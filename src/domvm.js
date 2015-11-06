@@ -53,6 +53,9 @@
 	// https://github.com/darsain/raft
 	// rAF throttler, aggregates multiple repeated refresh calls within single animframe
 	function raft(fn) {
+		if (!window.requestAnimationFrame)
+			return fn;
+
 		var id, ctx, args;
 
 		function call() {
