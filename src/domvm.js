@@ -188,9 +188,9 @@
 		function emit(event) {
 			var parent = parentView;
 			while (parent) {
-				if (parent.on && event in parent.on) {
+				if (parent.onEmit && event in parent.onEmit) {
 					var args = Array.prototype.slice.call(arguments, 1);
-					var res = parent.on[event].apply(null, args);
+					var res = parent.onEmit[event].apply(null, args);
 					if (res === false) break;
 				}
 				parent = parentView.parent;
@@ -212,7 +212,7 @@
 			}
 
 			if (view.on)
-				newBranch.on = view.on;
+				newBranch.onEmit = view.on;
 
 			if (branch)
 				graftBranch(branch, newBranch, true);
@@ -281,9 +281,10 @@
 
 		var tagObj = {
 			tag: null,
+			id: null,
 			ref: null,
 			guard: null,
-			props: null,
+			classes: null,
 		};
 
 		// must be in this order: tag#id.class1.class2$ref, or !ref (guard)
@@ -291,13 +292,10 @@
 		tagObj.tag = rawTag.replace(tagRe, function(full, tag, id, classes, refType, ref) {
 			var props = {};
 
-			if ((id || classes) && !tagObj.props)
-				tagObj.props = {};
-
 			if (id)
-				tagObj.props.id = id;
+				tagObj.id = id;
 			if (classes)
-				tagObj.props.class = classes.replace(/\./g, " ").trim();
+				tagObj.classes = classes.replace(/\./g, " ").trim();
 			if (ref) {
 				tagObj.ref = ref;
 				if (refType == "!")
@@ -326,11 +324,11 @@
 		node.tag = tagObj.tag;
 		node.ref = tagObj.ref;
 		node.guard = tagObj.guard;
+		node.id = tagObj.id;
 
-		if (tagObj.props) {
+		if (tagObj.classes) {
 			node.props = node.props || {};
-			for (var p in tagObj.props)
-				node.props[p] = tagObj.props[p];
+			node.props.class = tagObj.classes;
 		}
 	}
 
@@ -343,9 +341,12 @@
 			tag: null,
 			svg: false,
 			guard: false,		// created, updated, but children never touched
-			props: null,
+			id: null,
+			dataset: null,		// TODO
 			style: null,
-			on: null,			// "emit" listeners
+			props: null,
+			on: null,
+			onEmit: null,
 			el: null,
 			keyMap: null,		// holds idxs of any keyed children
 			body: null,
@@ -536,12 +537,14 @@
 	function patchProps(n, o) {
 		o = o || {};
 
+		if (n.id && n.id !== o.id)
+			n.el.id = n.id;
+
 		if (o.props || n.props) {
 			var op = o.props || {};
 			var np = n.props || {};
 
-			// extract style
-			if (isObj(op.style) || isObj(np.style)) {	// tofix: both must be objects
+			if (isObj(op.style) || isObj(np.style)) {	// tofix: both must be objects, or explode ; -> :
 				var ocss = op.style || {};
 				var ncss = np.style || {};
 
@@ -553,27 +556,27 @@
 				np.style = null;
 			}
 
-			// extract data*
+			// todo: parse data-* attr (slow)		indexOf("data-") == 0
 			if (isObj(op.data) || isObj(np.data)) {
 				var odata = op.data || {};
 				var ndata = np.data || {};
 
 				patch(n.el, odata, ndata, setData, delData);
 
-				n.data = np.data;
+				n.dataset = np.data;
 
 				op.data = null;
 				np.data = null;
 			}
 
-			// extract on* handlers
+			// todo? parse on* handlers (slow)		indexOf("on") == 0
 			if (op.on || np.on) {
 				var oon = op.on || {};
 				var non = np.on || {};
 
 				patch(n.el, oon, non, setEvt, delEvt);
 
-			//	n.on = np.on;			// tofix (rename?): n.on currently holds 'emit' handlers
+				n.on = np.on;
 
 				op.on = null;
 				np.on = null;
@@ -620,8 +623,20 @@
 	function setCss(targ, name, val) {targ.style[name] = val;};
 	function delCss(targ, name) {targ.style[name] = "";};
 
-	function setAttr(targ, name, val) {val === "" && name !== "value" ? delAttr(targ, name) : targ.setAttribute(name, val);};
-	function delAttr(targ, name) {targ.removeAttribute(name);};
+	function setAttr(targ, name, val) {
+		if (name[0] === ".")
+			targ[name.substr(1)] = val;
+		else if (val === "" && name !== "value")
+			delAttr(targ, name)
+		else
+			targ.setAttribute(name, val);
+	};
+	function delAttr(targ, name) {
+		if (name[0] === ".")
+			targ[name.substr(1)] = null;		// or = ""?
+		else
+			targ.removeAttribute(name);
+	};
 
 	function setAttrNS(targ, name, val) {val === "" ? delAttrNS(targ, name) : targ.setAttributeNS(null, name, val);};
 	function delAttrNS(targ, name) {targ.removeAttributeNS(null, name);};
