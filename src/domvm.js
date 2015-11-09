@@ -208,7 +208,7 @@
 				newBranch.key = "key" in branchDef ? branchDef.key :			// [Moo, arg1...].key
 								"key" in view ? view.key :						// return {key: abc, render: ...}
 								newBranch.key ||								// ["ul", {key: abc}] (reserved prop)
-								newBranch.ref || null;							// ["ul$ref"]
+								newBranch.ref || null;							// ["ul$ref"]			// or also reuse "#id"?
 			}
 
 			if (view.on)
@@ -324,10 +324,11 @@
 		node.tag = tagObj.tag;
 		node.ref = tagObj.ref;
 		node.guard = tagObj.guard;
-		node.id = tagObj.id;
 
-		if (tagObj.classes) {
+		if (tagObj.id || tagObj.classes) {
 			node.props = node.props || {};
+
+			node.props.id = tagObj.id;
 			node.props.class = tagObj.classes;
 		}
 	}
@@ -341,7 +342,6 @@
 			tag: null,
 			svg: false,
 			guard: false,		// created, updated, but children never touched
-			id: null,
 			dataset: null,		// TODO
 			style: null,
 			props: null,
@@ -372,10 +372,8 @@
 
 			procTag(raw[0], node);
 
-			if (node.props && "key" in node.props) {
-				node.key = node.props.key;
-				node.props.key = null;
-			}
+			if (node.props)
+				procProps(node.props, node);
 
 			node.svg = svg || node.tag == "svg";
 		}
@@ -393,6 +391,42 @@
 		}
 
 		return node;
+	}
+
+	function procProps(props, node) {
+		// standard attr
+		if (isObj(props.style)) {
+			var style = "";
+			for (var i in props.style)
+				style += i + ":" + props.style[i] + ";";
+			props.style = style;
+		}
+
+		// prefixed attr (expensive to parse/convert)
+		// "on*","data-"
+
+		// helper collections
+		if (props.on)
+			node.on = props.on;
+		if (props.data)
+			node.dataset = props.data;
+
+		// special properties
+		if (props._ref)
+			node.ref = props._ref;
+		if (props._key)
+			node.key = props._key;
+		if (props._name)
+			node.name = props._name;
+
+		props.on =
+		props.data =
+
+		props._ref =
+		props._key =
+		props._name = null;
+
+		// "value", "checked" "disabled" "required"
 	}
 
 	function hydrateBranch(node) {
@@ -537,50 +571,9 @@
 	function patchProps(n, o) {
 		o = o || {};
 
-		if (n.id && n.id !== o.id)
-			n.el.id = n.id;
-
 		if (o.props || n.props) {
 			var op = o.props || {};
 			var np = n.props || {};
-
-			if (isObj(op.style) || isObj(np.style)) {	// tofix: both must be objects, or explode ; -> :
-				var ocss = op.style || {};
-				var ncss = np.style || {};
-
-				patch(n.el, ocss, ncss, setCss, delCss);
-
-				n.style = np.style;
-
-				op.style = null;
-				np.style = null;
-			}
-
-			// todo: parse data-* attr (slow)		indexOf("data-") == 0
-			if (isObj(op.data) || isObj(np.data)) {
-				var odata = op.data || {};
-				var ndata = np.data || {};
-
-				patch(n.el, odata, ndata, setData, delData);
-
-				n.dataset = np.data;
-
-				op.data = null;
-				np.data = null;
-			}
-
-			// todo? parse on* handlers (slow)		indexOf("on") == 0
-			if (op.on || np.on) {
-				var oon = op.on || {};
-				var non = np.on || {};
-
-				patch(n.el, oon, non, setEvt, delEvt);
-
-				n.on = np.on;
-
-				op.on = null;
-				np.on = null;
-			}
 
 			// alter attributes
 			if (n.svg)
@@ -588,6 +581,14 @@
 			else
 				patch(n.el, op, np, setAttr, delAttr);
 		}
+
+		// todo: parse data-* attr (slow)		indexOf("data-") == 0
+		if (o.dataset || n.dataset)
+			patch(n.el, o.dataset || {}, n.dataset || {}, setData, delData);
+
+		// todo? parse on* handlers (slow)		indexOf("on") == 0
+		if (o.on || n.on)
+			patch(n.el, o.on || {}, n.on || {}, setEvt, delEvt);
 	}
 
 	// op = old props, np = new props, set = setter, del = unsetter
@@ -617,11 +618,8 @@
 	function setData(targ, name, val) {targ.dataset[name] = val;};
 	function delData(targ, name) {targ.dataset[name] = "";};
 
-	function setProp(targ, name, val) {targ[name] = val;};
-	function delProp(targ, name) {targ[name] = "";};
-
-	function setCss(targ, name, val) {targ.style[name] = val;};
-	function delCss(targ, name) {targ.style[name] = "";};
+//	function setCss(targ, name, val) {targ.style[name] = val;};
+//	function delCss(targ, name) {targ.style[name] = "";};
 
 	function setAttr(targ, name, val) {
 		if (name[0] === ".")
