@@ -18,7 +18,7 @@
 
     var svgNs = "http://www.w3.org/2000/svg";
     var voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
-    var seenTags = {};      // memoized parsed tags, todo: clean this?
+    var seenTags = {};    // memoized parsed tags, todo: clean this?
 
     var win = typeof window == "undefined" ? {} : window;
 
@@ -96,8 +96,13 @@
 
                 if (node.props) {
                     for (var pname in node.props) {
-                        if (node.props[pname] !== null && pname[0] !== "." && (pname == "value" || node.props[pname] !== ""))   // TODO: checked vs checked=""
-                            html += " " + pname + '="' + node.props[pname] + '"';
+                        var val = node.props[pname];
+
+                        if (val === true)
+                            html += " " + pname;
+                        else if (val === false) {}
+                        else if (val !== null && pname[0] !== ".")
+                            html += " " + pname + '="' + val + '"';
                     }
                 }
 
@@ -158,10 +163,10 @@
     function createView(viewFn, rendArgs, parentView) {
         var refs = {};
         var emit = emit;
-        var rAFresh = create.useRaf ? raft(refresh) : refresh;      // rAF-debounced refresh
+        var rAFresh = create.useRaf ? raft(refresh) : refresh;    // rAF-debounced refresh
         var view = viewFn(rAFresh, refs, emit);
         var render = view.render;
-//      var cleanup = view.cleanup || noop;
+//    var cleanup = view.cleanup || noop;
         var after = view.after;
         var branch = null;
 
@@ -334,20 +339,20 @@
 
     function procNode(raw, svg) {
         var node = {
-            type: null,         // elem, text, frag (todo)
-            name: null,         // view name populated externally by createView
-            key: null,          // view key populated externally by createView
+            type: null,      // elem, text, frag (todo)
+            name: null,      // view name populated externally by createView
+            key: null,        // view key populated externally by createView
             ref: null,
             tag: null,
             svg: false,
-            guard: false,       // created, updated, but children never touched
-            dataset: null,      // TODO
+            guard: false,      // created, updated, but children never touched
+            dataset: null,    // TODO
             style: null,
             props: null,
             on: null,
             onEmit: null,
             el: null,
-            keyMap: null,       // holds idxs of any keyed children
+            keyMap: null,      // holds idxs of any keyed children
             body: null,
         };
 
@@ -433,7 +438,7 @@
         if (node.type == TYPE_ELEM) {
             if (!node.el) {
                 node.el = node.svg ? document.createElementNS(svgNs, node.tag) : document.createElement(node.tag);
-                // if "svg", xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"      //version="1.1"
+                // if "svg", xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"    //version="1.1"
             //  node.el.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href');
                 node.props && patchProps(node);
             }
@@ -463,7 +468,7 @@
 
         if (isArray(node.body)) {
             for (var i = 0; i < node.body.length; i++)
-                hydrateWith(node.body[i], kids[i]);     // does the closure's version of returned branch update?
+                hydrateWith(node.body[i], kids[i]);  // does the closure's version of returned branch update?
         }
     }
 
@@ -512,7 +517,7 @@
                     // without keys, this may be expensive if body is 1000s of nodes, benefits of node
                     // reuse may not jusify re-iterating full old body to find reusable and ungrafted nodes
                     // fromIdx/toIdx may be passed in to only iterate roughly (or exactly) parallel nodes
-                    var o2 = findDonor(n2, o.body, o.keyMap, n.keyMap);     // , i, i
+                    var o2 = findDonor(n2, o.body, o.keyMap, n.keyMap);  // , i, i
 
                     if (o2)
                         graftBranch(o2, n2);
@@ -569,7 +574,7 @@
         }
     }
 
-    function patchProps(n, o) {
+    function patchProps(n, o, svg) {
         o = o || {};
 
         if (o.props || n.props) {
@@ -577,66 +582,66 @@
             var np = n.props || {};
 
             // alter attributes
-            if (n.svg)
-                patch(n.el, op, np, setAttrNS, delAttrNS);
-            else
-                patch(n.el, op, np, setAttr, delAttr);
+            patch(n.el, op, np, setAttr, delAttr, svg);
         }
 
-        // todo: parse data-* attr (slow)       indexOf("data-") == 0
+        // todo: parse data-* attr (slow)      indexOf("data-") == 0
         if (o.dataset || n.dataset)
-            patch(n.el, o.dataset || {}, n.dataset || {}, setData, delData);
+            patch(n.el, o.dataset || {}, n.dataset || {}, setData, delData, svg);
 
-        // todo? parse on* handlers (slow)      indexOf("on") == 0
+        // todo? parse on* handlers (slow)    indexOf("on") == 0
         if (o.on || n.on)
-            patch(n.el, o.on || {}, n.on || {}, setEvt, delEvt);
+            patch(n.el, o.on || {}, n.on || {}, setEvt, delEvt, svg);
     }
 
     // op = old props, np = new props, set = setter, del = unsetter
-    function patch(targ, op, np, set, del) {
+    function patch(targ, op, np, set, del, svg) {
+        svg = svg || false;
+
         for (var name in np) {
             if (np[name] === null) continue;
 
             // add new or mutate existing not matching old
             if (!(name in op) || np[name] !== op[name])
-                set(targ, name, np[name]);
+                set(targ, name, np[name], svg);
         }
         // remove any removed
         for (var name in op) {
             if (op[name] === null) continue;
 
             if (!(name in np))
-                del(targ, name, op[name]);
+                del(targ, name, svg);
         }
     }
 
 //  function setEvt(targ, name, val) {targ.addEventListener(name, val, false);};    // tofix: if old node exists (grafting), then don't re-add
 //  function delEvt(targ, name, val) {targ.removeEventListener(name, val, false);};
 
-    function setEvt(targ, name, val) {targ["on" + name] = val;};
-    function delEvt(targ, name) {targ["on" + name] = "";};
+    function setEvt(targ, name, val, svg) {targ["on" + name] = val;};
+    function delEvt(targ, name, svg) {targ["on" + name] = "";};
 
-    function setData(targ, name, val) {targ.dataset[name] = val;};
-    function delData(targ, name) {targ.dataset[name] = "";};
+    function setData(targ, name, val, svg) {targ.dataset[name] = val;};
+    function delData(targ, name, svg) {targ.dataset[name] = "";};
 
 //  function setCss(targ, name, val) {targ.style[name] = val;};
 //  function delCss(targ, name) {targ.style[name] = "";};
 
-    function setAttr(targ, name, val) {
+    function setAttr(targ, name, val, svg) {
         if (name[0] === ".")
             targ[name.substr(1)] = val;
-        else if (val === "" && name !== "value")
-            delAttr(targ, name)
-        else
-            targ.setAttribute(name, val);
+        else if (val === false)
+            delAttr(targ, name, svg);
+        else {
+            if (val === true)
+                val = "";
+            svg ? targ.setAttributeNS(null, name, val) : targ.setAttribute(name, val);
+        }
     };
-    function delAttr(targ, name) {
+
+    function delAttr(targ, name, svg) {
         if (name[0] === ".")
             targ[name.substr(1)] = null;        // or = ""?
         else
-            targ.removeAttribute(name);
+            svg ? targ.removeAttributeNS(null, name) : targ.removeAttribute(name);
     };
-
-    function setAttrNS(targ, name, val) {val === "" ? delAttrNS(targ, name) : targ.setAttributeNS(null, name, val);};
-    function delAttrNS(targ, name) {targ.removeAttributeNS(null, name);};
 });
