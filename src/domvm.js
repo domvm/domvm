@@ -20,18 +20,18 @@
 	var voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
 	var seenTags = {};		// memoized parsed tags, todo: clean this?
 
+	var win = typeof window == "undefined" ? {} : window;
+
 	var TYPE_ELEM = 1;
 	var TYPE_TEXT = 2;
 //	var TYPE_RAWEL = 3;
 	var TYPE_FRAG = 4;
 
-	createView.BENCH = false;
+	create.useRaf = true;
 
-	return createView;
+	return create;
 
 // ----------------------------
-
-	function noop() {}
 
 	function isArray(v) {
 		return Array.isArray(v);
@@ -53,7 +53,7 @@
 	// https://github.com/darsain/raft
 	// rAF throttler, aggregates multiple repeated refresh calls within single animframe
 	function raft(fn) {
-		if (!window.requestAnimationFrame)
+		if (!win.requestAnimationFrame)
 			return fn;
 
 		var id, ctx, args;
@@ -66,7 +66,7 @@
 		return function () {
 			ctx = this;
 			args = arguments;
-			if (!id) id = requestAnimationFrame(call);
+			if (!id) id = win.requestAnimationFrame(call);
 		};
 	}
 
@@ -96,7 +96,7 @@
 
 				if (node.props) {
 					for (var pname in node.props) {
-						if (node.props[pname] !== null && (pname == "value" || node.props[pname] !== ""))	// TODO: checked vs checked=""
+						if (node.props[pname] !== null && pname[0] !== "." && (pname == "value" || node.props[pname] !== ""))	// TODO: checked vs checked=""
 							html += " " + pname + '="' + node.props[pname] + '"';
 					}
 				}
@@ -112,7 +112,7 @@
 				}
 
 				// if body-less svg node, auto-close & return
-				if (node.svg && !node.body)
+				if (node.svg && node.tag !== "svg" && !node.body)
 					return html + "/>";
 				else
 					html +=  ">";
@@ -137,15 +137,32 @@
 		return html;
 	}
 
-	// pass args?
+	function create(viewFn, rendArgs, parentView) {
+		if (isArray(viewFn))
+			viewFn = createAnonView(viewFn);
+
+		return createView.call(null, viewFn, rendArgs, parentView);
+	}
+
+	// wraps a branchDef in an anon view
+	function createAnonView(branchDef) {
+		return function AnonView(refresh, refs, emit) {
+			return {
+				render: function() {
+					return branchDef;
+				}
+			}
+		}
+	}
+
 	function createView(viewFn, rendArgs, parentView) {
 		var refs = {};
 		var emit = emit;
-		var rAFresh = createView.BENCH ? refresh : raft(refresh);		// rAF-debounced refresh, except for bench
+		var rAFresh = create.useRaf ? raft(refresh) : refresh;		// rAF-debounced refresh
 		var view = viewFn(rAFresh, refs, emit);
 		var render = view.render;
 //		var cleanup = view.cleanup || noop;
-		var after = view.after || noop;
+		var after = view.after;
 		var branch = null;
 
 		refresh();
@@ -202,14 +219,7 @@
 			var branchDef = render.apply(null, args);
 			var newBranch = buildBranch(branchDef, true, parentView || null);
 
-			newBranch.name = viewFn.name || view.name || null;
-
-			if (newBranch.key === null) {
-				newBranch.key = "key" in branchDef ? branchDef.key :			// [Moo, arg1...].key
-								"key" in view ? view.key :						// return {key: abc, render: ...}
-								newBranch.key ||								// ["ul", {key: abc}] (reserved prop)
-								newBranch.ref || null;							// ["ul$ref"]			// or also reuse "#id"?
-			}
+			newBranch.name = newBranch.name || viewFn.name || null;
 
 			if (view.on)
 				newBranch.onEmit = view.on;
@@ -231,7 +241,7 @@
 			// use requestAnimationFrame here instead?
 			setTimeout(function() {
 				collectRefs(branch, refs, true);
-				after();
+				after && after();
 			}, 0);
 
 			return getInst();
@@ -282,31 +292,22 @@
 		var tagObj = {
 			tag: null,
 			id: null,
-			ref: null,
-			guard: null,
-			classes: null,
+			class: null,
 		};
 
-		// must be in this order: tag#id.class1.class2$ref, or !ref (guard)
-		var tagRe = /^([\w-]+)?(?:#([\w-]+))?((?:\.[\w-]+)+)?(?:([\$!])([\w-]+))?/;
-		tagObj.tag = rawTag.replace(tagRe, function(full, tag, id, classes, refType, ref) {
+		// must be in this order: tag#id.class1.class2
+		var tagRe = /^([\w\-]+)?(?:#([\w\-]+))?((?:\.[\w\-]+)+)?$/;
+		tagObj.tag = rawTag.replace(tagRe, function(full, tag, id, classes) {
 			var props = {};
 
 			if (id)
 				tagObj.id = id;
 			if (classes)
-				tagObj.classes = classes.replace(/\./g, " ").trim();
-			if (ref) {
-				tagObj.ref = ref;
-				if (refType == "!")
-					tagObj.guard = true;
-			}
+				tagObj.class = classes.replace(/\./g, " ").trim();
 
 			return tag || "div";
 		});
 
-		// NOTE: when ref/guard is used as a key, seenTags will fill up
-		// may not benefit from being memoized,
 		seenTags[rawTag] = tagObj;
 
 		return tagObj;
@@ -322,14 +323,12 @@
 		var tagObj = parseTag(rawTag);
 
 		node.tag = tagObj.tag;
-		node.ref = tagObj.ref;
-		node.guard = tagObj.guard;
 
-		if (tagObj.id || tagObj.classes) {
+		if (tagObj.id || tagObj.class) {
 			node.props = node.props || {};
 
 			node.props.id = tagObj.id;
-			node.props.class = tagObj.classes;
+			node.props.class = tagObj.class;
 		}
 	}
 
@@ -418,22 +417,24 @@
 			node.key = props._key;
 		if (props._name)
 			node.name = props._name;
+		if (props._guard)
+			node.guard = props._guard;
 
 		props.on =
 		props.data =
 
 		props._ref =
 		props._key =
-		props._name = null;
-
-		// "value", "checked" "disabled" "required"
+		props._name =
+		props._guard = null;
 	}
 
 	function hydrateBranch(node) {
 		if (node.type == TYPE_ELEM) {
 			if (!node.el) {
 				node.el = node.svg ? document.createElementNS(svgNs, node.tag) : document.createElement(node.tag);
-				// if "svg", xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink"
+				// if "svg", xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"		//version="1.1"
+			//	node.el.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href');
 				node.props && patchProps(node);
 			}
 
