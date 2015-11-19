@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>domvm</title>
+	<link rel="stylesheet" href="vendor/qunit/qunit-1.20.0.css">
+	<style>
+		#testy {
+			display: none;
+		}
+
+		.qunit-assert-list.qunit-collapsed + .qunit-source {
+			display: none;
+		}
+
+		.qunit-assert-list + .qunit-source {
+			display: block;
+		}
+	</style>
+</head>
+<body>
+	<div id="qunit"></div>
+	<div id="qunit-fixture"></div>
+	<div id="testy"></div>
+	<script src="vendor/qunit/qunit-1.20.0.js"></script>
+	<script src="lib/dominstr.js"></script>
+	<script src="../src/domvm.js"></script>
+	<script src="tests.js"></script>
+</body>
+</html>
