@@ -37,13 +37,13 @@
         return Array.isArray(v);
     }
 
-    function isPlain(v) {
+    function isValue(v) {
         var type = typeof v;
         return type == "string" || type == "number";
     }
 
     function isObj(v) {
-        return typeof v == "object";
+        return v !== null && typeof v == "object";
     }
 
     function isFunc(v) {
@@ -99,7 +99,7 @@
                 html += "<" + node.tag;
 
                 if (node.props) {
-                    var style = isPlain(node.props.style) ? node.props.style : "";
+                    var style = isValue(node.props.style) ? node.props.style : "";
                     var css = isObj(node.props.style) ? node.props.style : null;
 
                     if (css) {
@@ -437,14 +437,14 @@
 
             // isFunc(body)?
 
-            // todo: make uniform, but still avoid createTextNode? if (node.body.length == 1 && isPlain(node.body[0]))  node.el.textContent = 1, node.body = [newnode, inject firstChild]
-        //  if (isPlain(node.body))
+            // todo: make uniform, but still avoid createTextNode? if (node.body.length == 1 && isValue(node.body[0]))  node.el.textContent = 1, node.body = [newnode, inject firstChild]
+        //  if (isValue(node.body))
         //    node.body = [node.body];
 
             node.svg = svg || node.tag == "svg";
         }
         // plain strings/numbers
-        else if (isPlain(raw)) {
+        else if (isValue(raw)) {
             node.type = TYPE_TEXT;
             node.body = raw;
         }
@@ -503,8 +503,6 @@
     }
 
     function hydrateBranch(node) {
-
-
         if (node.type == TYPE_ELEM) {
             if (!node.el) {
                 node.el = node.svg ? doc.createElementNS(svgNs, node.tag) : doc.createElement(node.tag);
@@ -521,7 +519,7 @@
                 });
             }
             // for body defs like ["a", "blaahhh"], entire body can be dumped at once
-            else if (isPlain(node.body))
+            else if (isValue(node.body))
                 node.el.textContent = node.body;
         }
         // for body defs like ["foo", ["a"], "bar"], create separate textnodes
