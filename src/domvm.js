@@ -200,7 +200,7 @@
         var rAFresh = create.useRaf ? raft(redraw) : redraw;    // rAF-debounced redraw
         var view = viewFn(rAFresh, refs, emit);
         var render = view.render;
-//      var cleanup = view.cleanup || noop;
+//    var cleanup = view.cleanup || noop;
         var after = view.after;
         var branch = null;
 
@@ -246,7 +246,7 @@
         function emit(event) {
             var depth = null;
 
-            var evd = event.split(":");     // TODO: by key and by ref also
+            var evd = event.split(":");  // TODO: by key and by ref also
 
             if (evd.length == 2) {
                 event =  evd[0];
@@ -258,7 +258,7 @@
             var targ = branch;
 
             if (depth !== null) {
-                while (--depth && targ.parent)          // && ?
+                while (--depth && targ.parent)        // && ?
                     targ = targ.parent;
 
                 targ.onEmit[event].apply(null, args);
@@ -398,17 +398,17 @@
         var node = {
             type: null,   // elem, text, frag (todo)
             name: null,   // view name populated externally by createView
-            key: null,      // view key populated externally by createView
+            key: null,    // view key populated externally by createView
             ref: null,
             tag: null,
             svg: false,
-            guard: false,     // created, updated, but children never touched
+            guard: false,    // created, updated, but children never touched
             dataset: null,  // TODO
             props: null,
             on: null,
             onEmit: null,
             el: null,
-            keyMap: null,     // holds idxs of any keyed children
+            keyMap: null,    // holds idxs of any keyed children
             body: null,
         };
 
@@ -439,7 +439,7 @@
 
             // todo: make uniform, but still avoid createTextNode? if (node.body.length == 1 && isPlain(node.body[0]))  node.el.textContent = 1, node.body = [newnode, inject firstChild]
         //  if (isPlain(node.body))
-        //      node.body = [node.body];
+        //    node.body = [node.body];
 
             node.svg = svg || node.tag == "svg";
         }
@@ -479,9 +479,9 @@
 
         // helper collections
     //  if (props.on)
-    //      node.on = props.on;
+    //    node.on = props.on;
     //  if (props.data)
-    //      node.dataset = props.data;
+    //    node.dataset = props.data;
 
         // special properties
         if (props._ref)
@@ -607,7 +607,7 @@
             }
             // nothing to graft, hydrate new nodes
             else
-                hydrateBranch(n);       // todo: test, bad?
+                hydrateBranch(n);      // todo: test, bad?
         }
 
         if (isArray(o.body)) {
@@ -639,7 +639,7 @@
         n.el = o.el;
         o.el = null;
 
-        if (n.type === TYPE_TEXT) {
+        if (n.type === TYPE_TEXT && n.body !== o.body) {
             n.el.nodeValue = n.body;
             return;
         }
@@ -687,13 +687,13 @@
                 np.style = ns;
         }
 
-        // todo: parse data-* attr (slow)     indexOf("data-") == 0
-//      if (o.dataset || n.dataset)
-//          patch(n.el, o.dataset || {}, n.dataset || {}, setData, delData, n.svg, init);
+        // todo: parse data-* attr (slow)    indexOf("data-") == 0
+//    if (o.dataset || n.dataset)
+//        patch(n.el, o.dataset || {}, n.dataset || {}, setData, delData, n.svg, init);
 
         // todo? parse on* handlers (slow)  indexOf("on") == 0
     //  if (o.on || n.on)
-    //      patch(n.el, o.on || {}, n.on || {}, setEvt, delEvt, n.svg, init);
+    //    patch(n.el, o.on || {}, n.on || {}, setEvt, delEvt, n.svg, init);
     }
 
     // op = old props, np = new props, set = setter, del = unsetter
@@ -729,9 +729,9 @@
         if (name[0] === ".")
             targ[name.substr(1)] = val;
         else if (name === "class")
-            targ.className = val;       // svg is setattrns?
+            targ.className = val;      // svg is setattrns?
         else if (name === "id" || name.indexOf("on") === 0)
-            targ[name] = val;       // else test delegation for val === function vs object
+            targ[name] = val;      // else test delegation for val === function vs object
         else if (val === false)
             delAttr(targ, name, svg, init);
         else {
