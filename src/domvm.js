@@ -176,7 +176,7 @@
 		}
 	}
 
-	function createView(viewFn, rendArgs, parentView) {
+	function createView(viewFn, rendArgsInit, parentView) {
 		var refs = {};
 		var emit = emit;
 
@@ -204,7 +204,7 @@
 		var after = view.after;
 		var branch = null;
 
-		redraw(rendArgs || []);
+		redraw();
 
 		return getInst();
 
@@ -274,8 +274,8 @@
 			}
 		}
 
-		function redraw(rendArgs) {
-			var branchDef = render.apply(null, rendArgs || []);
+		function redraw(rendArgsNew) {
+			var branchDef = render.apply(null, rendArgsNew || rendArgsInit || []);
 
 			var newBranch = buildBranch(branchDef, true, parentView || null);
 

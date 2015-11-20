@@ -121,7 +121,8 @@ vm.redraw();
 
 If you prefer to explicitly pass data to the view rather than relying
 on `people` to be closured, you can pass it through to `render()` during
-inital creation and `redraw()` calls:
+inital creation and `redraw()` calls. In this way, you can pass in an
+external data context for the view, such as a domain model instance.
 
 ```js
 // a list of people
@@ -133,7 +134,7 @@ var people = [
 
 function PeopleView(redraw, refs, emit) {
 	return {
-		render: function(people) {										// <-- arg array lands here
+		render: function(people) {                                      // <-- arg array lands here
 			return ["ul.people-list", people.map(function(person) {
 				return ["li", person.name + " (aged " + person.age + ")"];
 			})];
@@ -142,19 +143,27 @@ function PeopleView(redraw, refs, emit) {
 }
 
 // create view model
-var vm = domvm(PeopleView, [people]);									// <-- arg array passed in
+var vm = domvm(PeopleView, [people]);                                   // <-- arg array passed in
 
 // render to document
 vm.mount(document.body);
 
-// modify the list
+// modify the list directly
 people.shift();
-people = people.concat([
+people.push(
 	{name: "Allison", age: 15},
-	{name: "Sergey", age: 39},
+	{name: "Sergey", age: 39}
+);
+
+// redraw without passing it again
+vm.redraw();
+
+// but if list is replaced, then it should be passed in again
+people = people.concat([
+	{name: "Jeff", age: 54}
 ]);
 
-// redraw view model
+// redraw with new list
 vm.redraw([people]);													// <-- arg array passed in
 ```
 
