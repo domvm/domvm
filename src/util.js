@@ -1,20 +1,21 @@
 !(function() {
-//	global util to refresh disjoint?, multiple import?
+//  global util to redraw disjoint?, multiple import?
 	function util(ctx, propThen) {		// just "then"?			// syncThen
-		var _refresh, _emit;
+		var _redraw, _emit;
 
-		function refreshRoot() {
-			_emit("_r:1000");
-		};
+		function redrawRoot() {
+			_emit("_redraw:1000");
+		}
 
 		function noop() {}
 
-		propThen = propThen === false ? noop : propThen || refreshRoot;		// or emit
-//		syncThen = syncThen === false ? noop : syncThen || refreshRoot;		// or emit
+		propThen = propThen === false ? noop : propThen || redrawRoot;		// or emit
+//	    syncThen = syncThen === false ? noop : syncThen || redrawRoot;		// or emit
 
 		return {
-			bind: function(refresh, emit) {
-				_refresh = refresh;
+			// rename to import?
+			bind: function(redraw, emit) {
+				_redraw = redraw;
 				_emit = emit;
 			},
 			prop: function prop(initVal, then) {
@@ -60,9 +61,9 @@
 		};
 	};
 	/*
-	function thenRefreshRoot
-	function thenRefreshParent
-	function thenRefreshSelf
+	function thenRedrawRoot
+	function thenRedrawParent
+	function thenRedrawSelf
 	function thenEmitChange
 	u.thenEmit
 	u.thenRedrawSelf
@@ -70,32 +71,3 @@
 	*/
 	domvm.u = util;
 })();
-
-/*
-uniform ["p", "moo"] === ["p", ["moo"]]
-isfunc body
-maintain active element/selected, etc
-checked, selectedIndex selected disabled bug with reuse
-util for defered
-fragments
-_guard
-refresh->redraw? update
-
-moar tests
-moar svg vs dom diffs, xlink
-
-
-emit into
-
-promiscuous, fetch
-auto-px
-
-auto-ref on all event handlers
-
-focus is retained on reused elements when sibs are not re-rendered
-(inputs, buttons)
-
-auto-export refresh/redraw
-
-shortcut for views
-*/
