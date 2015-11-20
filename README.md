@@ -41,15 +41,10 @@ Because you'll represent 50% of this lib's entire userbase and ecosystem (at tim
 ["p", "Hello"]										// plain tags
 
 ["p#foo.bar.baz", "Hello"]							// id and class shorthands
-
 ["input", {type: "checkbox", checked: true}]		// boolean attrs
-
 ["input", {type: "checkbox", ".checked": true}]		// set property instead of attr
-
 ["button", {onclick: function(e) {...}}, "Hello"]	// event handlers
-
 ["p", {style: "font-size: 10pt;"}, "Hello"]			// style can be a string
-
 ["p", {style: {fontSize: "10pt;"}}, "Hello"]		// ... or an object (camelCase only)
 
 ["h1", [											// child array can follow tag
