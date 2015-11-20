@@ -92,7 +92,7 @@ var people = [
 	{name: "Mark", age: 70},
 ];
 
-function PeopleView() {
+function PeopleView(redraw, refs, emit) {
 	return {
 		render: function() {
 			return ["ul.people-list", people.map(function(person) {
@@ -114,6 +114,42 @@ people = people.concat([
 
 // redraw view model
 vm.redraw();
+```
+
+If you prefer to explicitly pass the data to the view rather than relying
+on `people` to be closured, you can pass it through to `render()` during
+both inital creation and `redraw()` calls:
+
+```js
+// a list of people
+var people = [
+	{name: "Peter", age: 31},
+	{name: "Morgan", age: 27},
+	{name: "Mark", age: 70},
+];
+
+function PeopleView(redraw, refs, emit) {
+	return {
+		render: function(people) {
+			return ["ul.people-list", people.map(function(person) {
+				return ["li", person.name + " (aged " + person.age + ")"];
+			})];
+		}
+	};
+}
+
+// create view model from list & render to document
+var vm = domvm(PeopleView, [people]).mount(document.body);
+
+// modify the list
+people.shift();
+people = people.concat([
+	{name: "Allison", age: 15},
+	{name: "Sergey", age: 39},
+]);
+
+// redraw view model
+vm.redraw(people);
 ```
 
 ---
