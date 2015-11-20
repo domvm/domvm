@@ -352,7 +352,7 @@ QUnit.module("Subview List w/keys");
 		return {
 			render: function() {
 				return ["ul#list2.test-output", list.map(function(item) {
-					return [ListViewItem, item];
+					return [ListViewItem, [item]];
 				})];
 			}
 		};

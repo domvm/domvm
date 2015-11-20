@@ -55,7 +55,6 @@ var domvm = require("domvm");
 
 ```js
 ["p", "Hello"]										// plain tags
-
 ["p#foo.bar.baz", "Hello"]							// id and class shorthands
 ["input", {type: "checkbox", checked: true}]		// boolean attrs
 ["input", {type: "checkbox", ".checked": true}]		// set property instead of attr

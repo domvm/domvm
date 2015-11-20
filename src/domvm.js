@@ -315,7 +315,7 @@
 			return createView(raw, null, parentView).branch;
 		// viewFns with params
 		else if (isArray(raw) && isFunc(raw[0]))
-			return createView(raw[0], raw.slice(1), parentView).branch;
+			return createView(raw[0], raw[1] || [], parentView).branch;
 
 		var node = procNode(raw, svg);
 
