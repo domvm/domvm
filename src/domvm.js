@@ -193,7 +193,7 @@
 			targ = targ || 1000;
 
 			return function() {
-				emit("_redraw:" + targ);
+				emit("_redraw:" + targ);		// todo: pass through args
 			};
 		};
 
@@ -204,7 +204,7 @@
 		var after = view.after;
 		var branch = null;
 
-		redraw();
+		redraw(rendArgs || []);
 
 		return getInst();
 
@@ -274,9 +274,8 @@
 			}
 		}
 
-		function redraw() {
-			var args = arguments.length == 0 ? rendArgs || [] : arguments;
-			var branchDef = render.apply(null, args);
+		function redraw(rendArgs) {
+			var branchDef = render.apply(null, rendArgs || []);
 
 			var newBranch = buildBranch(branchDef, true, parentView || null);
 

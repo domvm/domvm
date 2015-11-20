@@ -77,7 +77,7 @@ var domvm = require("domvm");
 
 ["#ui", [											// same as div#ui
 	NavBarView,										// sub-view func w/ closured data
-	[PanelView, "someParam1", "someParam2"],		// ... or with passed-in data
+	[PanelView, ["a", "b"]],						// ... or with passed-in data
 ]]
 ```
 
@@ -102,8 +102,11 @@ function PeopleView(redraw, refs, emit) {
 	};
 }
 
-// create view model from list & render to document
-var vm = domvm(PeopleView).mount(document.body);
+// create view model
+var vm = domvm(PeopleView);
+
+// render to document
+vm.mount(document.body);
 
 // modify the list
 people.shift();
@@ -115,10 +118,11 @@ people = people.concat([
 // redraw view model
 vm.redraw();
 ```
+---
 
-If you prefer to explicitly pass the data to the view rather than relying
+If you prefer to explicitly pass data to the view rather than relying
 on `people` to be closured, you can pass it through to `render()` during
-both inital creation and `redraw()` calls:
+inital creation and `redraw()` calls:
 
 ```js
 // a list of people
@@ -130,7 +134,7 @@ var people = [
 
 function PeopleView(redraw, refs, emit) {
 	return {
-		render: function(people) {
+		render: function(people) {										// <-- arg array lands here
 			return ["ul.people-list", people.map(function(person) {
 				return ["li", person.name + " (aged " + person.age + ")"];
 			})];
@@ -138,8 +142,11 @@ function PeopleView(redraw, refs, emit) {
 	};
 }
 
-// create view model from list & render to document
-var vm = domvm(PeopleView, [people]).mount(document.body);
+// create view model
+var vm = domvm(PeopleView, [people]);									// <-- arg array passed in
+
+// render to document
+vm.mount(document.body);
 
 // modify the list
 people.shift();
@@ -149,7 +156,7 @@ people = people.concat([
 ]);
 
 // redraw view model
-vm.redraw(people);
+vm.redraw([people]);													// <-- arg array passed in
 ```
 
 ---
