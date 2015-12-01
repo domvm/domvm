@@ -158,11 +158,11 @@
 		return html;
 	}
 
-	function create(viewFn, rendArgs, parentView) {
+	function create(viewFn, rendArgs, parentBranch) {
 		if (isArray(viewFn))
 			viewFn = createAnonView(viewFn);
 
-		return createView.call(null, viewFn, rendArgs, parentView);
+		return createView.call(null, viewFn, rendArgs, parentBranch);
 	}
 
 	// wraps a branchDef in an anon view
@@ -176,7 +176,7 @@
 		}
 	}
 
-	function createView(viewFn, rendArgsInit, parentView) {
+	function createView(viewFn, rendArgsInit, parentBranch) {
 		var refs = {};
 		var emit = emit;
 
@@ -198,17 +198,17 @@
 		};
 
 		var rAFresh = create.useRaf ? raft(redraw) : redraw;	// rAF-debounced redraw
-		var view = viewFn(rAFresh, refs, emit);
+		var view = viewFn(rAFresh, refs, emit);					// ,getVm
 		var render = view.render;
-//	  var cleanup = view.cleanup || noop;
+//		var cleanup = view.cleanup || noop;
 		var after = view.after;
 		var branch = null;
 
 		redraw();
 
-		return getInst();
+		return getVm();
 
-		function getInst() {
+		function getVm() {
 			return {
 				html: html,
 				branch: branch,
@@ -223,7 +223,7 @@
 
 		function attachDOM(el) {
 			hydrateWith(branch, el);
-			return getInst();
+			return getVm();
 		}
 
 		function html() {
@@ -233,7 +233,7 @@
 		function mount(el) {
 			hydrateBranch(branch);
 			el.appendChild(branch.el);
-			return getInst();
+			return getVm();
 		}
 /*
 		function destroy() {
@@ -277,7 +277,7 @@
 		function redraw(rendArgsNew) {
 			var branchDef = render.apply(null, rendArgsNew || rendArgsInit || []);
 
-			var newBranch = buildBranch(branchDef, true, parentView || null);
+			var newBranch = buildBranch(branchDef, true, parentBranch || null);
 
 			newBranch.name = newBranch.name || viewFn.name || null;
 
@@ -291,9 +291,9 @@
 			// update parent's view of self
 			// this could be expensive is hundreds of sub-components redraw quickly
 			// could be avoided if a top-level redraw/sync was agreed to stay manual
-			if (parentView) {
-				var selfIdx = parentView.body.indexOf(branch);
-				parentView.body[selfIdx] = newBranch;
+			if (parentBranch) {
+				var selfIdx = parentBranch.body.indexOf(branch);
+				parentBranch.body[selfIdx] = newBranch;
 			}
 
 			branch = newBranch;
@@ -305,25 +305,27 @@
 				after && after();
 			}, 0);
 
-			return getInst();
+			return getVm();
 		}
 	}
 
-	function buildBranch(raw, isView, parentView, svg) {
+	function buildBranch(raw, isView, parentBranch, svg) {
 		// viewFns
 		if (isFunc(raw))
-			return createView(raw, null, parentView).branch;
+			return createView(raw, null, parentBranch).branch;
 		// viewFns with params
 		else if (isArray(raw) && isFunc(raw[0]))
-			return createView(raw[0], raw[1] || [], parentView).branch;
+			return createView(raw[0], raw[1] || [], parentBranch).branch;
+//		else if (isObj(raw) && raw.branch)
+//			return raw.branch;
 
 		var node = procNode(raw, svg);
 
 		svg = svg || node.svg;
 
 		if (isView) {
-			node.parent = parentView || null;
-			parentView = node;
+			node.parent = parentBranch || null;
+			parentBranch = node;
 		}
 
 		if (isArray(node.body)) {
@@ -331,7 +333,7 @@
 				anyKeys = false;
 
 			node.body = node.body.map(function(raw, i) {
-				var node2 = buildBranch(raw, false, parentView, svg);
+				var node2 = buildBranch(raw, false, parentBranch, svg);
 				if (node2.key !== null) {
 					keyMap[node2.key] = i;
 					anyKeys = true;
@@ -483,10 +485,11 @@
 	//	node.dataset = props.data;
 
 		// special properties
+
+		node.key = props._key || props._ref || props.id || props.name || null;
+
 		if (props._ref)
 			node.ref = props._ref;
-		if (props._key)
-			node.key = props._key;
 		if (props._name)
 			node.name = props._name;
 		if (props._guard)
