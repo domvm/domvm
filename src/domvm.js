@@ -177,6 +177,8 @@
 	}
 
 	function createView(viewFn, rendArgsInit, parentBranch) {
+//		console.log("Create view " + viewFn.name);
+
 		var refs = {};
 		var emit = emit;
 
@@ -198,32 +200,30 @@
 		};
 
 		var rAFresh = create.useRaf ? raft(redraw) : redraw;	// rAF-debounced redraw
-		var view = viewFn(rAFresh, refs, emit);					// ,getVm
-		var render = view.render;
-//		var cleanup = view.cleanup || noop;
-		var after = view.after;
-		var branch = null;
 
-		redraw();
+		var view = null,
+			branch = null;
 
-		return getVm();
+		var vm = {
+			html: html,
+			branch: getBranch,
+			redraw: rAFresh,
+			mount: mount,
+			attach: attachDOM,
+			emit: emit,
+			refs: refs,
+		//  destroy: destroy,
+		};
 
-		function getVm() {
-			return {
-				html: html,
-				branch: branch,
-				redraw: rAFresh,
-				mount: mount,
-				attach: attachDOM,
-			//  emit
-			//  refs
-			//  destroy: destroy,
-			};
+		return redraw();
+
+		function getBranch() {
+			return branch;
 		}
 
 		function attachDOM(el) {
 			hydrateWith(branch, el);
-			return getVm();
+			return vm;
 		}
 
 		function html() {
@@ -233,7 +233,7 @@
 		function mount(el) {
 			hydrateBranch(branch);
 			el.appendChild(branch.el);
-			return getVm();
+			return vm;
 		}
 /*
 		function destroy() {
@@ -275,7 +275,14 @@
 		}
 
 		function redraw(rendArgsNew) {
-			var branchDef = render.apply(null, rendArgsNew || rendArgsInit || []);
+//			console.log("Redraw view " + viewFn.name);
+
+			if (view === null)
+				view = viewFn(rAFresh, refs, emit, vm);
+
+	//		var cleanup = view.cleanup || noop;
+
+			var branchDef = view.render.apply(null, rendArgsNew || rendArgsInit || []);
 
 			var newBranch = buildBranch(branchDef, true, parentBranch || null);
 
@@ -302,20 +309,24 @@
 			// use requestAnimationFrame here instead?
 			setTimeout(function() {
 				collectRefs(branch, refs, true);
-				after && after();
+				view.after && view.after();
 			}, 0);
 
-			return getVm();
+			branch.viewFn = viewFn;	// _key, _name
+
+			branch.view = vm;
+
+			return branch.view;
 		}
 	}
 
 	function buildBranch(raw, isView, parentBranch, svg) {
 		// viewFns
 		if (isFunc(raw))
-			return createView(raw, null, parentBranch).branch;
+			return createView(raw, null, parentBranch).branch();
 		// viewFns with params
 		else if (isArray(raw) && isFunc(raw[0]))
-			return createView(raw[0], raw[1] || [], parentBranch).branch;
+			return createView(raw[0], raw[1] || [], parentBranch).branch();
 //		else if (isObj(raw) && raw.branch)
 //			return raw.branch;
 

@@ -607,7 +607,7 @@ QUnit.module("Elems & id/class");
 		var callCounts = instr.end();
 
 		var expcHtml = '<div></div>';
-		evalOut(assert, vm.branch.el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1 });
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1 });
 	});
 
 	QUnit.test('Text body: ["div", "moo"]', function(assert) {
@@ -618,7 +618,7 @@ QUnit.module("Elems & id/class");
 		var callCounts = instr.end();
 
 		var expcHtml = '<div>moo</div>';
-		evalOut(assert, vm.branch.el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1, textContent: 1 });
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1, textContent: 1 });
 	});
 
 	QUnit.test('Void elem: ["input"]', function(assert) {
@@ -629,7 +629,7 @@ QUnit.module("Elems & id/class");
 		var callCounts = instr.end();
 
 		var expcHtml = '<input>';
-		evalOut(assert, vm.branch.el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1 });
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1 });
 	});
 
 	QUnit.test('SVG elem: ["svg"]', function(assert) {
@@ -640,7 +640,7 @@ QUnit.module("Elems & id/class");
 		var callCounts = instr.end();
 
 		var expcHtml = '<svg></svg>';		// should include xlink & xmlns?
-		evalOut(assert, vm.branch.el, vm.html(), expcHtml, callCounts, { createElementNS: 1, appendChild: 1 });
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, { createElementNS: 1, appendChild: 1 });
 	});
 
 
@@ -652,7 +652,7 @@ QUnit.module("Elems & id/class");
 		var callCounts = instr.end();
 
 		var expcHtml = '<div id="foo" class="class1 class2"></div>';
-		evalOut(assert, vm.branch.el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1, className: 1 });
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1, className: 1 });
 	});
 
 	QUnit.test('["#foo.class1.class2"]', function(assert) {
@@ -663,7 +663,7 @@ QUnit.module("Elems & id/class");
 		var callCounts = instr.end();
 
 		var expcHtml = '<div id="foo" class="class1 class2"></div>';
-		evalOut(assert, vm.branch.el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1, className: 1 });
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1, className: 1 });
 	});
 
 	QUnit.test('[".class1.class2"]', function(assert) {
@@ -674,7 +674,7 @@ QUnit.module("Elems & id/class");
 		var callCounts = instr.end();
 
 		var expcHtml = '<div class="class1 class2"></div>';
-		evalOut(assert, vm.branch.el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1, className: 1 });
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1, className: 1 });
 	});
 
 	QUnit.test('Style Obj (camelCase)', function(assert) {
@@ -685,6 +685,96 @@ QUnit.module("Elems & id/class");
 		var callCounts = instr.end();
 
 		var expcHtml = '<div style="background-color: red;"></div>';
-		evalOut(assert, vm.branch.el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1 });
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, { createElement: 1, appendChild: 1 });
 	});
+})();
+
+QUnit.module("Subview redraw() Branch Consistency");
+
+(function() {
+	function Parent() {
+		this.kids = [];
+
+		var ctx = this;
+		this.view = function ParentView(redraw, refs, emit, vm) {
+			// viewState should be closured here, and this func only called once
+			ctx.redraw = redraw;
+			ctx.vm = vm;
+			return {
+				render: function() {
+					return ["ul", ctx.kids.map((kid) => kid.view)];
+				}
+			}
+		}
+	}
+
+	function Child(name) {
+		this.name = name;
+
+		var ctx = this;
+		this.view = function ChildView(redraw, refs, emit, vm) {
+			// viewState should be closured here, and this func only called once
+			ctx.redraw = redraw;
+			ctx.vm = vm;
+			return {
+				render: function() {
+					return ["li", ctx.name];
+				}
+			}
+		}
+	}
+
+	var mom = new Parent();
+	mom.kids.push(new Child("Billy"));
+
+	var vm, vm2;
+//	var vm2 =	// how to get .html?
+
+	QUnit.test('Proper initial HTML', function(assert) {
+		var expcHtml = '<ul><li>Billy</li></ul>';
+
+		instr.start();
+		vm = domvm(mom.view).mount(testy);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, { createElement: 2, appendChild: 2, textContent: 1 });
+	});
+
+	QUnit.test('update child -> redraw child -> redraw parent', function(assert) {
+		mom.kids[0].name = "Johnny";
+
+		instr.start();
+		mom.kids[0].redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul><li>Johnny</li></ul>';
+
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, { nodeValue: 1 });
+
+		instr.start();
+		mom.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, {});
+	});
+
+	QUnit.test('update child -> redraw parent -> redraw child', function(assert) {
+		mom.kids[0].name = "Chuck Norris";
+
+		instr.start();
+		mom.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul><li>Chuck Norris</li></ul>';
+
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, { nodeValue: 1 });
+
+		instr.start();
+		mom.kids[0].redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.branch().el, vm.html(), expcHtml, callCounts, {});
+	});
+
+	// TODO: also with passed-in data
 })();
