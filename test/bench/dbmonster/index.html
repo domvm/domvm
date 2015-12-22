@@ -6,17 +6,14 @@
 <body>
 
 <div id="body">
-	<!--
 	<button onclick="redraw()">GO</button>
 	<button onclick="step()">Step</button>
-	-->
+	<div id="body2"></div>
 </div>
 
 <script src="junkola-copied-from-ember.js"></script>
 <script src="../../../src/domvm.js"></script>
-<!--
 <script src="../../../test/lib/dominstr.js"></script>
--->
 
 <script>
 	var ROWS = 100;
@@ -53,17 +50,24 @@
 		};
 	}
 
-	var vw = domvm(Table).mount(document.getElementById("body"));
+	var vw = domvm(Table).mount(document.getElementById("body2"));
 
-//	var instr = new DOMInstr(true);
-/*
+/*  isomorphic test
+	var vw = domvm(Table);
+	var html = vw.html();
+	var body2 = document.getElementById("body2");
+	body2.innerHTML = html;
+	vw.attach(body2.firstChild);
+*/
+	var instr = new DOMInstr(true);
+
 	function step() {
 		dbs = getDatabases();
 		instr.start();
 		vw.redraw();
 		console.log(instr.end());
 	}
-*/
+
 	function redraw() {
 		dbs = getDatabases();
 		vw.redraw();

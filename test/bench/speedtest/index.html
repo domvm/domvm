@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Speedtest</title>
+
+	<link rel="stylesheet" type="text/css" href="speedtest.css" media="screen">
+</head>
+<body>
+	<p>This is a fork of <a href="http://jsfiddle.net/jashkenas/CGSd5/" target="_top">jashkenas's Ember/Backbone</a> with 500 circles and some stats around.</p>
+
+	<p>VDOM based:</p>
+	<button onclick="runCito()">Cito 0.0.1</button>
+	<button onclick="runDomvm()">domvm</button>
+	<button onclick="runDomchanger()">domChanger</button>
+	<button onclick="benchmark.reset()">Stop</button>
+
+	<p id="timing">&nbsp;</p>
+	<div id="grid"></div>
+
+	<script src="benchmark.js"></script>
+
+	<script src="cito.js"></script>
+	<script src="cito_002.js"></script>
+	<script src="domchanger.js"></script>
+	<script src="domchanger_002.js"></script>
+
+	<script src="../../../src/domvm.js"></script>
+<!--<script src="../../../test/lib/dominstr.js"></script>-->
+	<script src="domvm_002.js"></script>
+</body>
+</html>

@@ -5,8 +5,6 @@
 * domvm.js - DOM ViewModel
 * A thin, fast, dependency-free vdom diffing lib
 * https://github.com/leeoniya/domvm
-*
-* API heavily inspired by https://github.com/creationix/domchanger
 */
 
 ( // Module boilerplate to support commonjs, browser globals and AMD.
@@ -16,7 +14,10 @@
 )(function () {
 	"use strict";
 
-	var svgNs = "http://www.w3.org/2000/svg";
+	var NS = {
+		svg: "http://www.w3.org/2000/svg",
+		math: "http://www.w3.org/1998/Math/MathML",
+	};
 	var voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
 	var seenTags = {};  // memoized parsed tags, todo: clean this?
 
@@ -28,162 +29,69 @@
 //  var TYPE_RAWEL = 3;
 	var TYPE_FRAG = 4;
 
-	create.useRaf = true;
+	var REDRAW_NONE = 0;
+	var REDRAW_ROOT = 1;
+	var REDRAW_SELF = 2;
 
-	return create;
+	var DONOR_DOM	= 1;
+	var DONOR_NODE	= 2;
 
-// ----------------------------
-	function isArray(v) {
-		return Array.isArray(v);
-	}
+	createView.viewScan = false;	// enables aggressive unkeyed view reuse
+	createView.useRaf = true;
+//	createView.useDOM = true;
+	createView.autoRedraw = REDRAW_NONE;
 
-	function isValue(v) {
-		var type = typeof v;
-		return type == "string" || type == "number";
-	}
+	return createView;
 
-	function isObj(v) {
-		return v !== null && typeof v == "object";
-	}
+	// creates closure
+	function createView(viewFn, model, _key, opts, rendArgs, parentNode, idxInParent) {
+		var isRootNode = !parentNode;
 
-	function isFunc(v) {
-		return typeof v == "function";
-	}
-
-	// https://github.com/darsain/raft
-	// rAF throttler, aggregates multiple repeated redraw calls within single animframe
-	function raft(fn) {
-		if (!win.requestAnimationFrame)
-			return fn;
-
-		var id, ctx, args;
-
-		function call() {
-			id = 0;
-			fn.apply(ctx, args);
+		// for domvm([MyView, model, _key])
+		if (isArr(viewFn)) {
+			model = viewFn[1];
+			_key = viewFn[2];
+			opts = viewFn[3];
+			rendArgs = viewFn[4];
+			viewFn = viewFn[0];
 		}
 
-		return function() {
-			ctx = this;
-			args = arguments;
-			if (!id) id = win.requestAnimationFrame(call);
+		var vm = {
+			node: null,
+			view: [viewFn, model, _key],
+			redraw: createView.useRaf ? raft(redraw) : redraw,
+			emit: emit,
+			refs: {},
+			html: function() {
+				return collectHtml(vm.node);
+			},
+			mount: function(el) {		// appendTo?
+				hydrateNode(vm.node);
+				el.insertBefore(vm.node.el, null);
+				return vm;
+			},
+			attach: function(el) {
+				hydrateWith(vm.node, el);
+				return vm;
+			},
+			destroy: destroy,
+
+			// internal util funcs
+			moveTo: moveTo,
+			updIdx: updIdx,
+			wrapHandler: wrapHandler,
 		};
-	}
 
-	function collectRefs(node, refs, init) {
-		var isComp = node.name !== null;
+		var view = viewFn(vm, model, _key);
 
-		if (!init && isComp)
-			return null;
+		view = isFunc(view) ? {render: view} : view;
+		view.on = view.on || {};
+		view.on._redraw = redraw;
 
-		refs = refs || {};
-		if (node.ref !== null && node.el)
-			refs[node.ref] = node.el;
-		if (isArray(node.body)) {
-			node.body.forEach(function(n) {
-				collectRefs(n, refs);
-			});
-		}
-
-		return refs;
-	}
-
-	function camelDash(val) {
-		return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-	}
-
-	function collectHtml(node) {
-		var html = "";
-		switch (node.type) {
-			case TYPE_ELEM:
-				html += "<" + node.tag;
-
-				if (node.props) {
-					var style = isValue(node.props.style) ? node.props.style : "";
-					var css = isObj(node.props.style) ? node.props.style : null;
-
-					if (css) {
-						for (var pname in css) {
-							if (css[pname] !== null)
-								style += camelDash(pname) + ": " + css[pname] + ';';
-						}
-					}
-
-					for (var pname in node.props) {
-						if (pname.indexOf("on") === 0)
-							continue;
-
-						var val = node.props[pname];
-
-						if (isFunc(val))
-							val = val();
-
-						if (isObj(val))
-							continue;
-
-						if (val === true)
-							html += " " + pname;
-						else if (val === false) {}
-						else if (val !== null && pname[0] !== ".")
-							html += " " + pname + '="' + val + '"';
-					}
-
-					if (style.length)
-						html += ' style="' + style + '"';
-				}
-
-				// if body-less svg node, auto-close & return
-				if (node.svg && node.tag !== "svg" && !node.body)
-					return html + "/>";
-				else
-					html += ">";
-				break;
-			case TYPE_TEXT:
-				return node.body;
-				break;
-		}
-
-		if (!voidTags.test(node.tag)) {
-			if (isArray(node.body)) {
-				node.body.forEach(function(n2) {
-					html += collectHtml(n2);
-				});
-			}
-			else
-				html += node.body || "";
-
-			html += "</" + node.tag + ">";
-		}
-
-		return html;
-	}
-
-	function create(viewFn, rendArgs, parentBranch) {
-		if (isArray(viewFn))
-			viewFn = createAnonView(viewFn);
-
-		return createView.call(null, viewFn, rendArgs, parentBranch);
-	}
-
-	// wraps a branchDef in an anon view
-	function createAnonView(branchDef) {
-		return function AnonView(redraw, refs, emit) {
-			return {
-				render: function() {
-					return branchDef;
-				}
-			}
-		}
-	}
-
-	function createView(viewFn, rendArgsInit, parentBranch) {
-//		console.log("Create view " + viewFn.name);
-
-		var refs = {};
-		var emit = emit;
+		vm.view[3] = view;
 
 		// creates a curried emit
-		emit.event = function() {
+		emit.create = function() {
 			var args = arguments;
 			return function() {
 				emit.apply(null, args);
@@ -192,61 +100,134 @@
 
 		// targeted by depth or by key, root = 1000
 		emit.redraw = function(targ) {
-			targ = targ || 1000;
+			targ = isVal(targ) ? targ : 1000;
 
 			return function() {
 				emit("_redraw:" + targ);		// todo: pass through args
 			};
 		};
 
-		var rAFresh = create.useRaf ? raft(redraw) : redraw;	// rAF-debounced redraw
+		if (parentNode)
+			return moveTo(parentNode, idxInParent, rendArgs);
+		else
+			return redraw(rendArgs);
 
-		var view = null,
-			branch = null;
+		// transplants node into tree, optionally updating rendArgs
+		function moveTo(parentNodeNew, idxInParentNew, rendArgsNew) {
+			// null out in old parent
+			if (parentNode)
+				parentNode.body[idxInParent] = null;		// splice?
 
-		var vm = {
-			html: html,
-			branch: getBranch,
-			redraw: rAFresh,
-			mount: mount,
-			attach: attachDOM,
-			emit: emit,
-			refs: refs,
-		//  destroy: destroy,
-		};
+			parentNode = parentNodeNew;
+			updIdx(idxInParentNew);
 
-		return redraw();
-
-		function getBranch() {
-			return branch;
+			return redraw(rendArgsNew, false);
 		}
 
-		function attachDOM(el) {
-			hydrateWith(branch, el);
+		function updIdx(idxInParentNew) {
+			idxInParent = idxInParentNew;
+		}
+
+		function redraw(rendArgsNew, isRedrawRoot) {
+			rendArgs = rendArgsNew || rendArgs;
+
+			var old = vm.node;
+			var def = vm.view[3].render.apply(null, rendArgs);
+			var node = initNode(def, parentNode, idxInParent, vm);
+
+			node.key = isVal(_key) ? _key : node.key;
+
+			node.vm = vm;
+			vm.node = node;
+
+			var donor = old;
+
+			// clear donor if new tag, will replaceNode
+			if (old && (node.type !== old.type || node.tag !== old.tag)) {
+				donor = null;
+				var repl = true;
+			}
+
+			buildNode(node, donor);
+
+			// slot sef into parent
+			if (parentNode)
+				parentNode.body[idxInParent] = node;
+
+			if (isRedrawRoot !== false) {
+				old && cleanNode(old);
+
+				// hydrate on all but initial root createView/redraw (handled in mount()/attach())
+				(old || !isRootNode) && hydrateNode(node);
+
+				if (repl) {
+					old.el.parentNode.replaceChild(node.el, old.el);
+					old.el = null;
+				}
+			}
+
+			setTimeout(function() {
+				vm.refs = {};
+				collectRefs(node, vm);
+				exec(vm.view[3].after);
+			}, 0);
+
 			return vm;
 		}
 
-		function html() {
-			return collectHtml(branch);
+		function destroy(live) {
+			if (parentNode) {
+				if (live) {
+					for (var i = idxInParent + 1; i < parentNode.body.length; i++) {
+						var n = parentNode.body[i];
+						n.idx = i - 1;
+						if (n.vm)
+							n.vm.updIdx(n.idx);
+					}
+
+					parentNode.body.splice(idxInParent, 1);
+				}
+				else
+					parentNode.body[idxInParent] = null;
+			}
+
+			cleanNode(vm.node, true);
+
+			vm.node.vm = null;
+
+			// more cleanup?
+
+			exec(vm.view[3].cleanup);
 		}
 
-		function mount(el) {
-			hydrateBranch(branch);
-			el.appendChild(branch.el);
-			return vm;
+		function wrapHandler(fn, filt) {
+			var matches = isVal(filt) ? function(e) { return e.target.matches(filt); } : isFunc(filt) ? filt : null;
+
+			var handler = function(e) {
+				if (!filt || matches(e)) {
+					if (fn.call(e.target, e) === false) {
+						e.preventDefault();
+						e.stopPropagation();		// yay or nay?
+					}
+				}
+
+				switch (createView.autoRedraw) {
+					case REDRAW_SELF: redraw(); break;
+					case REDRAW_ROOT: emit.redraw()(); break;
+				}
+			};
+
+			// expose original for cmp
+			handler._fn = fn;
+
+			return handler;
 		}
-/*
-		function destroy() {
-			branch.el.parent.removeChild(branch.el);
-			branch = null;
-			// todo: other cleanup stuff
-			cleanup();
-		}
-*/
+
 		function emit(event) {
 			var depth = null;
 
-			var evd = event.split(":");  // TODO: by key and by ref also
+			// TODO: by key also
+			var evd = event.split(":");
 
 			if (evd.length == 2) {
 				event =  evd[0];
@@ -255,101 +236,113 @@
 
 			var args = Array.prototype.slice.call(arguments, 1);
 
-			var targ = branch;
+			var targ = vm.node;
 
 			if (depth !== null) {
-				while (--depth && targ.parent)		// && ?
+				while (depth && targ.parent) {
 					targ = targ.parent;
+					if (targ.vm)
+						depth--;
+				}
 
-				targ.onEmit[event].apply(null, args);
+				var ons = targ.vm ? targ.vm.view[3].on : null;
+				var evh = ons ? ons[event] : null;
+				evh && evh.apply(null, args);
 			}
 			else {
 				while (targ) {
-					if (targ.onEmit && event in targ.onEmit) {
-						var res = targ.onEmit[event].apply(null, args);
-						if (res === false) break;
+					if (targ.vm) {
+						var ons = targ.vm.view[3].on;
+						var evh = ons ? ons[event] : null;
+						if (evh) {
+							var res = evh.apply(null, args);
+							if (res === false) break;
+						}
 					}
+
 					targ = targ.parent;
 				}
 			}
 		}
+	}
 
-		function redraw(rendArgsNew) {
-//			console.log("Redraw view " + viewFn.name);
+	// absorbs active dom, assumes it was built by dumping the html()
+	// of this node into innerHTML (isomorphically)
+	// (todo: bind/refs)
+	function hydrateWith(node, el) {
+		node.el = el;
 
-			if (view === null)
-				view = viewFn(rAFresh, refs, emit, vm);
+		if (isArr(node.body)) {
+			for (var i = 0; i < node.body.length; i++) {
+				var node2 = node.body[i];
+				// handle empty text nodes stripped by innerHTML, inject them into DOM here
+				var isEmptyTextNode = node2 && node2.type === TYPE_TEXT && node2.body === "";
+				if (isEmptyTextNode)
+					el.insertBefore(document.createTextNode(""), el.childNodes[i] || null);
 
-	//		var cleanup = view.cleanup || noop;
-
-			var branchDef = view.render.apply(null, rendArgsNew || rendArgsInit || []);
-
-			var newBranch = buildBranch(branchDef, true, parentBranch || null);
-
-			newBranch.name = newBranch.name || viewFn.name || null;
-
-			newBranch.onEmit = view.on || {};
-
-			newBranch.onEmit._redraw = redraw;
-
-			if (branch && similarNodes(branch, newBranch))
-				graftBranch(branch, newBranch, true);
-
-			// update parent's view of self
-			// this could be expensive is hundreds of sub-components redraw quickly
-			// could be avoided if a top-level redraw/sync was agreed to stay manual
-			if (parentBranch) {
-				var selfIdx = parentBranch.body.indexOf(branch);
-				parentBranch.body[selfIdx] = newBranch;
+				hydrateWith(node2, el.childNodes[i]);
 			}
-
-			branch = newBranch;
-
-			// necessary to allow repaint to happen so refs are 'live'
-			// use requestAnimationFrame here instead?
-			setTimeout(function() {
-				collectRefs(branch, refs, true);
-				view.after && view.after();
-			}, 0);
-
-			branch.viewFn = viewFn;	// _key, _name
-
-			branch.view = vm;
-
-			return branch.view;
 		}
 	}
 
-	function buildBranch(raw, isView, parentBranch, svg) {
-		// viewFns
-		if (isFunc(raw))
-			return createView(raw, null, parentBranch).branch();
-		// viewFns with params
-		else if (isArray(raw) && isFunc(raw[0]))
-			return createView(raw[0], raw[1] || [], parentBranch).branch();
-//		else if (isObj(raw) && raw.branch)
-//			return raw.branch;
+	function cleanNode(node, removeSelf) {
+		if (isArr(node.body)) {
+			node.body.forEach(function(n, i) {
+				if (!n) return;
 
-		var node = procNode(raw, svg);
+				if (n.vm)
+					n.vm.destroy();
+				else {
+					if (n.el && n.el.parentNode)
+						 n.el.parentNode.removeChild(n.el);
+					else
+						cleanNode(n);
+				}
+			});
 
-		svg = svg || node.svg;
-
-		if (isView) {
-			node.parent = parentBranch || null;
-			parentBranch = node;
+			node.body = null;
 		}
 
-		if (isArray(node.body)) {
-			var keyMap = {},
-				anyKeys = false;
+		if (removeSelf && node.el) {
+			node.el.parentNode.removeChild(node.el);
+			node.el = null;
+		}
+	}
 
-			node.body = node.body.map(function(raw, i) {
-				var node2 = buildBranch(raw, false, parentBranch, svg);
-				if (node2.key !== null) {
-					keyMap[node2.key] = i;
+	// builds out node, excluding views.
+	// collects keyMap needed for grafting
+	function initNode(def, parentNode, idxInParent, ownerVm) {
+		var node = procNode(def, ownerVm);
+
+		node.parent = parentNode;
+		node.idx = idxInParent;
+		node.ns = parentNode && parentNode.ns ? parentNode.ns : (node.tag === "svg" || node.tag === "math") ? node.tag : null;
+	//	node.svg = parentNode ? parentNode.svg : node.tag === "svg";
+	//	node.math = parentNode ? parentNode.math : node.tag === "math";
+
+		if (isArr(node.body)) {
+			var keyMap = {}, anyKeys = false;
+
+			node.body.forEach(function(def2, i) {
+				var key = null, node2 = null;
+
+				if (isFunc(def2))
+					def2 = [def2];
+
+				if (isArr(def2) && isFunc(def2[0]))
+					key = def2[2];
+				else {
+					node2 = initNode(def2, node, i, ownerVm);
+					key = node2.key;
+				}
+
+				if (isVal(key)) {
+					keyMap[key] = i;
 					anyKeys = true;
 				}
-				return node2;
+
+
+				node.body[i] = node2 || def2;
 			});
 
 			if (anyKeys)
@@ -357,6 +350,178 @@
 		}
 
 		return node;
+	}
+
+	// def is tpl returned by render()
+	// old is matched donor vnode obj
+	function buildNode(node, donor) {
+		if (donor)
+			graftNode(donor, node);
+
+		if (isArr(node.body)) {
+			node.body.forEach(function(kid, i) {
+				var isView = isArr(kid);
+
+				if (donor) {
+					var donor2loc = findDonor(kid, node, donor);	// , i, i
+
+					if (donor2loc !== null) {
+						var donor2idx = donor2loc[0];
+						var donor2type = donor2loc[1];
+
+						var donor2 = donor.body[donor2idx];
+
+						if (isView && donor2.vm) {
+							if (donor2type === DONOR_NODE)
+								donor2.vm.moveTo(node, i, kid[3]);
+							else if (donor2type === DONOR_DOM) {
+								// TODO: instead, re-use old dom with new node here (loose match)
+								createView.apply(null, [kid[0], kid[1], kid[2], kid[3], kid[4], node, i]);
+								return;
+							}
+						}
+						else
+							node.body[i] = buildNode(kid, donor2);
+
+						return;
+					}
+				}
+				// fall through no donor found
+				if (isView)
+					createView.apply(null, [kid[0], kid[1], kid[2], kid[3], kid[4], node, i]);
+			});
+		}
+
+		return node;
+	}
+
+	function hydrateNode(node) {
+		var wasDry = !node.el;
+
+		if (node.type == TYPE_ELEM) {
+			if (wasDry) {
+				node.el = node.ns ? doc.createElementNS(NS[node.ns], node.tag) : doc.createElement(node.tag);
+
+				if (node.vm)
+					node.el._vm = node.vm;
+
+				node.props && patchProps(node);
+			}
+
+			if (isArr(node.body)) {
+				node.body.forEach(function(n2, i) {
+					hydrateNode(n2);
+				});
+			}
+			// for body defs like ["a", "blaahhh"], entire body can be dumped at once
+			else if (wasDry && isVal(node.body))
+				node.el.textContent = node.body;
+		}
+		// for body defs like ["foo", ["a"], "bar"], create separate textnodes
+		else if (node.type == TYPE_TEXT && wasDry)
+			node.el = doc.createTextNode(node.body);
+
+		// slot this element into correct position
+		var par = node.parent;
+
+		// insert and/or reorder
+		if (par && par.el && par.el.childNodes[node.idx] !== node.el)
+			par.el.insertBefore(node.el, par.el.childNodes[node.idx]);
+	}
+
+	function findDonor(node, newParent, oldParent, fromIdx, toIdx) {
+		var newIsView = isArr(node);
+		var newKey = newIsView ? node[2] || null : node.key;
+		var oldMap = oldParent.keyMap;
+		var newMap = newParent.keyMap;
+		var oldBody = oldParent.body;
+		var newBody = newParent.body;
+
+		// fast exact match by key
+		if (newKey !== null && oldMap && isVal(oldMap[newKey]))
+			return [oldMap[newKey], DONOR_NODE];
+
+		// if from or to > newbody length, return null
+		// todo: from keys here
+		fromIdx = fromIdx || 0;
+		if (fromIdx > oldBody.length - 1) return null;
+		toIdx = toIdx === 0 ? 0 : toIdx || oldBody.length - 1;
+
+		var approx = null;
+
+		// else search for similar & not keyed in newKeymap
+		for (var i = fromIdx; i <= toIdx; i++) {
+			var o = oldBody[i];
+			if (o === null || !o.el) continue;
+
+			// views can only graft from other views
+			if (newIsView && o.vm) {
+				// approx match by viewFn
+				if (o.vm.view[0] === node[0]) {
+					// exact match by model
+					if (o.vm.view[1] === node[1])
+						return [i, DONOR_NODE];
+
+					var existsInNew = false;
+
+					// it's expensive without WeakMaps to check if unkeyed views' old view/model combo
+					// exists in new tree, so they will be destroyed and dom re-used....unless domvm.viewScan = true
+					if (createView.viewScan) {
+						for (var j = 0; j < newBody.length; j++) {
+							var n = newBody[j];
+							if (!n.el && n.vm && n.vm.view[0] === o.vm.view[0] && n.vm.view[1] === o.vm.view[1]) {
+								existsInNew = true;
+								break;
+								// TODO: should be able to push-graft new one here, to avoid
+								// o.vm.moveTo(newParent, j, rendArgsNew);
+								// buildNode(newBody[j]);
+							}
+						}
+					}
+
+					// removed keyed view = can reuse its DOM if by end of list, no exacts were found
+					if (!existsInNew && !approx && newMap && !isVal(newMap[o.key]))
+						approx = [i, DONOR_DOM];
+				}
+			}
+			else if (areSimilar(o, node))
+				// matching dom nodes without keys
+				if (o.key === null || (!newMap || !isVal(newMap[o.key])))
+					return [i, DONOR_DOM];
+		}
+
+		return approx;
+	}
+
+	function areSimilar(o, n) {
+		return n.type === o.type && (n.type === TYPE_TEXT || n.tag !== null && n.tag === o.tag);
+	}
+
+	function graftNode(o, n) {
+		// move element over
+		n.el = o.el;
+		o.el = null;
+
+		if (n.type === TYPE_TEXT && n.body !== o.body) {
+			n.el.nodeValue = n.body;
+			return;
+		}
+
+		patchProps(n, o);
+
+		var nTxt = !isArr(n.body);
+		var oTxt = !isArr(o.body);
+
+		// []|text -> text
+		if (nTxt && n.body !== o.body) {
+			if (oTxt && n.el.firstChild)
+				n.el.firstChild.nodeValue = n.body;
+			else
+				n.el.textContent = n.body;
+		}
+		// text -> []
+		else if (oTxt && !nTxt)
+			n.el.textContent = "";
 	}
 
 	function parseTag(rawTag) {
@@ -406,30 +571,32 @@
 		}
 	}
 
-	function procNode(raw, svg) {
+	function procNode(raw, ownerVm) {
 		var node = {
-			type: null,   // elem, text, frag (todo)
-			name: null,   // view name populated externally by createView
-			key: null,	// view key populated externally by createView
+			type: null,		// elem, text, frag (todo)
+			name: null,		// view name populated externally by createView
+			key: null,		// view key populated externally by createView
 			ref: null,
+			idx: null,
+			parent: null,
 			tag: null,
-			svg: false,
+//			svg: false,
+//			math: false,
+			ns: null,
 			guard: false,	// created, updated, but children never touched
-			dataset: null,  // TODO
 			props: null,
 			on: null,
-			onEmit: null,
 			el: null,
 			keyMap: null,	// holds idxs of any keyed children
 			body: null,
 		};
 
-		if (isArray(raw) && raw.length) {
+		if (isArr(raw) && raw.length) {
 			node.type = TYPE_ELEM;
 
 			switch (raw.length) {
 				case 2:
-					if (isArray(raw[1]))
+					if (isArr(raw[1]))
 						node.body = raw[1];
 					else if (isObj(raw[1]))
 						node.props = raw[1];
@@ -445,21 +612,16 @@
 			procTag(raw[0], node);
 
 			if (node.props)
-				procProps(node.props, node);
+				procProps(node.props, node, ownerVm);
 
 			// isFunc(body)?
-
-			// todo: make uniform, but still avoid createTextNode? if (node.body.length == 1 && isValue(node.body[0]))  node.el.textContent = 1, node.body = [newnode, inject firstChild]
-		//  if (isValue(node.body))
-		//	  node.body = [node.body];
-
-			node.svg = svg || node.tag == "svg";
 		}
 		// plain strings/numbers
-		else if (isValue(raw)) {
+		else if (isVal(raw)) {
 			node.type = TYPE_TEXT;
 			node.body = raw;
 		}
+		/*
 		// raw elements
 		else if (isObj(raw) && raw.nodeType) {
 			node.type = TYPE_ELEM;
@@ -467,14 +629,21 @@
 			node.tag = raw.nodeName;
 		//  node.props?
 		}
+		*/
 
 		return node;
 	}
 
-	function procProps(props, node) {
-		// getters
+	function isEvProp(prop) {
+		return prop.substr(0,2) === "on";
+	}
+
+	function procProps(props, node, ownerVm) {
 		for (var i in props) {
-			if (isFunc(props[i]) && i.indexOf("on") == -1)
+			if (isEvProp(i))
+				props[i] = isFunc(props[i]) ? ownerVm.wrapHandler(props[i]) : isArr(props[i]) ? ownerVm.wrapHandler(props[i][0], props[i][1]) : null;
+			// getters
+			else if (isFunc(props[i]))
 				props[i] = props[i]();
 		}
 
@@ -486,18 +655,11 @@
 			}
 		}
 
-		// prefixed attr (expensive to parse/convert)
-		// "on*","data-"
-
-		// helper collections
-	//  if (props.on)
-	//	node.on = props.on;
-	//  if (props.data)
-	//	node.dataset = props.data;
-
-		// special properties
-
-		node.key = props._key || props._ref || props.id || props.name || null;
+		node.key =
+			isVal(props._key)	? props._key	:
+			isVal(props._ref)	? props._ref	:
+			isVal(props.id)		? props.id		:
+			isVal(props.name)	? props.name	: null;
 
 		if (props._ref)
 			node.ref = props._ref;
@@ -506,172 +668,10 @@
 		if (props._guard)
 			node.guard = props._guard;
 
-	//  props.on =
-		props.data =
-
 		props._ref =
 		props._key =
 		props._name =
 		props._guard = null;
-	}
-
-	function hydrateBranch(node) {
-		if (node.type == TYPE_ELEM) {
-			if (!node.el) {
-				node.el = node.svg ? doc.createElementNS(svgNs, node.tag) : doc.createElement(node.tag);
-				// if "svg", xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  //version="1.1"
-			//  node.el.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href');
-				node.props && patchProps(node);
-			}
-
-			if (isArray(node.body)) {
-			//  btw, createDocumentFragment is more expensive here
-				node.body.forEach(function(n2) {
-					hydrateBranch(n2);
-					node.el.appendChild(n2.el);
-				});
-			}
-			// for body defs like ["a", "blaahhh"], entire body can be dumped at once
-			else if (isValue(node.body))
-				node.el.textContent = node.body;
-		}
-		// for body defs like ["foo", ["a"], "bar"], create separate textnodes
-		else if (node.type == TYPE_TEXT)
-			node.el = doc.createTextNode(node.body);
-	}
-
-	// absorbs active dom, assumes it was built by dumping the html()
-	// of this node into innerHTML (isomorphically)
-	// (todo: bind/refs)
-	function hydrateWith(node, el) {
-		node.el = el;
-		var kids = el.children;
-
-		if (isArray(node.body)) {
-			for (var i = 0; i < node.body.length; i++)
-				hydrateWith(node.body[i], kids[i]);  // does the closure's version of returned branch update?
-		}
-	}
-
-	function similarNodes(o, n) {
-		return (n.key !== null && n.key === o.key) || (n.type === o.type && (n.type === TYPE_TEXT || n.tag !== null && n.tag === o.tag || n.name !== null && n.name === o.name));
-	}
-
-	// accepts parents' keymaps
-	function findDonor(newNode, oldBody, oldKeymap, newKeymap, fromIdx, toIdx) {
-		// if keyed and exists in old body
-		if (newNode.key !== null && oldKeymap && newNode.key in oldKeymap) {
-			var oldIdx = oldKeymap[newNode.key];
-			return oldBody[oldIdx];
-		}
-
-		fromIdx = fromIdx || 0;
-
-		if (fromIdx > oldBody.length - 1)
-			return null;
-
-		toIdx = toIdx === 0 ? 0 : toIdx || oldBody.length - 1;
-
-		// else search for similar & not keyed in newKeymap
-		for (var i = fromIdx; i <= toIdx; i++) {
-			var oldNode = oldBody[i];
-			if (!oldNode.el)		// skip already grafted
-				continue;
-			if (similarNodes(oldNode, newNode)) {
-				if (oldNode.key === null || !newKeymap || (newKeymap && !(oldNode.key in newKeymap)))
-					return oldNode;
-			}
-		}
-
-		return null;
-	}
-
-	// transplant nodes and from old to new re-use
-	function graftBranch(o, n) {
-		graftMatchedNode(o, n);
-
-		// if both old and new have non-empty array bodies, attempt graft old->new, else hydrate new
-		if (isArray(n.body) && n.body.length) {
-			if (isArray(o.body) && o.body.length) {
-				var oldLast = o.body.length - 1;
-				for (var i = 0, j = 0; i < n.body.length; i++) {
-					var n2 = n.body[i];
-
-					// without keys, this may be expensive if body is 1000s of nodes, benefits of node
-					// reuse may not jusify re-iterating full old body to find reusable and ungrafted nodes
-					// fromIdx/toIdx may be passed in to only iterate roughly (or exactly) parallel nodes
-					var o2 = findDonor(n2, o.body, o.keyMap, n.keyMap, j);  // , i, i
-
-					if (o2) {
-						graftBranch(o2, n2);
-						j++;
-					}
-					else {
-						hydrateBranch(n2);
-
-						if (i >= oldLast)
-							n.el.appendChild(n2.el);
-						else
-							n.el.insertBefore(n2.el, n.el.childNodes[i]);
-					}
-				}
-			}
-			// nothing to graft, hydrate new nodes
-			else
-				hydrateBranch(n);	  // todo: test, bad?
-		}
-
-		if (isArray(o.body)) {
-			// clean old body that's left (that wasnt grafted)
-			o.body.forEach(function(node) {
-				if (node.el) {
-					if (node.el.parentNode)
-						node.el.parentNode.removeChild(node.el);	// set to null?
-					node.el = null;
-				}
-				// other cleanup here?, todo: look for any mem leaks, clean seenTags?
-			});
-
-			o.body = null;
-		}
-
-		if (isArray(n.body)) {
-			// re-sort as needed
-			var kids = n.el.childNodes;
-			n.body.forEach(function(n2, i) {
-				if (kids[i] !== n2.el)
-					n.el.insertBefore(n2.el, kids[i]);
-			});
-		}
-	}
-
-	function graftMatchedNode(o, n) {
-		// move element over
-		n.el = o.el;
-		o.el = null;
-
-		if (n.type === TYPE_TEXT && n.body !== o.body) {
-			n.el.nodeValue = n.body;
-			return;
-		}
-
-		patchProps(n, o);
-
-		var nTxt = !isArray(n.body);
-		var oTxt = !isArray(o.body);
-		// []|text -> text
-		if (nTxt && n.body !== o.body) {
-			if (oTxt && n.el.firstChild)
-				n.el.firstChild.nodeValue = n.body;
-			else
-				n.el.textContent = n.body;
-		}
-		// text -> []
-		else if (oTxt && !nTxt) {
-			while (n.el.firstChild) {
-				n.el.removeChild(n.el.firstChild);
-			}
-		}
 	}
 
 	function patchProps(n, o) {
@@ -687,81 +687,207 @@
 			var ns = np.style;
 
 			if (isObj(os) || isObj(ns)) {
-				patch(n.el, os || {}, ns || {}, setCss, delCss, n.svg, init);
+				patch(n.el, os || {}, ns || {}, setCss, delCss, n.ns, init);
 				op.style = np.style = null;
 			}
 
 			// alter attributes
-			patch(n.el, op, np, setAttr, delAttr, n.svg, init);
+			patch(n.el, op, np, setAttr, delAttr, n.ns, init);
 
 			if (ns)
 				np.style = ns;
 		}
-
-		// todo: parse data-* attr (slow)	indexOf("data-") == 0
-//	  if (o.dataset || n.dataset)
-//		  patch(n.el, o.dataset || {}, n.dataset || {}, setData, delData, n.svg, init);
-
-		// todo? parse on* handlers (slow)  indexOf("on") == 0
-//	  if (o.on || n.on)
-//		  patch(n.el, o.on || {}, n.on || {}, setEvt, delEvt, n.svg, init);
 	}
 
 	// op = old props, np = new props, set = setter, del = unsetter
-	function patch(targ, op, np, set, del, svg, init) {
-		svg = svg || false;
-
+	function patch(targ, op, np, set, del, ns, init) {
 		for (var name in np) {
 			if (np[name] === null) continue;
 
 			// add new or mutate existing not matching old
-			if (!(name in op) || np[name] !== op[name])
-				set(targ, name, np[name], svg, init);
+			// also handles diffing of wrapped event handlers via exposed original (_fn)
+			if (!(name in op) || (isEvProp(name) ? np[name]._fn !== op[name]._fn : np[name] !== op[name]))
+				set(targ, name, np[name], ns, init);
 		}
 		// remove any removed
 		for (var name in op) {
 			if (op[name] === null) continue;
 
 			if (!(name in np))
-				del(targ, name, svg, init);
+				del(targ, name, ns, init);
 		}
 	}
 
 //  function setEvt(targ, name, val) {targ.addEventListener(name, val, false);};	// tofix: if old node exists (grafting), then don't re-add
 //  function delEvt(targ, name, val) {targ.removeEventListener(name, val, false);};
 
-	function setData(targ, name, val, svg, init) {targ.dataset[name] = val;};
-	function delData(targ, name, svg, init) {targ.dataset[name] = "";};
+	function setData(targ, name, val, ns, init) {targ.dataset[name] = val;};
+	function delData(targ, name, ns, init) {targ.dataset[name] = "";};
 
 	function setCss(targ, name, val) {targ.style[name] = val;};
 	function delCss(targ, name) {targ.style[name] = "";};
 
-	function setAttr(targ, name, val, svg, init) {
-		if (name[0] === ".")
-			targ[name.substr(1)] = val;
+	function setAttr(targ, name, val, ns, init) {
+		if (name[0] === ".") {
+			var n = name.substr(1);
+			if (ns === "svg")
+				targ[n].baseVal = val;
+			else
+				targ[n] = val;
+		}
 		else if (name === "class")
 			targ.className = val;	  // svg is setattrns?
-		else if (name === "id" || name.indexOf("on") === 0)
+		else if (name === "id" || isEvProp(name))
 			targ[name] = val;	  // else test delegation for val === function vs object
 		else if (val === false)
-			delAttr(targ, name, svg, init);
+			delAttr(targ, name, ns, init);
 		else {
 			if (val === true)
 				val = "";
-			svg ? targ.setAttributeNS(null, name, val) : targ.setAttribute(name, val);
+			ns ? targ.setAttributeNS(null, name, val) : targ.setAttribute(name, val);
 		}
 	}
 
-	function delAttr(targ, name, svg, init) {
+	function delAttr(targ, name, ns, init) {
 		if (init) return;
 
-		if (name[0] === ".")
-			targ[name.substr(1)] = null;		// or = ""?
+		if (name[0] === ".") {
+			var n = name.substr(1);
+			if (ns === "svg")
+				targ[n].baseVal = null;
+			else
+				targ[n] = null;					// or = ""?
+		}
 		else if (name === "class")
 			targ.className = "";				// svg is setattrns?
-		else if (name.indexOf("on") === 0)
+		else if (name === "id" || isEvProp(name))
 			targ[name] = null;
 		else
-			svg ? targ.removeAttributeNS(null, name) : targ.removeAttribute(name);
+			ns ? targ.removeAttributeNS(null, name) : targ.removeAttribute(name);
+	}
+
+	function collectRefs(node, parentVm) {
+		var refs = (node.vm || parentVm).refs;
+
+		if (node.ref !== null && node.el)
+			refs[node.ref] = node.el;
+		if (isArr(node.body)) {
+			node.body.forEach(function(n) {
+				collectRefs(n, node.vm || parentVm);
+			});
+		}
+	}
+
+	function collectHtml(node) {
+		var html = "";
+		switch (node.type) {
+			case TYPE_ELEM:
+				html += "<" + node.tag;
+
+				if (node.props) {
+					var style = isVal(node.props.style) ? node.props.style : "";
+					var css = isObj(node.props.style) ? node.props.style : null;
+
+					if (css) {
+						for (var pname in css) {
+							if (css[pname] !== null)
+								style += camelDash(pname) + ": " + css[pname] + ';';
+						}
+					}
+
+					for (var pname in node.props) {
+						if (isEvProp(pname))
+							continue;
+
+						var val = node.props[pname];
+
+						if (isFunc(val))
+							val = val();
+
+						if (isObj(val))
+							continue;
+
+						if (val === true)
+							html += " " + pname;
+						else if (val === false) {}
+						else if (val !== null && pname[0] !== ".")
+							html += " " + pname + '="' + val + '"';
+					}
+
+					if (style.length)
+						html += ' style="' + style + '"';
+				}
+
+				// if body-less svg node, auto-close & return
+				if (node.ns && node.tag !== "svg" && node.tag !== "math" && !node.body)
+					return html + "/>";
+				else
+					html += ">";
+				break;
+			case TYPE_TEXT:
+				return node.body;
+				break;
+		}
+
+		if (!voidTags.test(node.tag)) {
+			if (isArr(node.body)) {
+				node.body.forEach(function(n2) {
+					html += collectHtml(n2);
+				});
+			}
+			else
+				html += node.body || "";
+
+			html += "</" + node.tag + ">";
+		}
+
+		return html;
+	}
+
+	function isArr(val) {
+		return Array.isArray(val);
+	}
+
+	function isVal(val) {
+		var t = typeof val;
+		return t === "string" || t === "number" && !isNaN(val) && val !== Infinity;
+	}
+
+	function isObj(val) {
+		return Object.prototype.toString.call(val) === "[object Object]";
+	}
+
+	function isFunc(val) {
+		return typeof val === "function";
+	}
+
+	function camelDash(val) {
+		return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+	}
+
+	// saves from having to do fn && fn()
+	function exec(fn, args) {
+		if (fn)
+			return fn.apply(null, args);
+	}
+
+	// https://github.com/darsain/raft
+	// rAF throttler, aggregates multiple repeated redraw calls within single animframe
+	function raft(fn) {
+		if (!win.requestAnimationFrame)
+			return fn;
+
+		var id, ctx, args;
+
+		function call() {
+			id = 0;
+			fn.apply(ctx, args);
+		}
+
+		return function() {
+			ctx = this;
+			args = arguments;
+			if (!id) id = win.requestAnimationFrame(call);
+		};
 	}
 });
