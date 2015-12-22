@@ -102,9 +102,11 @@
 		emit.redraw = function(targ) {
 			targ = isVal(targ) ? targ : 1000;
 
-			return function() {
-				emit("_redraw:" + targ);		// todo: pass through args
-			};
+			emit("_redraw:" + targ);
+
+		//	return function() {
+		//		emit("_redraw:" + targ);		// todo: pass through args
+		//	};
 		};
 
 		if (parentNode)
