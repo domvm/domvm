@@ -82,7 +82,7 @@
 			wrapHandler: wrapHandler,
 		};
 
-		var view = viewFn(vm, model, _key);
+		var view = viewFn.call(model, vm, model, _key);
 
 		view = isFunc(view) ? {render: view} : view;
 		view.on = view.on || {};
@@ -134,7 +134,7 @@
 			rendArgs = rendArgsNew || rendArgs;
 
 			var old = vm.node;
-			var def = vm.view[3].render.apply(null, rendArgs);
+			var def = vm.view[3].render.apply(model, rendArgs);
 			var node = initNode(def, parentNode, idxInParent, vm);
 
 			node.key = isVal(_key) ? _key : node.key;
