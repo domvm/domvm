@@ -365,6 +365,22 @@ QUnit.module("Other mods");
 		}
 	}
 
+	QUnit.test('flatten arrays of arrays', function(assert) {
+		var items = ["a","b","c"];
+
+		tpl = ["div", [
+			items.map((item) => ["div", item]),
+			["br"],
+		]];
+		var expcHtml = '<div><div>a</div><div>b</div><div>c</div><br></div>';
+
+		instr.start();
+		var vm = domvm(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 5, insertBefore: 5, textContent: 3 });
+	});
+
 	QUnit.test('(root) span -> a', function(assert) {
 		tpl = ["span", "foo"];
 		var expcHtml = '<span>foo</span>';

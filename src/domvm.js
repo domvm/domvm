@@ -325,8 +325,17 @@
 		if (isArr(node.body)) {
 			var keyMap = {}, anyKeys = false;
 
-			node.body.forEach(function(def2, i) {
+			for (var i = 0, len = node.body.length; i < len; i++) {
+				var def2 = node.body[i];
+
 				var key = null, node2 = null;
+
+				// handle arrays of arrays, avoids need for concat() in tpls
+				if (isArr(def2) && isArr(def2[0])) {
+					insertArr(node.body, def2, i, 1);
+					len = node.body.length;
+					def2 = node.body[i];
+				}
 
 				if (isFunc(def2))
 					def2 = [def2];
@@ -343,9 +352,8 @@
 					anyKeys = true;
 				}
 
-
 				node.body[i] = node2 || def2;
-			});
+			}
 
 			if (anyKeys)
 				node.keyMap = keyMap;
@@ -871,6 +879,10 @@
 	function exec(fn, args) {
 		if (fn)
 			return fn.apply(null, args);
+	}
+
+	function insertArr(targ, arr, pos, rem) {
+		targ.splice.apply(targ, [pos, rem].concat(arr));
 	}
 
 	// https://github.com/darsain/raft
