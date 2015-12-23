@@ -207,7 +207,7 @@
 
 			var handler = function(e) {
 				if (!filt || matches(e)) {
-					if (fn.call(e.target, e) === false) {
+					if (fn.call(model, e) === false) {
 						e.preventDefault();
 						e.stopPropagation();		// yay or nay?
 					}
@@ -215,7 +215,7 @@
 
 				switch (createView.autoRedraw) {
 					case REDRAW_SELF: redraw(); break;
-					case REDRAW_ROOT: emit.redraw()(); break;
+					case REDRAW_ROOT: emit.redraw(); break;
 				}
 			};
 
