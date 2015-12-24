@@ -334,7 +334,7 @@
 				if (isArr(def2) && isArr(def2[0])) {
 					insertArr(node.body, def2, i, 1);
 					len = node.body.length;
-					def2 = node.body[i];
+					i--; continue;	// avoids de-opt
 				}
 
 				if (isFunc(def2))
