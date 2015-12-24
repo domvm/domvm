@@ -89,7 +89,7 @@
 		view.on._redraw = redraw;
 
 		vm.view[3] = view;
-
+/*
 		// creates a curried emit
 		emit.create = function() {
 			var args = arguments;
@@ -97,7 +97,7 @@
 				emit.apply(null, args);
 			};
 		};
-
+*/
 		// targeted by depth or by key, root = 1000
 		emit.redraw = function(targ) {
 			targ = isVal(targ) ? targ : 1000;
@@ -132,6 +132,8 @@
 
 		function redraw(rendArgsNew, isRedrawRoot) {
 			rendArgs = rendArgsNew || rendArgs;
+
+			vm.refs = {};
 
 			var old = vm.node;
 			var def = vm.view[3].render.apply(model, rendArgs);
@@ -169,8 +171,8 @@
 			}
 
 			setTimeout(function() {
-				vm.refs = {};
-				collectRefs(node, vm);
+				collectRefs(vm);
+
 				exec(vm.view[3].after);
 			}, 0);
 
@@ -316,11 +318,13 @@
 	function initNode(def, parentNode, idxInParent, ownerVm) {
 		var node = procNode(def, ownerVm);
 
+		// store a ref to this node for later ref collection to avoid full tree walking
+		if (node.ref !== null)
+			ownerVm.refs[node.ref] = node;
+
 		node.parent = parentNode;
 		node.idx = idxInParent;
 		node.ns = parentNode && parentNode.ns ? parentNode.ns : (node.tag === "svg" || node.tag === "math") ? node.tag : null;
-	//	node.svg = parentNode ? parentNode.svg : node.tag === "svg";
-	//	node.math = parentNode ? parentNode.math : node.tag === "math";
 
 		if (isArr(node.body)) {
 			var keyMap = {}, anyKeys = false;
@@ -419,9 +423,7 @@
 			}
 
 			if (isArr(node.body)) {
-				node.body.forEach(function(n2, i) {
-					hydrateNode(n2);
-				});
+				node.body.forEach(hydrateNode);
 			}
 			// for body defs like ["a", "blaahhh"], entire body can be dumped at once
 			else if (wasDry && isVal(node.body))
@@ -584,7 +586,7 @@
 	function procNode(raw, ownerVm) {
 		var node = {
 			type: null,		// elem, text, frag (todo)
-			name: null,		// view name populated externally by createView
+//			name: null,		// view name populated externally by createView
 			key: null,		// view key populated externally by createView
 			ref: null,
 			idx: null,
@@ -595,7 +597,7 @@
 			ns: null,
 			guard: false,	// created, updated, but children never touched
 			props: null,
-			on: null,
+//			on: null,
 			el: null,
 			keyMap: null,	// holds idxs of any keyed children
 			body: null,
@@ -673,14 +675,14 @@
 
 		if (props._ref)
 			node.ref = props._ref;
-		if (props._name)
-			node.name = props._name;
+//		if (props._name)
+//			node.name = props._name;
 		if (props._guard)
 			node.guard = props._guard;
 
 		props._ref =
 		props._key =
-		props._name =
+//		props._name =
 		props._guard = null;
 	}
 
@@ -731,8 +733,8 @@
 //  function setEvt(targ, name, val) {targ.addEventListener(name, val, false);};	// tofix: if old node exists (grafting), then don't re-add
 //  function delEvt(targ, name, val) {targ.removeEventListener(name, val, false);};
 
-	function setData(targ, name, val, ns, init) {targ.dataset[name] = val;};
-	function delData(targ, name, ns, init) {targ.dataset[name] = "";};
+//	function setData(targ, name, val, ns, init) {targ.dataset[name] = val;};
+//	function delData(targ, name, ns, init) {targ.dataset[name] = "";};
 
 	function setCss(targ, name, val) {targ.style[name] = val;};
 	function delCss(targ, name) {targ.style[name] = "";};
@@ -776,16 +778,9 @@
 			ns ? targ.removeAttributeNS(null, name) : targ.removeAttribute(name);
 	}
 
-	function collectRefs(node, parentVm) {
-		var refs = (node.vm || parentVm).refs;
-
-		if (node.ref !== null && node.el)
-			refs[node.ref] = node.el;
-		if (isArr(node.body)) {
-			node.body.forEach(function(n) {
-				collectRefs(n, node.vm || parentVm);
-			});
-		}
+	function collectRefs(vm) {
+		for (var i in vm.refs)
+			vm.refs[i] = vm.refs[i].el;
 	}
 
 	function collectHtml(node) {

@@ -879,7 +879,6 @@ QUnit.module("Subview redraw() Branch Consistency");
 
 		var ctx = this;
 		this.view = function ParentView(vm) {
-			// viewState should be closured here, and this func only called once
 			ctx.vm = vm;
 			return {
 				render: function() {
@@ -894,7 +893,6 @@ QUnit.module("Subview redraw() Branch Consistency");
 
 		var ctx = this;
 		this.view = function ChildView(vm) {
-			// viewState should be closured here, and this func only called once
 			ctx.vm = vm;
 			return {
 				render: function() {
@@ -959,22 +957,23 @@ QUnit.module("Subview redraw() Branch Consistency");
 	// TODO: also with passed-in data
 })();
 
-QUnit.module("after()");
+QUnit.module("after() & refs");
 
 (function() {
 	QUnit.test('after() is called on self', function(assert) {
-		assert.expect(1);
+		assert.expect(2);
 
 		var done = assert.async();
 
 		function MyView(vm) {
-			// viewState should be closured here, and this func only called once
 			return {
+				render: function() {
+					return ["span#zzz", {_ref: "mySpan3"}, "foo"];
+				},
 				after: function() {
 					assert.ok(true, "Self after()");
-				},
-				render: function() {
-					return ["span", "foo"];
+					assert.ok(vm.refs.mySpan3 === document.getElementById("zzz"), "Self ref");
+					console.log(vm.refs);
 				}
 			}
 		}
@@ -985,30 +984,32 @@ QUnit.module("after()");
 	});
 
 	QUnit.test('after() is called on subviews when parent redraws', function(assert) {
-		assert.expect(2);
+		assert.expect(4);
 
 		var done = assert.async();
 
 		function MyView(vm) {
-			// viewState should be closured here, and this func only called once
 			return {
+				render: function() {
+					return ["span#xxx", {_ref: "mySpan1"}, [MyView2]];
+				},
 				after: function() {
 					assert.ok(true, "Parent after()");
-				},
-				render: function() {
-					return ["span", [MyView2]];
+					assert.ok(vm.refs.mySpan1 === document.getElementById("xxx"), "Parent ref");
+					console.log(vm.refs);
 				}
 			}
 		}
 
 		function MyView2(vm) {
-			// viewState should be closured here, and this func only called once
 			return {
+				render: function() {
+					return ["span#yyy", {_ref: "mySpan2"}, "foo"];
+				},
 				after: function() {
 					assert.ok(true, "Child after()");
-				},
-				render: function() {
-					return ["span", "foo"];
+					assert.ok(vm.refs.mySpan2 === document.getElementById("yyy"), "Child ref");
+					console.log(vm.refs);
 				}
 			}
 		}
@@ -1016,5 +1017,7 @@ QUnit.module("after()");
 		var vm = domvm(MyView).mount(testyDiv);
 
 		setTimeout(done, 1);
+
+		// todo: ensure refs get re-ref'd on redraw/reuse
 	});
 })();

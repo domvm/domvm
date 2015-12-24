@@ -28,26 +28,25 @@
 			render: function() {
 				return ["table", {"class": "table table-striped latest-data"}, [
 					["tbody", dbs.map(function(db) {
-						var top5 = db.topFiveQueries.map(function(q) {
-							return ["td", {"class": "Query " + q.className}, [
-								q.elapsed,
-								["div", {"class": "popover left"}, [
-									["div", {"class": "popover-content"}, q.query],
-									["div", {"class": "arrow"}]
-								]],
-							]];
-						});
-
 						return ["tr", [
 							["td", {"class": "dbname"}, db.name],
 							["td", {"class": "query-count"}, [
 								["span", {"class": db.countClassName}, db.queries.length]
-							]]
-						].concat(top5)];
+							]],
+							db.topFiveQueries.map(function(q) {
+								return ["td", {"class": "Query " + q.className}, [
+									q.elapsed,
+									["div", {"class": "popover left"}, [
+										["div", {"class": "popover-content"}, q.query],
+										["div", {"class": "arrow"}]
+									]]
+								]]
+							})
+						]]
 					})]
-				]];
+				]]
 			}
-		};
+		}
 	}
 
 	var vw = domvm(Table).mount(document.getElementById("body2"));
