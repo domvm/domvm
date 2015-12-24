@@ -49,7 +49,14 @@
 		}
 	}
 
-	var vw = domvm(Table).mount(document.getElementById("body2"));
+	console.time("initial render");
+		console.time("vtree build");
+			var vw = domvm(Table);
+		console.timeEnd("vtree build");
+		console.time("mount");
+			vw.mount(document.getElementById("body2"));
+		console.timeEnd("mount");
+	console.timeEnd("initial render");
 
 /*  isomorphic test
 	var vw = domvm(Table);
