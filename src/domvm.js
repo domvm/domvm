@@ -57,6 +57,7 @@
 		}
 
 		var vm = {
+			state: {},
 			node: null,
 			view: [viewFn, model, _key],
 			redraw: createView.useRaf ? raft(redraw) : redraw,
