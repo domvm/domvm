@@ -748,7 +748,7 @@
 				targ[n] = val;
 		}
 		else if (name === "class")
-			targ.className = val;	  // svg is setattrns?
+			targ.className = val;
 		else if (name === "id" || isEvProp(name))
 			targ[name] = val;	  // else test delegation for val === function vs object
 		else if (val === false)
@@ -756,7 +756,8 @@
 		else {
 			if (val === true)
 				val = "";
-			ns ? targ.setAttributeNS(null, name, val) : targ.setAttribute(name, val);
+
+			targ.setAttribute(name, val);
 		}
 	}
 
@@ -771,11 +772,11 @@
 				targ[n] = null;					// or = ""?
 		}
 		else if (name === "class")
-			targ.className = "";				// svg is setattrns?
+			targ.className = "";
 		else if (name === "id" || isEvProp(name))
 			targ[name] = null;
 		else
-			ns ? targ.removeAttributeNS(null, name) : targ.removeAttribute(name);
+			targ.removeAttribute(name);
 	}
 
 	function collectRefs(vm) {
