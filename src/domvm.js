@@ -304,6 +304,8 @@
 			node.body = null;
 		}
 
+		node.vm = null;
+
 		if (removeSelf && node.el) {
 			node.el.parentNode.removeChild(node.el);
 			node.el = null;
