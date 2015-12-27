@@ -117,10 +117,6 @@
 
 		// transplants node into tree, optionally updating rendArgs
 		function moveTo(parentNodeNew, idxInParentNew, rendArgsNew) {
-			// null out in old parent
-			if (parentNode)
-				parentNode.body[idxInParent] = null;		// splice?
-
 			parentNode = parentNodeNew;
 			updIdx(idxInParentNew);
 
@@ -295,7 +291,7 @@
 			node.body.forEach(function(n, i) {
 				if (!n) return;
 
-				if (n.vm)
+				if (n.vm && !n.moved)
 					n.vm.destroy();
 				else {
 					if (n.el && n.el.parentNode)
@@ -535,6 +531,8 @@
 		// text -> []
 		else if (oTxt && !nTxt)
 			n.el.textContent = "";
+
+		o.moved = true;
 	}
 
 	function parseTag(rawTag) {
@@ -592,6 +590,7 @@
 			ref: null,
 			idx: null,
 			parent: null,
+			moved: false,
 			tag: null,
 //			svg: false,
 //			math: false,
