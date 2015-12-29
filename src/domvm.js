@@ -87,7 +87,7 @@
 
 		view = isFunc(view) ? {render: view} : view;
 		view.on = view.on || {};
-		view.on._redraw = redraw;
+		view.on._redraw = vm.redraw;
 
 		vm.view[3] = view;
 /*
@@ -213,7 +213,7 @@
 				}
 
 				switch (createView.autoRedraw) {
-					case REDRAW_SELF: redraw(); break;
+					case REDRAW_SELF: vm.redraw(); break;
 					case REDRAW_ROOT: emit.redraw(); break;
 				}
 			};
