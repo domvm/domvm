@@ -51,9 +51,9 @@ var domvm = require("domvm");
 ["input", {type: "checkbox", checked: true}]				// boolean attrs
 ["input", {type: "checkbox", ".checked": true}]				// set property instead of attr
 ["button", {onclick: function(e) {...}}, "Hello"]			// event handlers
-["ul", {onclick: [".item", function(e) {...}]}, "Hello"]	// event handlers (delegated)
+["ul", {onclick: {".item": function(e) {...}}}, "Hello"]	// event handlers (delegated)
 ["p", {style: "font-size: 10pt;"}, "Hello"]					// style can be a string
-["p", {style: {fontSize: "10pt;"}}, "Hello"]				// ... or an object (camelCase only)
+["p", {style: {fontSize: "10pt"}}, "Hello"]					// ... or an object (camelCase only)
 
 ["h1", [													// child array can follow tag
 	["em", "Important!"],
@@ -65,10 +65,26 @@ var domvm = require("domvm");
 	["br"],
 	["strong", "bar"],
 	"baz",
+	function() { return ["div", "clown"]; },				// and functions returning a node
+]]
+
+["p", function() {											// ... or funcs returning a body
+	return [
+		["span", "foo"],
+		["em", "bar"],
+	];
+}]
+
+["div", [													// child sub-arrays get flatened
+	["span", "some text"],
+	[
+		["strong", "stuff"],
+		["em", "more stuff"],
+	],
 ]]
 
 ["#ui", [													// same as div#ui
-	SomeViewFn												// sub-view with closured data
+	[SomeViewFn]											// sub-view w/closured data
 	[NavBarView, navbar],									// sub-view w/model
 	[PanelView, panel, "panelA"],							// sub-view w/model & key
 ]]

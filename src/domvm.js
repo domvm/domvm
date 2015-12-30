@@ -27,11 +27,7 @@
 	var TYPE_ELEM = 1;
 	var TYPE_TEXT = 2;
 //  var TYPE_RAWEL = 3;
-	var TYPE_FRAG = 4;
-
-	var REDRAW_NONE = 0;
-	var REDRAW_ROOT = 1;
-	var REDRAW_SELF = 2;
+//	var TYPE_FRAG = 4;
 
 	var DONOR_DOM	= 1;
 	var DONOR_NODE	= 2;
@@ -39,7 +35,6 @@
 	createView.viewScan = false;	// enables aggressive unkeyed view reuse
 	createView.useRaf = true;
 //	createView.useDOM = true;
-	createView.autoRedraw = REDRAW_NONE;
 
 	return createView;
 
@@ -80,7 +75,6 @@
 			// internal util funcs
 			moveTo: moveTo,
 			updIdx: updIdx,
-			wrapHandler: wrapHandler,
 		};
 
 		var view = viewFn.call(model, vm, model, _key);
@@ -90,24 +84,12 @@
 		view.on._redraw = vm.redraw;
 
 		vm.view[3] = view;
-/*
-		// creates a curried emit
-		emit.create = function() {
-			var args = arguments;
-			return function() {
-				emit.apply(null, args);
-			};
-		};
-*/
+
 		// targeted by depth or by key, root = 1000
+		// todo: pass through args
 		emit.redraw = function(targ) {
 			targ = isVal(targ) ? targ : 1000;
-
 			emit("_redraw:" + targ);
-
-		//	return function() {
-		//		emit("_redraw:" + targ);		// todo: pass through args
-		//	};
 		};
 
 		if (parentNode)
@@ -199,29 +181,6 @@
 			// more cleanup?
 
 			exec(vm.view[3].cleanup);
-		}
-
-		function wrapHandler(fn, filt) {
-			var matches = isVal(filt) ? function(e) { return e.target.matches(filt); } : isFunc(filt) ? filt : null;
-
-			var handler = function(e) {
-				if (!filt || matches(e)) {
-					if (fn.call(model, e) === false) {
-						e.preventDefault();
-						e.stopPropagation();		// yay or nay?
-					}
-				}
-
-				switch (createView.autoRedraw) {
-					case REDRAW_SELF: vm.redraw(); break;
-					case REDRAW_ROOT: emit.redraw(); break;
-				}
-			};
-
-			// expose original for cmp
-			handler._fn = fn;
-
-			return handler;
 		}
 
 		function emit(event) {
@@ -339,9 +298,6 @@
 					len = node.body.length;
 					i--; continue;	// avoids de-opt
 				}
-
-				if (isFunc(def2))
-					def2 = [def2];
 
 				if (isArr(def2) && isFunc(def2[0]))
 					key = def2[2];
@@ -605,6 +561,10 @@
 			body: null,
 		};
 
+		// getters
+		if (isFunc(raw))
+			raw = raw();
+
 		if (isArr(raw) && raw.length) {
 			node.type = TYPE_ELEM;
 
@@ -628,7 +588,13 @@
 			if (node.props)
 				procProps(node.props, node, ownerVm);
 
-			// isFunc(body)?
+			// getters
+			if (isFunc(node.body))
+				node.body = node.body();
+			// promises
+		//	else if (isProm(node.body))
+		//		node.body = "";
+
 		}
 		// plain strings/numbers
 		else if (isVal(raw)) {
@@ -652,10 +618,32 @@
 		return prop.substr(0,2) === "on";
 	}
 
+	function wrapHandler(fns, ctx) {
+		var handler = function(e) {
+			var res;
+
+			if (isFunc(fns))
+				res = fns.call(ctx, e);
+			else if (isObj(fns)) {
+				for (var filt in fns) {
+					if (e.target.matches(filt))
+						res = fns[filt].call(ctx, e);
+				}
+			}
+
+			if (res === false) {
+				e.preventDefault();
+				e.stopPropagation();		// yay or nay?
+			}
+		};
+
+		return handler;
+	}
+
 	function procProps(props, node, ownerVm) {
 		for (var i in props) {
 			if (isEvProp(i))
-				props[i] = isFunc(props[i]) ? ownerVm.wrapHandler(props[i]) : isArr(props[i]) ? ownerVm.wrapHandler(props[i][0], props[i][1]) : null;
+				props[i] = wrapHandler(props[i], ownerVm.view[1] || null);
 			// getters
 			else if (isFunc(props[i]))
 				props[i] = props[i]();
@@ -720,7 +708,7 @@
 
 			// add new or mutate existing not matching old
 			// also handles diffing of wrapped event handlers via exposed original (_fn)
-			if (!(name in op) || (isEvProp(name) ? np[name]._fn !== op[name]._fn : np[name] !== op[name]))
+			if (!(name in op) || np[name] !== op[name])
 				set(targ, name, np[name], ns, init);
 		}
 		// remove any removed
@@ -853,21 +841,25 @@
 	}
 
 	function isArr(val) {
-		return Array.isArray(val);
+		return val instanceof Array;
 	}
 
 	function isVal(val) {
 		var t = typeof val;
-		return t === "string" || t === "number" && !isNaN(val) && val !== Infinity;
+		return t === "string" || t === "number";
 	}
 
 	function isObj(val) {
-		return Object.prototype.toString.call(val) === "[object Object]";
+		return typeof val === "object" && val !== null && !isArr(val);
 	}
 
 	function isFunc(val) {
 		return typeof val === "function";
 	}
+
+//	function isProm(val) {
+//		typeof val === "object" && isFunc(val.then);
+//	}
 
 	function camelDash(val) {
 		return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();

@@ -877,29 +877,27 @@ QUnit.module("Subview redraw() Branch Consistency");
 	function Parent() {
 		this.kids = [];
 
-		var ctx = this;
-		this.view = function ParentView(vm) {
-			ctx.vm = vm;
+		this.view = [function ParentView(vm, parent) {
+			parent.vm = vm;
 			return {
 				render: function() {
-					return ["ul", ctx.kids.map((kid) => kid.view)];
+					return ["ul", parent.kids.map((kid) => kid.view)];
 				}
 			}
-		}
+		}, this];
 	}
 
 	function Child(name) {
 		this.name = name;
 
-		var ctx = this;
-		this.view = function ChildView(vm) {
-			ctx.vm = vm;
+		this.view = [function ChildView(vm, child) {
+			child.vm = vm;
 			return {
 				render: function() {
-					return ["li", ctx.name];
+					return ["li", child.name];
 				}
 			}
-		}
+		}, this];
 	}
 
 	var mom = new Parent();
@@ -991,7 +989,7 @@ QUnit.module("after() & refs");
 		function MyView(vm) {
 			return {
 				render: function() {
-					return ["span#xxx", {_ref: "mySpan1"}, [MyView2]];
+					return ["span#xxx", {_ref: "mySpan1"}, [[MyView2]]];
 				},
 				after: function() {
 					assert.ok(true, "Parent after()");
