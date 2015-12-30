@@ -75,7 +75,7 @@ var domvm = require("domvm");
 	];
 }]
 
-["div", [													// child sub-arrays get flatened
+["div", [													// child sub-arrays get flattened
 	["span", "some text"],
 	[
 		["strong", "stuff"],
