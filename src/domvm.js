@@ -358,6 +358,8 @@
 				// fall through no donor found
 				if (isView)
 					createView.apply(null, [kid[0], kid[1], kid[2], kid[3], kid[4], node, i]);
+				else
+					node.body[i] = buildNode(kid);
 			});
 		}
 
