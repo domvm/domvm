@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>SVG &amp; MathML</title>
+	<script src="../src/domvm.js"></script>
+</head>
+<body>
+	<h2>SVG</h2>
+
+	<p>Yes, SVG can be rendered and animated.</p>
+
+	<script>
+		function randColor() {
+			return '#'+Math.floor(Math.random()*16777215).toString(16);
+		}
+
+		var cRad = 20;
+		var sRot = 0;
+		var pFill = randColor();
+
+		function Scene(vm) {
+			return {
+				render: function() {
+					return ["svg", {version: "1.1", width: "500", height: "160"}, [
+						["polygon", {points: "150,75 112.5,140 37.5,140 0,75 37.5,10 112.5,10", fill: pFill}],
+						["rect", {transform: "translate(180 0) rotate(" + sRot + " 65 65)", x: "10", y: "10", width: "130", height: "130", fill: "#006791"}],
+						["circle", {transform: "translate(350 0)", r: cRad, cx: "75", cy: "75", fill:"#006791"}],
+					]];
+				}
+			}
+		}
+
+		var vm = domvm(Scene).mount(document.body);
+
+		var steps = 0;
+		while (steps++ < 80) {
+			setTimeout(function() {
+				cRad++;
+				sRot++;
+				pFill = randColor();
+				vm.redraw();
+			}, steps * 50);
+		}
+	</script>
+
+	<p>Should you do it? Probably not. You're better off using a dedicated SVG lib and dumping the result into a <a href="#">guarded</a> container node.</p>
+
+	<a target="_blank" href="http://snapsvg.io/">http://snapsvg.io/</a><br>
+	<a target="_blank" href="https://jonobr1.github.io/two.js/">https://jonobr1.github.io/two.js/</a><br>
+	<a target="_blank" href="http://andreaferretti.github.io/paths-js-demo/">http://andreaferretti.github.io/paths-js-demo/</a><br>
+	<a target="_blank" href="https://connoratherton.com/walkway">https://connoratherton.com/walkway</a><br>
+	<a target="_blank" href="http://maxwellito.github.io/vivus/">http://maxwellito.github.io/vivus/</a><br><br>
+
+	<h2>MathML</h2>
+
+	<p>Yes, MathML works but not in Chrome because <a href="https://code.google.com/p/chromium/issues/detail?id=152430">Chrome doesn't support MathML</a>. They think you should use <a href="https://www.mathjax.org/" target="_blank">MathJax</a> instead.</p>
+
+	<script>
+		function MathView() {
+			return function() {
+				return ["math", [
+					["msup", [
+						["mi", "e"],
+						["mrow", [
+							["mn", "2"],
+							["mi", "x"],
+							["mo", "+"],
+							["mn", "1"],
+						]]
+					]]
+				]];
+			};
+		}
+
+		domvm(MathView).mount(document.body);
+	</script>
+</body>
+</html>
