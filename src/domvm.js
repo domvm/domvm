@@ -52,7 +52,7 @@
 		}
 
 		var vm = {
-			state: {},
+			scope: {},
 			node: null,
 			view: [viewFn, model, _key],
 			redraw: createView.useRaf ? raft(redraw) : redraw,
@@ -77,7 +77,7 @@
 			updIdx: updIdx,
 		};
 
-		var view = viewFn.call(model, vm, model, _key);
+		var view = viewFn.call(vm.scope, vm, model, _key);
 
 		view = isFunc(view) ? {render: view} : view;
 		view.on = view.on || {};
