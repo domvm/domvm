@@ -955,6 +955,205 @@ QUnit.module("Subview redraw() Branch Consistency");
 	// TODO: also with passed-in data
 })();
 
+QUnit.module("Various Others");
+
+(function() {
+	function SomeView(vm) {
+		return {
+			render: function() {
+				return ["div", [
+					["div", [
+						["strong", [
+							[SomeView2]
+						]]
+					]]
+				]]
+			}
+		}
+	}
+
+	function SomeView2(vm) {
+		return {
+			render: function() {
+				return ["em", "yay!"];
+			}
+		}
+	}
+
+	QUnit.test('Init sub-view buried in plain nodes', function(assert) {
+		var expcHtml = '<div><div><strong><em>yay!</em></strong></div></div>';
+
+		instr.start();
+		vm = domvm(SomeView).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 4, insertBefore: 4, textContent: 1 });
+	});
+
+
+	function FlattenView(vm) {
+		return {
+			render: function() {
+				return ["div", [
+					["br"],
+					"hello kitteh",
+					[
+						["em", "foo"],
+						["em", "bar"],
+						[SomeView2],
+						"woohoo!",
+						[
+							[SomeView2],
+							["i", "another thing"],
+						]
+					],
+					"the end",
+				]];
+			}
+		}
+	}
+
+	QUnit.test('Flatten child sub-arrays', function(assert) {
+		var expcHtml = '<div><br>hello kitteh<em>foo</em><em>bar</em><em>yay!</em>woohoo!<em>yay!</em><i>another thing</i>the end</div>';
+
+		instr.start();
+		vm = domvm(FlattenView).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 7, createTextNode: 3, insertBefore: 10, textContent: 5 });
+	});
+})();
+
+
+QUnit.module("Function node types & values");
+
+(function() {
+	function ViewAny(vm) {
+		return {
+			render: function() {
+				return tpl;
+			}
+		}
+	}
+
+	function ViewAny2(vm) {
+		return {
+			render: function() {
+				return tpl2;
+			}
+		}
+	}
+
+	var tpl = null;
+	var tpl2 = null;
+
+	QUnit.test('Root node is function that returns node', function(assert) {
+		tpl = function() {
+			return ["p", "some text"];
+		}
+
+		var expcHtml = '<p>some text</p>';
+
+		instr.start();
+		vm = domvm(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
+	});
+
+	QUnit.test('Body is function that returns text value', function(assert) {
+		tpl = ["p", function() { return "some text" }];
+
+		var expcHtml = '<p>some text</p>';
+
+		instr.start();
+		vm = domvm(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
+	});
+
+	QUnit.test('Body is function that returns child array', function(assert) {
+		tpl = ["p", function() { return [["strong", "some text"]] }];
+
+		var expcHtml = '<p><strong>some text</strong></p>';
+
+		instr.start();
+		vm = domvm(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
+	});
+
+	QUnit.test('Child node is function that returns text value', function(assert) {
+		tpl = ["p", [function() { return "some text" }]];
+
+		var expcHtml = '<p>some text</p>';
+
+		instr.start();
+		vm = domvm(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 2, createTextNode: 1 });
+	});
+
+	/*
+	// Higher-order (functions that return complex nodes that need further recursive processing)
+	// TODO?: higher order functions that return functions
+	// Need to do a do/while loop to iterativly simplify nodes
+	QUnit.test('Child node is function that returns sub-view', function(assert) {
+		tpl = ["p", [function() { tpl2 = ["em", "some text"]; return [ViewAny2]; }]];
+
+		var expcHtml = '<p>some text</p>';
+
+		instr.start();
+		vm = domvm(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
+	});
+
+	QUnit.test('Child node is function that returns sub-array', function(assert) {
+		tpl = ["p", [["p", "moo"], function() { [["p", "cow"], ["em", "some text"]] }]];
+
+		var expcHtml = '<p>some text</p>';
+
+		instr.start();
+		vm = domvm(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
+	});
+	*/
+
+	QUnit.test('Attribute value is function/getter', function(assert) {
+		tpl = ["input", {value: function() { return "moo"; }}];
+
+		var expcHtml = '<input value="moo">';
+
+		instr.start();
+		vm = domvm(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, setAttribute: 1 });
+	});
+
+	QUnit.test('Style object attr value is function/getter', function(assert) {
+		tpl = ["input", {style: {width: function() { return "20px"; }}}];
+
+		var expcHtml = '<input style="width: 20px;">';
+
+		instr.start();
+		vm = domvm(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });
+	});
+
+	// style object value is function/getter
+	// special props, id, className, _key, _ref?
+})();
+
 QUnit.module("after() & refs");
 
 (function() {
