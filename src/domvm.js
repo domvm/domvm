@@ -39,15 +39,15 @@
 	return createView;
 
 	// creates closure
-	function createView(viewFn, model, _key, opts, rendArgs, parentNode, idxInParent) {
+	function createView(viewFn, model, _key, rendArgs, opts, parentNode, idxInParent) {
 		var isRootNode = !parentNode;
 
 		// for domvm([MyView, model, _key])
 		if (isArr(viewFn)) {
 			model = viewFn[1];
 			_key = viewFn[2];
-			opts = viewFn[3];
-			rendArgs = viewFn[4];
+			rendArgs = viewFn[3];
+			opts = viewFn[4];
 			viewFn = viewFn[0];
 		}
 
