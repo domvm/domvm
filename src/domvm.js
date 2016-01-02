@@ -51,6 +51,11 @@
 			viewFn = viewFn[0];
 		}
 
+		var origModel = model || null;
+
+		// special case model = data + ctrl
+		model = (model && model.ctrl && model.data) ? model.data : origModel;
+
 		var vm = {
 			scope: {},
 			node: null,
@@ -77,7 +82,7 @@
 			updIdx: updIdx,
 		};
 
-		var view = viewFn.call(vm.scope, vm, model, _key);
+		var view = viewFn.call(vm.scope, vm, origModel, _key);
 
 		view = isFunc(view) ? {render: view} : view;
 		view.on = view.on || {};
