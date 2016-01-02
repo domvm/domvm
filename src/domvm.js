@@ -53,8 +53,8 @@
 
 		var origModel = model || null;
 
-		// special case model = data + ctrl
-		model = (model && model.ctrl && model.data) ? model.data : origModel;
+		// special case model = ctrl + model
+		model = (model && model.ctrl && model.model) ? model.model : origModel;
 
 		var vm = {
 			scope: {},
