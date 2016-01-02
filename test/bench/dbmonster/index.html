@@ -1,87 +1,24 @@
+<!doctype html>
 <html>
 <head>
-  <link rel="stylesheet" href="bootstrap.min.css">
-  <link rel="stylesheet" href="style.css">
+<meta name="description" content="DBMON domvm">
+  <meta charset="utf-8">
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
+  <title>dbmon (domvm)</title>
 </head>
 <body>
-
-<div id="body">
-	<button onclick="redraw()">GO</button>
-	<button onclick="step()">Step</button>
-	<div id="body2"></div>
-</div>
-
-<script src="junkola-copied-from-ember.js"></script>
-<script src="../../../src/domvm.js"></script>
-<script src="../../../test/lib/dominstr.js"></script>
-
-<script>
-	var ROWS = 100;
-	var TIMEOUT = 0;
-
-	domvm.useRaf = false;
-
- 	var dbs = getDatabases();
-
-	function Table() {
-		return {
-			render: function() {
-				return ["table", {"class": "table table-striped latest-data"}, [
-					["tbody", dbs.map(function(db) {
-						return ["tr", [
-							["td", {"class": "dbname"}, db.name],
-							["td", {"class": "query-count"}, [
-								["span", {"class": db.countClassName}, db.queries.length]
-							]],
-							db.topFiveQueries.map(function(q) {
-								return ["td", {"class": "Query " + q.className}, [
-									q.elapsed,
-									["div", {"class": "popover left"}, [
-										["div", {"class": "popover-content"}, q.query],
-										["div", {"class": "arrow"}]
-									]]
-								]]
-							})
-						]]
-					})]
-				]]
-			}
-		}
-	}
-
-	console.time("initial render");
-		console.time("vtree build");
-			var vw = domvm(Table);
-		console.timeEnd("vtree build");
-		console.time("mount");
-			vw.mount(document.getElementById("body2"));
-		console.timeEnd("mount");
-	console.timeEnd("initial render");
-
-/*  isomorphic test
-	var vw = domvm(Table);
-	var html = vw.html();
-	var body2 = document.getElementById("body2");
-	body2.innerHTML = html;
-	vw.attach(body2.firstChild);
-*/
-	var instr = new DOMInstr(true);
-
-	function step() {
-		dbs = getDatabases();
-		instr.start();
-		vw.redraw();
-		console.log(instr.end());
-	}
-
-	function redraw() {
-		dbs = getDatabases();
-		vw.redraw();
-		setTimeout(redraw, TIMEOUT);
-	}
-
-//	redraw();
-</script>
-
+  <div id="body">
+    <button onclick="step()">Step</button>
+    <button onclick="loop()">Run</button>
+    <button onclick="stop()">Stop</button>
+  </div>
+  <div id="app"></div>
+  <script src="../../../src/domvm.js"></script>
+  <script src="../../../test/lib/dominstr.js"></script>
+  <script src="ENV.js"></script>
+  <script src="memory-stats.js"></script>
+  <script src="monitor.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
