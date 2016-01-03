@@ -39,6 +39,7 @@
 	return createView;
 
 	// creates closure
+	// TODO: need way to indicate detached vm vs parent-less root, to prevent un-needed initial redraw
 	function createView(viewFn, model, _key, rendArgs, opts, parentNode, idxInParent) {
 		var isRootNode = !parentNode;
 
@@ -304,8 +305,13 @@
 					i--; continue;	// avoids de-opt
 				}
 
-				if (isArr(def2) && isFunc(def2[0]))
+				if (isArr(def2) && isFunc(def2[0]))				// decl sub-view
 					key = def2[2];
+				else if (isObj(def2) && isFunc(def2.redraw)) {	// pre-init vm
+					def2.moveTo(node, i);
+					node2 = def2.node;
+					key = def2.view[2];
+				}
 				else {
 					node2 = initNode(def2, node, i, ownerVm);
 					key = node2.key;
