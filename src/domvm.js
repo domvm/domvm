@@ -54,11 +54,11 @@
 
 		var origModel = model || null;
 
-		// special case model = ctrl + model
-		model = (model && model.ctrl && model.model) ? model.model : origModel;
+		// special case model = ctx + model
+		model = (model && model.ctx && model.model) ? model.model : origModel;
 
 		var vm = {
-			scope: {},
+			ctx: {},
 			node: null,
 			view: [viewFn, model, _key],
 			redraw: createView.useRaf ? raft(redraw) : redraw,
@@ -83,7 +83,7 @@
 			updIdx: updIdx,
 		};
 
-		var view = viewFn.call(vm.scope, vm, origModel, _key);
+		var view = viewFn.call(vm.ctx, vm, origModel, _key);
 
 		view = isFunc(view) ? {render: view} : view;
 		view.on = view.on || {};
