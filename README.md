@@ -55,18 +55,23 @@ var domvm = require("domvm");
 ["p", {style: "font-size: 10pt;"}, "Hello"]					// style can be a string
 ["p", {style: {fontSize: "10pt"}}, "Hello"]					// ... or an object (camelCase only)
 
-["h1", [													// child array can follow tag
-	["em", "Important!"],
-	["sub", "tiny"],
+["h1", [													// explicit child array can follow tag
+	["em", "Important!"],									// but first child cannot be a function
+	["sub", "tiny"],										// or text node (see why below)
 ]]
 
-["a", {href: "/cows"}, [									// ... and can contain text nodes
+["h1",														// or children can follow tag (JSONML)
+	["em", "Important!"],									// this style has no restrictions
+	["sub", "tiny"],
+]
+
+["a", {href: "/cows"},										// children can contain text nodes
 	"foo",
 	["br"],
 	["strong", "bar"],
 	"baz",
 	function() { return ["div", "clown"]; },				// and functions returning a node
-]]
+]
 
 ["p", function() {											// ... or funcs returning a body
 	return [
@@ -75,20 +80,20 @@ var domvm = require("domvm");
 	];
 }]
 
-["div", [													// child sub-arrays get flattened
+["div",														// child sub-arrays get flattened
 	["span", "some text"],
 	[
 		["strong", "stuff"],
 		["em", "more stuff"],
 	],
-]]
+]
 
-["#ui", [													// same as div#ui
+["#ui",														// same as div#ui
 	[SomeViewFn]											// sub-view w/closured data
 	[NavBarView, navbar],									// sub-view w/model
 	[PanelView, panel, "panelA"],							// sub-view w/model & key
-	preInitVm												// pre-initialized ViewModel
-]]
+	preInitVm,												// pre-initialized ViewModel
+]
 
 // some special props...
 
