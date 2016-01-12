@@ -581,19 +581,18 @@
 		if (isArr(raw) && raw.length) {
 			node.type = TYPE_ELEM;
 
-			switch (raw.length) {
-				case 2:
-					if (isArr(raw[1]))
-						node.body = raw[1];
-					else if (isObj(raw[1]))
-						node.props = raw[1];
-					else
-						node.body = raw[1];
-					break;
-				case 3:
+			if (raw.length > 1) {
+				var bodyIdx = 1;
+
+				if (isObj(raw[1])) {
 					node.props = raw[1];
-					node.body = raw[2];
-					break;
+					bodyIdx = 2;
+				}
+
+				if (raw.length == bodyIdx + 1)
+					node.body = isVal(raw[bodyIdx]) ? raw[bodyIdx] : isFunc(raw[bodyIdx]) ? raw[bodyIdx]() : raw.slice(bodyIdx);
+				else
+					node.body = raw.slice(bodyIdx);
 			}
 
 			procTag(raw[0], node);
@@ -601,9 +600,6 @@
 			if (node.props)
 				procProps(node.props, node, ownerVm);
 
-			// getters
-			if (isFunc(node.body))
-				node.body = node.body();
 			// promises
 		//	else if (isProm(node.body))
 		//		node.body = "";
