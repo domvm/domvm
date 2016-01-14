@@ -1,9 +1,9 @@
 /**
-* Copyright (c) 2015, Leon Sorokin
+* Copyright (c) 2016, Leon Sorokin
 * All rights reserved. (MIT Licensed)
 *
 * domvm.js - DOM ViewModel
-* A thin, fast, dependency-free vdom diffing lib
+* A thin, fast, dependency-free vdom view layer
 * https://github.com/leeoniya/domvm
 */
 
@@ -346,8 +346,17 @@
 					key = def2.view[2];
 				}
 				else {
-					node2 = initNode(def2, node, i, ownerVm);
-					key = node2.key;
+					// merge if adjacent text nodes
+					if (i > 0 && node.body[i-1].type === TYPE_TEXT && isVal(def2)) {
+						node.body[i-1].body += def2;
+						node.body.splice(i,1);
+						len = node.body.length;
+						i--; continue;
+					}
+					else {
+						node2 = initNode(def2, node, i, ownerVm);
+						key = node2.key;
+					}
 				}
 
 				if (isVal(key)) {

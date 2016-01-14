@@ -1,6 +1,6 @@
 domvm.js (DOM ViewModel)
 ------------------------
-A thin, fast, dependency-free vdom diffing lib _(MIT Licensed)_
+A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
 ---
 ### Features
