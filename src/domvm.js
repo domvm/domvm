@@ -32,6 +32,39 @@
 	var DONOR_DOM	= 1;
 	var DONOR_NODE	= 2;
 
+	var t = true;
+	var unitlessProps = {
+		animationIterationCount: t,
+		boxFlex: t,
+		boxFlexGroup: t,
+		columnCount: t,
+		counterIncrement: t,
+		fillOpacity: t,
+		flex: t,
+		flexGrow: t,
+		flexOrder: t,
+		flexPositive: t,
+		flexShrink: t,
+		float: t,
+		fontWeight: t,
+		gridColumn: t,
+		lineHeight: t,
+		lineClamp: t,
+		opacity: t,
+		order: t,
+		orphans: t,
+		stopOpacity: t,
+		strokeDashoffset: t,
+		strokeOpacity: t,
+		strokeWidth: t,
+		tabSize: t,
+		transform: t,
+		transformOrigin: t,
+		widows: t,
+		zIndex: t,
+		zoom: t,
+	};
+
 	createView.viewScan = false;	// enables aggressive unkeyed view reuse
 	createView.useRaf = true;
 //	createView.useDOM = true;
@@ -735,8 +768,8 @@
 //	function setData(targ, name, val, ns, init) {targ.dataset[name] = val;};
 //	function delData(targ, name, ns, init) {targ.dataset[name] = "";};
 
-	function setCss(targ, name, val) {targ.style[name] = val;};
-	function delCss(targ, name) {targ.style[name] = "";};
+	function setCss(targ, name, val) {targ.style[name] = !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;}
+	function delCss(targ, name) {targ.style[name] = "";}
 
 	function setAttr(targ, name, val, ns, init) {
 		if (name[0] === ".") {
