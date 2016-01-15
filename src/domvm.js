@@ -329,34 +329,62 @@
 			for (var i = 0, len = node.body.length; i < len; i++) {
 				var def2 = node.body[i];
 
-				var key = null, node2 = null;
+				var key = null, node2 = null, killIt = false;
 
-				// handle arrays of arrays, avoids need for concat() in tpls
-				if (isArr(def2) && isArr(def2[0])) {
-					insertArr(node.body, def2, i, 1);
-					len = node.body.length;
-					i--; continue;	// avoids de-opt
-				}
+				// getters
+				if (isFunc(def2))
+					def2 = def2();
 
-				if (isArr(def2) && isFunc(def2[0]))				// decl sub-view
-					key = def2[2];
-				else if (isObj(def2) && isFunc(def2.redraw)) {	// pre-init vm
-					def2.moveTo(node, i);
-					node2 = def2.node;
-					key = def2.view[2];
-				}
+				// kill null and undefined nodes
+				if (def2 == null)
+					killIt = true;
 				else {
-					// merge if adjacent text nodes
-					if (i > 0 && node.body[i-1].type === TYPE_TEXT && isVal(def2)) {
-						node.body[i-1].body += def2;
-						node.body.splice(i,1);
-						len = node.body.length;
-						i--; continue;
+					var def2IsArr = isArr(def2),
+						def2IsObj = def2IsArr ? false : isObj(def2);		// technically, isPlainObj
+
+					if (def2IsArr) {
+						// kill empty array nodes
+						if (!def2.length)
+							killIt = true;
+						// handle arrays of arrays, avoids need for concat() in tpls
+						else if (isArr(def2[0])) {
+							insertArr(node.body, def2, i, 1);
+							len = node.body.length;
+							i--; continue;	// avoids de-opt
+						}
+						else if (isFunc(def2[0]))	// decl sub-view
+							key = def2[2];
+						else {
+							node2 = initNode(def2, node, i, ownerVm);
+							key = node2.key;
+						}
+					}
+					else if (def2IsObj) {
+						if (isFunc(def2.redraw)) {	// pre-init vm
+							def2.moveTo(node, i);
+							node2 = def2.node;
+							key = def2.view[2];
+						}
+						else {
+							node.body[i--] = ""+def2;
+							continue;
+						}
 					}
 					else {
-						node2 = initNode(def2, node, i, ownerVm);
-						key = node2.key;
+						// merge if adjacent text nodes
+						if (i > 0 && node.body[i-1].type === TYPE_TEXT) {		//  && isVal(def2)
+							node.body[i-1].body += ""+def2;
+							killIt = true;
+						}
+						else
+							node2 = initNode(""+def2, node, i, ownerVm);
 					}
+				}
+
+				if (killIt) {
+					node.body.splice(i,1);
+					len = node.body.length;
+					i--; continue;
 				}
 
 				if (isVal(key)) {

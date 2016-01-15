@@ -1248,3 +1248,29 @@ QUnit.module("after() & refs");
 		// todo: ensure refs get re-ref'd on redraw/reuse
 	});
 })();
+
+QUnit.module("Falsy values are stringified/removed");
+
+(function() {
+	function ViewAny(vm) {
+		return {
+			render: function() {
+				return tpl;
+			}
+		}
+	}
+
+	var tpl = null;
+
+	QUnit.test('Falsy values are handled/removed', function(assert) {
+		tpl = ["div", 0, 25, "", NaN, 19, undefined, function() {return "blah";}, [], Infinity, null, {}, true, "yo", false];
+
+		var expcHtml = '<div>025NaN19blahInfinity[object Object]trueyofalse</div>';
+
+		instr.start();
+		vm = domvm(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 2, createTextNode: 1 });
+	});
+})();

@@ -1,3 +1,10 @@
+/**
+* Copyright (c) 2016, Leon Sorokin
+* All rights reserved. (MIT Licensed)
+*
+* A DOM instrumenting helper for debugging
+* https://github.com/leeoniya/domvm
+*/
 ( // Module boilerplate to support commonjs, browser globals and AMD.
   (typeof module === "object" && typeof module.exports === "object" && function (m) { module.exports = m(); }) ||
   (typeof define === "function" && function (m) { define("DOMInstr", m); }) ||
