@@ -329,7 +329,7 @@
 			for (var i = 0, len = node.body.length; i < len; i++) {
 				var def2 = node.body[i];
 
-				var key = null, node2 = null, killIt = false;
+				var key = null, node2 = null, killIt = false, mergeIt = false;
 
 				// getters
 				if (isFunc(def2))
@@ -347,11 +347,8 @@
 						if (!def2.length)
 							killIt = true;
 						// handle arrays of arrays, avoids need for concat() in tpls
-						else if (isArr(def2[0])) {
-							insertArr(node.body, def2, i, 1);
-							len = node.body.length;
-							i--; continue;	// avoids de-opt
-						}
+						else if (isArr(def2[0]))
+							mergeIt = true;
 						else if (isFunc(def2[0]))	// decl sub-view
 							key = def2[2];
 						else {
@@ -381,10 +378,14 @@
 					}
 				}
 
-				if (killIt) {
-					node.body.splice(i,1);
+				if (killIt || mergeIt) {
+					if (mergeIt)
+						insertArr(node.body, def2, i, 1);
+					else
+						node.body.splice(i,1);
+
 					len = node.body.length;
-					i--; continue;
+					i--; continue;	// avoids de-opt
 				}
 
 				if (isVal(key)) {
