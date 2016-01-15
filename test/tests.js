@@ -1249,7 +1249,7 @@ QUnit.module("after() & refs");
 	});
 })();
 
-QUnit.module("Falsy values are stringified/removed");
+QUnit.module("Unrenderable values");
 
 (function() {
 	function ViewAny(vm) {
@@ -1260,9 +1260,10 @@ QUnit.module("Falsy values are stringified/removed");
 		}
 	}
 
-	var tpl = null;
+	var tpl = null,
+		vm = null;
 
-	QUnit.test('Falsy values are handled/removed', function(assert) {
+	QUnit.test('Values are properly coerced or ignored', function(assert) {
 		tpl = ["div", 0, 25, "", NaN, 19, undefined, function() {return "blah";}, [], Infinity, null, {}, true, "yo", false];
 
 		var expcHtml = '<div>025NaN19blahInfinity[object Object]trueyofalse</div>';
@@ -1272,5 +1273,17 @@ QUnit.module("Falsy values are stringified/removed");
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 2, createTextNode: 1 });
+	});
+
+	QUnit.test('Mutation of some nodes is consistent and does correct DOM ops', function(assert) {
+		tpl = ["div", 0, ["span", "moo"], undefined, function() {return "blah";}, [["span", "bar"],["span","baz"]], Infinity, null, false];
+
+		var expcHtml = '<div>0<span>moo</span>blah<span>bar</span><span>baz</span>Infinityfalse</div>';
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 3, createTextNode: 2, insertBefore: 5, nodeValue: 1, textContent: 3 });
 	});
 })();
