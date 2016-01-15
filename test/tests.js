@@ -1286,4 +1286,16 @@ QUnit.module("Unrenderable values");
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 3, createTextNode: 2, insertBefore: 5, nodeValue: 1, textContent: 3 });
 	});
+
+	QUnit.test('Empty text nodes should be squashed (isomorphism/innerHTML)', function(assert) {
+		tpl = ["div", "", ["span", "moo"], "", ["span", "cow"], ""];
+
+		var expcHtml = '<div><span>moo</span><span>cow</span></div>';
+
+		instr.start();
+		var vm2 = domvm(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm2.node.el, vm2.html(), expcHtml, callCounts, { createElement: 3, insertBefore: 3, textContent: 2 });
+	});
 })();

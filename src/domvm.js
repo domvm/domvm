@@ -275,9 +275,9 @@
 			for (var i = 0; i < node.body.length; i++) {
 				var node2 = node.body[i];
 				// handle empty text nodes stripped by innerHTML, inject them into DOM here
-				var isEmptyTextNode = node2 && node2.type === TYPE_TEXT && node2.body === "";
-				if (isEmptyTextNode)
-					el.insertBefore(document.createTextNode(""), el.childNodes[i] || null);
+		//		var isEmptyTextNode = node2 && node2.type === TYPE_TEXT && node2.body === "";
+		//		if (isEmptyTextNode)
+		//			el.insertBefore(document.createTextNode(""), el.childNodes[i] || null);
 
 				hydrateWith(node2, el.childNodes[i]);
 			}
@@ -368,8 +368,10 @@
 						}
 					}
 					else {
+						if (def2 === "")
+							killIt = true;
 						// merge if adjacent text nodes
-						if (i > 0 && node.body[i-1].type === TYPE_TEXT) {		//  && isVal(def2)
+						else if (i > 0 && node.body[i-1].type === TYPE_TEXT) {		//  && isVal(def2)
 							node.body[i-1].body += ""+def2;
 							killIt = true;
 						}
