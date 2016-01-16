@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>domvm patch</title>
+	<style>
+		td {
+			min-width: 25px;
+		}
+		.high {
+			color: red;
+		}
+		.low {
+			color: blue;
+		}
+	</style>
+</head>
+<body>
+	Here's a 100x100 (10,000 cell) table of random ints. The blue/red threshold is 50.
+	<br>Let's mutate <input id="mutate" type="text" value="300" style="width: 35px;">
+	cells/round x 1000 rounds! <button onclick="go()">GO!</button>
+
+	<script src="../../../src/domvm.js"></script>
+	<script src="../../lib/dominstr.js"></script>
+	<script src="../../lib/memory-stats.js"></script>
+	<script src="../../lib/monitor.js"></script>
+
+	<script>
+		domvm.config({useRaf: false});
+
+		var instr = new DOMInstr(true);
+
+		// a table component
+		function Table(data) {
+			this.data = data;
+			this.view = [TableView, this];
+		}
+
+		Table.prototype.setCell = function(rowIdx, colIdx, val) {
+			// update actual data
+			this.data[rowIdx][colIdx] = val;
+			// regenerate replacement cell
+			var newCell = this.vm.ctx.genCell(rowIdx, colIdx, val);
+			// micro-patch it
+			this.vm.patch(newCell);
+		};
+
+		// view of table component
+		function TableView(vm, table) {
+			table.vm = vm;
+
+			// exported funcs
+			vm.ctx = {
+				// cell node generator
+				genCell: (rowIdx, colIdx, val) =>
+					["td", {_key: rowIdx+"."+colIdx, class: val > 50 ? "high" : "low"}, val]
+			};
+
+			return {
+				render: () => ["table", table.data.map((row, rowIdx) =>
+					["tr", row.map((val, colIdx) =>
+						vm.ctx.genCell(rowIdx, colIdx, val)
+					)]
+				)]
+			}
+		}
+
+		function randInt(min, max) {
+			return Math.floor(Math.random() * (max - min + 1)) + min;
+		}
+
+		var rows = 100;
+		var cols = 100;
+		var data = [];
+
+		for (var r = 0; r < rows; r++) {
+			var row = [];
+			for (var c = 0; c < cols; c++)
+				row.push(randInt(0,100));
+			data.push(row);
+		}
+
+		var table = new Table(data);
+		var vm = domvm(table.view).mount(document.body);
+
+		function go() {
+			var rounds = 1000, iter = 0,
+				mutCells = document.getElementById("mutate").value;
+
+			var it = setInterval(function() {
+			//	instr.start();
+
+				for (var j = 0; j < mutCells; j++)
+					table.setCell(randInt(0,rows-1), randInt(0,cols-1), randInt(0,100));
+
+				Monitoring.renderRate.ping();
+
+				if (iter++ == rounds)
+					clearInterval(it);
+			}, 0);
+		}
+
+		setTimeout(function() {
+			instr.start();
+			vm.redraw();
+			console.log(instr.end());
+		}, 1000);
+	</script>
+</body>
+</html>

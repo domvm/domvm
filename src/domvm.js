@@ -107,6 +107,19 @@
 			html: function() {
 				return collectHtml(vm.node);
 			},
+			keyMap: {},
+			patch: function() {
+				var targs = arguments;
+
+				for (var i = 0; i < targs.length; i++) {
+					var key = targs[i][1]._key,
+						donor = vm.keyMap[key],
+						parent = donor.parent,
+						node = buildNode(initNode(targs[i], parent, donor.idx, vm), donor);
+
+					parent.body[donor.idx] = parent.keyMap[key] = vm.keyMap[key] = node;
+				}
+			},
 			mount: function(el) {		// appendTo?
 				hydrateNode(vm.node);
 				el.insertBefore(vm.node.el, null);
@@ -159,6 +172,7 @@
 			rendArgs = rendArgsNew || rendArgs;
 
 			vm.refs = {};
+			vm.keyMap = {};
 
 			var old = vm.node;
 			var def = vm.view[3].render.apply(model, rendArgs);
@@ -399,6 +413,7 @@
 
 				if (isVal(key)) {
 					keyMap[key] = i;
+					ownerVm.keyMap[key] = node2;
 					anyKeys = true;
 				}
 
