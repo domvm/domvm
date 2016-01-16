@@ -1,5 +1,5 @@
 (function(){
-	domvm.useRaf = false;
+	domvm.config({useRaf: false});
 
 	var count = 0;
 

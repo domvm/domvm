@@ -1,5 +1,5 @@
 // no cheating
-domvm.useRaf = false;
+domvm.config({useRaf: false});
 
 function DBMonView(vm, dbmon) {
 	dbmon.vm = vm;

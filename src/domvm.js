@@ -65,9 +65,16 @@
 		zoom: t,
 	};
 
-	createView.viewScan = false;	// enables aggressive unkeyed view reuse
-	createView.useRaf = true;
-//	createView.useDOM = true;
+	var cfg = {
+		useRaf: true,
+		viewScan: false,	// enables aggressive unkeyed view reuse
+		useDOM: false,
+
+	};
+
+	createView.config = function(newCfg) {
+		cfg = newCfg;
+	};
 
 	return createView;
 
@@ -94,7 +101,7 @@
 			ctx: {},
 			node: null,
 			view: [viewFn, model, _key],
-			redraw: createView.useRaf ? raft(redraw) : redraw,
+			redraw: cfg.useRaf ? raft(redraw) : redraw,
 			emit: emit,
 			refs: {},
 			html: function() {
@@ -519,7 +526,7 @@
 
 					// it's expensive without WeakMaps to check if unkeyed views' old view/model combo
 					// exists in new tree, so they will be destroyed and dom re-used....unless domvm.viewScan = true
-					if (createView.viewScan) {
+					if (cfg.viewScan) {
 						for (var j = 0; j < newBody.length; j++) {
 							var n = newBody[j];
 							if (!n.el && n.vm && n.vm.view[0] === o.vm.view[0] && n.vm.view[1] === o.vm.view[1]) {

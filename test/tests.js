@@ -1,4 +1,4 @@
-domvm.useRaf = false;
+domvm.config({useRaf: false});
 var instr = new DOMInstr();
 
 var testyDiv = document.getElementById("testy");
