@@ -28,8 +28,6 @@
 	<script>
 		domvm.config({useRaf: false});
 
-		var instr = new DOMInstr(true);
-
 		// a table component
 		function Table(data) {
 			this.data = data;
@@ -88,8 +86,6 @@
 				mutCells = document.getElementById("mutate").value;
 
 			var it = setInterval(function() {
-			//	instr.start();
-
 				for (var j = 0; j < mutCells; j++)
 					table.setCell(randInt(0,rows-1), randInt(0,cols-1), randInt(0,100));
 
@@ -99,6 +95,8 @@
 					clearInterval(it);
 			}, 0);
 		}
+
+		var instr = new DOMInstr(true);
 
 		setTimeout(function() {
 			instr.start();
