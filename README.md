@@ -7,7 +7,7 @@ A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
 UI-centric, exclusively declarative components suffer from locked-in syndrome, making them unusable outside of a specific framework. Frequently they must extend framework classes and adhere to compositional restrictions which typically mimic the underlying DOM tree and sacrifice powerful exposed APIs for the sake of designer-centric ease and beauty.
 
-Components should instead be plain, stateful and reusable JS objects with APIs or domain models with methods. They in turn can expose one or multiple views for external composition - each with its own state and/or exposed view API (e.g. `emailApp.tableView.markUnread()`). Alternatively, component views can be crafted externally and composed declaratively or imperatively interacted with. domvm provides this flexibility, facilitating truly reusable components without framework lock-in.
+Components should instead be plain, stateful and reusable JS objects with APIs or domain models with methods. They in turn can expose one or multiple views for external composition - each with its own state and/or exposed view API (e.g. `emailApp.tableView.markUnread()`). Alternatively, component views can be crafted externally and composed declaratively or imperatively interacted with. domvm provides this flexibility, allowing for separation of concerns and truly reusable components without framework lock-in.
 
 ---
 ### Features
