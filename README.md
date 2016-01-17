@@ -13,7 +13,7 @@ Components should not be UI-centric or purely declarative/functional as they are
 - Small - ~8k min, ~4k gzipped
 - Ultra fast - [dbmonster](http://leeoniya.github.io/domvm/test/bench/dbmonster/), [granular patch](http://leeoniya.github.io/domvm/test/bench/patch/)
 - Concise javascript templates. No html-in-js, js-in-html or other esoteric syntax requiring compilation
-- Sub-views - declarative OR imperative, freely composable
+- Sub-views - declarative OR imperative, freely composable, stateful and independently refreshable
 - Isomorphic - generate markup server-side and attach on client
 - Emit custom events to parent views (bubbling)
 - SVG & MathML support: [demo](http://leeoniya.github.io/domvm/demos/svg_mathml.html), [svg tiger](http://leeoniya.github.io/domvm/demos/svg-tiger.html),
