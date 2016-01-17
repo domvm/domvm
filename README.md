@@ -3,28 +3,34 @@ domvm.js (DOM ViewModel)
 A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
 ---
+### Concept
+
+Components should not be UI-centric or purely declarative/functional as they are in most front-end frameworks. They should be normal, reusable JS objects with APIs or domain models with methods. These components can then expose one or multiple views - each with its own state or view API that can then be freely composed into a full view structure. Alternatively you can create views into your components externally and choose either declarative or imperative composition. domvm provides this flexibility, facilitating truly reusable components without framework lock-in.
+
+---
 ### Features
 
-- Small - ~7k min, ~3k gzipped
-- Very fast - see dbmonster & speedtest examples in `/test/bench`
-- No dependencies, no build process
-- Components - non-intrusive, composable & independently refreshable
+- Small - ~8k min, ~4k gzipped
+- Ultra fast - [dbmonster](http://leeoniya.github.io/domvm/test/bench/dbmonster/), [granular patch](http://leeoniya.github.io/domvm/test/bench/patch/)
+- Concise javascript templates, no html-in-js or js-in-html crap
+- Sub-views - declarative OR imperative, freely composable
 - Isomorphic - generate markup server-side and attach on client
-- Learn in 10min - small API surface, pure-js templates
-- Emit custom events to parent components (bubbling)
-- SVG & MathML support
-- IE9+
+- Emit custom events to parent views (bubbling)
+- SVG & MathML support: [demo](http://leeoniya.github.io/domvm/demos/svg_mathml.html), [svg tiger](http://leeoniya.github.io/domvm/demos/svg-tiger.html),
+- IE9+ (w/ some small ES5 polyfills)
+- Thin API, no dependencies, no build process
 
 ---
 ### Usage/API
 
 0. [Installation](#installation)
-1. [Template Cheat Sheet](#template-cheat-sheet)
+1. [Template Reference](#template-reference)
 2. [Create, Modify, Redraw](#create-modify-redraw)
 3. [Subviews, Components](#subviews-components)
 4. [DOM Refs, after()](#dom-refs-after)
 5. [Events, emit(), on:{}](#events-emit-on)
 6. [Isomorphism, html(), attach()](#isomorphism-html-attach)
+6. [Granular patch()](#granular-patch)
 7. More docs to come...
 
 ---
@@ -36,14 +42,16 @@ A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 <script src="domvm.min.js"></script>
 ```
 
-**Node**
+**Node (TODO)**
 
 ```js
 var domvm = require("domvm");
 ```
 
 ---
-#### Template Cheat Sheet
+#### Template Reference
+
+domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 
 ```js
 ["p", "Hello"]												// plain tags
@@ -53,55 +61,54 @@ var domvm = require("domvm");
 ["button", {onclick: function(e) {...}}, "Hello"]			// event handlers
 ["ul", {onclick: {".item": function(e) {...}}}, "Hello"]	// event handlers (delegated)
 ["p", {style: "font-size: 10pt;"}, "Hello"]					// style can be a string
-["p", {style: {fontSize: "10pt"}}, "Hello"]					// ... or an object (camelCase only)
+["p", {style: {fontSize: "10pt"}}, "Hello"]					// or an object (camelCase only)
+["div", {style: {width: 35}}, "Hello"]						// "px" will be added when needed
 
-["h1", [													// explicit child array can follow tag
-	["em", "Important!"],									// but first child cannot be a function
-	["sub", "tiny"],										// or text node (see why below)
+["h1", {class: "header"},									// (props object is optional)
+	["em", "Important!"],									// child nodes follow tag
+	"foo",													// and can be text nodes
+	function() { return ["div", "clown"]; },				// or getters returning a child
+]
+
+["h1", [													// explicit child array can be provided
+	["em", "Important!"],									// (but first child cannot be a getter
+	["sub", "tiny"],										// or text/number...cause ambiguous)
+	[														// any sub-arrays will get flattened
+		["strong", "stuff"],								// but are subject to same conditions
+		["em", "more stuff"],
+	],
 ]]
 
-["h1",														// or children can follow tag (JSONML)
-	["em", "Important!"],									// this style has no restrictions
-	["sub", "tiny"],
-]
-
-["a", {href: "/cows"},										// children can contain text nodes
-	"foo",
-	["br"],
-	["strong", "bar"],
-	"baz",
-	function() { return ["div", "clown"]; },				// and functions returning a node
-]
-
-["p", function() {											// ... or funcs returning a body
+["p", function() {											// getter can return child array
 	return [
 		["span", "foo"],
 		["em", "bar"],
 	];
 }]
 
-["div",														// child sub-arrays get flattened
-	["span", "some text"],
-	[
-		["strong", "stuff"],
-		["em", "more stuff"],
-	],
-]
+["textarea", {rows: 50}].concat([							// use concat() to avoid explicit
+	"text",													// child array restrictions
+	["br"],
+	"", null, undefined, [],								// these will be removed
+	NaN, true, false, {}, Infinity							// these will be coerced to strings
+])
 
-["#ui",														// same as div#ui
-	[SomeViewFn]											// sub-view w/closured data
+["#ui",														// "div" can be omitted
+	[SomeViewFn],											// sub-view w/closured data
 	[NavBarView, navbar],									// sub-view w/model
 	[PanelView, panel, "panelA"],							// sub-view w/model & key
 	preInitVm,												// pre-initialized ViewModel
+	[asyncPromise, ["div", "Loading..."]],					// async node with placeholder
 ]
+
 
 // some special props...
 
 ["p", {_key: "myParag"}, "Some text"]						// keyed elements
 
-["p", {_ref: "myParag"}, "Some text"]						// named reference
+["p", {_ref: "myParag"}, "Some text"]						// named references
 
-["div", {_guard: true}]										// guarded node (unmanaged)
+["div", {_guard: true}]										// guarded/unmanaged node (TODO)
 ```
 
 ---
@@ -148,7 +155,7 @@ You can store any needed view state inside the `PeopleView` closure.
 ---
 #### Subviews, Components
 
-Let's split the above example into nested components/sub-views.
+Let's split the above example into nested sub-views.
 
 ```js
 // models
