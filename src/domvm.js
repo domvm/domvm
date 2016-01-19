@@ -101,6 +101,24 @@
 			ctx: {},
 			node: null,
 			view: [viewFn, model, _key],
+			render: null,
+			on: function(ev, fn) {
+				if (fn)
+					vm.events[ev].push(fn);
+				else {
+					for (var i in ev)
+						vm.events[i].push(ev[i]);
+				}
+			},
+		//	off: function(ev, fn) {},
+			events: {
+			//	willCreate:	[],
+			//	didCreate:	[],
+				willRedraw:	[],
+				didRedraw:	[],
+				willDestroy:[],
+				didDestroy:	[],
+			},
 			redraw: cfg.useRaf ? raft(redraw) : redraw,
 			emit: emit,
 			refs: {},
@@ -136,13 +154,8 @@
 			updIdx: updIdx,
 		};
 
-		var view = viewFn.call(vm.ctx, vm, origModel, _key);
-
-		view = isFunc(view) ? {render: view} : view;
-		view.on = view.on || {};
-		view.on._redraw = vm.redraw;
-
-		vm.view[3] = view;
+		vm.events._redraw = vm.redraw;
+		vm.render = viewFn.call(vm.ctx, vm, origModel, _key);
 
 		// targeted by depth or by key, root = 1000
 		// todo: pass through args
@@ -169,13 +182,15 @@
 		}
 
 		function redraw(rendArgsNew, isRedrawRoot) {
+			execAll(vm.events.willRedraw);
+
 			rendArgs = rendArgsNew || rendArgs;
 
 			vm.refs = {};
 			vm.keyMap = {};
 
 			var old = vm.node;
-			var def = vm.view[3].render.apply(model, rendArgs);
+			var def = vm.render.apply(model, rendArgs);
 			var node = initNode(def, parentNode, idxInParent, vm);
 
 			node.key = isVal(_key) ? _key : node.key;
@@ -212,13 +227,15 @@
 			setTimeout(function() {
 				collectRefs(vm);
 
-				exec(vm.view[3].after);
+				execAll(vm.events.didRedraw);
 			}, 0);
 
 			return vm;
 		}
 
 		function destroy(live) {
+			execAll(vm.events.willDestroy);
+
 			if (parentNode) {
 				if (live) {
 					for (var i = idxInParent + 1; i < parentNode.body.length; i++) {
@@ -240,7 +257,7 @@
 
 			// more cleanup?
 
-			exec(vm.view[3].cleanup);
+			execAll(vm.events.didDestroy);
 		}
 
 		function emit(event) {
@@ -265,14 +282,14 @@
 						depth--;
 				}
 
-				var ons = targ.vm ? targ.vm.view[3].on : null;
+				var ons = targ.vm ? targ.vm.events : null;
 				var evh = ons ? ons[event] : null;
 				evh && evh.apply(null, args);
 			}
 			else {
 				while (targ) {
 					if (targ.vm) {
-						var ons = targ.vm.view[3].on;
+						var ons = targ.vm.events;
 						var evh = ons ? ons[event] : null;
 						if (evh) {
 							var res = evh.apply(null, args);
@@ -970,9 +987,10 @@
 	}
 
 	// saves from having to do fn && fn()
-	function exec(fn, args) {
-		if (fn)
+	function execAll(fnArr, args) {
+		fnArr.forEach(function(fn) {
 			return fn.apply(null, args);
+		});
 	}
 
 	function insertArr(targ, arr, pos, rem) {

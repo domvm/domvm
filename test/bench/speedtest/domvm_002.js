@@ -4,19 +4,17 @@
 	var count = 0;
 
 	function View(refresh, refs, emit) {
-		return {
-			render: function() {
-				var circles = [];
-				for (var i = 0 ; i < benchmark.circles; i++) {
-					circles.push(
-						["div", {"class": "box-view"}, [
-							["div", {"class": "box", style: getStyle() }, count % 100]
-						]]
-					);
-				}
-				return ["div", circles];
+		return () => {
+			var circles = [];
+			for (var i = 0 ; i < benchmark.circles; i++) {
+				circles.push(
+					["div", {"class": "box-view"}, [
+						["div", {"class": "box", style: getStyle() }, count % 100]
+					]]
+				);
 			}
-		}
+			return ["div", circles];
+		};
 
 		function getStyle() {
 			return {

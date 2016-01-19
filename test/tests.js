@@ -12,13 +12,11 @@ function evalOut(assert, viewEl, genrHtml, expcHtml, actuCounts, expcCounts) {
 	assert.deepEqual(actuCounts, expcCounts, "DOM Ops: " + JSON.stringify(expcCounts));
 }
 
-function anonView(branchDef) {
-	return function AnonView(vm, data) {
-		return {
-			render: function() {
-				return branchDef;
-			}
-		}
+function anonView(tpl) {
+	return function AnonView(vm, model) {
+		return function() {
+			return tpl;
+		};
 	}
 }
 
@@ -28,13 +26,7 @@ QUnit.module("Flat List");
 	var list = ["a","b","c"];
 
 	function ListView(vm) {
-		return {
-			render: function() {
-				return ["ul#list0.test-output", list.map(function(item) {
-					return ["li", item];
-				})];
-			}
-		};
+		return () => ["ul#list0.test-output", list.map((item) => ["li", item])];
 	}
 
 	var vm, listEl;
@@ -193,14 +185,7 @@ QUnit.module("Flat List w/keys");
 	var list = ["a","b","c"];
 
 	function ListViewKeyed() {
-		return {
-			render: function() {
-				return ["ul#list1.test-output", list.map(function(item) {
-				//	return ["li$"+item, item];						// why no workie?
-					return ["li", {_key: item}, item];
-				})];
-			}
-		};
+		return () => ["ul#list1.test-output", list.map((item) => ["li", {_key: item}, item])];
 	}
 
 	var vm, listEl;
@@ -358,11 +343,7 @@ QUnit.module("Other mods");
 	var tpl;
 
 	function View(vm) {
-		return {
-			render: function() {
-				return tpl;
-			}
-		}
+		return () => tpl;
 	}
 
 	QUnit.test('flatten arrays of arrays', function(assert) {
@@ -527,21 +508,11 @@ QUnit.module("Subview List w/keys");
 	var list = ["a","b","c"];
 
 	function ListViewKeyed(vm, list) {
-		return {
-			render: function() {
-				return ["ul#list2.test-output", list.map(function(item) {
-					return [ListViewItem, item, item];
-				})];
-			}
-		};
+		return () => ["ul#list2.test-output", list.map((item) => [ListViewItem, item, item])];
 	}
 
 	function ListViewItem(vm, item, _key) {
-		return {
-			render: function() {
-				return ["li", item];		// {_key: item}
-			}
-		};
+		return () => ["li", item];		// {_key: item}
 	}
 
 	var vm, listEl;
@@ -716,11 +687,7 @@ QUnit.module("Attrs/Props");
 
 	function CheckView(vm, check) {
 		check.vm = vm;
-		return {
-			render: function() {
-				return ["input#" + check.id, {type: "checkbox", checked: check.checked}];
-			}
-		};
+		return () => ["input#" + check.id, {type: "checkbox", checked: check.checked}];
 	};
 
 	var check1 = new Check("check1", false);
@@ -877,27 +844,23 @@ QUnit.module("Subview redraw() Branch Consistency");
 	function Parent() {
 		this.kids = [];
 
-		this.view = [function ParentView(vm, parent) {
-			parent.vm = vm;
-			return {
-				render: function() {
-					return ["ul", parent.kids.map((kid) => kid.view)];
-				}
-			}
-		}, this];
+		this.view = [ParentView, this];
+	}
+
+	function ParentView(vm, parent) {
+		parent.vm = vm;
+		return () => ["ul", parent.kids.map((kid) => kid.view)];
 	}
 
 	function Child(name) {
 		this.name = name;
 
-		this.view = [function ChildView(vm, child) {
-			child.vm = vm;
-			return {
-				render: function() {
-					return ["li", child.name];
-				}
-			}
-		}, this];
+		this.view = [ChildView, this];
+	}
+
+	function ChildView(vm, child) {
+		child.vm = vm;
+		return () => ["li", child.name];
 	}
 
 	var mom = new Parent();
@@ -959,25 +922,17 @@ QUnit.module("Various Others");
 
 (function() {
 	function SomeView(vm) {
-		return {
-			render: function() {
-				return ["div", [
-					["div", [
-						["strong", [
-							[SomeView2]
-						]]
-					]]
-				]]
-			}
-		}
+		return () => ["div",
+			["div",
+				["strong",
+					[SomeView2]
+				]
+			]
+		];
 	}
 
 	function SomeView2(vm) {
-		return {
-			render: function() {
-				return ["em", "yay!"];
-			}
-		}
+		return () => ["em", "yay!"];
 	}
 
 	QUnit.test('Init sub-view buried in plain nodes', function(assert) {
@@ -992,25 +947,21 @@ QUnit.module("Various Others");
 
 
 	function FlattenView(vm) {
-		return {
-			render: function() {
-				return ["div", [
-					["br"],
-					"hello kitteh",
-					[
-						["em", "foo"],
-						["em", "bar"],
-						[SomeView2],
-						"woohoo!",
-						[
-							[SomeView2],
-							["i", "another thing"],
-						]
-					],
-					"the end",
-				]];
-			}
-		}
+		return () => ["div", [
+			["br"],
+			"hello kitteh",
+			[
+				["em", "foo"],
+				["em", "bar"],
+				[SomeView2],
+				"woohoo!",
+				[
+					[SomeView2],
+					["i", "another thing"],
+				]
+			],
+			"the end",
+		]];
 	}
 
 	QUnit.test('Flatten child sub-arrays', function(assert) {
@@ -1029,19 +980,11 @@ QUnit.module("Function node types & values");
 
 (function() {
 	function ViewAny(vm) {
-		return {
-			render: function() {
-				return tpl;
-			}
-		}
+		return () => tpl;
 	}
 
 	function ViewAny2(vm) {
-		return {
-			render: function() {
-				return tpl2;
-			}
-		}
+		return () => tpl2;
 	}
 
 	var tpl = null;
@@ -1184,25 +1127,24 @@ QUnit.module("Function node types & values");
 	// special props, id, className, _key, _ref?
 })();
 
-QUnit.module("after() & refs");
+QUnit.module("didRedraw() & refs");
 
 (function() {
-	QUnit.test('after() is called on self', function(assert) {
+	QUnit.test('didRedraw() is called on self', function(assert) {
 		assert.expect(2);
 
 		var done = assert.async();
 
 		function MyView(vm) {
-			return {
-				render: function() {
-					return ["span#zzz", {_ref: "mySpan3"}, "foo"];
-				},
-				after: function() {
-					assert.ok(true, "Self after()");
+			vm.on({
+				didRedraw: function() {
+					assert.ok(true, "Self didRedraw()");
 					assert.ok(vm.refs.mySpan3 === document.getElementById("zzz"), "Self ref");
 					console.log(vm.refs);
 				}
-			}
+			});
+
+			return () => ["span#zzz", {_ref: "mySpan3"}, "foo"];
 		}
 
 		var vm = domvm(MyView).mount(testyDiv);
@@ -1210,35 +1152,33 @@ QUnit.module("after() & refs");
 		setTimeout(done, 1);
 	});
 
-	QUnit.test('after() is called on subviews when parent redraws', function(assert) {
+	QUnit.test('didRedraw() is called on subviews when parent redraws', function(assert) {
 		assert.expect(4);
 
 		var done = assert.async();
 
 		function MyView(vm) {
-			return {
-				render: function() {
-					return ["span#xxx", {_ref: "mySpan1"}, [[MyView2]]];
-				},
-				after: function() {
-					assert.ok(true, "Parent after()");
+			vm.on({
+				didRedraw: function() {
+					assert.ok(true, "Parent didRedraw()");
 					assert.ok(vm.refs.mySpan1 === document.getElementById("xxx"), "Parent ref");
 					console.log(vm.refs);
 				}
-			}
+			});
+
+			return () => ["span#xxx", {_ref: "mySpan1"}, [MyView2]];
 		}
 
 		function MyView2(vm) {
-			return {
-				render: function() {
-					return ["span#yyy", {_ref: "mySpan2"}, "foo"];
-				},
-				after: function() {
+			vm.on({
+				didRedraw: function() {
 					assert.ok(true, "Child after()");
 					assert.ok(vm.refs.mySpan2 === document.getElementById("yyy"), "Child ref");
 					console.log(vm.refs);
 				}
-			}
+			});
+
+			return () => ["span#yyy", {_ref: "mySpan2"}, "foo"];
 		}
 
 		var vm = domvm(MyView).mount(testyDiv);
@@ -1253,11 +1193,7 @@ QUnit.module("Unrenderable values");
 
 (function() {
 	function ViewAny(vm) {
-		return {
-			render: function() {
-				return tpl;
-			}
-		}
+		return () => tpl;
 	}
 
 	var tpl = null,

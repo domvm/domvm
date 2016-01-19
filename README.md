@@ -126,12 +126,10 @@ var myPeeps = [
 
 // our view (will receive model)
 function PeopleView(vm, people) {
-	return {
-		render: function() {
-			return ["ul.people-list", people.map(function(person) {
-				return ["li", person.name + " (aged " + person.age + ")"];
-			})];
-		}
+	return function() {
+		return ["ul.people-list", people.map(function(person) {
+			return ["li", person.name + " (aged " + person.age + ")"];
+		})];
 	};
 }
 
@@ -179,23 +177,19 @@ function PeopleView(vm, people) {
 	// expose the view model to have vm.redraw() control outside this closure
 	people.vm = vm;
 
-	return {
-		render: function() {
-			return ["ul.people-list", people.map(function(person) {
-				return person.view;
-			})];
-		}
-	}
+	return function() {
+		return ["ul.people-list", people.map(function(person) {
+			return person.view;
+		})];
+	};
 }
 
 function PersonView(vm, person) {
 	person.vm = vm;
 
-	return {
-		render: function() {
-			return ["li", person.name + " (aged " + person.age + ")"];
-		}
-	}
+	return function() {
+		return ["li", person.name + " (aged " + person.age + ")"];
+	};
 }
 
 var myPeeps = [
@@ -244,23 +238,19 @@ function Person(name, age) {
 function PeopleView(vm, people) {
 	people.vm = vm;
 
-	return {
-		render: function() {
-			return ["ul.people-list", people.map(function(person) {
-				return [PersonView, person];							// view/model coupling now defined in parent template
-			})];
-		}
-	}
+	return function() {
+		return ["ul.people-list", people.map(function(person) {
+			return [PersonView, person];							// view/model coupling now defined in parent template
+		})];
+	};
 }
 
 function PersonView(vm, person) {
 	person.vm = vm;
 
-	return {
-		render: function() {
-			return ["li", person.name + " (aged " + person.age + ")"];
-		}
-	}
+	return function() {
+		return ["li", person.name + " (aged " + person.age + ")"];
+	};
 }
 
 var myPeeps = [
@@ -275,51 +265,47 @@ domvm(PeopleView, people).mount(document.body);							// top-level view/model co
 ```
 
 ---
-#### DOM Refs, after()
+#### DOM Refs, didRedraw()
 
 Get references to created DOM nodes.
 
 ```js
 function SomeView(vm) {
-	return {
-		render: function() {
-			return ["a", {href: "#", _ref: "myLink"}, "some link"];
-		},
-		after: function() {
+	vm.on({
+		didRedraw: function() {
 			// this is called after every redraw/render and can be used to operate on the created DOM elements
 			console.log("created link element", vm.refs.myLink)
 		}
+	});
+
+	return function() {
+		return ["a", {href: "#", _ref: "myLink"}, "some link"];
 	}
 }
 ```
 
 ---
-#### Events, emit(), on:{}
+#### Events, emit(), on()
 
 Custom events can be triggered, bubbled and listened to in the view hierarchy, similar to DOM events.
 
 ```js
 function ParentView(vm) {
-	return {
-		render: function() {
-			return ["div", [
-				ChildView
-			]];
-		},
-		on: {
-			myEvent: function(arg1, arg2) {
-				console.log("caught myEvent", arguments);
-			}
+	vm.on({
+		myEvent: function(arg1, arg2) {
+			console.log("caught myEvent", arguments);
 		}
-	}
+	});
+
+	return function() {
+		return ["div", [ChildView]];
+	};
 }
 
 function ChildView(vm) {
-	return {
-		render: function() {
-			return ["em", {onclick: function(e) { vm.emit("myEvent", ["arg1", "arg2"]); }}, "some text"];
-		}
-	}
+	return function() {
+		return ["em", {onclick: function(e) { vm.emit("myEvent", ["arg1", "arg2"]); }}, "some text"];
+	};
 }
 ```
 
@@ -333,11 +319,9 @@ function ChildView(vm) {
 ```js
 
 function SomeView(vm) {
-	return {
-		render: function() {
-			return ["div#foo", "foobar"];
-		}
-	}
+	return function() {
+		return ["div#foo", "foobar"];
+	};
 }
 
 // on the backend

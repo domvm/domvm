@@ -54,13 +54,11 @@
 					["td", {_key: rowIdx+"."+colIdx, class: val > 50 ? "high" : "low"}, val]
 			};
 
-			return {
-				render: () => ["table", table.data.map((row, rowIdx) =>
-					["tr", row.map((val, colIdx) =>
-						vm.ctx.genCell(rowIdx, colIdx, val)
-					)]
+			return () => ["table", table.data.map((row, rowIdx) =>
+				["tr", row.map((val, colIdx) =>
+					vm.ctx.genCell(rowIdx, colIdx, val)
 				)]
-			}
+			)];
 		}
 
 		function randInt(min, max) {

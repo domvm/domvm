@@ -20,15 +20,13 @@
 		var pFill = randColor();
 
 		function Scene(vm) {
-			return {
-				render: function() {
-					return ["svg", {version: "1.1", width: "500", height: "160"}, [
-						["polygon", {points: "150,75 112.5,140 37.5,140 0,75 37.5,10 112.5,10", fill: pFill}],
-						["rect", {transform: "translate(180 0) rotate(" + sRot + " 65 65)", x: "10", y: "10", width: "130", height: "130", fill: "#006791"}],
-						["circle", {transform: "translate(350 0)", r: cRad, cx: "75", cy: "75", fill:"#006791"}],
-					]];
-				}
-			}
+			return function() {
+				return ["svg", {version: "1.1", width: "500", height: "160"}, [
+					["polygon", {points: "150,75 112.5,140 37.5,140 0,75 37.5,10 112.5,10", fill: pFill}],
+					["rect", {transform: "translate(180 0) rotate(" + sRot + " 65 65)", x: "10", y: "10", width: "130", height: "130", fill: "#006791"}],
+					["circle", {transform: "translate(350 0)", r: cRad, cx: "75", cy: "75", fill:"#006791"}],
+				]];
+			};
 		}
 
 		var vm = domvm(Scene).mount(document.body);
