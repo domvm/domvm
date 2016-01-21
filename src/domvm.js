@@ -495,16 +495,12 @@
 		if (node.type == TYPE_ELEM) {
 			if (wasDry) {
 				node.el = node.ns ? doc.createElementNS(NS[node.ns], node.tag) : doc.createElement(node.tag);
-
-				if (node.vm)
-					node.el._vm = node.vm;
-
 				node.props && patchProps(node);
 			}
 
-			if (isArr(node.body)) {
+			if (isArr(node.body))
 				node.body.forEach(hydrateNode);
-			}
+
 			// for body defs like ["a", "blaahhh"], entire body can be dumped at once
 			else if (wasDry && isVal(node.body))
 				node.el.textContent = node.body;
@@ -512,6 +508,9 @@
 		// for body defs like ["foo", ["a"], "bar"], create separate textnodes
 		else if (node.type == TYPE_TEXT && wasDry)
 			node.el = doc.createTextNode(node.body);
+
+		// reverse-ref
+		node.el._node = node;
 
 		// slot this element into correct position
 		var par = node.parent;
