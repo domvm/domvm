@@ -100,7 +100,6 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 	[NavBarView, navbar],									// sub-view w/model
 	[PanelView, panel, "panelA"],							// sub-view w/model & key
 	preInitVm,												// pre-initialized ViewModel
-	[asyncPromise, ["div", "Loading..."]],					// async node with placeholder
 ]
 
 
