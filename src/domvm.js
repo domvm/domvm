@@ -22,7 +22,7 @@
 	var seenTags = {};  // memoized parsed tags, todo: clean this?
 
 	var win = typeof window == "undefined" ? {} : window;
-	var doc = document;
+	var doc = typeof document == "undefined" ? {} : document;;
 
 	var TYPE_ELEM = 1;
 	var TYPE_TEXT = 2;
