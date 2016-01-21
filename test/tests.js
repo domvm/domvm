@@ -1235,3 +1235,75 @@ QUnit.module("Unrenderable values");
 		evalOut(assert, vm2.node.el, vm2.html(), expcHtml, callCounts, { createElement: 3, insertBefore: 3, textContent: 2 });
 	});
 })();
+
+QUnit.module("impCtx replacement");
+
+(function() {
+/*
+	function ViewAll(vm, model, key, addlCtx) {
+		var vmA = domvm(ViewA);
+
+		return () => [
+
+		];
+	}
+
+	function ViewB(vm, model, key, addlCtx) {
+		return () => [
+
+		];
+	}
+*/
+	function ViewA(vm) {
+//		console.log(vm.imp.foo);
+		return (imp) =>
+			["#viewA",
+				imp.foo,
+				["br"],
+				imp.bar,
+			];
+	}
+
+	// sub-views = [ViewB, null, null, data]?
+
+	// createView,		modelView(), dataView()
+	// createTpl,
+
+	var dataA = {foo: "foo", bar: "bar"},
+		dataB = {foo: "xxx", bar: "yyy"},
+		vmA = null;
+
+	QUnit.test('Initial model correctly rendered', function(assert) {
+		var expcHtml = '<div id="viewA">foo<br>bar</div>';
+
+		instr.start();
+		vmA = domvm(ViewA, dataA, false).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 4, createTextNode: 2 });
+	});
+
+	QUnit.test('Replace impCtx using redraw()', function(assert) {
+		var expcHtml = '<div id="viewA">xxx<br>yyy</div>';
+
+		instr.start();
+		vmA.redraw(dataB);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { nodeValue: 2 });
+	});
+
+	QUnit.test('Update impCtx & redraw()', function(assert) {
+		dataB.bar = "yyy2";
+
+		var expcHtml = '<div id="viewA">xxx<br>yyy2</div>';
+
+		instr.start();
+		vmA.redraw(dataB);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { nodeValue: 1 });
+	});
+})();
+
+// QUnit.module("Keyed model & addlCtx replacement");

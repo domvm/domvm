@@ -80,20 +80,29 @@
 
 	// creates closure
 	// TODO: need way to indicate detached vm vs parent-less root, to prevent un-needed initial redraw
-	function createView(viewFn, model, key, addlCtx, opts, parentNode, idxInParent) {
+	function createView(viewFn, model, key, impCtx, opts, parentNode, idxInParent) {
 		var isRootNode = !parentNode;
 
 		// for domvm([MyView, model, key])
 		if (isArr(viewFn)) {
 			model	= viewFn[1];
-			key	= viewFn[2];
-			addlCtx	= viewFn[3];
+			key		= viewFn[2];
+			impCtx	= viewFn[3];
 			opts	= viewFn[4];
 			viewFn	= viewFn[0];
 		}
 
+		// if key is `false`, then model arg is treated as (non-persistent) impCtx
+		// same as doing domvm(MyView, null, null, model)
+		if (key === false) {
+			impCtx = model;
+			model = null;
+			key = null;
+		}
+
 		var vm = {
-			ctx: {},
+			exp: {},
+			imp: impCtx || {},
 			node: null,
 			view: [viewFn, model, key],
 			render: null,
@@ -150,7 +159,7 @@
 		};
 
 		vm.events._redraw = vm.redraw;
-		vm.render = viewFn.call(vm.ctx, vm, model, key, addlCtx);
+		vm.render = viewFn.call(vm.exp, vm, model, key);
 
 		// targeted by depth or by key, root = 1000
 		// todo: pass through args
@@ -160,34 +169,32 @@
 		};
 
 		if (parentNode)
-			return moveTo(parentNode, idxInParent, model, addlCtx);
+			return moveTo(parentNode, idxInParent, impCtx);
 		else
-			return redraw(model, addlCtx);
+			return redraw(impCtx);
 
-		// transplants node into tree, optionally updating model & addlCtx
-		function moveTo(parentNodeNew, idxInParentNew, newModel, newAddlCtx) {
+		// transplants node into tree, optionally updating model & impCtx
+		function moveTo(parentNodeNew, idxInParentNew, newImpCtx) {
 			parentNode = parentNodeNew;
 			updIdx(idxInParentNew);
 
-			return redraw(newModel, newAddlCtx, false);
+			return redraw(newImpCtx, false);
 		}
 
 		function updIdx(idxInParentNew) {
 			idxInParent = idxInParentNew;
 		}
 
-		function redraw(newModel, newAddlCtx, isRedrawRoot) {
+		function redraw(newImpCtx, isRedrawRoot) {
 			execAll(vm.events.willRedraw);
 
-			model = newModel || model;
-			vm.view[1] = model;
-			addlCtx = newAddlCtx || addlCtx;
+			vm.imp = newImpCtx != null ? newImpCtx : impCtx;
 
 			vm.refs = {};
 			vm.keyMap = {};
 
 			var old = vm.node;
-			var def = vm.render.call(model);
+			var def = vm.render.call(model, vm.imp);
 			var node = initNode(def, parentNode, idxInParent, vm);
 
 			node.key = isVal(key) ? key : node.key;
@@ -462,7 +469,7 @@
 
 						if (isView && donor2.vm) {
 							if (donor2type === DONOR_NODE)
-								donor2.vm.moveTo(node, i, kid[1], kid[3]);
+								donor2.vm.moveTo(node, i, kid[3]);
 							else if (donor2type === DONOR_DOM) {
 								// TODO: instead, re-use old dom with new node here (loose match)
 								createView.call(null, kid[0], kid[1], kid[2], kid[3], kid[4], node, i);
