@@ -4,6 +4,13 @@
 	<meta charset="utf-8">
 	<title>domvm patch</title>
 	<style>
+		#perf {
+			position: fixed;
+			opacity: 0.9;
+			right: 0;
+			bottom: 0;
+		}
+
 		td {
 			min-width: 25px;
 		}
@@ -17,16 +24,40 @@
 </head>
 <body>
 	Here's a 100x100 (10,000 cell) table of random ints. The blue/red threshold is 50.
-	<br>Let's mutate <input id="mutate" type="text" value="300" style="width: 35px;">
-	cells/round x 1000 rounds! <button onclick="go()">GO!</button>
+	<button onclick="requestAnimationFrame(go);">GO!</button>
 
-	<script src="../../../src/domvm.js"></script>
-	<script src="../../lib/dominstr.js"></script>
-	<script src="../../lib/memory-stats.js"></script>
-	<script src="../../lib/monitor.js"></script>
+	<div id="perf"></div>
+
+	<script src="../../../dist/domvm.min.js"></script>
+<!--<script src="../../lib/dominstr.js"></script>-->
+	<script src="profiler.js"></script>
 
 	<script>
-		domvm.config({useRaf: false});
+	//	domvm.config({useRaf: false});
+
+		var rows = 100;
+		var cols = 100;
+		var mutations = 0.03;
+
+		// ------ slider code -----
+		var sliderContainer = document.createElement('div');
+		sliderContainer.style.display = 'flex';
+		var slider = document.createElement('input');
+		slider.type = 'range';
+		slider.style.width = '100%';
+		slider.style.margin = '5px';
+		slider.value = mutations * 100;
+		var text = document.createElement('label');
+		text.textContent = 'mutations : ' + (mutations * 100).toFixed(0) + '%';
+
+		slider.addEventListener('change', function(e) {
+		  mutations = /** @type {!HTMLInputElement} */(e.target).value / 100;
+		  text.textContent = 'mutations : ' + (mutations * 100).toFixed(0) + '%';
+		});
+		sliderContainer.appendChild(text);
+		sliderContainer.appendChild(slider);
+		document.body.insertBefore(sliderContainer, document.body.firstChild);
+		// --------------------------
 
 		// a table component
 		function Table(data) {
@@ -65,10 +96,8 @@
 			return Math.floor(Math.random() * (max - min + 1)) + min;
 		}
 
-		var rows = 100;
-		var cols = 100;
+		// initial data
 		var data = [];
-
 		for (var r = 0; r < rows; r++) {
 			var row = [];
 			for (var c = 0; c < cols; c++)
@@ -79,21 +108,24 @@
 		var table = new Table(data);
 		var vm = domvm(table.view).mount(document.body);
 
+		function update() {
+		  for (var i = 0; i < data.length; i++) {
+			var cols = data[i];
+			for (var j = 0; j < cols.length; j++) {
+			  if (Math.random() < mutations) {
+				table.setCell(i, j, randInt(0,100));
+			  }
+			}
+		  }
+		};
+
 		function go() {
-			var rounds = 1000, iter = 0,
-				mutCells = document.getElementById("mutate").value;
-
-			var it = setInterval(function() {
-				for (var j = 0; j < mutCells; j++)
-					table.setCell(randInt(0,rows-1), randInt(0,cols-1), randInt(0,100));
-
-				Monitoring.renderRate.ping();
-
-				if (iter++ == rounds)
-					clearInterval(it);
-			}, 0);
+			profiler.measure('update', update);
+			requestAnimationFrame(go);
 		}
 
+		profiler.init('update', (document.getElementById('perf')));
+/*
 		var instr = new DOMInstr(true);
 
 		setTimeout(function() {
@@ -101,6 +133,7 @@
 			vm.redraw();
 			console.log(instr.end());
 		}, 1000);
+*/
 	</script>
 </body>
 </html>
