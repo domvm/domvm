@@ -506,8 +506,12 @@
 				node.body.forEach(hydrateNode);
 
 			// for body defs like ["a", "blaahhh"], entire body can be dumped at once
-			else if (wasDry && isVal(node.body))
-				node.el.textContent = node.body;
+			else if (wasDry && isVal(node.body)) {
+				if (node.raw)
+					node.el.innerHTML = node.body;
+				else
+					node.el.textContent = node.body;
+			}
 		}
 		// for body defs like ["foo", ["a"], "bar"], create separate textnodes
 		else if (node.type == TYPE_TEXT && wasDry)
@@ -611,8 +615,12 @@
 		if (nTxt && n.body !== o.body) {
 			if (oTxt && n.el.firstChild)
 				n.el.firstChild.nodeValue = n.body;
-			else
-				n.el.textContent = n.body;
+			else {
+				if (n.raw)
+					n.el.innerHTML = n.body;
+				else
+					n.el.textContent = n.body;
+			}
 		}
 		// text -> []
 		else if (oTxt && !nTxt)
@@ -682,6 +690,7 @@
 //			math: false,
 			ns: null,
 			guard: false,	// created, updated, but children never touched
+			raw: false,
 			props: null,
 //			on: null,
 			el: null,
@@ -769,8 +778,15 @@
 			if (isEvProp(i))
 				props[i] = wrapHandler(props[i], ownerVm.view[1] || null);
 			// getters
-			else if (isFunc(props[i]))
-				props[i] = props[i]();
+			else if (isFunc(props[i])) {
+				// for router
+				if (i == "href") {
+					props.onclick = props[i];
+					props.href = props[i].url;
+				}
+				else
+					props[i] = props[i]();
+			}
 		}
 
 		if (isObj(props.style)) {
@@ -789,14 +805,17 @@
 
 		if (props._ref)
 			node.ref = props._ref;
+		if (props._raw)
+			node.raw = true;
 //		if (props._name)
 //			node.name = props._name;
 		if (props._guard)
-			node.guard = props._guard;
+			node.guard = true;
 
 		props._ref =
 		props._key =
 //		props._name =
+		props._raw =
 		props._guard = null;
 	}
 
