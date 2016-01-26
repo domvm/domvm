@@ -25,19 +25,22 @@
 <body>
 	Here's a 100x100 (10,000 cell) table of random ints. The blue/red threshold is 50.
 	<button onclick="requestAnimationFrame(go);">GO!</button>
+	<button onclick="step()">Step</button>
 
 	<div id="perf"></div>
 
-	<script src="../../../dist/domvm.min.js"></script>
-<!--<script src="../../lib/dominstr.js"></script>-->
+	<script src="../../../src/domvm.js"></script>
+	<script src="../../lib/dominstr.js"></script>
 	<script src="profiler.js"></script>
 
 	<script>
-	//	domvm.config({useRaf: false});
+		domvm.config({useRaf: false});
+
+		var instr = new DOMInstr(true);
 
 		var rows = 100;
 		var cols = 100;
-		var mutations = 0.03;
+		var mutations = 0.30;
 
 		// ------ slider code -----
 		var sliderContainer = document.createElement('div');
@@ -65,29 +68,29 @@
 			this.view = [TableView, this];
 		}
 
-		Table.prototype.setCell = function(rowIdx, colIdx, val) {
-			// update actual data
+		Table.prototype.updCell = function(rowIdx, colIdx, val) {
 			this.data[rowIdx][colIdx] = val;
-			// regenerate replacement cell
-			var newCell = this.vm.ctx.genCell(rowIdx, colIdx, val);
-			// micro-patch it
-			this.vm.patch(newCell);
+			this.vm.exp.patchCell(rowIdx, colIdx, val);
 		};
 
 		// view of table component
 		function TableView(vm, table) {
 			table.vm = vm;
 
+			var genCell = (val) => ["td", {class: val > 50 ? "high" : "low"}, val];
+
 			// exported funcs
-			vm.ctx = {
-				// cell node generator
-				genCell: (rowIdx, colIdx, val) =>
-					["td", {_key: rowIdx+"."+colIdx, class: val > 50 ? "high" : "low"}, val]
+			vm.exp = {
+				patchCell: (rowIdx, colIdx, val) => {
+					var oldCell = vm.node.body[rowIdx].body[colIdx];		// vm.getNode(key1,key2,key3)
+					var newTpl = genCell(val);
+					vm.patch(oldCell, newTpl);
+				}
 			};
 
 			return () => ["table", table.data.map((row, rowIdx) =>
 				["tr", row.map((val, colIdx) =>
-					vm.ctx.genCell(rowIdx, colIdx, val)
+					genCell(val)
 				)]
 			)];
 		}
@@ -109,15 +112,23 @@
 		var vm = domvm(table.view).mount(document.body);
 
 		function update() {
-		  for (var i = 0; i < data.length; i++) {
-			var cols = data[i];
-			for (var j = 0; j < cols.length; j++) {
-			  if (Math.random() < mutations) {
-				table.setCell(i, j, randInt(0,100));
-			  }
+			for (var i = 0; i < data.length; i++) {
+				var cols = data[i];
+				for (var j = 0; j < cols.length; j++) {
+					if (Math.random() < mutations)
+						table.updCell(i, j, randInt(0,100));
+				}
 			}
-		  }
+		//	instr.start();
+		//	vm.redraw();
+		//	console.log(instr.end());
 		};
+
+		function step() {
+			instr.start();
+			update();
+			console.log(instr.end());
+		}
 
 		function go() {
 			profiler.measure('update', update);

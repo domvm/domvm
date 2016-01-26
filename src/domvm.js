@@ -69,7 +69,6 @@
 		useRaf: true,
 		viewScan: false,	// enables aggressive unkeyed view reuse
 		useDOM: false,
-
 	};
 
 	createView.config = function(newCfg) {
@@ -124,23 +123,13 @@
 				didDestroy:	[],
 			},
 			redraw: cfg.useRaf ? raft(redraw) : redraw,
+		//	patch: cfg.useRaf ? raft(patchNode) : patchNode,		// why no repaint?
+			patch: patchNode,
 			emit: emit,
 			refs: {},
+		//	keyMap: {},
 			html: function() {
 				return collectHtml(vm.node);
-			},
-			keyMap: {},
-			patch: function() {
-				var targs = arguments;
-
-				for (var i = 0; i < targs.length; i++) {
-					var key = targs[i][1]._key,
-						donor = vm.keyMap[key],
-						parent = donor.parent,
-						node = buildNode(initNode(targs[i], parent, donor.idx, vm), donor);
-
-					parent.body[donor.idx] = parent.keyMap[key] = vm.keyMap[key] = node;
-				}
 			},
 			mount: function(el) {		// appendTo?
 				hydrateNode(vm.node);
@@ -185,13 +174,37 @@
 			idxInParent = idxInParentNew;
 		}
 
+		/* TODO
+		function spliceNodes() {}
+		*/
+
+		// need disclaimer that old and new nodes must be same type
+		// and must have matching keyes if are keyed
+		function patchNode(oldNode, newTpl) {
+		//	execAll(vm.events.willRedraw);
+
+			var donor = oldNode,
+				parent = donor.parent,
+				newNode = buildNode(initNode(newTpl, parent, donor.idx, vm), donor);
+
+			parent.body[donor.idx] = newNode;
+
+			var key = newNode.key;
+
+			if (isVal(key))
+				parent.keyMap[key] = newNode;
+			//	parent.keyMap[key] = vm.keyMap[key] = newNode;
+
+		//	execAll(vm.events.didRedraw);
+		}
+
 		function redraw(newImpCtx, isRedrawRoot) {
 			execAll(vm.events.willRedraw);
 
 			vm.imp = newImpCtx != null ? newImpCtx : impCtx;
 
 			vm.refs = {};
-			vm.keyMap = {};
+		//	vm.keyMap = {};
 
 			var old = vm.node;
 			var def = vm.render.call(model, vm.imp);
@@ -434,7 +447,7 @@
 
 				if (isVal(key)) {
 					keyMap[key] = i;
-					ownerVm.keyMap[key] = node2;
+				//	ownerVm.keyMap[key] = node2;
 					anyKeys = true;
 				}
 
