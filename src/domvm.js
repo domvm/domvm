@@ -459,7 +459,7 @@
 				var isView = isArr(kid);
 
 				if (donor) {
-					var donor2loc = findDonor(kid, node, donor);	// , i, i
+					var donor2loc = findDonor(kid, node, donor);			// , i, i		// if flagged node._static, just use i,i / DONOR_NODE
 
 					if (donor2loc !== null) {
 						var donor2idx = donor2loc[0];
@@ -472,7 +472,7 @@
 								donor2.vm.moveTo(node, i, kid[3]);
 							else if (donor2type === DONOR_DOM) {
 								// TODO: instead, re-use old dom with new node here (loose match)
-								createView.call(null, kid[0], kid[1], kid[2], kid[3], kid[4], node, i);
+								createView(kid[0], kid[1], kid[2], kid[3], kid[4], node, i);
 								return;
 							}
 						}
@@ -484,7 +484,7 @@
 				}
 				// fall through no donor found
 				if (isView)
-					createView.apply(null, [kid[0], kid[1], kid[2], kid[3], kid[4], node, i]);
+					createView(kid[0], kid[1], kid[2], kid[3], kid[4], node, i);
 				else
 					node.body[i] = buildNode(kid);
 			});
