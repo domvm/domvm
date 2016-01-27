@@ -95,7 +95,7 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 	NaN, true, false, {}, Infinity							// these will be coerced to strings
 ])
 
-["#ui",														// "div" can be omitted
+["#ui",														// same as "div#ui"
 	[SomeViewFn],											// sub-view w/closured data
 	[NavBarView, navbar],									// sub-view w/model
 	[PanelView, panel, "panelA"],							// sub-view w/model & key
@@ -105,9 +105,11 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 
 // some special props...
 
+[".myHtml", {_raw: true}, "<p>A am text!</p>"]				// raw innerHTML body
+
 ["p", {_key: "myParag"}, "Some text"]						// keyed elements
 
-["p", {_ref: "myParag"}, "Some text"]						// named references
+["p", {_ref: "myParag"}, "Some text"]						// named refs (via vm.refs.myParag)
 
 ["div", {_guard: true}]										// guarded/unmanaged node (TODO)
 ```
