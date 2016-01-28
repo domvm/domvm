@@ -148,7 +148,7 @@
 		};
 
 		vm.events._redraw = vm.redraw;
-		vm.render = viewFn.call(vm.exp, vm, model, key);
+		vm.render = viewFn.call(vm.exp, vm, model, key, impCtx);
 
 		// targeted by depth or by key, root = 1000
 		// todo: pass through args
