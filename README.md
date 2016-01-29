@@ -12,30 +12,30 @@ Components should instead be plain, stateful and reusable JS objects with APIs o
 ---
 #### Features
 
-- Small - ~11k min (or less), ~5k gzipped
+- Thin API, no dependencies, build = just concat & min
+- Small - ~8k min core + ~3k router, isomorphism, observers (~5k everything gzipped)
 - Ultra fast - [dbmonster](http://leeoniya.github.io/domvm/test/bench/dbmonster/), [granular patch](http://leeoniya.github.io/domvm/test/bench/patch/)
-- Concise javascript templates. No html-in-js, js-in-html or other esoteric syntax requiring compilation
+- Concise js templates. No html-in-js, js-in-html or other esoteric syntax requiring tooling/compilation
 - Sub-views - declarative OR imperative, freely composable, stateful and independently refreshable
 - Isomorphic - generate markup server-side and attach on client
-- Client-side router & mutation observers
+- Decoupled client-side router (for SPAs) & mutation observers (for auto-redraw)
 - Emit custom events to parent views (bubbling)
 - SVG & MathML support: [demo](http://leeoniya.github.io/domvm/demos/svg_mathml.html), [svg tiger](http://leeoniya.github.io/domvm/demos/svg-tiger.html),
 - IE9+ (w/ some small ES5 polyfills)
-- Thin API, no dependencies, no build process
 
 ---
 #### Usage/API
 
 0. [Installation](#installation)
 0. [Modules](#modules)
-1. [Template Reference](#template-reference)
-2. [Create, Modify, Redraw](#create-modify-redraw)
-3. [Subviews, Components](#subviews-components)
-4. [DOM Refs, after()](#dom-refs-after)
-5. [Events, emit(), on:{}](#events-emit-on)
-6. [Isomorphism, html(), attach()](#isomorphism-html-attach)
-7. [Granular patch()](#granular-patch)
-8. More docs to come...
+0. [Template Reference](#template-reference)
+0. [Create, Modify, Redraw](#create-modify-redraw)
+0. [Subviews, Components](#subviews-components)
+0. [DOM Refs, after()](#dom-refs-after)
+0. [Events, emit(), on:{}](#events-emit-on)
+0. [Isomorphism, html(), attach()](#isomorphism-html-attach)
+0. [Granular patch()](#granular-patch)
+0. More docs to come...
 
 ---
 #### Installation
