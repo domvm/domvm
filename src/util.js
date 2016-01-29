@@ -1,6 +1,8 @@
 (function(global) {
 	"use strict";
 
+	var win = typeof window == "undefined" ? {} : window;
+
 	var u = {
 		TYPE_ELEM: 1,
 		TYPE_TEXT: 2,

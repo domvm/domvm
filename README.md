@@ -10,7 +10,7 @@ UI-centric, exclusively declarative components suffer from locked-in syndrome, m
 Components should instead be plain, stateful and reusable JS objects with APIs or domain models with methods. They in turn can expose one or multiple views for external composition - each with its own state and/or exposed view API (e.g. `emailApp.tableView.markUnread()`). Alternatively, component views can be crafted externally and composed declaratively or imperatively interacted with. domvm provides this flexibility, allowing for separation of concerns and truly reusable components without framework lock-in.
 
 ---
-### Features
+#### Features
 
 - Small - ~11k min (or less), ~5k gzipped
 - Ultra fast - [dbmonster](http://leeoniya.github.io/domvm/test/bench/dbmonster/), [granular patch](http://leeoniya.github.io/domvm/test/bench/patch/)
@@ -24,7 +24,7 @@ Components should instead be plain, stateful and reusable JS objects with APIs o
 - Thin API, no dependencies, no build process
 
 ---
-### Usage/API
+#### Usage/API
 
 0. [Installation](#installation)
 0. [Modules](#modules)
@@ -53,7 +53,7 @@ var domvm = require("domvm");
 ```
 
 ---
-### Modules
+#### Modules
 
 Each module is a single js file in `/src`. The first 3 are the "core", the rest are optional and can be replaced by your own implementations. For development, just include them in order.
 

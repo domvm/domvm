@@ -8,7 +8,6 @@
 
 	var seenTags = {};  // memoized parsed tags, todo: clean this?
 
-	var win = typeof window == "undefined" ? {} : window;
 	var doc = typeof document == "undefined" ? {} : document;
 
 	var DONOR_DOM	= 1;
@@ -108,7 +107,7 @@
 				willDestroy:[],
 				didDestroy:	[],
 			},
-			redraw: cfg.useRaf ? raft(redraw) : redraw,
+			redraw: cfg.useRaf ? u.raft(redraw) : redraw,
 		//	patch: cfg.useRaf ? raft(patchNode) : patchNode,		// why no repaint?
 			patch: patchNode,
 			emit: emit,
