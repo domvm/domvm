@@ -3,7 +3,7 @@ domvm.js (DOM ViewModel)
 A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
 ---
-### Philosophy
+#### Philosophy
 
 UI-centric, exclusively declarative components suffer from locked-in syndrome, making them unusable outside of a specific framework. Frequently they must extend framework classes and adhere to compositional restrictions which typically mimic the underlying DOM tree and sacrifice powerful exposed APIs for the sake of designer-centric ease and beauty.
 
@@ -60,7 +60,7 @@ Each module is a single js file in `/src`. The first 3 are the "core", the rest 
 - domvm: namespace & module wrapper
 - domvm.util: generic funcs required by other modules
 - domvm.view: the core view/vdom/template lib
-- domvm.html: vtree -> innerHTML generator, if you need isomorphism/SSR
+- domvm.html: vtree => innerHTML generator, if you need isomorphism/SSR
 - domvm.watch: auto-redraw helpers - mutation observers, ajax wrappers
 - domvm.route: router & reverse router for single page apps (SPAs)
 
