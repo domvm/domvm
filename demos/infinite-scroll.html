@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+</head>
+<body>
+	<script src="../dist/domvm.min.js"></script>
+	<script>
+		const itemsToLoad = 20;
+
+		function ItemListView(vm, items, key) {
+			const itemHeight = 30;
+			const windowHeight = 300;
+			const loadWhenNumFromBottom = 5;
+
+			function calcLoadLine(scrollHeight) {
+				return scrollHeight - (itemHeight * loadWhenNumFromBottom);
+			}
+
+			var loadLine = calcLoadLine(itemsToLoad * itemHeight);
+
+			var onscroll = function(e) {
+				var winBottom = e.target.scrollTop + windowHeight;
+				if (winBottom >= loadLine) {
+					vm.imp.loadMoar();
+					vm.redraw();
+					loadLine = calcLoadLine(e.target.scrollHeight);
+				}
+			};
+
+			// this is render() and is called on every redraw() to regen the template
+			return function() {
+				var props = {
+					style: {height: windowHeight, overflowY: "scroll"},
+					onscroll: onscroll,
+				};
+				var kids = items.map((item) => ["div", {style: {color: item.color, height: itemHeight}}, item.color]);
+				return ["#win", props, kids];
+			}
+		}
+
+		function randColor() {
+			return '#'+Math.floor(Math.random()*16777215).toString(16);
+		}
+
+		var items = [];
+
+		var impCtx = {
+			loadMoar: function() {
+				for (var i = itemsToLoad; i > 0; i--)
+					items.push({color: randColor()});
+			}
+		};
+
+		// load initial items
+		impCtx.loadMoar();
+
+		domvm.view(ItemListView, items, null, impCtx).mount(document.body);
+	</script>
+</body>
+</html>

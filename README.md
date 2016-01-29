@@ -12,11 +12,12 @@ Components should instead be plain, stateful and reusable JS objects with APIs o
 ---
 ### Features
 
-- Small - ~8k min, ~4k gzipped
+- Small - ~11k min (or less), ~5k gzipped
 - Ultra fast - [dbmonster](http://leeoniya.github.io/domvm/test/bench/dbmonster/), [granular patch](http://leeoniya.github.io/domvm/test/bench/patch/)
 - Concise javascript templates. No html-in-js, js-in-html or other esoteric syntax requiring compilation
 - Sub-views - declarative OR imperative, freely composable, stateful and independently refreshable
 - Isomorphic - generate markup server-side and attach on client
+- Client-side router & mutation observers
 - Emit custom events to parent views (bubbling)
 - SVG & MathML support: [demo](http://leeoniya.github.io/domvm/demos/svg_mathml.html), [svg tiger](http://leeoniya.github.io/domvm/demos/svg-tiger.html),
 - IE9+ (w/ some small ES5 polyfills)
@@ -26,14 +27,15 @@ Components should instead be plain, stateful and reusable JS objects with APIs o
 ### Usage/API
 
 0. [Installation](#installation)
+0. [Modules](#modules)
 1. [Template Reference](#template-reference)
 2. [Create, Modify, Redraw](#create-modify-redraw)
 3. [Subviews, Components](#subviews-components)
 4. [DOM Refs, after()](#dom-refs-after)
 5. [Events, emit(), on:{}](#events-emit-on)
 6. [Isomorphism, html(), attach()](#isomorphism-html-attach)
-6. [Granular patch()](#granular-patch)
-7. More docs to come...
+7. [Granular patch()](#granular-patch)
+8. More docs to come...
 
 ---
 #### Installation
@@ -48,6 +50,34 @@ Components should instead be plain, stateful and reusable JS objects with APIs o
 
 ```js
 var domvm = require("domvm");
+```
+
+---
+### Modules
+
+Each module is a single js file in `/src`. The first 3 are the "core", the rest are optional and can be replaced by your own implementations. For development, just include them in order.
+
+domvm: namespace & module wrapper
+domvm.util: generic funcs required by other modules
+domvm.view: the core view/vdom/template lib
+domvm.html: vtree -> innerHTML generator, if you need isomorphism/SSR
+domvm.watch: auto-redraw helpers - mutation observers, ajax wrappers
+domvm.route: router & reverse router for single page apps (SPAs)
+
+**Building A Custom Bundle**
+
+Building is simple: concat the needed modules and minify with tools of your choice. I use [Closure Compiler](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for both:
+
+```
+java -jar compiler.jar
+	--language_in ECMASCRIPT5
+	--js src/domvm.js
+	--js src/util.js
+	--js src/view.js
+	--js src/html.js
+	--js src/watch.js
+	--js src/route.js
+	--js_output_file dist/domvm.min.js
 ```
 
 ---
@@ -135,7 +165,7 @@ function PeopleView(vm, people) {
 }
 
 // create view model
-var vm = domvm(PeopleView, myPeeps);
+var vm = domvm.view(PeopleView, myPeeps);
 
 // render to document
 vm.mount(document.body);
@@ -201,7 +231,7 @@ var myPeeps = [
 
 var people = new People(myPeeps);
 
-domvm(people.view).mount(document.body);
+domvm.view(people.view).mount(document.body);
 
 // modify the list
 var allison = new Person("Allison", 15);
@@ -262,7 +292,7 @@ var myPeeps = [
 
 var people = new People(myPeeps);
 
-domvm(PeopleView, people).mount(document.body);							// top-level view/model coupling now defined here
+domvm.view(PeopleView, people).mount(document.body);							// top-level view/model coupling now defined here
 ```
 
 ---
@@ -326,12 +356,12 @@ function SomeView(vm) {
 }
 
 // on the backend
-var vm = domvm(SomeView, someModel);
+var vm = domvm.view(SomeView, someModel);
 // have server barf this html into the returned document
-var html = vm.html();
+var html = domvm.html(vm.node);
 
 // ...then on the front-end
-var vm = domvm(SomeView, someModel);
+var vm = domvm.view(SomeView, someModel);
 // instead of mount(), use attach()
 vm.attach(document.getElementById("foo"));
 ```

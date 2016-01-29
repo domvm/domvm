@@ -3,7 +3,7 @@
 	<title>domvm svg tiger</title>
 </head>
 <body>
-	<script src="../src/domvm.js"></script>
+	<script src="../dist/domvm.min.js"></script>
 	<script>
 		// `tpl` scraped/converted from https://upload.wikimedia.org/wikipedia/commons/f/fd/Ghostscript_Tiger.svg
 		// using code code at https://gist.github.com/leeoniya/d9bfcf12a88c8261f19b
@@ -19,7 +19,7 @@
 
 		console.time("initial render");
 			console.time("vtree build");
-				var vw = domvm(View);
+				var vw = domvm.view(View);
 			console.timeEnd("vtree build");
 			console.time("mount");
 				vw.mount(document.body);

@@ -61,7 +61,7 @@ var dbmon = new DBMon();
 
 console.time("initial render");
 	console.time("vtree build");
-		var vw = domvm(DBMonView, dbmon);
+		var vw = domvm.view(DBMonView, dbmon);
 	console.timeEnd("vtree build");
 	console.time("mount");
 		instr.start(true);

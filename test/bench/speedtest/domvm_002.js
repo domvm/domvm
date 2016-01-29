@@ -28,7 +28,7 @@
 	window.runDomvm = function() {
 		benchmark.reset();
 
-		var v = domvm(View);
+		var v = domvm.view(View);
 		v.mount(document.getElementById("grid"));
 
 		benchmark.loop(function() {
