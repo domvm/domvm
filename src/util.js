@@ -6,7 +6,7 @@
 	var u = {
 		TYPE_ELEM: 1,
 		TYPE_TEXT: 2,
-	//  TYPE_RAWEL: 3,
+	//	TYPE_RAWEL: 3,
 	//	TYPE_FRAG: 4,
 
 		isArr: function(val) {
