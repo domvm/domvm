@@ -1,0 +1,1 @@
+java -jar compiler.jar --language_in ECMASCRIPT5 --js src/domvm.js --js src/util.js --js src/view.js --js src/html.js --js src/watch.js --js src/route.js --js_output_file dist/domvm.min.js
