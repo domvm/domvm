@@ -57,12 +57,12 @@ var domvm = require("domvm");
 
 Each module is a single js file in `/src`. The first 3 are the "core", the rest are optional and can be replaced by your own implementations. For development, just include them in order.
 
-domvm: namespace & module wrapper
-domvm.util: generic funcs required by other modules
-domvm.view: the core view/vdom/template lib
-domvm.html: vtree -> innerHTML generator, if you need isomorphism/SSR
-domvm.watch: auto-redraw helpers - mutation observers, ajax wrappers
-domvm.route: router & reverse router for single page apps (SPAs)
+- domvm: namespace & module wrapper
+- domvm.util: generic funcs required by other modules
+- domvm.view: the core view/vdom/template lib
+- domvm.html: vtree -> innerHTML generator, if you need isomorphism/SSR
+- domvm.watch: auto-redraw helpers - mutation observers, ajax wrappers
+- domvm.route: router & reverse router for single page apps (SPAs)
 
 **Building A Custom Bundle**
 
