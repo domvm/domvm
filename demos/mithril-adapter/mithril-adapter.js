@@ -13,14 +13,10 @@ m.prop = w.prop;
 m.withAttr = w.sync;
 
 // domvm.watch has method-specific fetch funcs w.get(), w.post()
-// we'll also mimic Mithril by returning an m.prop that gets set
-// on promise resolution with an initial value set, since domvm
-// render is not blocked by pending promises/async
+// this wrapper only handles methods with no request body
 m.request = function(opts) {
-	var p = m.prop(opts.initialValue);
 	var meth = opts.method.toLowerCase();
-	w[meth](opts.url, p);
-	return p;
+	return w[meth](opts.url, m.prop(opts.initialValue));
 };
 
 // component mounter
