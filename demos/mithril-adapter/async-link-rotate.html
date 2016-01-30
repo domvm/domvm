@@ -1,0 +1,68 @@
+<!doctype>
+<html>
+<head>
+	<style>
+		.example {
+			background: #ffe;
+			border: 1px solid #ddd;
+			display: block;
+			font: Courier New;
+			margin-bottom: 20px;
+			padding: 5px 10px;
+			width: 320px;
+		}
+
+		.output a,
+		.more a {
+			display: block;
+			margin: 0 0 10px;
+		}
+
+		a {
+			color: #161;
+		}
+
+		a:visited {
+			color: #383;
+		}
+
+		.output a:after,
+		.more a:after {
+			content: " \bb";
+		}
+	</style>
+
+	<script src="../../dist/domvm.min.js"></script>
+</head>
+<body>
+	<div id="example" class="example output"></div>
+
+	<script>
+		function Demo() {
+			this.pages = w.get("pages.json", w.prop([]));
+
+			this.rotate = function() {
+				this.pages().push(this.pages().shift());
+			};
+		}
+
+		function DemoView(vm, demo) {
+			return function() {
+				return ["div",
+					demo.pages().map(function(page) {
+						return ["a", {href: page.url}, page.title];
+					}),
+					["button", {onclick: demo.rotate}, "Rotate links"]
+				];
+			};
+		}
+
+		// init a global watch w/auto-redraw handler
+		var w = domvm.watch().on(function() { demoVm.redraw(); });
+		// init state/model & create vm
+		var demoVm = domvm.view(DemoView, new Demo(), null, null, {watch: w});
+		// render to doc
+		demoVm.mount(document.getElementById("example"));
+	</script>
+</body>
+</html>

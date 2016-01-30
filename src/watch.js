@@ -1,7 +1,11 @@
 (function(domvm) {
 	"use strict";
 
-	domvm.watch = function(handler) {
+	var u = domvm.util;
+
+	domvm.watch = function() {
+		var handlers = [];
+
 		function noop() {};
 
 		function initFetch(method, url, body, cb, opts) {
@@ -52,17 +56,33 @@
 				}
 			};
 
-			return fetch(url, opts)
+			var prom = fetch(url, opts)
 				.then(checkStatus)
 				.then(reader)
 				.then(ok, err)
 				.then(function(res) {
-					if (res !== false)
-						handler();
+					res !== false && api.fire();
 				}, noop);
+
+			if (ok._name === "_prop")
+				return ok;
+
+			return prom;
 		}
 
-		return {
+		var api = {
+			on: function(handler) {
+				handlers.push(handler);
+				return api;
+			},
+			off: function(handler) {
+				handlers.splice(handlers.indexOf(handler), 1);
+				return api;
+			},
+			fire: function() {
+				u.execAll(handlers, arguments);
+				return api;
+			},
 			prop: function prop(initVal) {		// , model, name (if you want the handler to know ctx)
 				var val = initVal;
 
@@ -70,12 +90,18 @@
 					if (arguments.length && newVal !== val) {
 						var oldVal = val;
 						val = newVal;
-						if (handler && runHandler !== false)
-							handler();
+						if (runHandler !== false)
+							api.fire();
 					}
 
 					return val;
 				};
+
+				fn._name = "_prop";
+
+				// .ref()
+
+				fn.toString = fn;
 
 				return fn;
 			},
@@ -137,6 +163,8 @@
 			patch:	function(url, body, cb, opts) {
 				return initFetch("patch", url, body, cb, opts);
 			},
-		}
+		};
+
+		return api;
 	};
 })(domvm);

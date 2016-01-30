@@ -13,7 +13,7 @@ Components should instead be plain, stateful and reusable JS objects with APIs o
 #### Features
 
 - Thin API, no dependencies, build = just concat & min
-- Small - ~8k min core + ~3k router, isomorphism, observers (~5k everything gzipped)
+- Small - ~8k min core + ~4k router, isomorphism, observers (~5k everything gzipped)
 - Ultra fast - [dbmonster](http://leeoniya.github.io/domvm/test/bench/dbmonster/), [granular patch](http://leeoniya.github.io/domvm/test/bench/patch/)
 - Concise js templates. No html-in-js, js-in-html or other esoteric syntax requiring tooling/compilation
 - Sub-views - declarative OR imperative, freely composable, stateful and independently refreshable

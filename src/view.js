@@ -89,6 +89,7 @@
 			imp: impCtx || {},
 			node: null,
 			view: [viewFn, model, key],
+			opts: opts || {},
 			render: null,
 			on: function(ev, fn) {
 				if (fn)
@@ -747,22 +748,27 @@
 		return node;
 	}
 
-	function wrapHandler(fns, ctx) {
+	function wrapHandler(fns, ctx, node, ownerVm) {
 		var handler = function(e) {
 			var res;
 
 			if (u.isFunc(fns))
-				res = fns.call(ctx, e);
+				res = fns.call(ctx, e, node, ownerVm);
 			else if (u.isObj(fns)) {
 				for (var filt in fns) {
 					if (e.target.matches(filt))
-						res = fns[filt].call(ctx, e);
+						res = fns[filt].call(ctx, e, node, ownerVm);
 				}
 			}
 
 			if (res === false) {
 				e.preventDefault();
 				e.stopPropagation();		// yay or nay?
+			}
+
+			if (ownerVm.opts.watch) {
+				var watchEv = {vm: ownerVm};
+				ownerVm.opts.watch.fire(watchEv);			// use ctx here also?
 			}
 		};
 
@@ -772,7 +778,7 @@
 	function procProps(props, node, ownerVm) {
 		for (var i in props) {
 			if (u.isEvProp(i))
-				props[i] = wrapHandler(props[i], ownerVm.view[1] || null);
+				props[i] = wrapHandler(props[i], ownerVm.opts.evctx || ownerVm.view[1] || ownerVm.imp || null, node, ownerVm);
 			// getters
 			else if (u.isFunc(props[i])) {
 				// for router

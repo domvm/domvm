@@ -1,0 +1,76 @@
+<!doctype>
+<html>
+<head>
+	<style>
+		.example {
+			background: #ffe;
+			border: 1px solid #ddd;
+			display: block;
+			font: Courier New;
+			margin-bottom: 20px;
+			padding: 5px 10px;
+			width: 320px;
+		}
+
+		.output a,
+		.more a {
+			display: block;
+			margin: 0 0 10px;
+		}
+
+		a {
+			color: #161;
+		}
+
+		a:visited {
+			color: #383;
+		}
+
+		.output a:after,
+		.more a:after {
+			content: " \bb";
+		}
+	</style>
+
+	<script src="../../dist/domvm.min.js"></script>
+	<script src="mithril-adapter.min.js"></script>
+</head>
+<body>
+	<div id="example" class="example output"></div>
+
+	<script>
+		//model
+		var Page = {
+			list: function() {
+				return m.request({method: "GET", url: "pages.json", initialValue: []});
+			}
+		};
+
+		var Demo = {
+			//controller
+			controller: function() {
+				var pages = Page.list();
+				return {
+					pages: pages,
+					rotate: function() {
+						pages().push(pages().shift());
+					}
+				}
+			},
+
+			//view
+			view: function(ctrl) {
+				return m("div", [
+					ctrl.pages().map(function(page) {
+						return m("a", {href: page.url}, page.title);
+					}),
+					m("button", {onclick: ctrl.rotate}, "Rotate links")
+				]);
+			}
+		};
+
+		//initialize
+		m.mount(document.getElementById("example"), Demo);
+	</script>
+</body>
+</html>
