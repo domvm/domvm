@@ -9,14 +9,11 @@ var w = domvm.watch();
 // m.prop
 m.prop = w.prop;
 
-// m.withAttr
-m.withAttr = w.sync;
-
 // domvm.watch has method-specific fetch funcs w.get(), w.post()
 // this wrapper only handles methods with no request body
 m.request = function(opts) {
 	var meth = opts.method.toLowerCase();
-	return w[meth](opts.url, m.prop(opts.initialValue));
+	return m.prop(opts.initialValue, w[meth](opts.url));
 };
 
 // component mounter

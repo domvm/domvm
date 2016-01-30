@@ -58,14 +58,17 @@
 
 			var prom = fetch(url, opts)
 				.then(checkStatus)
+				// decode data
 				.then(reader)
+				// invoke provided callbacks, massage/set data
 				.then(ok, err)
+				// fire any redraws
 				.then(function(res) {
 					res !== false && api.fire();
+					return res;
 				}, noop);
 
-			if (ok._name === "_prop")
-				return ok;
+			prom._fetchArgs = [method, url, body, [ok, err], opts];
 
 			return prom;
 		}
@@ -83,21 +86,44 @@
 				u.execAll(handlers, arguments);
 				return api;
 			},
-			prop: function prop(initVal) {		// , model, name (if you want the handler to know ctx)
+			prop: function prop(initVal, asyncVal) {		// , model, name (if you want the handler to know ctx)
 				var val = initVal;
 
-				var fn = function(newVal, runHandler) {
+				var fn = function(newVal, runHandlers) {
 					if (arguments.length && newVal !== val) {
 						var oldVal = val;
 						val = newVal;
-						if (runHandler !== false)
+						if (runHandlers !== false)
 							api.fire();
 					}
 
 					return val;
 				};
 
-				fn._name = "_prop";
+				// TODO: also provide caching policy so redraws can re-fetch implicitly
+				if (asyncVal && asyncVal.then) {
+					fn.freshen = noop;
+
+					// pending fetch provided?
+					if (asyncVal._fetchArgs) {
+						// splice the prop setter call into the original callbacks
+						var origCbs = asyncVal._fetchArgs[3];
+						asyncVal._fetchArgs[3] = [
+							function(res) {
+								return fn(origCbs[0] ? origCbs[0](res) : res);
+							},
+							origCbs[1],
+						];
+
+						fn.freshen = function() {
+							initFetch.apply(null, asyncVal._fetchArgs);
+						};
+					}
+
+					// this is needed to update the prop on following the already pending async call. without rAF debunce
+					// will cause an extra redraw since we can't splice the setter into the already built chain
+					asyncVal.then(fn);
+				}
 
 				// .ref()
 
