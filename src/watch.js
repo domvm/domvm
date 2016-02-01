@@ -102,7 +102,7 @@
 
 				// TODO: also provide caching policy so redraws can re-fetch implicitly
 				if (asyncVal && asyncVal.then) {
-					fn.freshen = noop;
+					fn.update = noop;
 
 					// pending fetch provided?
 					if (asyncVal._fetchArgs) {
@@ -115,7 +115,7 @@
 							origCbs[1],
 						];
 
-						fn.freshen = function() {
+						fn.update = function() {
 							initFetch.apply(null, asyncVal._fetchArgs);
 						};
 					}
