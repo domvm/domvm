@@ -766,7 +766,7 @@
 				e.stopPropagation();		// yay or nay?
 			}
 
-			if (ownerVm.opts.watch) {
+			if (ownerVm.opts.hasOwnProperty("watch")) {
 				var watchEv = {vm: ownerVm};
 				ownerVm.opts.watch.fire(watchEv);			// use ctx here also?
 			}

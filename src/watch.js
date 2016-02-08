@@ -3,8 +3,11 @@
 
 	var u = domvm.util;
 
-	domvm.watch = function() {
+	domvm.watch = function(handler) {
 		var handlers = [];
+
+		if (u.isFunc(handler))
+			handlers.push(handler);
 
 		function noop() {};
 
