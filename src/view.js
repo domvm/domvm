@@ -119,9 +119,15 @@
 				return collectHtml(vm.node);
 			},
 		*/
-			mount: function(el) {		// appendTo?
-				hydrateNode(vm.node);
-				el.insertBefore(vm.node.el, null);
+			mount: function(el, isRoot) {
+				if (isRoot)
+					el.textContent = '';
+
+				hydrateNode(vm.node, isRoot ? el : null);
+
+				if (!isRoot)
+					el.insertBefore(vm.node.el, null);
+
 				return vm;
 			},
 			attach: function(el) {
@@ -494,12 +500,12 @@
 		return node;
 	}
 
-	function hydrateNode(node) {
+	function hydrateNode(node, el) {
 		var wasDry = !node.el;
 
 		if (node.type == u.TYPE_ELEM) {
 			if (wasDry) {
-				node.el = node.ns ? doc.createElementNS(NS[node.ns], node.tag) : doc.createElement(node.tag);
+				node.el = el && el.nodeName ? el : node.ns ? doc.createElementNS(NS[node.ns], node.tag) : doc.createElement(node.tag);
 				node.props && patchProps(node);
 			}
 
