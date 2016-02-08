@@ -1,4 +1,4 @@
-(function(global) {
+(function(domvm) {
 	"use strict";
 
 	var win = typeof window == "undefined" ? {} : window;

@@ -11,14 +11,4 @@
 * @preserve https://github.com/leeoniya/domvm
 */
 
-( // Module boilerplate to support commonjs, browser globals and AMD.
-	(typeof module === "object" && typeof module.exports === "object" && function (m) { module.exports = m(); }) ||
-	(typeof define === "function" && function (m) { define("domvm", m); }) ||
-	(function (m) { window.domvm = m(); })
-)(function () {
-	var domvm = {};
-
-	//--MODULES--//
-
-	return domvm;
-});
+(typeof global !== "undefined" ? global : this).domvm = {};
