@@ -973,6 +973,19 @@
 			targ.className = val;
 		else if (name === "id" || u.isEvProp(name))
 			targ[name] = val;	  // else test delegation for val === function vs object
+		else if (targ.nodeName === "INPUT" && (name === "checked" || name === "value")) {
+			delAttr(targ, name, ns, init);
+			if (name === "checked") {
+				targ[name] = !!val;
+				if (val)
+					targ.setAttribute(name, "");
+			} else {
+				val = "" + val;
+				targ[name] = val;
+				if (val)
+					targ.setAttribute(name, val);
+			}
+		}
 		else if (val === false)
 			delAttr(targ, name, ns, init);
 		else {
