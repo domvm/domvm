@@ -122,7 +122,9 @@ view.Todo = function Todo(vm, data) {
 
     vm.hook({
         didRedraw: function() {
-            vm.refs.editor.focus();
+            if (editing) {
+                vm.refs.editor.focus();
+            }
         }
     })
 
