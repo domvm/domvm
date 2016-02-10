@@ -20,13 +20,15 @@ model.Todos = {
     },
 
     destroy: function(id) {
+        var i, store = this.all();
+
         if (typeof id === 'undefined') {
             this.store = [];
         }
 
-        for (var i = 0; i < this.store.length; i++) {
-            if (this.store[i].id === id) {
-                this.store.splice(i, 1);
+        for (var i = 0; i < store.length; i++) {
+            if (store[i].id === id) {
+                store.splice(i, 1);
                 break;
             }
         }
@@ -34,10 +36,11 @@ model.Todos = {
         this.save();
     },
 
-    destroyCompleted: function(){
-        for (var i = 0; i < this.store.length; i++) {
-            if (this.store[i].completed) {
-                this.store.splice(i, 1);
+    destroyCompleted: function() {
+        var store = this.all();
+        for (var i = 0; i < store.length; i++) {
+            if (store[i].completed) {
+                store.splice(i, 1);
                 i--;
             }
         }
@@ -45,16 +48,40 @@ model.Todos = {
         this.save();
     },
 
+    complete: function(todo, completed) {
+        todo.completed = completed;
+        this.save();
+    },
+
+    completeAll: function(completed) {
+        this.all().forEach(function(todo){
+            todo.completed = completed;
+        })
+        this.save();
+    },
+
     count: function() {
-        return this.store.length;
+        return this.all().length;
     },
 
     remaining: function() {
-        return this.store.reduce(function(result, todo){
+        return this.all().reduce(function(result, todo){
             return todo.completed
                 ? result
                 : result + 1;
         }, 0);
+    },
+
+    findActive: function() {
+        return this.all().filter(function(item){
+            return !item.completed;
+        })
+    },
+
+    findCompleted: function() {
+        return this.store.filter(function(item){
+            return item.completed;
+        })
     },
 
     all: function() {

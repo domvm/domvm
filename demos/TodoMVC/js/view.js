@@ -39,43 +39,27 @@ view.App = function App(vm, todos) {
 view.Main = function Main(vm, todos) {
 
     function toggleAll(e) {
-        var ch = !!e.target.checked;
-        todos.store.forEach(function(todo){
-            todo.completed = ch;
-        })
-        todos.save();
+        todos.completeAll(e.target.checked);
         vm.emit('_redraw');
     }
 
     function allCompleted() {
-        return todos.store.reduce(function(res, todo){
-            return todo.completed && res;
-        }, true)
+        return todos.remaining() === 0;
     }
 
     function filterTodos() {
-        var tds = todos.all();
         switch (currentFilter) {
-            case 'active':
-                return tds.filter(function(item){
-                    return !item.completed;
-                })
-            break;
-            case 'completed':
-                return tds.filter(function(item){
-                    return item.completed;
-                })
-            break;
-            default:
-                return tds;
+            case 'active'    : return todos.findActive();
+            case 'completed' : return todos.findCompleted();
+            default          : return todos.all();
         }
     }
 
     return function() {
-        var util = [];
+        var mainBody = [];
 
-        if (todos.store.length) {
-            util.push(
+        if (todos.count()) {
+            mainBody.push(
                 ['input.toggle-all',
                     {
                         checked: allCompleted,
@@ -89,7 +73,7 @@ view.Main = function Main(vm, todos) {
             );
         }
 
-        return ['section.main', util]
+        return ['section.main', mainBody]
     }
 }
 
@@ -100,14 +84,13 @@ view.Todo = function Todo(vm, data) {
         todos   = data.todos;
 
     function toggle() {
-        todo.completed = !todo.completed;
-        todos.save();
-        vm.redraw();
+        todos.complete(todo, !todo.completed);
+        vm.emit.redraw();
     }
 
     function destroy() {
         todos.destroy(todo.id);
-        vm.emit('_redraw:1');
+        vm.emit.redraw();
     }
 
     function commitEditing() {
@@ -118,13 +101,12 @@ view.Todo = function Todo(vm, data) {
 
     function startEditing() {
         editing = true;
-        vm.node.el.classList.add('editing');
-        vm.refs.editor.focus();
+        vm.redraw();
     }
 
     function stopEditing() {
         editing = false;
-        vm.node.el.classList.remove('editing');
+        vm.redraw();
     }
 
     function editorKeydown(e) {
@@ -134,8 +116,18 @@ view.Todo = function Todo(vm, data) {
         }
     }
 
+    function makeCls() {
+        return (todo.completed ? 'completed' : '') + (editing ? ' editing': '');
+    }
+
+    vm.hook({
+        didRedraw: function() {
+            vm.refs.editor.focus();
+        }
+    })
+
     return function() { return (
-        ['li', {class: (todo.completed ? 'completed' : '')},
+        ['li', {class: makeCls()},
             ['div.view',
                 ['input.toggle',
                     {
@@ -190,7 +182,7 @@ view.Footer = function Footer(vm, todos) {
         var countCompl = todos.count() - remaining;
 
         return (
-        ['footer', {class: 'footer' + (todos.store.length ? '' : ' hidden')},
+        ['footer', {class: 'footer' + (todos.count() ? '' : ' hidden')},
             ['span.todo-count',
                 ['strong', remaining + (remaining === 1 ? ' item' : ' items') + ' left']
             ],
