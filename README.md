@@ -340,7 +340,7 @@ function ChildView(vm) {
 }
 ```
 
-1. Events normally bubble up the view tree and trigger all listeners that match the event name. But they can be targeted to specific ancestors (currently only by numeric level, but soon and more usefully by `_key`). To target an event only to the parent, use `vm.emit("myEvent:1")`. To target it only at the root view, just pick any large number: `vm.emit("myEvent:1000")`.
+1. Events normally bubble up the view tree and trigger all listeners that match the event name. But they can be targeted to specific ancestors (currently only by numeric level, but soon and more usefully by `_key`). To target an event only to the parent, use `vm.emit("myEvent:1")` or `vm.emit("myEvent:parent")`. To target it only at the root view, you can use either, `root` key: `vm.emit("myEvent:root")` or any large number: `vm.emit("myEvent:1000")`.
 2. Since triggering an ancestor's `redraw()` from a child is such a common requirement, each view model is preloaded with a "_redraw" event listener in the emit system. You can trigger an ancestor's `redraw()` (e.g. root) from a child via `vm.emit("_redraw:1000")`. There is a shorthand for this case `vm.emit.redraw(targ)` where `targ` defaults to `1000` (root).
 3. Event listeners that return `false` will stop further bubbling.
 
