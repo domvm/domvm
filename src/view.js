@@ -940,7 +940,9 @@
 
 			// add new or mutate existing not matching old
 			// also handles diffing of wrapped event handlers via exposed original (_fn)
-			if (!(name in op) || np[name] !== op[name])
+			if (isInputProp(targ.tagName, name))
+				targ[name] = np[name];
+			else if (!(name in op) || np[name] !== op[name])
 				set(targ, name, np[name], ns, init);
 		}
 		// remove any removed
@@ -949,6 +951,19 @@
 
 			if (!(name in np))
 				del(targ, name, ns, init);
+		}
+	}
+
+	function isInputProp(tag, name) {
+		switch (tag) {
+			case 'INPUT':
+				return name === 'value' || name === 'checked';
+			case 'TEXTAREA':
+				return name === 'value';
+			case 'SELECT':
+				return name === 'value' || name === 'selectedIndex';
+			case 'OPTION':
+				return name === 'selected';
 		}
 	}
 
