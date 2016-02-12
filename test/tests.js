@@ -1137,7 +1137,7 @@ QUnit.module("didRedraw() & refs");
 		var done = assert.async();
 
 		function MyView(vm) {
-			vm.on({
+			vm.hook({
 				didRedraw: function() {
 					assert.ok(true, "Self didRedraw()");
 					assert.ok(vm.refs.mySpan3 === document.getElementById("zzz"), "Self ref");
@@ -1159,7 +1159,7 @@ QUnit.module("didRedraw() & refs");
 		var done = assert.async();
 
 		function MyView(vm) {
-			vm.on({
+			vm.hook({
 				didRedraw: function() {
 					assert.ok(true, "Parent didRedraw()");
 					assert.ok(vm.refs.mySpan1 === document.getElementById("xxx"), "Parent ref");
@@ -1171,7 +1171,7 @@ QUnit.module("didRedraw() & refs");
 		}
 
 		function MyView2(vm) {
-			vm.on({
+			vm.hook({
 				didRedraw: function() {
 					assert.ok(true, "Child after()");
 					assert.ok(vm.refs.mySpan2 === document.getElementById("yyy"), "Child ref");

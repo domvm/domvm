@@ -92,22 +92,15 @@
 			opts: opts || {},
 			render: null,
 			on: function(ev, fn) {
-				if (fn)
-					vm.events[ev].push(fn);
-				else {
-					for (var i in ev)
-						vm.events[i].push(ev[i]);
-				}
+				addHandlers(vm.events, ev, fn);
+			},
+			hook: function(ev, fn) {
+				vm.hooks = vm.hooks || {};
+				addHandlers(vm.hooks, ev, fn);
 			},
 		//	off: function(ev, fn) {},
-			events: {
-			//	willCreate:	[],
-			//	didCreate:	[],
-				willRedraw:	[],
-				didRedraw:	[],
-				willDestroy:[],
-				didDestroy:	[],
-			},
+			events: {},		// targeted bubbling events & _redraw requests
+			hooks: null,		// willMount,didMount,willRedraw,didRedraw,willUnmount,didUnmount,
 			redraw: cfg.useRaf ? u.raft(redraw) : redraw,
 		//	patch: cfg.useRaf ? raft(patchNode) : patchNode,		// why no repaint?
 			patch: patchNode,
@@ -120,6 +113,8 @@
 			},
 		*/
 			mount: function(el, isRoot) {
+				vm.hooks && u.execAll(vm.hooks.willMount);
+
 				if (isRoot)
 					el.textContent = '';
 
@@ -128,14 +123,18 @@
 				if (!isRoot)
 					el.insertBefore(vm.node.el, null);
 
+				vm.hooks && u.execAll(vm.hooks.didMount);
+
 				return vm;
 			},
 			attach: function(el) {
-				hydrateWith(vm.node, el);
+				hydrateWith(vm.node, el);		// will/didAttach?
 				return vm;
 			},
-			destroy: destroy,
-
+		//	detach: detach,
+			unmount: function() {
+				fireHooks(vm.hooks, "Unmount", unmount, []);
+			},
 			// internal util funcs
 			moveTo: moveTo,
 			updIdx: updIdx,
@@ -156,6 +155,19 @@
 		else
 			return redraw(impCtx);
 
+		function addHandlers(ctx, ev, fn) {
+			if (fn) {
+				ctx[ev] = ctx[ev] || [];
+				ctx[ev].push(fn);
+			}
+			else {
+				for (var i in ev) {
+					ctx[i] = ctx[i] || [];
+					ctx[i].push(ev[i]);
+				}
+			}
+		}
+
 		// transplants node into tree, optionally updating model & impCtx
 		function moveTo(parentNodeNew, idxInParentNew, newImpCtx) {
 			parentNode = parentNodeNew;
@@ -175,7 +187,7 @@
 		// need disclaimer that old and new nodes must be same type
 		// and must have matching keyes if are keyed
 		function patchNode(oldNode, newTpl) {
-		//	execAll(vm.events.willRedraw);
+		//	execAll(vm.hooks.willRedraw);
 
 			var donor = oldNode,
 				parent = donor.parent,
@@ -189,11 +201,11 @@
 				parent.keyMap[key] = newNode;
 			//	parent.keyMap[key] = vm.keyMap[key] = newNode;
 
-		//	execAll(vm.events.didRedraw);
+		//	execAll(vm.hooks.didRedraw);
 		}
 
 		function redraw(newImpCtx, isRedrawRoot) {
-			u.execAll(vm.events.willRedraw);
+			vm.hooks && u.execAll(vm.hooks.willRedraw);
 
 			vm.imp = newImpCtx != null ? newImpCtx : impCtx;
 
@@ -227,7 +239,7 @@
 				old && cleanNode(old);
 
 				// hydrate on all but initial root createView/redraw (handled in mount()/attach())
-				(old || !isRootNode) && hydrateNode(node);
+				(old || !isRootNode) && hydrateNode(node, null, node.el);			// parentNode.el.firstChild?
 
 				if (repl) {
 					old.el.parentNode.replaceChild(node.el, old.el);
@@ -235,17 +247,18 @@
 				}
 			}
 
-			setTimeout(function() {
+			// FTW: http://blog.millermedeiros.com/promise-nexttick/
+			// https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
+			Promise.resolve().then(function() {
 				collectRefs(vm);
-
-				u.execAll(vm.events.didRedraw);
-			}, 0);
+				vm.hooks && u.execAll(vm.hooks.didRedraw);
+			});
 
 			return vm;
 		}
 
-		function destroy(live) {
-			u.execAll(vm.events.willDestroy);
+		function unmount(live) {
+			vm.hooks && u.execAll(vm.hooks.willUnmount);
 
 			if (parentNode) {
 				if (live) {
@@ -268,7 +281,7 @@
 
 			// more cleanup?
 
-			u.execAll(vm.events.didDestroy);
+			vm.hooks && u.execAll(vm.hooks.didUnmount);
 		}
 
 		function emit(event) {
@@ -339,13 +352,9 @@
 				if (!n) return;
 
 				if (n.vm && !n.moved)
-					n.vm.destroy();
-				else {
-					if (n.el && n.el.parentNode)
-						 n.el.parentNode.removeChild(n.el);
-					else
-						cleanNode(n);
-				}
+					n.vm.unmount();
+				else
+					cleanNode(n, true);
 			});
 
 			node.body = null;
@@ -353,10 +362,14 @@
 
 		node.vm = null;
 
-		if (removeSelf && node.el) {
-			node.el.parentNode.removeChild(node.el);
-			node.el = null;
-		}
+		if (removeSelf && node.el && node.el.parentNode)
+			fireHooks(node.hooks, "Remove", removeNode, [node]);
+	}
+
+	function removeNode(node) {
+		node.el.parentNode.removeChild(node.el);
+		node.el = null;
+//		return [node];
 	}
 
 	// builds out node, excluding views.
@@ -459,18 +472,27 @@
 	// old is matched donor vnode obj
 	function buildNode(node, donor) {
 		if (donor)
-			graftNode(donor, node);
+			fireHooks(node.hooks, "Reuse", graftNode, [donor, node]);
 
 		if (u.isArr(node.body)) {
+			// this is an optimization so a full old branch rescan is not needed to find a donor for each new node.
+			// if nodes are contiguously donated (as in mostly static branches), then we know nothing to donate above
+			// them and start search lower on every iteration
+			var lastContigDonor2Idx = 0;
+
 			node.body.forEach(function(kid, i) {
 				var isView = u.isArr(kid);
 
 				if (donor) {
-					var donor2loc = findDonor(kid, node, donor);			// , i, i		// if flagged node._static, just use i,i / DONOR_NODE
+					var donor2loc = findDonor(kid, node, donor, lastContigDonor2Idx);			// , i, i		// if flagged node._static, just use i,i / DONOR_NODE
 
 					if (donor2loc !== null) {
 						var donor2idx = donor2loc[0];
 						var donor2type = donor2loc[1];
+
+						// if donor was found in parallel pos, advance contig range
+						if (donor2idx === lastContigDonor2Idx)
+							lastContigDonor2Idx++;
 
 						var donor2 = donor.body[donor2idx];
 
@@ -500,7 +522,7 @@
 		return node;
 	}
 
-	function hydrateNode(node, el) {
+	function hydrateNode(node, el, sibAtIdx) {
 		var wasDry = !node.el;
 
 		if (node.type == u.TYPE_ELEM) {
@@ -509,8 +531,12 @@
 				node.props && patchProps(node);
 			}
 
-			if (u.isArr(node.body))
-				node.body.forEach(hydrateNode);
+			if (u.isArr(node.body)) {
+				for (var i = 0, sibAtIdx2 = node.el.firstChild; i < node.body.length; i++) {
+					var moved = hydrateNode(node.body[i], null, sibAtIdx2);
+					sibAtIdx2 = moved ? sibAtIdx2 : sibAtIdx2.nextSibling || null;
+				}
+			}
 
 			// for body defs like ["a", "blaahhh"], entire body can be dumped at once
 			else if (wasDry && u.isVal(node.body)) {
@@ -527,12 +553,25 @@
 		// reverse-ref
 		node.el._node = node;
 
+		if (sibAtIdx === node.el)
+			return false;
+
 		// slot this element into correct position
 		var par = node.parent;
 
 		// insert and/or reorder
-		if (par && par.el && par.el.childNodes[node.idx] !== node.el)
-			par.el.insertBefore(node.el, par.el.childNodes[node.idx]);
+	//	if (par && par.el && par.el.childNodes[node.idx] !== node.el)
+		if (par && par.el) {
+			fireHooks(node.hooks, wasDry ? "Insert" : "Move", insertNode, [node, sibAtIdx]);
+			return true;
+		}
+	}
+
+	function insertNode(node, sibAtIdx) {
+	//	var par = ;
+		node.parent.el.insertBefore(node.el, sibAtIdx);
+	//	par.el.insertBefore(node.el, par.el.childNodes[node.idx]);
+	//	return [node];
 	}
 
 	function findDonor(node, newParent, oldParent, fromIdx, toIdx) {
@@ -634,6 +673,42 @@
 			n.el.textContent = "";
 
 		o.moved = true;
+
+	//	return [o, n];
+	}
+
+	function fireHooks(handlers, baseName, execFn, execArgs, willArgs, didArgs) {
+		if (!handlers)
+			execFn.apply(null, execArgs);
+		else {
+			var will = handlers["will" + baseName];
+
+			// does not handle executing multiple hooks cause cannot coalese returned promises, etc
+			if (u.isArr(will))
+				will = will[0];
+
+			var did = handlers["did" + baseName];
+
+			if (u.isArr(did))
+				did = did[0];
+
+			var execAndDid = function() {
+			//	var didArgs = execFn.apply(null, execArgs);
+				execFn.apply(null, execArgs);
+				did && did.apply(null, didArgs || willArgs || execArgs);
+			};
+
+			if (will) {
+				var willRes = will.apply(null, willArgs || execArgs);
+
+				if (u.isProm(willRes))
+					willRes.then(execAndDid);
+				else
+					execAndDid();
+			}
+			else
+				execAndDid();
+		}
 	}
 
 	function parseTag(rawTag) {
@@ -692,6 +767,7 @@
 			idx: null,
 			parent: null,
 			moved: false,
+			hooks: null,	// willInsert,didInsert,willReuse,didReuse,willMove,didMove,willRemove,didRemove
 			tag: null,
 //			svg: false,
 //			math: false,
@@ -803,6 +879,11 @@
 				if (u.isFunc(val))
 					props.style[pname] = val();
 			}
+		}
+
+		if (u.isObj(props._hooks)) {
+			node.hooks = props._hooks;
+			props._hooks = null;
 		}
 
 		node.key =

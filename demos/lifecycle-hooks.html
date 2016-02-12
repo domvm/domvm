@@ -1,0 +1,208 @@
+<!doctype html>
+<html>
+<head>
+	<title>domvm lifecycle hooks</title>
+	<style>
+		.items,
+		.items li {
+			background: transparent;
+			transition: 1000ms;
+			opacity: 1;
+		}
+
+		.items.mounted {
+			outline: 2px solid red;
+			transition: none;
+		}
+
+		.items.redrawn {
+			background: lightblue;
+			transition: none;
+		}
+
+		.items.unmounting {
+			background: pink;
+			transition: none;
+		}
+
+		.items.unmounted {
+			opacity: 0;
+		}
+
+		.items .inserted {
+			background: lime;
+			transition: none;
+		}
+
+		.items .removing {
+			background: red;
+			transition: none;
+		}
+
+		.items .removed {
+			opacity: 0;
+		}
+
+		.items .reused.same {
+			background: silver;
+			transition: none;
+		}
+
+		.items .reused.changed {
+			background: orange;
+			transition: none;
+		}
+
+		.items .moved {
+			background: magenta;
+			transition: none;
+		}
+	</style>
+
+	<script src="../src/domvm.js"></script>
+	<script src="../src/util.js"></script>
+	<script src="../src/view.js"></script>
+</head>
+<body>
+	<script>
+		function View(vm, data) {
+			// DOM node/template level hooks
+			var hooks = {
+				willInsert: function(node) {
+					console.log("willInsert", node);
+				},
+				didInsert: function(node) {
+					console.log("didInsert", node);
+
+					node.el.classList.add("inserted");
+					requestAnimationFrame(function() {
+						node.el.classList.remove("inserted");
+					});
+				},
+				willReuse: function(oldNode, newNode) {
+					console.log("willReuse", oldNode, newNode);
+				},
+				didReuse: function(oldNode, newNode) {
+					// DIY diff to detect changes
+					if (oldNode.body !== newNode.body) {
+						newNode.el.classList.add("reused", "changed");
+						requestAnimationFrame(function() {
+							newNode.el.classList.remove("reused", "changed");
+						});
+					}
+
+					console.log("didReuse", oldNode, newNode);
+				},
+				willMove: function(node) {
+					console.log("willMove", node);
+				},
+				didMove: function(node) {
+					console.log("didMove", node);
+
+					node.el.classList.add("moved");
+					requestAnimationFrame(function() {
+						node.el.classList.remove("moved");
+					});
+				},
+				willRemove: function(node) {
+					console.log("willRemove", node);
+
+					node.el.classList.add("removing");
+					requestAnimationFrame(function() {
+						node.el.classList.remove("removing");
+						node.el.classList.add("removed");
+					});
+
+					return new Promise(function(resolve, reject) {
+						node.el.addEventListener("transitionend", resolve);
+					});
+				},
+				didRemove: function(node) {
+					console.log("didRemove", node);
+				},
+			};
+
+			return () => ["ul.items", data.map(word =>
+				["li", {_hooks: hooks, _key: word.substr(0,1)}, word]
+			)];
+		}
+
+		var data = [
+			"0.cat",
+			"1.dog",
+		];
+
+		var vm = domvm.view(View, data);
+
+		// view-level hooks
+		vm.hook({
+			willRedraw: function() { console.log("willRedraw", vm); },
+			didRedraw: function() {
+				console.log("didRedraw", vm);
+
+				vm.node.el.classList.add("redrawn");
+				requestAnimationFrame(function() {
+					vm.node.el.classList.remove("redrawn");
+				});
+			},
+			willMount: function() { console.log("willMount", vm); },
+			didMount: function() {
+				console.log("didMount", vm);
+
+				vm.node.el.classList.add("mounted");
+				requestAnimationFrame(function() {
+					vm.node.el.classList.remove("mounted");
+				});
+			},
+			willUnmount: function() {
+				console.log("willUnmount", vm);
+
+				vm.node.el.classList.add("unmounting");
+				requestAnimationFrame(function() {
+					vm.node.el.classList.remove("unmounting");
+					vm.node.el.classList.add("unmounted");
+				});
+
+				return new Promise(function(resolve, reject) {
+					vm.node.el.addEventListener("transitionend", resolve);
+				});
+			},
+			didUnmount: function() { console.log("didUnmount", vm); },
+		});
+
+		vm.mount(document.body);
+
+		setTimeout(function() {
+			data.pop();
+			vm.redraw();
+		}, 1000);
+
+		setTimeout(function() {
+			data.push("2.foo","3.bar");
+			vm.redraw();
+		}, 2000);
+
+		setTimeout(function() {
+			data.unshift(data.pop());
+			vm.redraw();
+		}, 3000);
+
+		setTimeout(function() {
+			data.splice(2, 0, "4.cookie");
+			data.splice(0, 1, "5.butter");
+			vm.redraw();
+		}, 4000);
+
+		setTimeout(function() {
+			data[0] += "-mod";
+			data[2] += "-mod";
+			vm.redraw();
+		}, 5000);
+/*
+		setTimeout(function() {
+			vm.unmount();
+		}, 6000);
+*/
+	</script>
+</body>
+</html>

@@ -22,12 +22,12 @@
 		isFunc: function(val) {
 			return typeof val === "function";
 		},
-//		isProm: function(val) {
-//			typeof val === "object" && u.isFunc(val.then);
-//		},
+		isProm: function(val) {
+			return typeof val === "object" && u.isFunc(val.then);
+		},
 		// saves from having to do fn && fn()
 		execAll: function(fnArr, args) {
-			fnArr.forEach(function(fn) {
+			fnArr && fnArr.forEach(function(fn) {
 				return fn.apply(null, args);
 			});
 		},
