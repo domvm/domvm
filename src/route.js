@@ -75,9 +75,9 @@
 
 		var pos = null;
 		var stack = [];
-		var cfg = routeFn(api, imp);
-		var routes = cfg.routes;
-		var root = cfg.root || "/";
+//		var cfg = routeFn(api, imp);
+		var routes = routeFn(api, imp);
+	//	var root = cfg.root || "/";
 	/*
 		// can be optimized by prerpocessing routes on init only
 		function match(fullUrl) {
@@ -93,7 +93,7 @@
 	*/
 		function buildUrl(name, params) {
 			var r = routes[name];
-			var full = root + r.url;
+			var full = r.url;
 			if (params && full.indexOf(":") !== -1) {
 				params = params.slice();
 				var ok = true,
