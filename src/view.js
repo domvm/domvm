@@ -48,7 +48,7 @@
 
 	var cfg = {
 		useRaf: true,
-		viewScan: false,	// enables aggressive unkeyed view reuse
+		viewScan: false,	// enables aggressive unkeyed view Recycle
 		useDOM: false,
 	};
 
@@ -472,7 +472,7 @@
 	// old is matched donor vnode obj
 	function buildNode(node, donor) {
 		if (donor)
-			fireHooks(node.hooks, "Reuse", graftNode, [donor, node]);
+			fireHooks(node.hooks, "Recycle", graftNode, [donor, node]);
 
 		if (u.isArr(node.body)) {
 			// this is an optimization so a full old branch rescan is not needed to find a donor for each new node.
@@ -562,7 +562,7 @@
 		// insert and/or reorder
 	//	if (par && par.el && par.el.childNodes[node.idx] !== node.el)
 		if (par && par.el) {
-			fireHooks(node.hooks, wasDry ? "Insert" : "Move", insertNode, [node, sibAtIdx]);
+			fireHooks(node.hooks, wasDry ? "Insert" : "Reinsert", insertNode, [node, sibAtIdx]);
 			return true;
 		}
 	}
@@ -767,7 +767,7 @@
 			idx: null,
 			parent: null,
 			moved: false,
-			hooks: null,	// willInsert,didInsert,willReuse,didReuse,willMove,didMove,willRemove,didRemove
+			hooks: null,	// willInsert,didInsert,willRecycle,didRecycle,willReinsert,didReinsert,willRemove,didRemove
 			tag: null,
 //			svg: false,
 //			math: false,

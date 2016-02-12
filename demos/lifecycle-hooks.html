@@ -79,10 +79,12 @@
 						node.el.classList.remove("inserted");
 					});
 				},
-				willReuse: function(oldNode, newNode) {
-					console.log("willReuse", oldNode, newNode);
+				willRecycle: function(oldNode, newNode) {
+					console.log("willRecycle", oldNode, newNode);
 				},
-				didReuse: function(oldNode, newNode) {
+				didRecycle: function(oldNode, newNode) {
+					console.log("didRecycle", oldNode, newNode);
+
 					// DIY diff to detect changes
 					if (oldNode.body !== newNode.body) {
 						newNode.el.classList.add("reused", "changed");
@@ -90,14 +92,12 @@
 							newNode.el.classList.remove("reused", "changed");
 						});
 					}
-
-					console.log("didReuse", oldNode, newNode);
 				},
-				willMove: function(node) {
-					console.log("willMove", node);
+				willReinsert: function(node) {
+					console.log("willReinsert", node);
 				},
-				didMove: function(node) {
-					console.log("didMove", node);
+				didReinsert: function(node) {
+					console.log("didReinsert", node);
 
 					node.el.classList.add("moved");
 					requestAnimationFrame(function() {
