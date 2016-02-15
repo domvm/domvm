@@ -1257,11 +1257,11 @@ QUnit.module("impCtx replacement");
 */
 	function ViewA(vm) {
 //		console.log(vm.imp.foo);
-		return (imp) =>
+		return (vm) =>
 			["#viewA",
-				imp.foo,
+				vm.imp.foo,
 				["br"],
-				imp.bar,
+				vm.imp.bar,
 			];
 	}
 

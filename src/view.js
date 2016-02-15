@@ -213,7 +213,7 @@
 		//	vm.keyMap = {};
 
 			var old = vm.node;
-			var def = vm.render.call(model, vm.imp);
+			var def = vm.render.call(vm.exp, vm, model, key, vm.imp);
 			var node = initNode(def, parentNode, idxInParent, vm);
 
 			node.key = u.isVal(key) ? key : node.key;

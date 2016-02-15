@@ -20,7 +20,7 @@
 				return word.text[0] === randStr(1) ? ".selected" : "";
 			}
 
-			return (data) => ["div", data.map(word =>
+			return (vm) => ["div", vm.imp.map(word =>
 				["span.word-wrap" + cls(word), {"data-index": word.index}, word.text + ' ']
 			)];
 		}
