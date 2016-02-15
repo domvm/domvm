@@ -978,17 +978,14 @@
 		else {
 			if (val === true)
 				val = "";
-
 			targ.setAttribute(name, val);
 		}
 
 		if (targ.nodeName === "INPUT") {
-			if (name === "checked" || name === "selected") {
-				targ[name] = !!val;
-			}
-			else if (name === "value") {
+			if (name === "checked" || name === "selected")
+				targ[name] = (val === "");
+			else if (name === "value")
 				targ[name] = "" + val;
-			}
 		}
 	}
 
