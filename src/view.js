@@ -99,7 +99,7 @@
 				addHandlers(vm.hooks, ev, fn);
 			},
 		//	off: function(ev, fn) {},
-			events: {},		// targeted bubbling events & _redraw requests
+			events: {},		// targeted bubbling events & redraw requests
 			hooks: null,		// willMount,didMount,willRedraw,didRedraw,willUnmount,didUnmount,
 			redraw: cfg.useRaf ? u.raft(redraw) : redraw,
 		//	patch: cfg.useRaf ? raft(patchNode) : patchNode,		// why no repaint?
@@ -140,15 +140,8 @@
 			updIdx: updIdx,
 		};
 
-		vm.events._redraw = vm.redraw;
+		vm.events.redraw = vm.redraw;
 		vm.render = viewFn.call(vm.exp, vm, model, key, impCtx);
-
-		// targeted by depth or by key, root = 1000
-		// todo: pass through args
-		emit.redraw = function(targ) {
-			targ = u.isVal(targ) ? targ : 1000;
-			emit("_redraw:" + targ);
-		};
 
 		if (parentNode)
 			return moveTo(parentNode, idxInParent, impCtx);
@@ -291,8 +284,12 @@
 			var evd = event.split(":");
 
 			if (evd.length == 2) {
-				event =  evd[0];
-				depth = +evd[1];
+				event = evd[0];
+				switch (evd[1]) {
+					case 'root'  : depth = Infinity; break;
+					case 'parent': depth = 1;        break;
+					default      : depth = +evd[1];
+				}
 			}
 
 			var args = Array.prototype.slice.call(arguments, 1);
