@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>domvvm TodoList</title>
+
+	<style>
+		#todos ul {
+			padding: 0;
+			margin: 0 0 20px 0;
+		}
+
+		#todos .done label {
+			text-decoration: line-through;
+			color: red;
+		}
+
+		#todos .rem {
+			font-weight: bold;
+			background: none;
+			border: none;
+		}
+
+		#todos .rem:hover {
+			color: red;
+			cursor: pointer;
+		}
+
+		#todos label {
+			display: inline-block;
+			width: 200px;
+		}
+
+		#todos label:hover {
+			cursor: pointer;
+			text-shadow: 2px 2px 2px #ccc;
+		}
+	</style>
+
+	<script src="../src/domvm.js"></script>
+	<script src="../src/util.js"></script>
+	<script src="../src/view.js"></script>
+</head>
+<body>
+	<script>
+		function TodoList(items) {
+			this.items = items || [];
+		}
+
+		TodoList.prototype = {
+			add: function(text, isDone) {
+				if (!text.length) return;
+				this.items.push({text: text, done: isDone || false});
+				return this.items.length - 1;
+			},
+
+			update: function(idx, text, isDone) {
+				this.items[idx].done = isDone;
+				if (text !== null)
+					this.items[idx].text = text;
+			},
+
+			remove: function(idx) {
+				this.items.splice(idx, 1);
+			}
+		};
+
+		function TodoListView(vm, list) {
+			return function() {
+				var numDone = list.items.filter(function(item) { return item.done; }).length;
+
+				return ["div#todos",
+					"Done: " + numDone + "/" + list.items.length,
+					["br"],
+					["ol", list.items.map(function(item, idx) {
+						return ["li" + (item.done ? ".done" : ""),
+							["label",
+								["input", {type: "checkbox", checked: item.done, onchange: function(e) { list.update(idx, null, e.target.checked); vm.redraw(); }}],
+								item.text,
+							],
+							["button.rem", {onclick: function(e) { list.remove(idx); vm.redraw(); }}, "X"],
+						];
+					})],
+					["input", {_ref: "itemText", type: "text", autofocus: true, placeholder: "Type something...", onkeyup: handleAdd}],
+					["button", {onclick: handleAdd}, "Add"],
+				];
+
+				function handleAdd(e) {
+					var inpEl = vm.refs.itemText;
+
+					if (e.type == "click" || e.type == "keyup" && e.which == 13) {
+						list.add(inpEl.value);
+						inpEl.value = "";
+						inpEl.focus();
+						vm.redraw();
+					}
+				}
+			};
+		}
+
+		var todos = [
+			{text: "make todo list sample", done: false},
+			{text: "drink a beer", done: true},
+			{text: "take a nap", done: true},
+			{text: "go poop", done: false},
+			{text: "watch tv", done: true},
+		];
+
+//		var todos = [];
+//		for (var i = 0; i < 1000; i++)
+//			todos.push({text: randStr(5), done: randItem([true, false])});
+
+		var myTodo = new TodoList(todos);
+		domvm.view(TodoListView, myTodo).mount(document.body);
+
+		function randStr(len) {
+			var text = "";
+			var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+			for( var i = 0; i < len; i++ )
+				text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+			return text;
+		}
+
+		function randItem(arr) {
+			return arr[Math.floor(Math.random()*arr.length)];
+		}
+	</script>
+</body>
+</html>
