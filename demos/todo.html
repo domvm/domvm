@@ -67,9 +67,9 @@
 
 		function TodoListView(vm, list) {
 			return function() {
-				var numDone = list.items.reduce(function(sum, item) { return sum + (item.done ? 1 : 0); }, 0);
+				var numDone = list.items.reduce(function(sum, item) { return sum + +item.done; }, 0);
 
-				return ["div#todos",
+				return ["#todos",
 					"Done: " + numDone + "/" + list.items.length,
 					["br"],
 					["ol", list.items.map(function(item, idx) {
