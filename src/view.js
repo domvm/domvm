@@ -327,6 +327,49 @@
 		}
 	}
 
+	// iterate up through parents until to find
+	// which has the same key as provided.
+	// return the root if no key is provided.
+	function findUp(node, key) {
+		var parent;
+		while (parent = node.parent) {
+			node = parent;
+			if (!key)
+				continue;
+			else if (node.key === key)
+				break;
+		}
+		return node;
+	}
+
+	// iterate down through the children until to find
+	// the child which match the provided key.
+	// returns undefined if no key is provided
+	function findDown(node, key) {
+		// return undefined if no body or no key
+		if (!u.isArr(node.body) || !key)
+			return;
+
+		var ret, i = 0,
+			body = node.body,
+			len  = body.length;
+
+		for (i = 0; i < len; i++) {
+			// if key match, then we got it
+			if (body[i].key === key) {
+				ret = body[i];
+				break;
+			}
+			// find in children otherwise
+			else {
+				ret = findDown(body[i], key);
+				if (ret)
+					break;
+			}
+		}
+		return ret || body;
+	}
+
 	// absorbs active dom, assumes it was built by dumping the html()
 	// of this node into innerHTML (isomorphically)
 	// (todo: bind/refs)
@@ -384,6 +427,14 @@
 		node.parent = parentNode;
 		node.idx = idxInParent;
 		node.ns = parentNode && parentNode.ns ? parentNode.ns : (node.tag === "svg" || node.tag === "math") ? node.tag : null;
+
+		node.up = function(key) {
+			return findUp(this, key);
+		}
+
+		node.down = function(key) {
+			return findDown(this, key);
+		}
 
 		if (u.isArr(node.body)) {
 			var keyMap = {}, anyKeys = false;
