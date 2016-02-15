@@ -67,7 +67,7 @@
 
 		function TodoListView(vm, list) {
 			return function() {
-				var numDone = list.items.filter(function(item) { return item.done; }).length;
+				var numDone = list.items.reduce(function(sum, item) { return sum + (item.done ? 1 : 0); }, 0);
 
 				return ["div#todos",
 					"Done: " + numDone + "/" + list.items.length,
@@ -75,7 +75,7 @@
 					["ol", list.items.map(function(item, idx) {
 						return ["li" + (item.done ? ".done" : ""),
 							["label",
-								["input", {type: "checkbox", checked: item.done, onchange: function(e) { list.update(idx, null, e.target.checked); vm.redraw(); }}],
+								["input", {type: "checkbox", "data-idx": idx, ".checked": item.done, onchange: handleChange}],
 								item.text,
 							],
 							["button.rem", {onclick: function(e) { list.remove(idx); vm.redraw(); }}, "X"],
@@ -84,6 +84,11 @@
 					["input", {_ref: "itemText", type: "text", autofocus: true, placeholder: "Type something...", onkeyup: handleAdd}],
 					["button", {onclick: handleAdd}, "Add"],
 				];
+
+				function handleChange(e) {
+					list.update(e.target.dataset.idx, null, e.target.checked);
+					vm.redraw();
+				}
 
 				function handleAdd(e) {
 					var inpEl = vm.refs.itemText;
