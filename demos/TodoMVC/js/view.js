@@ -84,7 +84,7 @@ view.Main = function Main(vm, todos) {
                     }
                 ],
                 ['ul.todo-list', filterTodos().map(function(todo) {
-                    return [view.Todo, todo]
+                    return [view.Todo, {todo: todo, todos: todos}]
                 })]
             );
         }
@@ -94,8 +94,10 @@ view.Main = function Main(vm, todos) {
 }
 
 
-view.Todo = function Todo(vm, todo) {
-    var editing = false;
+view.Todo = function Todo(vm, data) {
+    var editing = false,
+        todo    = data.todo,
+        todos   = data.todos;
 
     function toggle() {
         todo.completed = !todo.completed;
@@ -103,10 +105,7 @@ view.Todo = function Todo(vm, todo) {
     }
 
     function destroy() {
-        var index = todos.indexOf(todo);
-        if (index != -1) {
-            todos.splice(index, 1);
-        }
+        todos.destroy(todo.id);
         vm.emit('_redraw');
     }
 
