@@ -43,7 +43,7 @@ view.Main = function Main(vm, todos) {
         todos.store.forEach(function(todo){
             todo.completed = ch;
         })
-
+        todos.save();
         vm.emit('_redraw');
     }
 
@@ -101,12 +101,13 @@ view.Todo = function Todo(vm, data) {
 
     function toggle() {
         todo.completed = !todo.completed;
-        vm.emit('_redraw:1000');
+        todos.save();
+        vm.redraw();
     }
 
     function destroy() {
         todos.destroy(todo.id);
-        vm.emit('_redraw');
+        vm.emit('_redraw:1');
     }
 
     function commitEditing() {
@@ -162,13 +163,17 @@ view.Todo = function Todo(vm, data) {
 
 
 view.Footer = function Footer(vm, todos) {
+    var filters = {};
 
     function makeFilter(filtr) {
-        return function(e) {
-            e.preventDefault();
-            currentFilter = filtr;
-            vm.emit('_redraw');
+        if (! filters.hasOwnProperty(filtr)) {
+            filters[filtr] = function() {
+                currentFilter = filtr;
+                vm.emit('_redraw');
+                return false;
+            }
         }
+        return filters[filtr];
     }
 
     function makeCls(filtr) {
