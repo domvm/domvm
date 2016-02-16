@@ -968,18 +968,36 @@
 				targ[n].baseVal = val;
 			else
 				targ[n] = val;
+			return;
 		}
-		else if (name === "class")
+		else if (name === "class") {
 			targ.className = val;
-		else if (name === "id" || u.isEvProp(name))
+			return;
+		}
+		else if (name === "id" || u.isEvProp(name)) {
 			targ[name] = val;	  // else test delegation for val === function vs object
-		else if (val === false)
+			return;
+		}
+		else if (val === false) {
 			delAttr(targ, name, ns, init);
+		}
 		else {
 			if (val === true)
 				val = "";
-
 			targ.setAttribute(name, val);
+		}
+
+		if (targ.nodeName === "INPUT") {
+			switch (name) {
+				case "checked":
+				case "selected":
+					targ[name] = (val === "");
+					break;
+				case "value":
+				case "selectedIndex":
+					targ[name] = "" + val;
+					break;
+			}
 		}
 	}
 
