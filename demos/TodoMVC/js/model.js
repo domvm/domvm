@@ -69,7 +69,9 @@ model.Todos = {
     },
 
     save: function() {
-        localStorage.setItem(this.id, JSON.stringify(this.store));
+        var id      = this.id,
+            content = JSON.stringify(this.store);
+        setTimeout(function(){ localStorage.setItem(id, content) })
     }
 };
 
