@@ -367,6 +367,39 @@ vm.attach(document.getElementById("foo"));
 ```
 
 ---
+
+#### Finding nodes, up(), down()
+
+Nodes can be queried by its key.
+```js
+function List(vm) {
+    return function() {
+        return ["ul", {_key: "list"},
+            ["li", {_key: "item-a"}, "TextA"],
+            ["li", {_key: "item-b"}, "TextB"],
+            ["li", {_key: "item-c"}, "TextC"]
+        ];
+    };
+}
+var vm = domvm.view(List);
+vm.mount(document.body);
+
+// Find a child down in the tree
+var itemA = vm.node.down("item-a");                        // itemA.body == "TextA"
+
+// Find a parent relative to `itemA`
+var list = itemA.up("list");                               // list == vm.node
+
+// Find a child with `item-b` key
+var itemB = list.down("item-b");                           // itemB.body == "TextB"
+
+// If `up` is called with no key it will return the root element
+var root = itemB.up();                                     // root == vm.node
+
+// Getting a sibling
+var itemB = itemA.up("list").down("item-b");               // itemB.body == "TextB"
+```
+
 ### Demos
 
 Soon...
