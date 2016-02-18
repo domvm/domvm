@@ -223,7 +223,7 @@
 			vm.node = node;
 
 			// unjailed vm root keys, will propagate up
-			var unjKey = (""+node.key)[0] === "!" ? node.key.substr(1) : null;
+			var unjKey = (""+node.key)[0] === "^" ? node.key.substr(1) : null;
 
 			// set parent vm for easy traversal
 			var ancest = parentNode;
