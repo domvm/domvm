@@ -141,20 +141,12 @@
 			updIdx: updIdx,
 		};
 
-		vm.events._redraw = vm.redraw;
 		vm.render = viewFn.call(vm.exp, vm, model, key, impCtx);
-
-		// targeted by depth or by key, root = 1000
-		// todo: pass through args
-		emit.redraw = function(targ) {
-			targ = u.isVal(targ) ? targ : 1000;
-			emit("_redraw:" + targ);
-		};
 
 		if (parentNode)
 			return moveTo(parentNode, idxInParent, impCtx);
 		else
-			return redraw(impCtx);
+			return redraw(0, impCtx);
 
 		function addHandlers(ctx, ev, fn) {
 			if (fn) {
@@ -174,7 +166,7 @@
 			parentNode = parentNodeNew;
 			updIdx(idxInParentNew);
 
-			return redraw(newImpCtx, false);
+			return redraw(0, newImpCtx, false);
 		}
 
 		function updIdx(idxInParentNew) {
@@ -205,7 +197,14 @@
 		//	execAll(vm.hooks.didRedraw);
 		}
 
-		function redraw(newImpCtx, isRedrawRoot) {
+		function redraw(level, newImpCtx, isRedrawRoot) {
+			if (level) {
+				var targ = vm;
+				while (level-- && targ.parent) { targ = targ.parent; }
+				targ.redraw(0, newImpCtx, true);
+				return targ.vm;
+			}
+
 			vm.hooks && u.execAll(vm.hooks.willRedraw);
 
 			vm.imp = newImpCtx != null ? newImpCtx : impCtx;
@@ -302,32 +301,17 @@
 		}
 
 		function emit(event) {
-			var depth = null;
-
-			// TODO: by key also
-			var evd = event.split(":");
-
-			if (evd.length == 2) {
-				event =  evd[0];
-				depth = +evd[1];
-			}
-
 			var args = Array.prototype.slice.call(arguments, 1);
 
 			var targ = vm;
 
-			if (depth !== null) {
-				while (depth-- && targ.parent)
-					targ = targ.parent;
-			}
-			else {
-				while (targ) {
-					if (targ.events[event]) break;
-					targ = targ.parent;
+			while (targ) {
+				if (targ.events[event]) {
+					u.execAll(targ.events[event], args);
+					break;
 				}
+				targ = targ.parent;
 			}
-
-			u.execAll(targ.events[event], args);
 		}
 	}
 

@@ -1172,10 +1172,8 @@ QUnit.module("emit() & synthetic events");
 
 	domvm.view(ViewA);
 
-	function mkTest(assert, vm, fnName) {
+	function mkTest(assert, vm) {
 		return function test(ev, exp) {
-		//	data = {};
-		//	data[fnName] = "";
 			reset();
 			vm.emit(ev);
 			assert.propEqual(data, exp, ev);
@@ -1183,52 +1181,110 @@ QUnit.module("emit() & synthetic events");
 	}
 
 	QUnit.test('vmC', function(assert) {
-		var test = mkTest(assert, vmC);		// , "ab"
+		var test = mkTest(assert, vmC);
 
 		test("abc",		{ abc: "c", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("abc:1",	{ abc: "b", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("abc:2",	{ abc: "a", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("abc:1000",{ abc: "a", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("abc:0",	{ abc: "c", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-
 		test("a",		{ abc: "", a: "a", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("a:1",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("a:2",		{ abc: "", a: "a", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("a:1000",	{ abc: "", a: "a", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("a:0",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-
 		test("ab",		{ abc: "", a: "", ab: "b", ac: "", b: "", bc: "", c: "" });
-		test("ab:1",	{ abc: "", a: "", ab: "b", ac: "", b: "", bc: "", c: "" });
-		test("ab:2",	{ abc: "", a: "", ab: "a", ac: "", b: "", bc: "", c: "" });
-		test("ab:1000",	{ abc: "", a: "", ab: "a", ac: "", b: "", bc: "", c: "" });
-		test("ab:0",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-
 		test("ac",		{ abc: "", a: "", ab: "", ac: "c", b: "", bc: "", c: "" });
-		test("ac:1",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("ac:2",	{ abc: "", a: "", ab: "", ac: "a", b: "", bc: "", c: "" });
-		test("ac:1000",	{ abc: "", a: "", ab: "", ac: "a", b: "", bc: "", c: "" });
-		test("ac:0",	{ abc: "", a: "", ab: "", ac: "c", b: "", bc: "", c: "" });
-
 		test("b",		{ abc: "", a: "", ab: "", ac: "", b: "b", bc: "", c: "" });
-		test("b:1",		{ abc: "", a: "", ab: "", ac: "", b: "b", bc: "", c: "" });
-		test("b:2",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("b:1000",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("b:0",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-
 		test("bc",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "c", c: "" });
-		test("bc:1",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "b", c: "" });
-		test("bc:2",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("bc:1000",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("bc:0",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "c", c: "" });
-
 		test("c",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "c" });
-		test("c:1",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("c:2",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("c:1000",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
-		test("c:0",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "c" });
 	});
 
-	// todo: args, .emit.redraw, :key
+	QUnit.test('vmB', function(assert) {
+		var test = mkTest(assert, vmB);
+
+		test("abc",		{ abc: "b", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("a",		{ abc: "", a: "a", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("ab",		{ abc: "", a: "", ab: "b", ac: "", b: "", bc: "", c: "" });
+		test("ac",		{ abc: "", a: "", ab: "", ac: "a", b: "", bc: "", c: "" });
+		test("b",		{ abc: "", a: "", ab: "", ac: "", b: "b", bc: "", c: "" });
+		test("bc",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "b", c: "" });
+		test("c",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+	});
+
+	QUnit.test('vmA', function(assert) {
+		var test = mkTest(assert, vmA);
+
+		test("abc",		{ abc: "a", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("a",		{ abc: "", a: "a", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("ab",		{ abc: "", a: "", ab: "a", ac: "", b: "", bc: "", c: "" });
+		test("ac",		{ abc: "", a: "", ab: "", ac: "a", b: "", bc: "", c: "" });
+		test("b",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("bc",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("c",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+	});
+
+	// todo: w/args
+})();
+
+QUnit.module("redraw() ancestors");
+
+(function() {
+	var data = { a: 0, b: 0, c: 0 },
+		vmA, vmB, vmC;
+
+	function ViewA(vm) {
+		vmA = vm;
+		return function() {
+			data.a++;
+			return ["#a", ["strong", [ViewB]]];
+		};
+	}
+
+	function ViewB(vm) {
+		vmB = vm;
+		return function() {
+			data.b++;
+			return ["#b", ["em", [ViewC]]];
+		};
+	}
+
+	function ViewC(vm) {
+		vmC = vm;
+		return function() {
+			data.c++;
+			return ["#c", "Hello"];
+		};
+	}
+
+	domvm.view(ViewA);
+
+	function mkTest(assert, vm) {
+		return function test(targ, exp) {
+			data = { a: 0, b: 0, c: 0 };
+			vm.redraw(targ);			// , impCtx
+			assert.propEqual(data, exp, targ);
+		}
+	}
+
+	QUnit.test('vmC', function(assert) {
+		var test = mkTest(assert, vmC);
+
+		test(0, { a: 0, b: 0, c: 1 });
+		test(1, { a: 0, b: 1, c: 1 });
+		test(2, { a: 1, b: 1, c: 1 });
+		test(1000, { a: 1, b: 1, c: 1 });
+	});
+
+	QUnit.test('vmB', function(assert) {
+		var test = mkTest(assert, vmB);
+
+		test(0, { a: 0, b: 1, c: 1 });
+		test(1, { a: 1, b: 1, c: 1 });
+		test(1000, { a: 1, b: 1, c: 1 });
+	});
+
+	QUnit.test('vmA', function(assert) {
+		var test = mkTest(assert, vmA);
+
+		test(0, { a: 1, b: 1, c: 1 });
+		test(1, { a: 1, b: 1, c: 1 });
+		test(1000, { a: 1, b: 1, c: 1 });
+	});
+
+	// todo: w/args
 })();
 
 QUnit.module("didRedraw() & refs");
@@ -1391,7 +1447,7 @@ QUnit.module("impCtx replacement");
 		var expcHtml = '<div id="viewA">xxx<br>yyy</div>';
 
 		instr.start();
-		vmA.redraw(dataB);
+		vmA.redraw(0, dataB);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 2 });
@@ -1403,11 +1459,13 @@ QUnit.module("impCtx replacement");
 		var expcHtml = '<div id="viewA">xxx<br>yyy2</div>';
 
 		instr.start();
-		vmA.redraw(dataB);
+		vmA.redraw(0, dataB);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 1 });
 	});
+
+	// todo: ancestor ctx replacement?
 })();
 
 // QUnit.module("Keyed model & addlCtx replacement");
