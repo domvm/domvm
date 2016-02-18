@@ -308,8 +308,12 @@
 			var evd = event.split(":");
 
 			if (evd.length == 2) {
-				event =  evd[0];
-				depth = +evd[1];
+				event = evd[0];
+				switch (evd[1]) {
+					case 'root'  : depth = Infinity; break;
+					case 'parent': depth = 1;        break;
+					default      : depth = +evd[1];
+				}
 			}
 
 			var args = Array.prototype.slice.call(arguments, 1);
