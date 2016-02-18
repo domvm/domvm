@@ -106,7 +106,8 @@
 			patch: patchNode,
 			emit: emit,
 			refs: {},
-		//	keyMap: {},
+			parent: null,
+			keys: {},
 		/*
 			html: function() {
 				return collectHtml(vm.node);
@@ -198,7 +199,7 @@
 			var key = newNode.key;
 
 			if (u.isVal(key))
-				parent.keyMap[key] = newNode;
+				parent.keyMap[key] = donor.idx;
 			//	parent.keyMap[key] = vm.keyMap[key] = newNode;
 
 		//	execAll(vm.hooks.didRedraw);
@@ -220,6 +221,22 @@
 
 			node.vm = vm;
 			vm.node = node;
+
+			// unjailed vm root keys, will propagate up
+			var unjKey = (""+node.key)[0] === "!" ? node.key.substr(1) : null;
+
+			// set parent vm for easy traversal
+			var ancest = parentNode;
+			while (ancest) {
+				if (ancest.vm) {
+					if (!vm.parent)
+						vm.parent = ancest.vm;
+					if (unjKey !== null)
+						ancest.vm.keys[unjKey] = vm;
+				}
+
+				ancest = ancest.parent;
+			}
 
 			var donor = old;
 
@@ -297,33 +314,20 @@
 
 			var args = Array.prototype.slice.call(arguments, 1);
 
-			var targ = vm.node;
+			var targ = vm;
 
 			if (depth !== null) {
-				while (depth && targ.parent) {
+				while (depth-- && targ.parent)
 					targ = targ.parent;
-					if (targ.vm)
-						depth--;
-				}
-
-				var ons = targ.vm ? targ.vm.events : null;
-				var evh = ons ? ons[event] : null;
-				evh && evh.apply(null, args);
 			}
 			else {
 				while (targ) {
-					if (targ.vm) {
-						var ons = targ.vm.events;
-						var evh = ons ? ons[event] : null;
-						if (evh) {
-							var res = evh.apply(null, args);
-							if (res === false) break;
-						}
-					}
-
+					if (targ.events[event]) break;
 					targ = targ.parent;
 				}
 			}
+
+			u.execAll(targ.events[event], args);
 		}
 	}
 

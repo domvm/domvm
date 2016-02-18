@@ -1128,6 +1128,109 @@ QUnit.module("Function node types & values");
 	// special props, id, className, _key, _ref?
 })();
 
+
+QUnit.module("emit() & synthetic events");
+
+(function() {
+	var data;
+
+	function reset() {
+		data = { abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" };
+	}
+
+	var vmA, vmB, vmC;
+
+	function ViewA(vm) {
+		vmA = vm;
+		vm.on("abc", function() { data.abc += "a"; });
+		vm.on("ab", function() { data.ab += "a"; });
+		vm.on("ac", function() { data.ac += "a"; });
+		vm.on("a", function() { data.a += "a"; });
+
+		return () => ["#a", ["strong", [ViewB]]];
+	}
+
+	function ViewB(vm) {
+		vmB = vm;
+		vm.on("abc", function() { data.abc += "b"; });
+		vm.on("ab", function() { data.ab += "b"; });
+		vm.on("bc", function() { data.bc += "b"; });
+		vm.on("b", function() { data.b += "b"; });
+
+		return () => ["#b", ["em", [ViewC]]];
+	}
+
+	function ViewC(vm) {
+		vmC = vm;
+		vm.on("abc", function() { data.abc += "c"; });
+		vm.on("bc", function() { data.bc += "c"; });
+		vm.on("ac", function() { data.ac += "c"; });
+		vm.on("c", function() { data.c += "c"; });
+
+		return () => ["#c", "Hello"];
+	}
+
+	domvm.view(ViewA);
+
+	function mkTest(assert, vm, fnName) {
+		return function test(ev, exp) {
+		//	data = {};
+		//	data[fnName] = "";
+			reset();
+			vm.emit(ev);
+			assert.propEqual(data, exp, ev);
+		}
+	}
+
+	QUnit.test('vmC', function(assert) {
+		var test = mkTest(assert, vmC);		// , "ab"
+
+		test("abc",		{ abc: "c", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("abc:1",	{ abc: "b", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("abc:2",	{ abc: "a", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("abc:1000",{ abc: "a", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("abc:0",	{ abc: "c", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+
+		test("a",		{ abc: "", a: "a", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("a:1",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("a:2",		{ abc: "", a: "a", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("a:1000",	{ abc: "", a: "a", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("a:0",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+
+		test("ab",		{ abc: "", a: "", ab: "b", ac: "", b: "", bc: "", c: "" });
+		test("ab:1",	{ abc: "", a: "", ab: "b", ac: "", b: "", bc: "", c: "" });
+		test("ab:2",	{ abc: "", a: "", ab: "a", ac: "", b: "", bc: "", c: "" });
+		test("ab:1000",	{ abc: "", a: "", ab: "a", ac: "", b: "", bc: "", c: "" });
+		test("ab:0",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+
+		test("ac",		{ abc: "", a: "", ab: "", ac: "c", b: "", bc: "", c: "" });
+		test("ac:1",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("ac:2",	{ abc: "", a: "", ab: "", ac: "a", b: "", bc: "", c: "" });
+		test("ac:1000",	{ abc: "", a: "", ab: "", ac: "a", b: "", bc: "", c: "" });
+		test("ac:0",	{ abc: "", a: "", ab: "", ac: "c", b: "", bc: "", c: "" });
+
+		test("b",		{ abc: "", a: "", ab: "", ac: "", b: "b", bc: "", c: "" });
+		test("b:1",		{ abc: "", a: "", ab: "", ac: "", b: "b", bc: "", c: "" });
+		test("b:2",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("b:1000",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("b:0",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+
+		test("bc",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "c", c: "" });
+		test("bc:1",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "b", c: "" });
+		test("bc:2",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("bc:1000",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("bc:0",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "c", c: "" });
+
+		test("c",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "c" });
+		test("c:1",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("c:2",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("c:1000",	{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
+		test("c:0",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "c" });
+	});
+
+	// todo: args, .emit.redraw, :key
+})();
+
 QUnit.module("didRedraw() & refs");
 
 (function() {
