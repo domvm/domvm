@@ -18,19 +18,19 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 - Small - ~9k min core + ~4k router, isomorphism, observers (~5k everything gzipped)
 - Ultra fast - [dbmonster](http://leeoniya.github.io/domvm/test/bench/dbmonster/), [granular patch](http://leeoniya.github.io/domvm/test/bench/patch/)
 - Concise js templates. No html-in-js, js-in-html or other esoteric syntax requiring tooling/compilation
-- Sub-views - declarative OR imperative, freely composable, stateful and independently refreshable
-- Lifecycle hooks - view-level and granular node-level for e.g. [async animations](https://leeoniya.github.io/domvm/demos/lifecycle-hooks.html)
-- Isomorphic - generate markup server-side and attach on client
-- Decoupled client-side router (for SPAs) & mutation observers (for auto-redraw)
+- Sub-views - declarative *or* imperative, freely composable, stateful and independently refreshable
 - Synthetic events - emit custom events with data to ancestor views
+- Lifecycle hooks - view-level and granular node-level for e.g. [async animations](https://leeoniya.github.io/domvm/demos/lifecycle-hooks.html)
+- Decoupled client-side router (for SPAs) & mutation observers (for auto-redraw)
+- Isomorphic - generate markup server-side and attach on client
 - SVG & MathML support: [demo](http://leeoniya.github.io/domvm/demos/svg_mathml.html), [svg tiger](http://leeoniya.github.io/domvm/demos/svg-tiger.html),
 - IE9+ (with some ES5/6 polyfills)
 
 ---
-#### Usage/API
+#### Documentation (WIP, help wanted!)
 
 0. [Installation](#installation)
-0. [Modules](#modules)
+0. [Modules, Building](#modules-building)
 0. [Template Reference](#template-reference)
 0. [Create, Modify, Redraw](#create-modify-redraw)
 0. [Subviews, Components, Patterns](#subviews-components-patterns)
@@ -59,14 +59,14 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 <script src="domvm.min.js"></script>
 ```
 
-**Node (TODO)**
+**Node (works, but not yet on npm)**
 
 ```js
 var domvm = require("domvm");
 ```
 
 ---
-#### Modules
+#### Modules, Building
 
 Each module is a single js file in `/src`. The first 3 are the "core", the rest are optional and can be replaced by your own implementations. For development, just include them in order.
 
