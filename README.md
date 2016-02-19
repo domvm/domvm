@@ -7,23 +7,24 @@ A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
 UI-centric, exclusively declarative components suffer from locked-in syndrome, making them unusable outside of a specific framework. Frequently they must extend framework classes and adhere to compositional restrictions which typically mimic the underlying DOM tree and sacrifice powerful exposed APIs for the sake of designer-centric ease and beauty.
 
-Components should instead be plain, stateful and reusable JS objects with APIs or domain models with methods. They in turn can expose one or multiple views for external composition - each with its own state and/or exposed view API (e.g. `emailApp.tableView.markUnread()`). Alternatively, component views can be crafted externally and composed declaratively or imperatively interacted with.
+Instead, domvm offers straightforward, pure-js development without opinionated structural or single-paradigm buy-in. Uniformly compose imperative and declarative views, expose APIs, hold private state or don't, dependency-inject or closure, build monolithic or loosely coupled components.
 
-domvm provides this flexibility, allowing for separation of concerns and truly reusable components without framework lock-in.
+Architect reusable apps without fighting a pre-defined structure, learning tomes-worth of idiomatic abstractions or leaning on non-reusable, esoteric template DSLs.
 
 ---
 #### Features
 
-- Thin API, no dependencies, build = just concat & min
-- Small - ~8k min core + ~4k router, isomorphism, observers (~5k everything gzipped)
+- Thin API, no dependencies, build = concat & min
+- Small - ~9k min core + ~4k router, isomorphism, observers (~5k everything gzipped)
 - Ultra fast - [dbmonster](http://leeoniya.github.io/domvm/test/bench/dbmonster/), [granular patch](http://leeoniya.github.io/domvm/test/bench/patch/)
 - Concise js templates. No html-in-js, js-in-html or other esoteric syntax requiring tooling/compilation
 - Sub-views - declarative OR imperative, freely composable, stateful and independently refreshable
+- Lifecycle hooks - view-level and granular node-level for e.g. [async animations](https://leeoniya.github.io/domvm/demos/lifecycle-hooks.html)
 - Isomorphic - generate markup server-side and attach on client
 - Decoupled client-side router (for SPAs) & mutation observers (for auto-redraw)
-- Emit custom events to parent views (bubbling)
+- Synthetic events - emit custom events with data to ancestor views
 - SVG & MathML support: [demo](http://leeoniya.github.io/domvm/demos/svg_mathml.html), [svg tiger](http://leeoniya.github.io/domvm/demos/svg-tiger.html),
-- IE9+ (w/ some ES5/6 polyfills)
+- IE9+ (with some ES5/6 polyfills)
 
 ---
 #### Usage/API
@@ -32,12 +33,21 @@ domvm provides this flexibility, allowing for separation of concerns and truly r
 0. [Modules](#modules)
 0. [Template Reference](#template-reference)
 0. [Create, Modify, Redraw](#create-modify-redraw)
+0. [Triggr Ancestor redraw()](#trigger-ancestor-redraw)
 0. [Subviews, Components](#subviews-components)
-0. [DOM Refs, after()](#dom-refs-after)
-0. [Events, emit(), on:{}](#events-emit-on)
+0. [Lifecycle Hooks, Async Animation](#lifecycle-hooks-async-animation)
+0. [DOM Refs, Raw Element Access](#dom-refs-raw-element-access)
+0. [Synthetic Events, emit(), on:{}](#synthetic-events-emit-on)
 0. [Isomorphism, html(), attach()](#isomorphism-html-attach)
-0. [Granular patch()](#granular-patch)
-0. More docs to come...
+0. Addl dependency injection and dynamic updates (impCtx)
+0. Exposing private view state and APIs (expCtx)
+0. Auto-redraw: mutation observers wrappers, ajax wrappers, async/Promise nodes
+0. Routing, reverse-routing (href generation)
+0. Disjoint view redraw: imperative vms & dep-inject, unjailed keys, contained event bus
+0. guard, absorb(), etc.
+0. Optimizations: event delegation, node patch()
+0. Hacking internals: vtree traversal, vm transplanting, etc.
+0. Useful patterns and idiomatic solutions to common problems
 
 ---
 #### Installation
@@ -150,14 +160,7 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 #### Create, Modify, Redraw
 
 ```js
-// our model (just some data)
-var myPeeps = [
-	{name: "Peter", age: 31},
-	{name: "Morgan", age: 27},
-	{name: "Mark", age: 70},
-];
-
-// our view (will receive model)
+// view closure
 function PeopleView(vm, people) {
 	return function() {
 		return ["ul.people-list", people.map(function(person) {
@@ -166,7 +169,14 @@ function PeopleView(vm, people) {
 	};
 }
 
-// create view model
+// model/data
+var myPeeps = [
+	{name: "Peter", age: 31},
+	{name: "Morgan", age: 27},
+	{name: "Mark", age: 70},
+];
+
+// init view, passing the model
 var vm = domvm.view(PeopleView, myPeeps);
 
 // render to document
@@ -179,7 +189,7 @@ myPeeps.push(
 	{name: "Sergey", age: 39}
 );
 
-// redraw view model
+// redraw
 vm.redraw();
 ```
 
@@ -188,7 +198,7 @@ You can store any needed view state inside the `PeopleView` closure.
 ---
 #### Trigger Ancestor redraw()
 
-You can invoke `.redraw()` of any ancestor view (e.g. parent, root) by passing a numeric "level" param to the current vm's `vm.redraw()`.
+You can invoke `.redraw()` of any ancestor view (e.g. parent, root) by passing a numeric `level`.
 
 ```js
 // redraw self, same as vm.redraw()
@@ -204,21 +214,17 @@ vm.redraw(1000);
 ---
 #### Subviews, Components
 
-Let's split the above example into nested sub-views.
+Let's split the above example into nested sub-views. Here one method where the views are decoupled from the models which are themselves are OO instances.
 
 ```js
 // models
 function People(list) {
 	this.list = list;
-
-	this.view = [PeopleView, this];
 }
 
 function Person(name, age) {
 	this.name = name;
 	this.age = age;
-
-	this.view = [PersonView, this];
 }
 
 // views
@@ -228,7 +234,7 @@ function PeopleView(vm, people) {
 
 	return function() {
 		return ["ul.people-list", people.map(function(person) {
-			return person.view;
+			return [PersonView, person];		// declarative sub-view composition
 		})];
 	};
 }
@@ -249,7 +255,7 @@ var myPeeps = [
 
 var people = new People(myPeeps);
 
-domvm.view(people.view).mount(document.body);
+domvm.view(PeopleView, people).mount(document.body);
 
 // modify the list
 var allison = new Person("Allison", 15);
@@ -267,50 +273,37 @@ allison.age = 100;
 allison.vm.redraw();
 ```
 
-1. The only addition to your domain models is a one-liner view definition, resulting in loose coupling. There is no restriction to have only a single view, you can have multiple views of the same model.
-2. The view functions expose the view model to the model itself via `model.vm = vm` from within the view closure. This allows you invoke `redraw()` of sub-views (and access other features) through your model instances.
-
-There are many ways to skin a cat; you can define the views/model coupling outside the models entirely if you prefer. Instead, the above can re-written as:
+This is just one of many ways to restructure things. You can instead choose to abandon OO or enclose the views in the models to make each component more self-contained and monolithic. You can also imperatively pre-init the views (vms), for example:
 
 ```js
-// models
+// view-enclosing OO components with imperative vm init
 function People(list) {
 	this.list = list;
+
+	// pre-init the vm imperatively
+	this.vm = domvm.view(PeopleView, this);
+
+	function PeopleView(vm, people) {
+		return function() {
+			return ["ul.people-list", people.map(function(person) {
+				return person.vm;		// imperative sub-view composition
+			})];
+		};
+	}
 }
 
 function Person(name, age) {
 	this.name = name;
 	this.age = age;
+
+	this.vm = domvm.view(PersonView, this);
+
+	function PersonView(vm, person) {
+		return function() {
+			return ["li", person.name + " (aged " + person.age + ")"];
+		};
+	}
 }
-
-// views
-function PeopleView(vm, people) {
-	people.vm = vm;
-
-	return function() {
-		return ["ul.people-list", people.map(function(person) {
-			return [PersonView, person];							// view/model coupling now defined in parent template
-		})];
-	};
-}
-
-function PersonView(vm, person) {
-	person.vm = vm;
-
-	return function() {
-		return ["li", person.name + " (aged " + person.age + ")"];
-	};
-}
-
-var myPeeps = [
-	new Person("Peter", 31),
-	new Person("Morgan", 27),
-	new Person("Mark", 70),
-];
-
-var people = new People(myPeeps);
-
-domvm.view(PeopleView, people).mount(document.body);							// top-level view/model coupling now defined here
 ```
 
 ---
@@ -340,7 +333,7 @@ Usage: `vm.hook("didRedraw", function() {...})` or `vm.hook({didRedraw: function
 View-level `will*` hooks are not yet promise handling, so cannot be used for delay, but you can just rely on the view's root node's hooks to accomplish similar goals.
 
 ---
-#### DOM Refs & Raw Element Access
+#### DOM Refs, Raw Element Access
 
 Get references to created DOM nodes.
 
