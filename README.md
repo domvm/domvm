@@ -205,24 +205,11 @@ In very large apps, you may need to optimize performance by restricting what you
 
 **Pattern A:** decoupled-model-view
 
-Here, the views are fully separated from the OO models and use declarative template composition.
+Here, the views are separated from the pure-data models. During initial redraw, the views expose themselves back into the models to provide external redraw control.
 
 ```js
-// models
-function People(list) {
-	this.list = list;
-}
-
-function Person(name, age) {
-	this.name = name;
-	this.age = age;
-}
-
 // views
 function PeopleView(vm, people) {
-	// expose the view model to have vm.redraw() control outside this closure
-	people.vm = vm;
-
 	return function() {
 		return ["ul.people-list", people.map(function(person) {
 			// declarative sub-view composition (parent links the view to model)
@@ -232,6 +219,7 @@ function PeopleView(vm, people) {
 }
 
 function PersonView(vm, person) {
+	// expose the imperative view
 	person.vm = vm;
 
 	return function() {
@@ -240,27 +228,25 @@ function PersonView(vm, person) {
 }
 
 var myPeeps = [
-	new Person("Peter", 31),
-	new Person("Morgan", 27),
-	new Person("Mark", 70),
+	{name: "Peter", age: 31},
+	{name: "Morgan", age: 27},
+	{name: "Mark", age: 70},
 ];
 
-var people = new People(myPeeps);
-
-domvm.view(PeopleView, people).mount(document.body);
+var peepVm = domvm.view(PeopleView, myPeeps).mount(document.body);
 ```
 
-We can now redraw each model's view independently, as needed.
+After initial redraw, we can redraw each model's view independently, as needed.
 
 ```js
 // modify the list
-var allison = new Person("Allison", 15);
-var sergy = new Person("Sergey", 39);
+var allison = {name: "Allison", age: 15};
+var sergy = {name: "Sergey", age: 39};
 
-people.list.push(allison, sergy);
+myPeeps.push(allison, sergy);
 
-// redraw list
-people.vm.redraw();
+// redraw list (this inits and exposes the new vms)
+peepVm.redraw();
 
 // modify a specific person
 allison.age = 100;
@@ -271,7 +257,7 @@ allison.vm.redraw();
 
 **Pattern B:** view-linking-model
 
-You could stay declarative and add slight coupling by having the models pre-define a model-view pairing, moving that responsibility out of any parent templates.
+You can opt for slight coupling by having the models pre-define a model-view pairing, moving that responsibility out of any parent templates. Below, we employ OO models, but you could use `Object.create` or other more pure methods to achieve the same goals.
 
 ```js
 // models
@@ -306,6 +292,12 @@ function PersonView(vm, person) {
 		return ["li", person.name + " (aged " + person.age + ")"];
 	};
 }
+
+var myPeeps = [
+	new Person("Peter", 31),
+	new Person("Morgan", 27),
+	new Person("Mark", 70),
+];
 
 var people = new People(myPeeps);
 
