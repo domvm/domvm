@@ -33,7 +33,7 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 0. [Modules](#modules)
 0. [Template Reference](#template-reference)
 0. [Create, Modify, Redraw](#create-modify-redraw)
-0. [Subviews, Components](#subviews-components)
+0. [Subviews, Components, Patterns](#subviews-components-patterns)
 0. [Trigger Ancestor redraw()](#trigger-ancestor-redraw)
 0. [Lifecycle Hooks, Async Animation](#lifecycle-hooks-async-animation)
 0. [Synthetic Events, emit(), on:{}](#synthetic-events-emit-on)
@@ -199,9 +199,13 @@ vm.redraw();
 ```
 
 ---
-#### Subviews, Components
+#### Subviews, Components, Patterns
 
-In very large apps, you may need to optimize performance by restricting what you redraw. Let's restructure the example into nested sub-views. Here's one strategy where the views are decoupled from the OO models with declarative template composition.
+In very large apps, you may need to optimize performance by restricting what you redraw. Let's restructure the example into nested sub-views.
+
+**Pattern A:** decoupled-model-view
+
+Here, the views are fully separated from the OO models and use declarative template composition.
 
 ```js
 // models
@@ -265,7 +269,52 @@ allison.age = 100;
 allison.vm.redraw();
 ```
 
-This is just one of many ways to restructure things. You can instead choose to abandon OO or enclose the views in the models to make each component more self-contained and monolithic. You can also imperatively pre-init the views (vms), for example:
+**Pattern B:** view-linking-model
+
+You could stay declarative and add slight coupling by having the models pre-define a model-view pairing, moving that responsibility out of any parent templates.
+
+```js
+// models
+function People(list) {
+	this.list = list;
+
+	this.view = [PeopleView, this];
+}
+
+function Person(name, age) {
+	this.name = name;
+	this.age = age;
+
+	this.view = [PersonView, this];
+}
+
+// views
+function PeopleView(vm, people) {
+	people.vm = vm;
+
+	return function() {
+		return ["ul.people-list", people.map(function(person) {
+			return person.view;
+		})];
+	};
+}
+
+function PersonView(vm, person) {
+	person.vm = vm;
+
+	return function() {
+		return ["li", person.name + " (aged " + person.age + ")"];
+	};
+}
+
+var people = new People(myPeeps);
+
+var vm = domvm.view(people.view);
+```
+
+**Pattern C:** view-enclosing-model
+
+Continuing our steady march towards progressivly more monolithic components, you can enclose the views in the models to make each component more self-contained. You can also imperatively pre-init the views (vms), for example:
 
 ```js
 // view-enclosing OO components with imperative vm init
@@ -298,6 +347,30 @@ function Person(name, age) {
 	}
 }
 ```
+
+**Pattern D:** model-enclosing-view
+
+This is similar to how React components work and inverts the model-view structure to be more UI-centric, with every component being both the model and a single view without explicit model constructors or OO.
+
+```js
+function PeopleView(vm, list) {
+	return function() {
+		return ["ul.people-list", people.map(function(person) {
+			return [PersonView, person];
+		})];
+	};
+}
+
+function PersonView(vm, person) {
+	return function() {
+		return ["li", person.name + " (aged " + person.age + ")"];
+	};
+}
+
+var people = domvm.view(PeopleView, myPeeps);
+```
+
+**Pattern E:** make up your own!
 
 It's easy to see the power which comes from uniformly-composable imperative and declarative paradigms. You models can expose multiple, disjoint views which can then be consumed by different parts of a larger template, such as a single `NavMenu` component with shared state but exposing split `TopNav`, `SideNav` and `FooterNav` views. Alternatively or additionally, more views of your model can be constructed declaratively by a containing parent template.
 
