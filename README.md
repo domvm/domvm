@@ -300,6 +300,7 @@ function Person(name, age) {
 ```
 
 It's easy to see the power which comes from uniformly-composable imperative and declarative paradigms. You models can expose multiple, disjoint views which can then be consumed by different parts of a larger template, such as a single `NavMenu` component with shared state but exposing split `TopNav`, `SideNav` and `FooterNav` views. Alternatively or additionally, more views of your model can be constructed declaratively by a containing parent template.
+
 ---
 #### Trigger Ancestor redraw()
 
