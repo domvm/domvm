@@ -353,7 +353,7 @@ function Person(name, age) {
 This is similar to how React components work and inverts the model-view structure to be more UI-centric, with every component being both the model and a single view without explicit model constructors or OO.
 
 ```js
-function PeopleView(vm, list) {
+function PeopleView(vm, people) {
 	return function() {
 		return ["ul.people-list", people.map(function(person) {
 			return [PersonView, person];
