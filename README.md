@@ -33,12 +33,13 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 0. [Modules](#modules)
 0. [Template Reference](#template-reference)
 0. [Create, Modify, Redraw](#create-modify-redraw)
-0. [Triggr Ancestor redraw()](#trigger-ancestor-redraw)
 0. [Subviews, Components](#subviews-components)
+0. [Trigger Ancestor redraw()](#trigger-ancestor-redraw)
 0. [Lifecycle Hooks, Async Animation](#lifecycle-hooks-async-animation)
-0. [DOM Refs, Raw Element Access](#dom-refs-raw-element-access)
 0. [Synthetic Events, emit(), on:{}](#synthetic-events-emit-on)
+0. [DOM Refs, Raw Element Access](#dom-refs-raw-element-access)
 0. [Isomorphism, html(), attach()](#isomorphism-html-attach)
+0. Keying nodes to prevent recycling
 0. Addl dependency injection and dynamic updates (impCtx)
 0. Exposing private view state and APIs (expCtx)
 0. Auto-redraw: mutation observers wrappers, ajax wrappers, async/Promise nodes
@@ -162,6 +163,10 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 ```js
 // view closure
 function PeopleView(vm, people) {
+	// This is the view init/constructor which receives the data/model.
+	// Use it to store private state, cache, private funcs, etc.
+
+	// This is render() and will be called on each redraw() to regenerate the template
 	return function() {
 		return ["ul.people-list", people.map(function(person) {
 			return ["li", person.name + " (aged " + person.age + ")"];
@@ -193,28 +198,10 @@ myPeeps.push(
 vm.redraw();
 ```
 
-You can store any needed view state inside the `PeopleView` closure.
-
----
-#### Trigger Ancestor redraw()
-
-You can invoke `.redraw()` of any ancestor view (e.g. parent, root) by passing a numeric `level`.
-
-```js
-// redraw self, same as vm.redraw()
-vm.redraw(0);
-
-// redraw parent (& descendents)
-vm.redraw(1);
-
-// redraw root (& descendents) by passing some huge value
-vm.redraw(1000);
-```
-
 ---
 #### Subviews, Components
 
-Let's split the above example into nested sub-views. Here one method where the views are decoupled from the models which are themselves are OO instances.
+In very large apps, you may need to optimize performance by restricting what you redraw. Let's restructure the example into nested sub-views. Here's one strategy where the views are decoupled from the OO models with declarative template composition.
 
 ```js
 // models
@@ -234,7 +221,8 @@ function PeopleView(vm, people) {
 
 	return function() {
 		return ["ul.people-list", people.map(function(person) {
-			return [PersonView, person];		// declarative sub-view composition
+			// declarative sub-view composition (parent links the view to model)
+			return [PersonView, person];
 		})];
 	};
 }
@@ -256,7 +244,11 @@ var myPeeps = [
 var people = new People(myPeeps);
 
 domvm.view(PeopleView, people).mount(document.body);
+```
 
+We can now redraw each model's view independently, as needed.
+
+```js
 // modify the list
 var allison = new Person("Allison", 15);
 var sergy = new Person("Sergey", 39);
@@ -286,7 +278,8 @@ function People(list) {
 	function PeopleView(vm, people) {
 		return function() {
 			return ["ul.people-list", people.map(function(person) {
-				return person.vm;		// imperative sub-view composition
+				// imperative sub-view composition (model exposes its own view)
+				return person.vm;
 			})];
 		};
 	}
@@ -304,6 +297,23 @@ function Person(name, age) {
 		};
 	}
 }
+```
+
+It's easy to see the power which comes from uniformly-composable imperative and declarative paradigms. You models can expose multiple, disjoint views which can then be consumed by different parts of a larger template, such as a single `NavMenu` component with shared state but exposing split `TopNav`, `SideNav` and `FooterNav` views. Alternatively or additionally, more views of your model can be constructed declaratively by a containing parent template.
+---
+#### Trigger Ancestor redraw()
+
+You can invoke `.redraw()` of any ancestor view (e.g. parent, root) by passing a numeric `level`.
+
+```js
+// redraw self, same as vm.redraw()
+vm.redraw(0);
+
+// redraw parent (& descendents)
+vm.redraw(1);
+
+// redraw root (& descendents) by passing some huge value
+vm.redraw(1000);
 ```
 
 ---
@@ -333,26 +343,6 @@ Usage: `vm.hook("didRedraw", function() {...})` or `vm.hook({didRedraw: function
 View-level `will*` hooks are not yet promise handling, so cannot be used for delay, but you can just rely on the view's root node's hooks to accomplish similar goals.
 
 ---
-#### DOM Refs, Raw Element Access
-
-Get references to created DOM nodes.
-
-```js
-function SomeView(vm) {
-	vm.hook({
-		didRedraw: function() {
-			// operate on referenced DOM elements
-			console.log("created link element", vm.refs.myLink)
-		}
-	});
-
-	return function() {
-		return ["a", {href: "#", _ref: "myLink"}, "some link"];
-	};
-}
-```
-
----
 #### Synthetic Events, emit(), on()
 
 Custom events can be emitted up the view hierarchy (with data) and handled by ancestors. When a matching handler is found, the callbacks are executed and the bubbling halts.
@@ -377,6 +367,27 @@ function ChildView(vm) {
 
 	return function() {
 		return ["em", {onclick: handleClick}, "some text"];
+	};
+}
+```
+
+---
+#### DOM Refs, Raw Element Access
+
+DOM nodes created by templates can be accessd via `vm.refs.*`. Since nodes can be recycled, always access the refs object via the vm since it will get re-generated on each redaw.
+
+```js
+function SomeView(vm) {
+	function handleMyBtnClick() {
+		vm.refs.strongFoo;
+	}
+
+	return function() {
+		return ["div",
+			["strong", {href: "#", _ref: "strongFoo"}, "Strong foo text"],
+			["br"],
+			["a.myBtn", {href: "#", onclick: handleMyBtnClick}, "some link"],
+		];
 	};
 }
 ```
