@@ -7,7 +7,9 @@ A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
 UI-centric, exclusively declarative components suffer from locked-in syndrome, making them unusable outside of a specific framework. Frequently they must extend framework classes and adhere to compositional restrictions which typically mimic the underlying DOM tree and sacrifice powerful exposed APIs for the sake of designer-centric ease and beauty.
 
-Components should instead be plain, stateful and reusable JS objects with APIs or domain models with methods. They in turn can expose one or multiple views for external composition - each with its own state and/or exposed view API (e.g. `emailApp.tableView.markUnread()`). Alternatively, component views can be crafted externally and composed declaratively or imperatively interacted with. domvm provides this flexibility, allowing for separation of concerns and truly reusable components without framework lock-in.
+Components should instead be plain, stateful and reusable JS objects with APIs or domain models with methods. They in turn can expose one or multiple views for external composition - each with its own state and/or exposed view API (e.g. `emailApp.tableView.markUnread()`). Alternatively, component views can be crafted externally and composed declaratively or imperatively interacted with.
+
+domvm provides this flexibility, allowing for separation of concerns and truly reusable components without framework lock-in.
 
 ---
 #### Features
@@ -21,7 +23,7 @@ Components should instead be plain, stateful and reusable JS objects with APIs o
 - Decoupled client-side router (for SPAs) & mutation observers (for auto-redraw)
 - Emit custom events to parent views (bubbling)
 - SVG & MathML support: [demo](http://leeoniya.github.io/domvm/demos/svg_mathml.html), [svg tiger](http://leeoniya.github.io/domvm/demos/svg-tiger.html),
-- IE9+ (w/ some small ES5 polyfills)
+- IE9+ (w/ some ES5/6 polyfills)
 
 ---
 #### Usage/API
@@ -184,6 +186,22 @@ vm.redraw();
 You can store any needed view state inside the `PeopleView` closure.
 
 ---
+#### Trigger Ancestor redraw()
+
+You can invoke redraw() of a any ancestor view (e.g. parent, root) by passing a numeric "level" param to the current vm's `vm.redraw()`.
+
+```js
+// redraw self, same as vm.redraw()
+vm.redraw(0);
+
+// redraw parent (& descendents)
+vm.redraw(1);
+
+// redraw root (& descendents) by passing some huge value
+vm.redraw(1000);
+```
+
+---
 #### Subviews, Components
 
 Let's split the above example into nested sub-views.
@@ -296,29 +314,56 @@ domvm.view(PeopleView, people).mount(document.body);							// top-level view/mod
 ```
 
 ---
-#### DOM Refs, didRedraw()
+#### Lifecycle Hooks, Async Animation
+
+**Demo:** [lifecycle-hooks](demos/lifecycle-hooks.html) (different hooks animate in/out with different colors)
+
+**Node-level**
+
+Usage: `["div", {_hooks: {...}}, "Hello"]`
+
+- will/didInsert (initial insert)
+- will/didRecycle (reuse & patch)
+- will/didReinsert (detach & move)
+- will/didRemove
+
+Node-level `will*` hooks allow a Promise/thennable return and can delay the event until the promise is resolved, allowing you to CSS animate, etc.
+
+**View-level**
+
+Usage: `vm.hook("didRedraw", function() {...})`
+Usage: `vm.hook({didRedraw: function() {...}})`
+
+- will/didRedraw
+- will/didMount
+- will/didUnmount
+
+View-level `will*` hooks are not yet promise handling, so cannot be used for delay, but you can just rely on the view's root node's hooks to accomplish similar goals.
+
+---
+#### DOM Refs & Raw Element Access
 
 Get references to created DOM nodes.
 
 ```js
 function SomeView(vm) {
-	vm.on({
+	vm.hook({
 		didRedraw: function() {
-			// this is called after every redraw/render and can be used to operate on the created DOM elements
+			// operate on referenced DOM elements
 			console.log("created link element", vm.refs.myLink)
 		}
 	});
 
 	return function() {
 		return ["a", {href: "#", _ref: "myLink"}, "some link"];
-	}
+	};
 }
 ```
 
 ---
-#### Events, emit(), on()
+#### Synthetic Events, emit(), on()
 
-Custom events can be triggered, bubbled and listened to in the view hierarchy, similar to DOM events.
+Custom events can be emitted up the view hierarchy (with data) and handled by ancestors. When a matching handler is found, the callbacks are executed and the bubbling halts.
 
 ```js
 function ParentView(vm) {
@@ -334,21 +379,20 @@ function ParentView(vm) {
 }
 
 function ChildView(vm) {
+	var handleClick = function(e) {
+		vm.emit("myEvent", ["arg1", "arg2"]);
+	};
+
 	return function() {
-		return ["em", {onclick: function(e) { vm.emit("myEvent", ["arg1", "arg2"]); }}, "some text"];
+		return ["em", {onclick: handleClick}, "some text"];
 	};
 }
 ```
-
-1. Events normally bubble up the view tree and trigger all listeners that match the event name. But they can be targeted to specific ancestors (currently only by numeric level, but soon and more usefully by `_key`). To target an event only to the parent, use `vm.emit("myEvent:1")`. To target it only at the root view, just pick any large number: `vm.emit("myEvent:1000")`.
-2. Since triggering an ancestor's `redraw()` from a child is such a common requirement, each view model is preloaded with a "_redraw" event listener in the emit system. You can trigger an ancestor's `redraw()` (e.g. root) from a child via `vm.emit("_redraw:1000")`. There is a shorthand for this case `vm.emit.redraw(targ)` where `targ` defaults to `1000` (root).
-3. Event listeners that return `false` will stop further bubbling.
 
 ---
 #### Isomorphism, html(), attach()
 
 ```js
-
 function SomeView(vm) {
 	return function() {
 		return ["div#foo", "foobar"];
@@ -369,4 +413,4 @@ vm.attach(document.getElementById("foo"));
 ---
 ### Demos
 
-Soon...
+See /demos and /test/bench
