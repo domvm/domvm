@@ -188,7 +188,7 @@ You can store any needed view state inside the `PeopleView` closure.
 ---
 #### Trigger Ancestor redraw()
 
-You can invoke redraw() of a any ancestor view (e.g. parent, root) by passing a numeric "level" param to the current vm's `vm.redraw()`.
+You can invoke `.redraw()` of any ancestor view (e.g. parent, root) by passing a numeric "level" param to the current vm's `vm.redraw()`.
 
 ```js
 // redraw self, same as vm.redraw()
@@ -316,7 +316,7 @@ domvm.view(PeopleView, people).mount(document.body);							// top-level view/mod
 ---
 #### Lifecycle Hooks, Async Animation
 
-**Demo:** [lifecycle-hooks](demos/lifecycle-hooks.html) (different hooks animate in/out with different colors)
+**Demo:** [lifecycle-hooks](https://leeoniya.github.io/domvm/demos/lifecycle-hooks.html) different hooks animate in/out with different colors.
 
 **Node-level**
 
@@ -331,8 +331,7 @@ Node-level `will*` hooks allow a Promise/thennable return and can delay the even
 
 **View-level**
 
-Usage: `vm.hook("didRedraw", function() {...})`
-Usage: `vm.hook({didRedraw: function() {...}})`
+Usage: `vm.hook("didRedraw", function() {...})` or `vm.hook({didRedraw: function() {...}})`
 
 - will/didRedraw
 - will/didMount
