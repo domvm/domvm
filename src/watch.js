@@ -27,22 +27,22 @@
 					opts.body = ""+body;
 			}
 
-			var ok = cb,
-				err = noop;
+			var okFn = cb,
+				errFn = noop;
 
 			if (cb instanceof Array) {
-				ok = cb[0];
+				okFn = cb[0];
 				if (cb[1])
-					err = cb[1];
+					errFn = cb[1];
 			}
 
 			function checkStatus(resp) {
 				if (resp.status >= 200 && resp.status < 300)
 					return resp
 				else {
-					var err = new Error(resp.statusText)
-					err.resp = resp
-					throw err;
+					var err = new Error(resp.status + ": " + resp.statusText)
+					err.data = resp;
+					return Promise.reject(err);
 				}
 			}
 
@@ -64,14 +64,20 @@
 				// decode data
 				.then(reader)
 				// invoke provided callbacks, massage/set data
-				.then(ok, err)
+				.then(okFn, errFn)
 				// fire any redraws
-				.then(function(res) {
-					res !== false && api.fire();
-					return res;
-				}, noop);
+				.then(
+					function(res) {
+						res !== false && api.fire();
+						return res;
+					},
+					function(err) {
+						api.fire();
+						return err;
+					}
+				);
 
-			prom._fetchArgs = [method, url, body, [ok, err], opts];
+			prom._fetchArgs = [method, url, body, [okFn, errFn], opts];
 
 			return prom;
 		}
@@ -85,10 +91,10 @@
 				handlers.splice(handlers.indexOf(handler), 1);
 				return api;
 			},
-			fire: function() {
+			fire: u.raft(function() {
 				u.execAll(handlers, arguments);
 				return api;
-			},
+			}),
 			prop: function prop(initVal, asyncVal) {		// , model, name (if you want the handler to know ctx)
 				var val = initVal;
 

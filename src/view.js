@@ -54,7 +54,7 @@
 
 	domvm.view = createView;
 
-	domvm.config = function(newCfg) {
+	domvm.view.config = function(newCfg) {
 		cfg = newCfg;
 	};
 
