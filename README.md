@@ -236,7 +236,7 @@ var myPeeps = [
 var peepVm = domvm.view(PeopleView, myPeeps).mount(document.body);
 ```
 
-After initial redraw, we can redraw each model's view independently, as needed.
+Now we can redraw each model's view independently.
 
 ```js
 // modify the list
@@ -280,6 +280,7 @@ function PeopleView(vm, people) {
 
 	return function() {
 		return ["ul.people-list", people.map(function(person) {
+			// declarative sub-view composition (model exposes its own binding)
 			return person.view;
 		})];
 	};
@@ -364,7 +365,7 @@ var people = domvm.view(PeopleView, myPeeps);
 
 **Pattern E:** make up your own!
 
-It's easy to see the power which comes from uniformly-composable imperative and declarative paradigms. You models can expose multiple, disjoint views which can then be consumed by different parts of a larger template, such as a single `NavMenu` component with shared state but exposing split `TopNav`, `SideNav` and `FooterNav` views. Alternatively or additionally, more views of your model can be constructed declaratively by a containing parent template.
+The above examples demonstrate the flexibility afforded by uniformly-composable imperative and declarative paradigms. For instance, models can expose multiple views which can then be consumed by disjoint parts of some larger template, such as a single `NavMenu` component with shared state and sitemap tree but exposing split `TopNav`, `SideNav` and `FooterNav` views. Alternatively or additionally, more views of your model can be constructed after the fact if you choose to expose enough state/api.
 
 ---
 #### Trigger Ancestor redraw()
