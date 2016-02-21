@@ -73,7 +73,7 @@ Each module is a single js file in `/src`. The first 3 are the "core", the rest 
 - domvm: namespace & module wrapper
 - domvm.util: generic funcs required by other modules
 - domvm.view: the core view/vdom/template lib
-- domvm.html: vtree => innerHTML generator, if you need isomorphism/SSR
+- domvm.html: vtree -> HTML generator, if you need isomorphism/SSR
 - domvm.watch: auto-redraw helpers - mutation observers, ajax wrappers
 - domvm.route: router & reverse router for single page apps (SPAs)
 

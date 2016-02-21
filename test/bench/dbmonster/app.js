@@ -4,29 +4,31 @@ domvm.view.config({useRaf: false});
 function DBMonView(vm, dbmon) {
 	dbmon.vm = vm;
 
-	return (data) => ["div",
-		["table", { class: "table table-striped latest-data" },
-			["tbody",
-				dbmon.data.map(function(db) {
-					return ["tr",
-						["td", { class: "dbname" }, db.dbname],
-						["td", { class: "query-count" },
-							["span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries]
-						],
-						db.lastSample.topFiveQueries.map(function(query) {
-							return ["td", { class: "Query " + query.elapsedClassName },
-								["span", query.formatElapsed],
-								["div", { class: "popover left" },
-									["div", { class: "popover-content" }, query.query],
-									["div", { class: "arrow" }, ""]
-								]
-							];
-						})
-					];
-				})
+	return function(data) {
+		return ["div",
+			["table", { class: "table table-striped latest-data" },
+				["tbody",
+					dbmon.data.map(function(db) {
+						return ["tr",
+							["td", { class: "dbname" }, db.dbname],
+							["td", { class: "query-count" },
+								["span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries]
+							],
+							db.lastSample.topFiveQueries.map(function(query) {
+								return ["td", { class: "Query " + query.elapsedClassName },
+									["span", query.formatElapsed],
+									["div", { class: "popover left" },
+										["div", { class: "popover-content" }, query.query],
+										["div", { class: "arrow" }, ""]
+									]
+								];
+							})
+						];
+					})
+				]
 			]
-		]
-	];
+		];
+	};
 }
 
 function DBMon() {
