@@ -883,15 +883,15 @@
 			node.ref = props._ref;
 		if (props._raw)
 			node.raw = true;
-//		if (props._name)
-//			node.name = props._name;
+		if (props._data)
+			node.data = props._data;
 		if (props._guard)
 			node.guard = true;
 
 		props._ref =
 		props._key =
-//		props._name =
 		props._raw =
+		props._data =
 		props._guard = null;
 	}
 
