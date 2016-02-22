@@ -91,7 +91,7 @@
 				}
 
 				function handleAdd(e) {
-					var inpEl = vm.refs.itemText;
+					var inpEl = vm.refs.itemText.el;
 
 					if (e.type == "click" || e.type == "keyup" && e.which == 13) {
 						list.add(inpEl.value);

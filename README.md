@@ -439,14 +439,15 @@ function ChildView(vm) {
 ```
 
 ---
-#### DOM Refs, Raw Element Access
+#### Node Refs, DOM Element Access
 
-DOM nodes created by templates can be accessd via `vm.refs.*`. Since nodes can be recycled, always access the refs object via the vm since it will get re-generated on each redaw.
+Virtual nodes created by templates can be accessd via `vm.refs.*`. Since DOM nodes can be recycled, always access the refs object via the vm since it will get re-generated on each redaw.
 
 ```js
 function SomeView(vm) {
 	function handleMyBtnClick() {
-		vm.refs.strongFoo;
+		// access the created DOM node under "strongFoo" virtual node
+		vm.refs.strongFoo.el;
 	}
 
 	return function() {

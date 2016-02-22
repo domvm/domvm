@@ -266,7 +266,6 @@
 			// FTW: http://blog.millermedeiros.com/promise-nexttick/
 			// https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
 			Promise.resolve().then(function() {
-				collectRefs(vm);
 				vm.hooks && u.execAll(vm.hooks.didRedraw);
 			});
 
@@ -987,10 +986,5 @@
 			targ[name] = null;
 		else
 			targ.removeAttribute(name);
-	}
-
-	function collectRefs(vm) {
-		for (var i in vm.refs)
-			vm.refs[i] = vm.refs[i].el;
 	}
 })(domvm);

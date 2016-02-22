@@ -1299,7 +1299,7 @@ QUnit.module("didRedraw() & refs");
 			vm.hook({
 				didRedraw: function() {
 					assert.ok(true, "Self didRedraw()");
-					assert.ok(vm.refs.mySpan3 === document.getElementById("zzz"), "Self ref");
+					assert.ok(vm.refs.mySpan3.el === document.getElementById("zzz"), "Self ref");
 					console.log(vm.refs);
 				}
 			});
@@ -1321,7 +1321,7 @@ QUnit.module("didRedraw() & refs");
 			vm.hook({
 				didRedraw: function() {
 					assert.ok(true, "Parent didRedraw()");
-					assert.ok(vm.refs.mySpan1 === document.getElementById("xxx"), "Parent ref");
+					assert.ok(vm.refs.mySpan1.el === document.getElementById("xxx"), "Parent ref");
 					console.log(vm.refs);
 				}
 			});
@@ -1333,7 +1333,7 @@ QUnit.module("didRedraw() & refs");
 			vm.hook({
 				didRedraw: function() {
 					assert.ok(true, "Child after()");
-					assert.ok(vm.refs.mySpan2 === document.getElementById("yyy"), "Child ref");
+					assert.ok(vm.refs.mySpan2.el === document.getElementById("yyy"), "Child ref");
 					console.log(vm.refs);
 				}
 			});

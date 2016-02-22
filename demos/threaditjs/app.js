@@ -84,7 +84,7 @@ function ThreadListView(vm, threads, key, imp) {
 		submitting = true;
 		vm.redraw();
 
-		imp.app.newThread(vm.refs.text.value, function() {
+		imp.app.newThread(vm.refs.text.el.value, function() {
 			submitting = false;
 		});
 
