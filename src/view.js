@@ -140,6 +140,8 @@
 			updIdx: updIdx,
 		};
 
+		opts && opts.hooks && vm.hook(opts.hooks);
+
 		vm.render = viewFn.call(vm.exp, vm, model, key, impCtx);
 
 		if (parentNode)
