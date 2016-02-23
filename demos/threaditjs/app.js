@@ -31,11 +31,13 @@ ThreaditApp.prototype = {
 	getThreads: function() {
 		this.threads().length && this.threads([]);
 		var onOk = function(resp) { this.threads(resp.data); }.bind(this);
+	//	T.timeEnd("Setup");
 		return w.get(T.apiUrl + "/threads/", [onOk, this._onErr]);
 	},
 	getComments: function(id) {
 		this.comments().length && this.comments([]);
 		var onOk = function(resp) { this.comments(T.transformResponse(resp)); }.bind(this);
+	//	T.timeEnd("Setup");
 		w.get(T.apiUrl + "/comments/" + id, [onOk, this._onErr]);
 	},
 };
