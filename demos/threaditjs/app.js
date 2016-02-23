@@ -29,12 +29,12 @@ ThreaditApp.prototype = {
 		return w0.post(T.apiUrl + "/comments/create", {text : text, parent: parent.id}, [onOk, this._onErr]);
 	},
 	getThreads: function() {
-		this.threads([]);
+		this.threads().length && this.threads([]);
 		var onOk = function(resp) { this.threads(resp.data); }.bind(this);
 		return w.get(T.apiUrl + "/threads/", [onOk, this._onErr]);
 	},
 	getComments: function(id) {
-		this.comments([]);
+		this.comments().length && this.comments([]);
 		var onOk = function(resp) { this.comments(T.transformResponse(resp)); }.bind(this);
 		w.get(T.apiUrl + "/comments/" + id, [onOk, this._onErr]);
 	},
@@ -199,17 +199,16 @@ function ThreaditRouter(rt, imp) {
 }
 
 var app = new ThreaditApp();
+
 // router uses app to invoke api/fetch calls on history changes
 var router = domvm.route(ThreaditRouter, {app: app});
 
-// we end setup timer here since the rest relates to vtree build, ajax and render/repaint
-T.timeEnd("Setup");
+var opts = { hooks: { didMount: function() { T.timeEnd("Setup"); } } };
 
-T.time("Initial mount()");
-// view uses app for render and uses router to construct hrefs for links
-var appVm = domvm.view(ThreaditView, {app: app, router: router}).mount(document.body);
-T.timeEnd("Initial mount()");
+// our view uses app for render and router to construct hrefs for links
+var appVm = domvm.view(ThreaditView, {app: app, router: router}, null, null, opts).mount(document.body);
 
+// add follow-up redraw timer
 appVm.hook({
 	willRedraw: function() { T.time("Full redraw()"); },
 	didRedraw: function() { T.timeEnd("Full redraw()"); },
