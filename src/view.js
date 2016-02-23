@@ -107,7 +107,6 @@
 			emit: emit,
 			refs: {},
 			parent: null,
-			keys: {},
 		/*
 			html: function() {
 				return collectHtml(vm.node);
@@ -222,7 +221,7 @@
 			vm.node = node;
 
 			// unjailed vm root keys, will propagate up
-			var unjKey = (""+node.key)[0] === "^" ? node.key.substr(1) : null;
+			var unjRef = (""+node.key)[0] === "^" ? node.key.substr(1) : null;
 
 			// set parent vm for easy traversal
 			var ancest = parentNode;
@@ -230,8 +229,8 @@
 				if (ancest.vm) {
 					if (!vm.parent)
 						vm.parent = ancest.vm;
-					if (unjKey !== null)
-						ancest.vm.keys[unjKey] = vm;
+					if (unjRef !== null)
+						ancest.vm.refs[unjRef] = node;
 				}
 
 				ancest = ancest.parent;
