@@ -166,7 +166,7 @@ function CommentReplyView(vm, comment) {
 					onkeyup: previewReply,
 				}],
 				["input", {type: "submit", value: "Reply!"}],
-				[".preview", tmpComment]
+				[".preview", {_raw: true}, T.previewComment(tmpComment)],
 			]
 			:
 			["a", { href: "#", onclick: toggleReplyMode }, "Reply!"]
