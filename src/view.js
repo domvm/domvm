@@ -54,7 +54,7 @@
 
 	domvm.view = createView;
 
-	domvm.config = function(newCfg) {
+	domvm.view.config = function(newCfg) {
 		cfg = newCfg;
 	};
 
@@ -106,7 +106,7 @@
 			patch: patchNode,
 			emit: emit,
 			refs: {},
-		//	keyMap: {},
+			parent: null,
 		/*
 			html: function() {
 				return collectHtml(vm.node);
@@ -140,20 +140,14 @@
 			updIdx: updIdx,
 		};
 
-		vm.events._redraw = vm.redraw;
-		vm.render = viewFn.call(vm.exp, vm, model, key, impCtx);
+		opts && opts.hooks && vm.hook(opts.hooks);
 
-		// targeted by depth or by key, root = 1000
-		// todo: pass through args
-		emit.redraw = function(targ) {
-			targ = u.isVal(targ) ? targ : 1000;
-			emit("_redraw:" + targ);
-		};
+		vm.render = viewFn.call(vm.exp, vm, model, key, impCtx);
 
 		if (parentNode)
 			return moveTo(parentNode, idxInParent, impCtx);
 		else
-			return redraw(impCtx);
+			return redraw(0, impCtx);
 
 		function addHandlers(ctx, ev, fn) {
 			if (fn) {
@@ -173,7 +167,7 @@
 			parentNode = parentNodeNew;
 			updIdx(idxInParentNew);
 
-			return redraw(newImpCtx, false);
+			return redraw(0, newImpCtx, false);
 		}
 
 		function updIdx(idxInParentNew) {
@@ -198,13 +192,20 @@
 			var key = newNode.key;
 
 			if (u.isVal(key))
-				parent.keyMap[key] = newNode;
+				parent.keyMap[key] = donor.idx;
 			//	parent.keyMap[key] = vm.keyMap[key] = newNode;
 
 		//	execAll(vm.hooks.didRedraw);
 		}
 
-		function redraw(newImpCtx, isRedrawRoot) {
+		function redraw(level, newImpCtx, isRedrawRoot) {
+			if (level) {
+				var targ = vm;
+				while (level-- && targ.parent) { targ = targ.parent; }
+				targ.redraw(0, newImpCtx, true);
+				return targ.vm;
+			}
+
 			vm.hooks && u.execAll(vm.hooks.willRedraw);
 
 			vm.imp = newImpCtx != null ? newImpCtx : impCtx;
@@ -220,6 +221,22 @@
 
 			node.vm = vm;
 			vm.node = node;
+
+			// unjailed vm root keys, will propagate up
+			var unjRef = (""+node.key)[0] === "^" ? node.key.substr(1) : null;
+
+			// set parent vm for easy traversal
+			var ancest = parentNode;
+			while (ancest) {
+				if (ancest.vm) {
+					if (!vm.parent)
+						vm.parent = ancest.vm;
+					if (unjRef !== null)
+						ancest.vm.refs[unjRef] = node;
+				}
+
+				ancest = ancest.parent;
+			}
 
 			var donor = old;
 
@@ -250,7 +267,6 @@
 			// FTW: http://blog.millermedeiros.com/promise-nexttick/
 			// https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
 			Promise.resolve().then(function() {
-				collectRefs(vm);
 				vm.hooks && u.execAll(vm.hooks.didRedraw);
 			});
 
@@ -285,44 +301,16 @@
 		}
 
 		function emit(event) {
-			var depth = null;
-
-			// TODO: by key also
-			var evd = event.split(":");
-
-			if (evd.length == 2) {
-				event =  evd[0];
-				depth = +evd[1];
-			}
-
 			var args = Array.prototype.slice.call(arguments, 1);
 
-			var targ = vm.node;
+			var targ = vm;
 
-			if (depth !== null) {
-				while (depth && targ.parent) {
-					targ = targ.parent;
-					if (targ.vm)
-						depth--;
+			while (targ) {
+				if (targ.events[event]) {
+					u.execAll(targ.events[event], args);
+					break;
 				}
-
-				var ons = targ.vm ? targ.vm.events : null;
-				var evh = ons ? ons[event] : null;
-				evh && evh.apply(null, args);
-			}
-			else {
-				while (targ) {
-					if (targ.vm) {
-						var ons = targ.vm.events;
-						var evh = ons ? ons[event] : null;
-						if (evh) {
-							var res = evh.apply(null, args);
-							if (res === false) break;
-						}
-					}
-
-					targ = targ.parent;
-				}
+				targ = targ.parent;
 			}
 		}
 	}
@@ -539,10 +527,10 @@
 			}
 
 			// for body defs like ["a", "blaahhh"], entire body can be dumped at once
-			else if (wasDry && u.isVal(node.body)) {
+			else if (u.isVal(node.body)) {
 				if (node.raw)
 					node.el.innerHTML = node.body;
-				else
+				else if (wasDry)
 					node.el.textContent = node.body;
 			}
 		}
@@ -866,7 +854,7 @@
 				// for router
 				if (i == "href") {
 					props.onclick = props[i];
-					props.href = props[i].url;
+					props.href = props[i].path;
 				}
 				else
 					props[i] = props[i]();
@@ -896,15 +884,15 @@
 			node.ref = props._ref;
 		if (props._raw)
 			node.raw = true;
-//		if (props._name)
-//			node.name = props._name;
+		if (props._data)
+			node.data = props._data;
 		if (props._guard)
 			node.guard = true;
 
 		props._ref =
 		props._key =
-//		props._name =
 		props._raw =
+		props._data =
 		props._guard = null;
 	}
 
@@ -1017,10 +1005,5 @@
 			targ[name] = null;
 		else
 			targ.removeAttribute(name);
-	}
-
-	function collectRefs(vm) {
-		for (var i in vm.refs)
-			vm.refs[i] = vm.refs[i].el;
 	}
 })(domvm);

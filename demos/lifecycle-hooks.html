@@ -122,9 +122,11 @@
 				},
 			};
 
-			return () => ["ul.items", data.map(word =>
-				["li", {_hooks: hooks, _key: word.substr(0,1)}, word]
-			)];
+			return function() {
+				return ["ul.items", data.map(function(word) {
+					return ["li", {_hooks: hooks, _key: word.substr(0,1)}, word];
+				})];
+			};
 		}
 
 		var data = [

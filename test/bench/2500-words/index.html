@@ -13,16 +13,18 @@
 	</style>
 
 	<script>
-		domvm.config({useRaf: false});
+		domvm.view.config({useRaf: false});
 
 		function SomeView(vm) {
 			function cls(word) {
 				return word.text[0] === randStr(1) ? ".selected" : "";
 			}
 
-			return (vm) => ["div", vm.imp.map(word =>
-				["span.word-wrap" + cls(word), {"data-index": word.index}, word.text + ' ']
-			)];
+			return function(vm) {
+				return ["div", vm.imp.map(function(word) {
+					return ["span.word-wrap" + cls(word), {"data-index": word.index}, word.text + ' ']
+				})];
+			};
 		}
 
 		function randStr(len) {

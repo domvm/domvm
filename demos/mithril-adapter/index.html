@@ -65,7 +65,7 @@
 			},
 
 			//view
-			view: function(ctrl) {
+			view: function(vm, ctrl) {
 				return m("div", [
 					ctrl.pages().map(function(page) {
 						return m("a", {href: page.url}, page.title);

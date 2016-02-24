@@ -27,7 +27,7 @@
 		},
 		// saves from having to do fn && fn()
 		execAll: function(fnArr, args) {
-			fnArr && fnArr.forEach(function(fn) {
+			fnArr && (!u.isArr(fnArr) ? [fnArr] : fnArr).forEach(function(fn) {
 				return fn.apply(null, args);
 			});
 		},

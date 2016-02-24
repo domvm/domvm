@@ -37,7 +37,7 @@
 	<script src="profiler.js"></script>
 
 	<script>
-		domvm.config({useRaf: false});
+		domvm.view.config({useRaf: false});
 
 		var instr = new DOMInstr(true);
 
@@ -80,22 +80,26 @@
 		function TableView(vm, table) {
 			table.vm = vm;
 
-			var genCell = (val) => ["td", {class: val > 50 ? "high" : "low"}, val];
+			function genCell(val) {
+				return ["td", {class: val > 50 ? "high" : "low"}, val];
+			}
 
 			// exported funcs
 			vm.exp = {
-				patchCell: (rowIdx, colIdx, val) => {
+				patchCell: function(rowIdx, colIdx, val) {
 					var oldCell = vm.node.body[rowIdx].body[colIdx];		// vm.getNode(key1,key2,key3)
 					var newTpl = genCell(val);
 					vm.patch(oldCell, newTpl);
 				}
 			};
 
-			return () => ["table", table.data.map((row, rowIdx) =>
-				["tr", row.map((val, colIdx) =>
-					genCell(val)
-				)]
-			)];
+			return function() {
+				return ["table", table.data.map(function(row, rowIdx) {
+					return ["tr", row.map(function(val, colIdx) {
+						return genCell(val);
+					})];
+				})];
+			};
 		}
 
 		function randInt(min, max) {

@@ -19,14 +19,12 @@ m.request = function(opts) {
 // component mounter
 m.mount = function(elem, comp) {
 	// view constructor / component whatever
-	function View(vm, model, key, impCtx) {
+	function View(vm) {
 		return comp.view;
 	};
 
-	// run "init" / create state / instance / whatever
-	// imported context is passed into .render(impCtx) on each
-	// redraw while models are only passed once into the view constructor
-	var impCtx = comp.controller();
+	// run "init" / create state / model instance / whatever
+	var model = comp.controller();
 
 	var opts = {
 	//	import the observer context with which to auto-wrap ev handlers and promises
@@ -34,7 +32,7 @@ m.mount = function(elem, comp) {
 	//	decide what context you want for event handlers, Mithril uses the controller.
 	//	technically this doesnt need to be set explicitly, since order of precedence is
 	//	opts.evctx || model || impCtx || null
-		evctx: impCtx,
+		evctx: model,
 	};
 
 	// add a handler that'll trigger redraw
@@ -42,5 +40,5 @@ m.mount = function(elem, comp) {
 		compVm.redraw();
 	});
 
-	var compVm = domvm.view(View, null, null, impCtx, opts).mount(elem);
+	var compVm = domvm.view(View, model, null, null, opts).mount(elem);
 };
