@@ -527,10 +527,10 @@
 			}
 
 			// for body defs like ["a", "blaahhh"], entire body can be dumped at once
-			else if (wasDry && u.isVal(node.body)) {
+			else if (u.isVal(node.body)) {
 				if (node.raw)
 					node.el.innerHTML = node.body;
-				else
+				else if (wasDry)
 					node.el.textContent = node.body;
 			}
 		}
