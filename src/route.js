@@ -47,6 +47,7 @@
 						toPos = stack.length - 1;
 					}
 
+					var prev = stack[pos];
 					var next = stack[toPos];
 
 					var args = Array.prototype.slice.call(arguments);
@@ -55,11 +56,11 @@
 
 					if (pos !== null) {
 						var onexit = stack[pos].route.onexit;
-						canExit = !onexit ? true : onexit.call(null, stack[toPos].params.concat(next));
+						canExit = !onexit ? true : onexit.apply(null, [{to: next}].concat(prev ? prev.params : []));
 					}
 
 					if (canExit !== false) {
-						var canEnter = stack[toPos].route.onenter.apply(null, params.concat(stack[pos]));
+						var canEnter = stack[toPos].route.onenter.apply(null, [{from: prev}].concat(params));
 
 						if (canEnter === false) {
 						//	revert nav?
