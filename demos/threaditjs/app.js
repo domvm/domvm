@@ -28,14 +28,14 @@ ThreaditApp.prototype = {
 		var onOk = function(resp) { parent.children.push(resp.data); cb && cb(); };
 		return w0.post(T.apiUrl + "/comments/create", {text : text, parent: parent.id}, [onOk, this._onErr]);
 	},
-	getThreads: function() {
-		this.threads().length && this.threads([]);
+	getThreads: function(initial) {
+		!initial && this.threads([]);
 		var onOk = function(resp) { this.threads(resp.data); }.bind(this);
 	//	T.timeEnd("Setup");
 		return w.get(T.apiUrl + "/threads/", [onOk, this._onErr]);
 	},
-	getComments: function(id) {
-		this.comments().length && this.comments([]);
+	getComments: function(id, initial) {
+		!initial && this.comments([]);
 		var onOk = function(resp) { this.comments(T.transformResponse(resp)); }.bind(this);
 	//	T.timeEnd("Setup");
 		w.get(T.apiUrl + "/comments/" + id, [onOk, this._onErr]);
@@ -181,17 +181,17 @@ function ThreaditRouter(rt, imp) {
 	return {
 		threadList: {
 			path: routePre + "/",
-			onenter: function(from) {
+			onenter: function(e) {
 				document.title = titlePre + "Thread List";
-				imp.app.getThreads();
+				imp.app.getThreads(!e.from);
 			},
 		},
 		thread: {
 			path: routePre + "/thread/:id",
 			params: {id: /[a-zA-Z0-9]{5,7}/},
-			onenter: function(id, from) {
+			onenter: function(e, id) {
 				document.title = titlePre + "Thread #" + id;
-				imp.app.getComments(id);
+				imp.app.getComments(id, !e.from);
 			},
 		},
 //		_noMatch: {
