@@ -3,20 +3,20 @@ html {
 }
 
 a{
-	color: #161;
+	color: #BD008C;
 	text-decoration:none;
 	font-weight:normal;
 	cursor: pointer;
 }
 
 a:hover {
-	color: #161;
+	color: #BD008C;
 	text-decoration:underline;
 	font-weight: normal;
 }
 
 input[type=submit] {
-	background-color: #5A5;
+	background-color: #BD008C;
 	color: #fff;
 	border: 0;
 	font-weight: bold;
