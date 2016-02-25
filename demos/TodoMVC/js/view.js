@@ -14,7 +14,7 @@ view.App = function App(vm, todos) {
         if (e.keyCode === ENTER_KEY) {
             todos.add({ title: e.target.value });
             e.target.value = '';
-            vm.emit('_redraw');
+            vm.redraw();
         }
     }
 
@@ -40,7 +40,7 @@ view.Main = function Main(vm, todos) {
 
     function toggleAll(e) {
         todos.completeAll(e.target.checked);
-        vm.emit('_redraw');
+        vm.redraw(1000);
     }
 
     function allCompleted() {
@@ -62,13 +62,13 @@ view.Main = function Main(vm, todos) {
             mainBody.push(
                 ['input.toggle-all',
                     {
-                        checked: allCompleted,
+                        ".checked": allCompleted,
                         type: 'checkbox',
                         onclick: toggleAll
                     }
                 ],
                 ['ul.todo-list', filterTodos().map(function(todo) {
-                    return [view.Todo, {todo: todo, todos: todos}]
+                    return [view.Todo, todo, null, {todos: todos}]
                 })]
             );
         }
@@ -78,24 +78,24 @@ view.Main = function Main(vm, todos) {
 }
 
 
-view.Todo = function Todo(vm, data) {
+view.Todo = function Todo(vm, todo) {
     var editing = false,
-        todo    = data.todo,
-        todos   = data.todos;
+        todos   = vm.imp.todos;
 
     function toggle() {
         todos.complete(todo, !todo.completed);
-        vm.emit.redraw();
+        vm.redraw(1000);
     }
 
     function destroy() {
         todos.destroy(todo.id);
-        vm.emit.redraw();
+        vm.redraw(1000);
     }
 
     function commitEditing() {
-        todo.title = vm.refs.editor.value;
-        stopEditing();
+        todo.title = vm.refs.editor.el.value;
+        editing = false;
+        todos.save();
         vm.redraw();
     }
 
@@ -104,7 +104,8 @@ view.Todo = function Todo(vm, data) {
         vm.redraw();
     }
 
-    function stopEditing() {
+    function cancelEditing() {
+        vm.refs.editor.el.value = todo.title;
         editing = false;
         vm.redraw();
     }
@@ -112,7 +113,7 @@ view.Todo = function Todo(vm, data) {
     function editorKeydown(e) {
         switch (e.keyCode) {
             case ENTER_KEY : commitEditing(); break;
-            case ESC_KEY   : stopEditing();
+            case ESC_KEY   : cancelEditing();
         }
     }
 
@@ -123,18 +124,18 @@ view.Todo = function Todo(vm, data) {
     vm.hook({
         didRedraw: function() {
             if (editing) {
-                vm.refs.editor.focus();
+                vm.refs.editor.el.focus();
             }
         }
     })
 
     return function() { return (
-        ['li', {class: makeCls()},
+        ['li', {class: makeCls},
             ['div.view',
                 ['input.toggle',
                     {
                         type: 'checkbox',
-                        checked: todo.completed,
+                        ".checked": todo.completed,
                         onclick: toggle,
                     }
                 ],
@@ -145,8 +146,8 @@ view.Todo = function Todo(vm, data) {
                 {
                     _ref: 'editor',
                     type: 'text',
-                    value: todo.title,
-                    onblur: stopEditing,
+                    ".value": todo.title,
+                    onblur: commitEditing,
                     onkeydown: editorKeydown
                 }
             ]
@@ -163,7 +164,7 @@ view.Footer = function Footer(vm, todos) {
         if (! filters.hasOwnProperty(filtr)) {
             filters[filtr] = function() {
                 currentFilter = filtr;
-                vm.emit('_redraw');
+                vm.redraw(1000);
                 return false;
             }
         }
@@ -176,7 +177,7 @@ view.Footer = function Footer(vm, todos) {
 
     function destroyCompleted() {
         todos.destroyCompleted();
-        vm.emit('_redraw');
+        vm.redraw(1000);
     }
 
     return function() {
