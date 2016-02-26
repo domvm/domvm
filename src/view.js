@@ -58,6 +58,14 @@
 		cfg = newCfg;
 	};
 
+	// for lib-assisted auto monkey patching
+	var vmExts = null;
+
+	domvm.view.extend = function(ext, reset) {
+		vmExts = !vmExts || reset ? [] : vmExts;
+		vmExts.push(ext);
+	};
+
 	var u = domvm.util;
 
 	return domvm;
@@ -141,6 +149,8 @@
 		};
 
 		opts && opts.hooks && vm.hook(opts.hooks);
+
+		u.execAll(vmExts, [vm]);
 
 		vm.render = viewFn.call(vm.exp, vm, model, key, impCtx);
 
