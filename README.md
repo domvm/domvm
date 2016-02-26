@@ -452,7 +452,7 @@ function SomeView(vm) {
 
 	return function() {
 		return ["div",
-			["strong", {href: "#", _ref: "strongFoo"}, "Strong foo text"],
+			["strong", {_ref: "strongFoo"}, "Strong foo text"],
 			["br"],
 			["a.myBtn", {href: "#", onclick: handleMyBtnClick}, "some link"],
 		];
