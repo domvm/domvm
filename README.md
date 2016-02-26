@@ -77,8 +77,6 @@ Each module is a single js file in `/src`. The first 3 are the "core", the rest 
 0. `domvm.watch`: auto-redraw helpers (mutation observers, ajax wrappers)
 0. `domvm.route`: router & href generator for single page apps (SPAs)
 
-**Building A Custom Bundle**
-
 Building is simple: concat the needed modules and minify with tools of your choice. I use [Closure Compiler](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for both:
 
 ```
