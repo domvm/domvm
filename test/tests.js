@@ -741,6 +741,21 @@ QUnit.module("Attrs/Props");
 		var expcHtml = '<input type="checkbox" id="check2">';
 		evalOut(assert, checkEl, domvm.html(check2.vm.node), expcHtml, callCounts, { removeAttribute: 1 });
 	});
+
+	QUnit.test("Input Attribute", function(assert) {
+		var model = new Check('check3', true);
+		var view  = domvm.view(CheckView, model).mount(testyDiv);
+		var el    = view.node.el;
+
+		// user interaction
+		el.checked = false;
+
+		// redraw with model.checked still true
+		view.redraw();
+
+		// the visual state should be equal to the model state
+		assert.equal(el.checked, model.checked);
+	});
 })();
 
 // TODO: assert triple equal outerHTML === domvm.html(vm.node) === hardcoded html
