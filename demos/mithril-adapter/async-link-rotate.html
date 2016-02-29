@@ -67,7 +67,7 @@
 		// init a global watch w/auto-redraw handler
 		var w = domvm.watch().on(function() { demoVm.redraw(); });
 		// init state/model & create vm
-		var demoVm = domvm.view(DemoView, new Demo(), null, null, {watch: w});
+		var demoVm = domvm.view(DemoView, new Demo(), null, {watch: w});
 		// render to doc
 		demoVm.mount(document.getElementById("example"));
 	</script>

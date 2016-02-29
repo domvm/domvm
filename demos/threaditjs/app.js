@@ -42,9 +42,9 @@ ThreaditApp.prototype = {
 	},
 };
 
-function ThreaditView(vm, imp) {
+function ThreaditView(vm, deps) {
 	return function() {
-		var route = imp.router.current();
+		var route = deps.router.current();
 
 		return [".body",
 			["p.head_links",
@@ -56,26 +56,26 @@ function ThreaditView(vm, imp) {
 				["a", {href: "http://domvm.threaditjs.com"}, "ThreaditJS: domvm"]
 			],
 			[".main",
-			 	imp.app.error() ?
-			 	["p", ["strong", "Server's angry! "], imp.app.error]
+			 	deps.app.error() ?
+			 	["p", ["strong", "Server's angry! "], deps.app.error]
 			 	: route.name == "threadList"
-			 	? [ThreadListView, imp.app.threads, null, imp]
+			 	? [ThreadListView, deps, deps.app.threads]
 			 	: route.name == "thread"
-			 	? [ThreadBranchView, imp.app.comments().root, null, imp]
+			 	? [ThreadBranchView, deps, deps.app.comments().root || false]
 			 	: null,
 			]
 		]
 	}
 }
 
-function ThreadListView(vm, threads, key, imp) {
+function ThreadListView(vm, deps, threads) {
 	var submitting = false;
 
 	// sub-template
 	function threadListItemTpl(thread) {
 		return [
 			["p",
-				["a", {href: imp.router.href("thread", [thread.id])}, T.trimTitle(thread.text)]			//	r.goto("comment", [5]);
+				["a", {href: deps.router.href("thread", [thread.id])}, T.trimTitle(thread.text)]			//	r.goto("comment", [5]);
 			],
 			["p.comment_count", thread.comment_count + " comment" + (thread.comment_count !== 1 ? "s" : "")],
 			["hr"],
@@ -86,7 +86,7 @@ function ThreadListView(vm, threads, key, imp) {
 		submitting = true;
 		vm.redraw();
 
-		imp.app.newThread(vm.refs.text.el.value, function() {
+		deps.app.newThread(vm.refs.text.el.value, function() {
 			submitting = false;
 		});
 
@@ -109,16 +109,16 @@ function ThreadListView(vm, threads, key, imp) {
 }
 
 // sub-view (will be used recursively)
-function ThreadBranchView(vm, comment, key, imp) {
+function ThreadBranchView(vm, deps, comment) {
 	return function() {
 		return [".comment",
 			!comment
-			? ["p", {style: {marginBottom: 20, fontWeight: "bold"}}, "Loading thread " + imp.router.current().params[0] + "..."]
+			? ["p", {style: {marginBottom: 20, fontWeight: "bold"}}, "Loading thread " + deps.router.current().params[0] + "..."]
 			: [
 				["p", {_raw: true}, comment.text],
-				[CommentReplyView, comment, null, imp],
+				[CommentReplyView, deps, comment],
 				[".children", comment.children.map(function(comment2) {
-					return [ThreadBranchView, comment2, null, imp];
+					return [ThreadBranchView, deps, comment2];
 				})]
 			]
 		];
@@ -126,7 +126,7 @@ function ThreadBranchView(vm, comment, key, imp) {
 }
 
 // sub-sub view
-function CommentReplyView(vm, comment) {
+function CommentReplyView(vm, deps, comment) {
 	var replying = false;
 	var submitting = false;
 	var tmpComment = "";
@@ -142,7 +142,7 @@ function CommentReplyView(vm, comment) {
 		replying = false;
 		vm.redraw();
 
-		vm.imp.app.newComment(comment, tmpComment, function() {
+		deps.app.newComment(comment, tmpComment, function() {
 			submitting = false;
 			vm.redraw(1);	// redraw parent
 		});
@@ -174,7 +174,7 @@ function CommentReplyView(vm, comment) {
 	}
 };
 
-function ThreaditRouter(rt, imp) {
+function ThreaditRouter(rt, deps) {
 	var titlePre = "ThreaditjS: domvm | ";
 	var routePre = "/domvm/demos/threaditjs";
 
@@ -183,7 +183,7 @@ function ThreaditRouter(rt, imp) {
 			path: routePre + "/",
 			onenter: function(e) {
 				document.title = titlePre + "Thread List";
-				imp.app.getThreads(!e.from);
+				deps.app.getThreads(!e.from);
 			},
 		},
 		thread: {
@@ -191,7 +191,7 @@ function ThreaditRouter(rt, imp) {
 			params: {id: /[a-zA-Z0-9]{5,7}/},
 			onenter: function(e, id) {
 				document.title = titlePre + "Thread #" + id;
-				imp.app.getComments(id, !e.from);
+				deps.app.getComments(id, !e.from);
 			},
 		},
 //		_noMatch: {
@@ -208,7 +208,7 @@ var router = domvm.route(ThreaditRouter, {app: app});
 var opts = { hooks: { didMount: function() { T.timeEnd("Setup"); } } };
 
 // our view uses app for render and router to construct hrefs for links
-var appVm = domvm.view(ThreaditView, {app: app, router: router}, null, null, opts).mount(document.body);
+var appVm = domvm.view(ThreaditView, {app: app, router: router}, true, opts).mount(document.body);
 
 // add follow-up redraw timer
 appVm.hook({
