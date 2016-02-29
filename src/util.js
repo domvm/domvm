@@ -3,6 +3,39 @@
 
 	var win = typeof window == "undefined" ? {} : window;
 
+	var t = true;
+	var unitlessProps = {
+		animationIterationCount: t,
+		boxFlex: t,
+		boxFlexGroup: t,
+		columnCount: t,
+		counterIncrement: t,
+		fillOpacity: t,
+		flex: t,
+		flexGrow: t,
+		flexOrder: t,
+		flexPositive: t,
+		flexShrink: t,
+		float: t,
+		fontWeight: t,
+		gridColumn: t,
+		lineHeight: t,
+		lineClamp: t,
+		opacity: t,
+		order: t,
+		orphans: t,
+		stopOpacity: t,
+		strokeDashoffset: t,
+		strokeOpacity: t,
+		strokeWidth: t,
+		tabSize: t,
+		transform: t,
+		transformOrigin: t,
+		widows: t,
+		zIndex: t,
+		zoom: t,
+	};
+
 	var u = {
 		TYPE_ELEM: 1,
 		TYPE_TEXT: 2,
@@ -39,6 +72,9 @@
 		},
 		camelDash: function(val) {
 			return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+		},
+		autoPx: function(name, val) {
+			return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
 		},
 		// https://github.com/darsain/raft
 		// rAF throttler, aggregates multiple repeated redraw calls within single animframe

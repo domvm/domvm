@@ -18,7 +18,7 @@
 					if (css) {
 						for (var pname in css) {
 							if (css[pname] !== null)
-								style += u.camelDash(pname) + ": " + css[pname] + ';';
+								style += u.camelDash(pname) + ": " + u.autoPx(pname, css[pname]) + '; ';
 						}
 					}
 
@@ -42,7 +42,7 @@
 					}
 
 					if (style.length)
-						html += ' style="' + style + '"';
+						html += ' style="' + style.trim() + '"';
 				}
 
 				// if body-less svg node, auto-close & return

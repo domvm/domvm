@@ -13,39 +13,6 @@
 	var DONOR_DOM	= 1;
 	var DONOR_NODE	= 2;
 
-	var t = true;
-	var unitlessProps = {
-		animationIterationCount: t,
-		boxFlex: t,
-		boxFlexGroup: t,
-		columnCount: t,
-		counterIncrement: t,
-		fillOpacity: t,
-		flex: t,
-		flexGrow: t,
-		flexOrder: t,
-		flexPositive: t,
-		flexShrink: t,
-		float: t,
-		fontWeight: t,
-		gridColumn: t,
-		lineHeight: t,
-		lineClamp: t,
-		opacity: t,
-		order: t,
-		orphans: t,
-		stopOpacity: t,
-		strokeDashoffset: t,
-		strokeOpacity: t,
-		strokeWidth: t,
-		tabSize: t,
-		transform: t,
-		transformOrigin: t,
-		widows: t,
-		zIndex: t,
-		zoom: t,
-	};
-
 	var cfg = {
 		useRaf: true,
 		viewScan: false,	// enables aggressive unkeyed view Recycle
@@ -70,35 +37,48 @@
 
 	return domvm;
 
+	// disambiguates immutable handle from different param sigs
+	function getViewKey(model, key) {
+		return (
+			// false key signals a non-persistent model
+			key === false ? null :
+			// omitted or true key signals a persistent model, in future true may opt you into WeakMaps
+			model != null && (key == null || key === true) ? model :
+			// string or numeric key - peristent model tracked by key...stringify key?
+		//	key === 0 || key ? key
+			key
+		);
+	}
+
 	// creates closure
 	// TODO: need way to indicate detached vm vs parent-less root, to prevent un-needed initial redraw
-	function createView(viewFn, model, key, impCtx, opts, parentNode, idxInParent) {
+	function createView(viewFn, model, key, opts, parentNode, idxInParent) {
 		var isRootNode = !parentNode;
 
 		// for domvm([MyView, model, key])
 		if (u.isArr(viewFn)) {
 			model	= viewFn[1];
 			key		= viewFn[2];
-			impCtx	= viewFn[3];
-			opts	= viewFn[4];
+			opts	= viewFn[3];
 			viewFn	= viewFn[0];
 		}
 
-		// if key is `false`, then model arg is treated as (non-persistent) impCtx
-		// same as doing domvm(MyView, null, null, model)
-		if (key === false) {
-			impCtx = model;
-			model = null;
-			key = null;
-		}
+		key = getViewKey(model, key);
 
 		var vm = {
-			exp: {},
-			imp: impCtx || {},
+			api: {},
 			node: null,
-			view: [viewFn, model, key],
+			view: [viewFn, key],	// immutable vm handle
+			model: model,
 			opts: opts || {},
 			render: null,
+			update: function(newModel, doRedraw) {
+				// persistent models cannot be updated with new data via the view
+				// this function is for dumb data re-rendering, key must have been false
+				if (newModel != null && (key == null || !u.isVal(key) && key !== model))
+					model = vm.model = newModel;
+				return doRedraw !== false ? redraw(0) : vm;
+			},
 			on: function(ev, fn) {
 				addHandlers(vm.events, ev, fn);
 			},
@@ -152,12 +132,12 @@
 
 		u.execAll(vmExts, [vm]);
 
-		vm.render = viewFn.call(vm.exp, vm, model, key, impCtx);
+		vm.render = viewFn.call(vm.api, vm, model, key);
 
 		if (parentNode)
-			return moveTo(parentNode, idxInParent, impCtx);
+			return moveTo(parentNode, idxInParent);
 		else
-			return redraw(0, impCtx);
+			return redraw(0);
 
 		function addHandlers(ctx, ev, fn) {
 			if (fn) {
@@ -172,12 +152,13 @@
 			}
 		}
 
-		// transplants node into tree, optionally updating model & impCtx
-		function moveTo(parentNodeNew, idxInParentNew, newImpCtx) {
+		// transplants node into tree, optionally updating model
+		function moveTo(parentNodeNew, idxInParentNew, newModel) {
 			parentNode = parentNodeNew;
 			updIdx(idxInParentNew);
+			vm.update(newModel, false);
 
-			return redraw(0, newImpCtx, false);
+			return redraw(0, false);
 		}
 
 		function updIdx(idxInParentNew) {
@@ -208,23 +189,21 @@
 		//	execAll(vm.hooks.didRedraw);
 		}
 
-		function redraw(level, newImpCtx, isRedrawRoot) {
+		function redraw(level, isRedrawRoot) {
 			if (level) {
 				var targ = vm;
 				while (level-- && targ.parent) { targ = targ.parent; }
-				targ.redraw(0, newImpCtx, true);
+				targ.redraw(0, true);
 				return targ.vm;
 			}
 
 			vm.hooks && u.execAll(vm.hooks.willRedraw);
 
-			vm.imp = newImpCtx != null ? newImpCtx : impCtx;
-
 			vm.refs = {};
 		//	vm.keyMap = {};
 
 			var old = vm.node;
-			var def = vm.render.call(vm.exp, vm, model, key, vm.imp);
+			var def = vm.render.call(vm.api, vm, model, key);
 			var node = initNode(def, parentNode, idxInParent, vm);
 
 			node.key = u.isVal(key) ? key : node.key;
@@ -496,10 +475,10 @@
 
 						if (isView && donor2.vm) {
 							if (donor2type === DONOR_NODE)
-								donor2.vm.moveTo(node, i, kid[3]);
+								donor2.vm.moveTo(node, i, kid[1]);
 							else if (donor2type === DONOR_DOM) {
 								// TODO: instead, re-use old dom with new node here (loose match)
-								createView(kid[0], kid[1], kid[2], kid[3], kid[4], node, i);
+								createView(kid[0], kid[1], kid[2], kid[3], node, i);
 								return;
 							}
 						}
@@ -511,7 +490,7 @@
 				}
 				// fall through no donor found
 				if (isView)
-					createView(kid[0], kid[1], kid[2], kid[3], kid[4], node, i);
+					createView(kid[0], kid[1], kid[2], kid[3], node, i);
 				else
 					node.body[i] = buildNode(kid);
 			});
@@ -601,8 +580,8 @@
 			if (newIsView && o.vm) {
 				// approx match by viewFn
 				if (o.vm.view[0] === node[0]) {
-					// exact match by model
-					if (o.vm.view[1] === node[1])
+					// exact match by key
+					if (o.vm.view[1] === getViewKey(node[1], node[2]))
 						return [i, DONOR_NODE];
 
 					var existsInNew = false;
@@ -858,7 +837,7 @@
 	function procProps(props, node, ownerVm) {
 		for (var i in props) {
 			if (u.isEvProp(i))
-				props[i] = wrapHandler(props[i], ownerVm.opts.evctx || ownerVm.view[1] || ownerVm.imp || null, node, ownerVm);
+				props[i] = wrapHandler(props[i], ownerVm.opts.evctx || ownerVm.model || null, node, ownerVm);
 			// getters
 			else if (u.isFunc(props[i])) {
 				// for router
@@ -956,7 +935,7 @@
 //	function setData(targ, name, val, ns, init) {targ.dataset[name] = val;};
 //	function delData(targ, name, ns, init) {targ.dataset[name] = "";};
 
-	function setCss(targ, name, val) {targ.style[name] = !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;}
+	function setCss(targ, name, val) {targ.style[name] = u.autoPx(name, val);}
 	function delCss(targ, name) {targ.style[name] = "";}
 
 	function setAttr(targ, name, val, ns, init) {
