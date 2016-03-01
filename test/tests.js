@@ -513,7 +513,7 @@ QUnit.module("Subview List w/keys");
 	}
 
 	function ListViewItem(vm, item, key) {
-		return () => ["li", item];		// {_key: item}		// todo: keys defined internally
+		return () => ["li", {_key: item}, item];
 	}
 
 	var vm, listEl;
@@ -1828,5 +1828,68 @@ QUnit.module("Imperative VMs");
 		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 2 });
 	});
 })();
+
+QUnit.module("Unjailed refs");
+
+(function() {
+	var footVm;
+
+	var data = {
+		a: "foo",
+		b: "bar",
+		c: "baz",
+	};
+
+	function updateData() {
+		data.a = "moo";
+		data.b = "cow";
+		data.c = "now";
+	}
+
+	function AppView(vm, data) {
+		vm.on("redrawMainAndFooter", function() {
+			vm.refs.main.vm.redraw();
+			vm.refs.footer.vm.redraw();
+		});
+
+		return () =>
+			["div",
+				data.a,
+				[MainView, data],
+				[FooterView, data, "^footer"],
+			];
+	}
+
+	function MainView(vm, data) {
+		return () => ["strong", {_ref: "^main"}, data.b];
+	}
+
+	function FooterView(vm, data) {
+		footVm = vm;
+
+		return () => ["em", data.c];
+	}
+
+	QUnit.test('Modify', function(assert) {
+		instr.start();
+		var vm = domvm.view(AppView, data).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div>foo<strong>bar</strong><em>baz</em></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 3, insertBefore: 4, textContent: 2, createTextNode: 1 });
+
+		updateData();
+
+		instr.start();
+		vm.emit("redrawMainAndFooter");
+		var callCounts = instr.end();
+
+		var expcHtml = '<div>foo<strong>cow</strong><em>now</em></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { nodeValue: 2 });
+	});
+})();
+
 
 // QUnit.module("Keyed model & addlCtx replacement");

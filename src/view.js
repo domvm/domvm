@@ -180,7 +180,6 @@
 
 			parent.body[donor.idx] = newNode;
 
-			var key = newNode.key;
 
 		//	execAll(vm.hooks.didRedraw);
 		}
@@ -202,13 +201,14 @@
 			var def = vm.render.call(vm.api, vm, model, key);
 			var node = initNode(def, parentNode, idxInParent, vm);
 
-			node.key = u.isVal(key) ? key : node.key;
-
 			node.vm = vm;
 			vm.node = node;
 
 			// unjailed vm root keys, will propagate up
-			var unjRef = (""+node.key)[0] === "^" ? node.key.substr(1) : null;
+			var unjRef =
+				(u.isVal(key)      && key[0]      === "^") ? key.substr(1) :
+				(u.isVal(node.ref) && node.ref[0] === "^") ? node.ref.substr(1) :
+				null;
 
 			// set parent vm for easy traversal
 			var ancest = parentNode;
@@ -345,8 +345,7 @@
 //		return [node];
 	}
 
-	// builds out node, excluding views.
-	// collects keyMap needed for grafting
+	// builds out node, excluding views
 	function initNode(def, parentNode, idxInParent, ownerVm) {
 		var node = procNode(def, ownerVm);
 
