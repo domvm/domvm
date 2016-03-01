@@ -76,6 +76,12 @@
 		autoPx: function(name, val) {
 			return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
 		},
+		indexOfKey: function(key, nodes, start, end) {
+			for (var i = 0; i < nodes.length; i++)
+				if (nodes[i].key === key)
+					return i;
+			return -1;
+		},
 		// https://github.com/darsain/raft
 		// rAF throttler, aggregates multiple repeated redraw calls within single animframe
 		raft: function(fn) {

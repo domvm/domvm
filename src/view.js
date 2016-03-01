@@ -182,10 +182,6 @@
 
 			var key = newNode.key;
 
-			if (u.isVal(key))
-				parent.keyMap[key] = donor.idx;
-			//	parent.keyMap[key] = vm.keyMap[key] = newNode;
-
 		//	execAll(vm.hooks.didRedraw);
 		}
 
@@ -363,8 +359,6 @@
 		node.ns = parentNode && parentNode.ns ? parentNode.ns : (node.tag === "svg" || node.tag === "math") ? node.tag : null;
 
 		if (u.isArr(node.body)) {
-			var keyMap = {}, anyKeys = false;
-
 			for (var i = 0, len = node.body.length; i < len; i++) {
 				var def2 = node.body[i];
 
@@ -399,7 +393,7 @@
 						if (u.isFunc(def2.redraw)) {	// pre-init vm
 							def2.moveTo(node, i);
 							node2 = def2.node;
-							key = def2.view[2];
+							key = def2.view[1];
 						}
 						else {
 							node.body[i--] = ""+def2;
@@ -429,17 +423,11 @@
 					i--; continue;	// avoids de-opt
 				}
 
-				if (u.isVal(key)) {
-					keyMap[key] = i;
-				//	ownerVm.keyMap[key] = node2;
-					anyKeys = true;
-				}
+				if (key != null)
+					node.hasKeys = true;
 
 				node.body[i] = node2 || def2;
 			}
-
-			if (anyKeys)
-				node.keyMap = keyMap;
 		}
 
 		return node;
@@ -554,14 +542,17 @@
 	function findDonor(node, newParent, oldParent, fromIdx, toIdx) {
 		var newIsView = u.isArr(node);
 		var newKey = newIsView ? node[2] || null : node.key;
-		var oldMap = oldParent.keyMap;
-		var newMap = newParent.keyMap;
+		var oldKeys = oldParent.hasKeys;
+		var newKeys = newParent.hasKeys;
 		var oldBody = oldParent.body;
 		var newBody = newParent.body;
 
 		// fast exact match by key
-		if (newKey !== null && oldMap && u.isVal(oldMap[newKey]))
-			return [oldMap[newKey], DONOR_NODE];
+		if (newKey !== null && oldKeys) {
+			var idx = u.indexOfKey(newKey, oldBody);
+			if (idx > -1)
+				return [idx, DONOR_NODE];
+		}
 
 		// if from or to > newbody length, return null
 		// todo: from keys here
@@ -602,13 +593,13 @@
 					}
 
 					// removed keyed view = can reuse its DOM if by end of list, no exacts were found
-					if (!existsInNew && !approx && newMap && !u.isVal(newMap[o.key]))
+					if (!existsInNew && !approx && newKeys && u.indexOfKey(o.key, newBody) == -1)
 						approx = [i, DONOR_DOM];
 				}
 			}
 			else if (areSimilar(o, node))
 				// matching dom nodes without keys
-				if (o.key === null || (!newMap || !u.isVal(newMap[o.key])))
+				if (o.key === null || (!newKeys || u.indexOfKey(o.key, newBody) == -1))
 					return [i, DONOR_DOM];
 		}
 
@@ -754,7 +745,7 @@
 			props: null,
 //			on: null,
 			el: null,
-			keyMap: null,	// holds idxs of any keyed children
+			hasKeys: false,	// holds idxs of any keyed children
 			body: null,
 		};
 
