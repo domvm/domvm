@@ -513,7 +513,7 @@ QUnit.module("Subview List w/keys");
 	}
 
 	function ListViewItem(vm, item, key) {
-		return () => ["li", {_key: item}, item];
+		return () => ["li", item];		// {_key: item}
 	}
 
 	var vm, listEl;

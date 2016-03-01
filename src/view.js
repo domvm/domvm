@@ -210,6 +210,9 @@
 				(u.isVal(node.ref) && node.ref[0] === "^") ? node.ref.substr(1) :
 				null;
 
+			node.key = u.isVal(key) ? key : node.key;
+//			node.key = key != null ? key : node.key;		// todo post-1.0, full vm<->root congruence
+
 			// set parent vm for easy traversal
 			var ancest = parentNode;
 			while (ancest) {
