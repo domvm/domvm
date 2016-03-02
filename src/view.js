@@ -42,11 +42,11 @@
 		return (
 			// false key signals a non-persistent model
 			key === false ? null :
-			// omitted or true key signals a persistent model, in future true may opt you into WeakMaps
-			model != null && (key == null || key === true) ? model :
-			// string or numeric key - peristent model tracked by key...stringify key?
-		//	key === 0 || key ? key
-			key
+			// undefined/null key signals a persistent model
+			key == null && model != null ? model :
+			// string or numeric key - persistent model tracked by key
+			u.isVal(key) ? key :
+			null
 		);
 	}
 
@@ -75,7 +75,7 @@
 			update: function(newModel, doRedraw) {
 				// persistent models cannot be updated with new data via the view
 				// this function is for dumb data re-rendering, key must have been false
-				if (newModel != null && (key == null || !u.isVal(key) && key !== model))
+				if (newModel != null && key !== model)
 					model = vm.model = newModel;
 				return doRedraw !== false ? redraw(0) : vm;
 			},
@@ -384,8 +384,8 @@
 						// handle arrays of arrays, avoids need for concat() in tpls
 						else if (u.isArr(def2[0]))
 							mergeIt = true;
-						else if (u.isFunc(def2[0]))	// decl sub-view
-							key = def2[2];
+						else if (u.isFunc(def2[0]))		// decl sub-view
+							key = getViewKey(def[1], def[2]);
 						else {
 							node2 = initNode(def2, node, i, ownerVm);
 							key = node2.key;
@@ -425,7 +425,7 @@
 					i--; continue;	// avoids de-opt
 				}
 
-				if (key != null)
+				if (key !== null)
 					node.hasKeys = true;
 
 				node.body[i] = node2 || def2;
