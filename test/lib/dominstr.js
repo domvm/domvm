@@ -14,12 +14,15 @@
 	var textContent = Object.getOwnPropertyDescriptor(nodeProto, "textContent");
 	var nodeValue = Object.getOwnPropertyDescriptor(nodeProto, "nodeValue");
 
-	var elemProto = Element.prototype;
-	var innerHTML = Object.getOwnPropertyDescriptor(elemProto, "innerHTML");
-	var className = Object.getOwnPropertyDescriptor(elemProto, "className");
+	var elemProto	= Element.prototype;
+	var innerHTML	= Object.getOwnPropertyDescriptor(elemProto, "innerHTML");
+	var className	= Object.getOwnPropertyDescriptor(elemProto, "className");
+	var id			= Object.getOwnPropertyDescriptor(elemProto, "id");
 
 	var htmlProto = HTMLElement.prototype;
 	var innerText = Object.getOwnPropertyDescriptor(htmlProto, "innerText");
+	
+	// checked, disabled, value, onclick, onkey*, etc..
 
 //	var styleProto = CSSStyleDeclaration.prototype;
 //	var setProperty = Object.getOwnPropertyDescriptor(styleProto, "setProperty");
@@ -114,6 +117,14 @@
 				},
 			});
 
+			counts.id = 0;
+			Object.defineProperty(elemProto, "id", {
+				set: function(s) {
+					counts.id++;
+					id.set.call(this, s);
+				},
+			});
+
 			/*
 			counts.setProperty = 0;
 			Object.defineProperty(styleProto, "setProperty", {
@@ -141,6 +152,7 @@
 			Object.defineProperty(htmlProto, "innerText", innerText);
 			Object.defineProperty(elemProto, "innerHTML", innerHTML);
 			Object.defineProperty(elemProto, "className", className);
+			Object.defineProperty(elemProto, "id", id);
 		//	Object.defineProperty(styleProto, "setProperty", setProperty);
 
 			var out = {};
