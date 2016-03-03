@@ -23,7 +23,7 @@
 					}
 
 					for (var pname in node.props) {
-						if (u.isEvProp(pname))
+						if (u.isEvProp(pname) || pname[0] === ".")
 							continue;
 
 						var val = node.props[pname];

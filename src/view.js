@@ -849,6 +849,10 @@
 				else
 					props[i] = props[i]();
 			}
+
+			// dynamic props get auto-added from attrs defs
+			if (u.isDynProp(node.tag, i))
+				props["."+i] = props[i];
 		}
 
 		if (u.isObj(props.style)) {
@@ -916,12 +920,9 @@
 		for (var name in np) {
 			if (np[name] === null) continue;
 
-			// dynamic props get set to blow away unsynced user interactions
-			if (u.isDynProp(tag, name))		// todo: also sync if specced as prop: ".checked"
-				targ[name] = np[name];
 			// add new or mutate existing not matching old
 			// also handles diffing of wrapped event handlers via exposed original (_fn)
-			if (np[name] !== op[name])
+			if (np[name] !== op[name] || name[0] === ".")
 				set(targ, name, np[name], ns, init);
 		}
 		// remove any removed
