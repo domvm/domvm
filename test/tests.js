@@ -4,13 +4,14 @@ var instr = new DOMInstr();
 
 var testyDiv = document.getElementById("testy");
 
-function evalOut(assert, viewEl, genrHtml, expcHtml, actuCounts, expcCounts) {
+function evalOut(assert, viewEl, genrHtml, expcHtml, actuCounts, expcCounts, actuProps, expcProps) {
 	var wrap = document.createElement("div");
 	wrap.innerHTML = expcHtml;
 
 	assert.equal(genrHtml, expcHtml, "domvm.html(): " + genrHtml);
 	assert.ok(viewEl.isEqualNode(wrap.firstChild), "DOM HTML: " + viewEl.outerHTML);
 	assert.deepEqual(actuCounts, expcCounts, "DOM Ops: " + JSON.stringify(expcCounts));
+	actuProps && assert.deepEqual(actuProps, expcProps, "DOM Props: " + JSON.stringify(expcProps));
 }
 
 function anonView(tpl) {
@@ -735,6 +736,7 @@ QUnit.module("Attrs/Props");
 
 	var check1 = new Check("check1", false);
 	var check2 = new Check("check2", true);
+	var check3 = new Check("check3", true);
 
 	QUnit.test("Bool attr init false", function(assert) {
 		instr.start();
@@ -744,7 +746,7 @@ QUnit.module("Attrs/Props");
 		var checkEl = document.getElementById(check1.id);
 
 		var expcHtml = '<input type="checkbox" id="check1">';
-		evalOut(assert, checkEl, domvm.html(check1.vm.node), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, setAttribute: 1 });
+		evalOut(assert, checkEl, domvm.html(check1.vm.node), expcHtml, callCounts, { id: 1, checked: 1, createElement: 1, insertBefore: 1, setAttribute: 1 }, {checked: checkEl.checked}, {checked: false});
 	});
 
 	QUnit.test("Bool attr toggle true", function(assert) {
@@ -757,7 +759,7 @@ QUnit.module("Attrs/Props");
 		var checkEl = document.getElementById(check1.id);
 
 		var expcHtml = '<input type="checkbox" checked id="check1">';
-		evalOut(assert, checkEl, domvm.html(check1.vm.node), expcHtml, callCounts, { setAttribute: 1 });
+		evalOut(assert, checkEl, domvm.html(check1.vm.node), expcHtml, callCounts, { checked: 1, setAttribute: 1 }, {checked: checkEl.checked}, {checked: true});
 	});
 
 	QUnit.test("Bool attr init true", function(assert) {
@@ -768,7 +770,7 @@ QUnit.module("Attrs/Props");
 		var checkEl = document.getElementById(check2.id);
 
 		var expcHtml = '<input type="checkbox" checked id="check2">';
-		evalOut(assert, checkEl, domvm.html(check2.vm.node), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, setAttribute: 2 });
+		evalOut(assert, checkEl, domvm.html(check2.vm.node), expcHtml, callCounts, { id: 1, checked: 1, createElement: 1, insertBefore: 1, setAttribute: 2 }, {checked: checkEl.checked}, {checked: true});
 	});
 
 	QUnit.test("Bool attr toggle false", function(assert) {
@@ -781,7 +783,30 @@ QUnit.module("Attrs/Props");
 		var checkEl = document.getElementById(check2.id);
 
 		var expcHtml = '<input type="checkbox" id="check2">';
-		evalOut(assert, checkEl, domvm.html(check2.vm.node), expcHtml, callCounts, { removeAttribute: 1 });
+		evalOut(assert, checkEl, domvm.html(check2.vm.node), expcHtml, callCounts, { checked: 1, removeAttribute: 1 }, {checked: checkEl.checked}, {checked: false});
+	});
+
+	QUnit.test("Dynamic props, always sync vtree -> DOM prop", function(assert) {
+		instr.start();
+		domvm.view(CheckView, check3).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var checkEl = document.getElementById(check3.id);
+
+		var expcHtml = '<input type="checkbox" checked id="check3">';
+		evalOut(assert, checkEl, domvm.html(check3.vm.node), expcHtml, callCounts, { id: 1, checked: 1, createElement: 1, insertBefore: 1, setAttribute: 2 }, {checked: checkEl.checked}, {checked: true});
+
+		// user interaction
+		check3.vm.node.checked = false;
+
+		// redraw with model.checked still true
+		instr.start();
+		check3.vm.redraw();
+		var callCounts = instr.end();
+
+		// the visual state should be reset back to the model state
+		var expcHtml = '<input type="checkbox" checked id="check3">';
+		evalOut(assert, checkEl, domvm.html(check3.vm.node), expcHtml, callCounts, { checked: 1 }, {checked: checkEl.checked}, {checked: true});
 	});
 })();
 
@@ -1059,6 +1084,7 @@ QUnit.module("Function node types & values");
 
 	var tpl = null;
 	var tpl2 = null;
+	var vm;
 
 	QUnit.test('Root node is function that returns node', function(assert) {
 		tpl = function() {
@@ -1178,7 +1204,7 @@ QUnit.module("Function node types & values");
 		vm = domvm.view(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
-		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, setAttribute: 1 });
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, setAttribute: 1, value: 1 }, {value: vm.node.el.value}, {value: "moo"});
 	});
 
 	QUnit.test('Style object attr value is function/getter', function(assert) {

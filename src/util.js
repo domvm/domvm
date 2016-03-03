@@ -70,6 +70,21 @@
 		isEvProp: function(prop) {
 			return prop.substr(0,2) === "on";
 		},
+		isDynProp: function(tag, attr) {
+			switch (tag) {
+				case "input":
+				case "textarea": 
+				case "select":
+				case "option":
+					switch (attr) {
+						case "value":
+						case "checked":
+						case "selected":
+						case "selectedIndex":
+							return true;
+					}
+			}
+		},
 		camelDash: function(val) {
 			return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 		},

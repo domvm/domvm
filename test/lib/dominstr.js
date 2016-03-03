@@ -21,8 +21,23 @@
 
 	var htmlProto = HTMLElement.prototype;
 	var innerText = Object.getOwnPropertyDescriptor(htmlProto, "innerText");
-	
-	// checked, disabled, value, onclick, onkey*, etc..
+
+	var inpProto = HTMLInputElement.prototype;
+	var areaProto = HTMLTextAreaElement.prototype;
+	var selProto = HTMLSelectElement.prototype;
+	var optProto = HTMLOptionElement.prototype;
+
+	var inpChecked = Object.getOwnPropertyDescriptor(inpProto, "checked");
+	var inpVal = Object.getOwnPropertyDescriptor(inpProto, "value");
+
+	var areaVal = Object.getOwnPropertyDescriptor(areaProto, "value");
+
+	var selVal = Object.getOwnPropertyDescriptor(selProto, "value");
+	var selIndex = Object.getOwnPropertyDescriptor(selProto, "selectedIndex");
+
+	var optSel = Object.getOwnPropertyDescriptor(optProto, "selected");
+
+	// onclick, onkey*, etc..
 
 //	var styleProto = CSSStyleDeclaration.prototype;
 //	var setProperty = Object.getOwnPropertyDescriptor(styleProto, "setProperty");
@@ -125,6 +140,50 @@
 				},
 			});
 
+			counts.checked = 0;
+			Object.defineProperty(inpProto, "checked", {
+				set: function(s) {
+					counts.checked++;
+					inpChecked.set.call(this, s);
+				},
+			});
+
+			counts.value = 0;
+			Object.defineProperty(inpProto, "value", {
+				set: function(s) {
+					counts.value++;
+					inpVal.set.call(this, s);
+				},
+			});
+			Object.defineProperty(areaProto, "value", {
+				set: function(s) {
+					counts.value++;
+					areaVal.set.call(this, s);
+				},
+			});
+			Object.defineProperty(selProto, "value", {
+				set: function(s) {
+					counts.value++;
+					selVal.set.call(this, s);
+				},
+			});
+
+			counts.selectedIndex = 0;
+			Object.defineProperty(selProto, "selectedIndex", {
+				set: function(s) {
+					counts.selectedIndex++;
+					selIndex.set.call(this, s);
+				},
+			});
+
+			counts.selected = 0;
+			Object.defineProperty(optProto, "selected", {
+				set: function(s) {
+					counts.selected++;
+					optSel.set.call(this, s);
+				},
+			});
+
 			/*
 			counts.setProperty = 0;
 			Object.defineProperty(styleProto, "setProperty", {
@@ -153,6 +212,12 @@
 			Object.defineProperty(elemProto, "innerHTML", innerHTML);
 			Object.defineProperty(elemProto, "className", className);
 			Object.defineProperty(elemProto, "id", id);
+			Object.defineProperty(inpProto,  "checked", inpChecked);
+			Object.defineProperty(inpProto,  "value", inpVal);
+			Object.defineProperty(areaProto, "value", areaVal);
+			Object.defineProperty(selProto,  "value", selVal);
+			Object.defineProperty(selProto,  "selectedIndex", selIndex);
+			Object.defineProperty(optProto,  "selected", optSel);
 		//	Object.defineProperty(styleProto, "setProperty", setProperty);
 
 			var out = {};
