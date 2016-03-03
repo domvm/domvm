@@ -102,7 +102,8 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 ["input", {type: "checkbox", checked: true}]				// boolean attrs
 ["input", {type: "checkbox", ".checked": true}]				// set property instead of attr
 ["button", {onclick: function(e) {...}}, "Hello"]			// event handlers
-["ul", {onclick: {".item": function(e) {...}}}, "Hello"]	// event handlers (delegated)
+["button", {onclick: [myFn, arg1, arg2]}, "Hello"]			// event handlers (parameterized)
+["ul", {onclick: {".item": function(e) {...}}}, ...]		// event handlers (delegated)
 ["p", {style: "font-size: 10pt;"}, "Hello"]					// style can be a string
 ["p", {style: {fontSize: "10pt"}}, "Hello"]					// or an object (camelCase only)
 ["div", {style: {width: 35}}, "Hello"]						// "px" will be added when needed
@@ -143,15 +144,12 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 	preInitVm,												// pre-initialized ViewModel
 ]
 
-
-// some special props...
+// special _* props
 
 [".myHtml", {_raw: true}, "<p>A am text!</p>"]				// raw innerHTML body
-
-["p", {_key: "myParag"}, "Some text"]						// keyed elements
-
+["p", {_key: "myParag"}, "Some text"]						// keyed nodes
 ["p", {_ref: "myParag"}, "Some text"]						// named refs (via vm.refs.myParag)
-
+["p", {_data: {foo: 123}}, "Some text"]						// per-node data (faster than attr)
 ["div", {_guard: true}]										// guarded/unmanaged node (TODO)
 ```
 
