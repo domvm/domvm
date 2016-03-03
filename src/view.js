@@ -802,14 +802,22 @@
 
 	function wrapHandler(fns, ctx, node, ownerVm) {
 		var handler = function(e) {
-			var res;
+			var res, vnode = e.target._node;
 
+			// pass ownerVm? these handlers are usually defined in the view closure so already have access to vm
 			if (u.isFunc(fns))
-				res = fns.call(ctx, e, node, ownerVm);
+				res = fns.call(ctx, e, vnode);
+			else if (u.isArr(fns))
+				res = fns[0].apply(ctx, fns.slice(1).concat(e, vnode));
 			else if (u.isObj(fns)) {
 				for (var filt in fns) {
-					if (e.target.matches(filt))
-						res = fns[filt].call(ctx, e, node, ownerVm);
+					var cb = fns[filt];
+					if (e.target.matches(filt)) {
+						if (u.isArr(cb))
+							res = cb[0].apply(ctx, cb.slice(1).concat(e, vnode));
+						else if (u.isFunc(cb))
+							res = cb.call(ctx, e, vnode);
+					}
 				}
 			}
 
@@ -819,7 +827,7 @@
 			}
 
 			if (ownerVm.opts.hasOwnProperty("watch")) {
-				var watchEv = {vm: ownerVm};
+				var watchEv = {vm: ownerVm, node: vnode};
 				ownerVm.opts.watch.fire(watchEv);			// use ctx here also?
 			}
 		};
