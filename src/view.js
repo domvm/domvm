@@ -910,14 +910,14 @@
 
 			// add new or mutate existing not matching old
 			// also handles diffing of wrapped event handlers via exposed original (_fn)
-			if (!(name in op) || np[name] !== op[name])
+			if (np[name] !== op[name])
 				set(targ, name, np[name], ns, init);
 		}
 		// remove any removed
 		for (var name in op) {
 			if (op[name] === null) continue;
 
-			if (!(name in np))
+			if (np[name] == null)
 				del(targ, name, ns, init);
 		}
 	}
