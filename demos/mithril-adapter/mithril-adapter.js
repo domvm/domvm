@@ -40,5 +40,5 @@ m.mount = function(elem, comp) {
 		compVm.redraw();
 	});
 
-	var compVm = domvm.view(View, model, null, null, opts).mount(elem);
+	var compVm = domvm.view(View, model, null, opts).mount(elem);
 };

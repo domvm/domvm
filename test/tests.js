@@ -4,13 +4,14 @@ var instr = new DOMInstr();
 
 var testyDiv = document.getElementById("testy");
 
-function evalOut(assert, viewEl, genrHtml, expcHtml, actuCounts, expcCounts) {
+function evalOut(assert, viewEl, genrHtml, expcHtml, actuCounts, expcCounts, actuProps, expcProps) {
 	var wrap = document.createElement("div");
 	wrap.innerHTML = expcHtml;
 
 	assert.equal(genrHtml, expcHtml, "domvm.html(): " + genrHtml);
 	assert.ok(viewEl.isEqualNode(wrap.firstChild), "DOM HTML: " + viewEl.outerHTML);
 	assert.deepEqual(actuCounts, expcCounts, "DOM Ops: " + JSON.stringify(expcCounts));
+	actuProps && assert.deepEqual(actuProps, expcProps, "DOM Props: " + JSON.stringify(expcProps));
 }
 
 function anonView(tpl) {
@@ -20,6 +21,48 @@ function anonView(tpl) {
 		};
 	}
 }
+
+QUnit.module("Prop/attr patch");
+
+(function() {
+	function View() {
+		return () => tpl;
+	}
+
+	var vm, tpl;
+
+	// todo dataMoo or deep ".dataset.*" .value? console.log(vm.node.el.onclick._fn);
+	QUnit.test("Create", function(assert) {
+		var onclick = function() {};
+		tpl = ["input#foo.bar.baz", {type: "text", style: {fontFamily: "Arial", fontSize: 12}, disabled: true, custom: "abc", custom2: null, custom3: "", custom4: "foo", onclick: onclick}];
+
+		instr.start();
+		vm = domvm.view(View).mount(testyDiv);		// todo: create test container
+		var callCounts = instr.end();
+
+		var expcHtml = '<input type="text" disabled custom="abc" custom3="" custom4="foo" id="foo" class="bar baz" style="font-family: Arial; font-size: 12px;">';
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { id: 1, className: 1, createElement: 1, insertBefore: 1, setAttribute: 5 });
+	});
+
+	// TODO: can 'id' or 'name' be allowed to change for recycling since they implicitly double as keys?
+	// TODO: can any form elements be reused if non-matching type?
+	QUnit.test("Update", function(assert) {
+		var onclick = function() {};
+		tpl = ["input#foo", {type: "text", style: {padding: 10}, disabled: false, custom: "xyz", custom2: "...", custom4: null}];
+
+		instr.start();
+		vm.redraw();		// todo: create test container
+		var callCounts = instr.end();
+
+		// a bit of a hack to get the outerHtml to match exactly fo the test
+		// domvm sets className="" for perf rather than removeAttribute("class")
+		if (vm.node.el.className === "")
+			vm.node.el.removeAttribute("class");
+
+		var expcHtml = '<input type="text" custom="xyz" custom2="..." id="foo" style="padding: 10px;">';
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { className: 1, removeAttribute: 3, setAttribute: 2 });
+	});
+})();
 
 QUnit.module("Flat List");
 
@@ -40,7 +83,7 @@ QUnit.module("Flat List");
 		listEl = document.getElementById("list0");
 
 		var expcHtml = '<ul id="list0" class="test-output"><li>a</li><li>b</li><li>c</li></ul>';
-		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { createElement: 4, insertBefore: 4, className: 1, textContent: 3 });
+		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { id: 1, createElement: 4, insertBefore: 4, className: 1, textContent: 3 });
 	});
 
 	// noop
@@ -199,7 +242,7 @@ QUnit.module("Flat List w/keys");
 		listEl = document.getElementById("list1");
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>a</li><li>b</li><li>c</li></ul>';
-		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { createElement: 4, insertBefore: 4, className: 1, textContent: 3 });
+		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { id: 1, createElement: 4, insertBefore: 4, className: 1, textContent: 3 });
 	});
 
 	// noop
@@ -512,7 +555,7 @@ QUnit.module("Subview List w/keys");
 		return () => ["ul#list2.test-output", list.map((item) => [ListViewItem, item, item])];
 	}
 
-	function ListViewItem(vm, item, _key) {
+	function ListViewItem(vm, item, key) {
 		return () => ["li", item];		// {_key: item}
 	}
 
@@ -526,7 +569,7 @@ QUnit.module("Subview List w/keys");
 		listEl = document.getElementById("list2");
 
 		var expcHtml = '<ul id="list2" class="test-output"><li>a</li><li>b</li><li>c</li></ul>';
-		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { createElement: 4, insertBefore: 4, className: 1, textContent: 3 });
+		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { id: 1, createElement: 4, insertBefore: 4, className: 1, textContent: 3 });
 	});
 
 	// noop
@@ -693,6 +736,7 @@ QUnit.module("Attrs/Props");
 
 	var check1 = new Check("check1", false);
 	var check2 = new Check("check2", true);
+	var check3 = new Check("check3", true);
 
 	QUnit.test("Bool attr init false", function(assert) {
 		instr.start();
@@ -702,7 +746,7 @@ QUnit.module("Attrs/Props");
 		var checkEl = document.getElementById(check1.id);
 
 		var expcHtml = '<input type="checkbox" id="check1">';
-		evalOut(assert, checkEl, domvm.html(check1.vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, setAttribute: 1 });
+		evalOut(assert, checkEl, domvm.html(check1.vm.node), expcHtml, callCounts, { id: 1, checked: 1, createElement: 1, insertBefore: 1, setAttribute: 1 }, {checked: checkEl.checked}, {checked: false});
 	});
 
 	QUnit.test("Bool attr toggle true", function(assert) {
@@ -715,7 +759,7 @@ QUnit.module("Attrs/Props");
 		var checkEl = document.getElementById(check1.id);
 
 		var expcHtml = '<input type="checkbox" checked id="check1">';
-		evalOut(assert, checkEl, domvm.html(check1.vm.node), expcHtml, callCounts, { setAttribute: 1 });
+		evalOut(assert, checkEl, domvm.html(check1.vm.node), expcHtml, callCounts, { checked: 1, setAttribute: 1 }, {checked: checkEl.checked}, {checked: true});
 	});
 
 	QUnit.test("Bool attr init true", function(assert) {
@@ -726,7 +770,7 @@ QUnit.module("Attrs/Props");
 		var checkEl = document.getElementById(check2.id);
 
 		var expcHtml = '<input type="checkbox" checked id="check2">';
-		evalOut(assert, checkEl, domvm.html(check2.vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, setAttribute: 2 });
+		evalOut(assert, checkEl, domvm.html(check2.vm.node), expcHtml, callCounts, { id: 1, checked: 1, createElement: 1, insertBefore: 1, setAttribute: 2 }, {checked: checkEl.checked}, {checked: true});
 	});
 
 	QUnit.test("Bool attr toggle false", function(assert) {
@@ -739,7 +783,30 @@ QUnit.module("Attrs/Props");
 		var checkEl = document.getElementById(check2.id);
 
 		var expcHtml = '<input type="checkbox" id="check2">';
-		evalOut(assert, checkEl, domvm.html(check2.vm.node), expcHtml, callCounts, { removeAttribute: 1 });
+		evalOut(assert, checkEl, domvm.html(check2.vm.node), expcHtml, callCounts, { checked: 1, removeAttribute: 1 }, {checked: checkEl.checked}, {checked: false});
+	});
+
+	QUnit.test("Dynamic props, always sync vtree -> DOM prop", function(assert) {
+		instr.start();
+		domvm.view(CheckView, check3).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var checkEl = document.getElementById(check3.id);
+
+		var expcHtml = '<input type="checkbox" checked id="check3">';
+		evalOut(assert, checkEl, domvm.html(check3.vm.node), expcHtml, callCounts, { id: 1, checked: 1, createElement: 1, insertBefore: 1, setAttribute: 2 }, {checked: checkEl.checked}, {checked: true});
+
+		// user interaction
+		check3.vm.node.checked = false;
+
+		// redraw with model.checked still true
+		instr.start();
+		check3.vm.redraw();
+		var callCounts = instr.end();
+
+		// the visual state should be reset back to the model state
+		var expcHtml = '<input type="checkbox" checked id="check3">';
+		evalOut(assert, checkEl, domvm.html(check3.vm.node), expcHtml, callCounts, { checked: 1 }, {checked: checkEl.checked}, {checked: true});
 	});
 })();
 
@@ -802,7 +869,7 @@ QUnit.module("Elems & id/class");
 		var callCounts = instr.end();
 
 		var expcHtml = '<div id="foo" class="class1 class2"></div>';
-		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, className: 1 });
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, className: 1 });
 	});
 
 	QUnit.test('["#foo.class1.class2"]', function(assert) {
@@ -813,7 +880,7 @@ QUnit.module("Elems & id/class");
 		var callCounts = instr.end();
 
 		var expcHtml = '<div id="foo" class="class1 class2"></div>';
-		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, className: 1 });
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, className: 1 });
 	});
 
 	QUnit.test('[".class1.class2"]', function(assert) {
@@ -974,6 +1041,33 @@ QUnit.module("Various Others");
 
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 7, createTextNode: 3, insertBefore: 10, textContent: 5 });
 	});
+
+	function SomeView3() {
+		return () => ["em", {style: {width: 30, zIndex: 5}}, "test"];
+	}
+
+	QUnit.test('"px" appended only to proper numeric style attrs', function(assert) {
+		var expcHtml = '<em style="width: 30px; z-index: 5;">test</em>';
+
+		instr.start();
+		vm = domvm.view(SomeView3).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, textContent: 1, insertBefore: 1 });
+	});
+
+	// TODO: how to test mounting to body without blowing away test?
+	QUnit.test('Mount to existing element instead of append into', function(assert) {
+		var em = document.createElement("em");
+
+		var expcHtml = '<em style="width: 30px; z-index: 5;">test</em>';
+
+		instr.start();
+		vm = domvm.view(SomeView3).mount(em, true);
+		var callCounts = instr.end();
+
+		evalOut(assert, em, domvm.html(vm.node), expcHtml, callCounts, { textContent: 2 });		// uses +1 textContent to clear it first
+	});
 })();
 
 
@@ -990,6 +1084,7 @@ QUnit.module("Function node types & values");
 
 	var tpl = null;
 	var tpl2 = null;
+	var vm;
 
 	QUnit.test('Root node is function that returns node', function(assert) {
 		tpl = function() {
@@ -1109,7 +1204,7 @@ QUnit.module("Function node types & values");
 		vm = domvm.view(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
-		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, setAttribute: 1 });
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, setAttribute: 1, value: 1 }, {value: vm.node.el.value}, {value: "moo"});
 	});
 
 	QUnit.test('Style object attr value is function/getter', function(assert) {
@@ -1396,32 +1491,20 @@ QUnit.module("Unrenderable values");
 	});
 })();
 
-QUnit.module("impCtx replacement");
+QUnit.module("Non-persistent model replacement");
 
 (function() {
-/*
-	function ViewAll(vm, model, key, addlCtx) {
-		var vmA = domvm.view(ViewA);
-
-		return () => [
-
-		];
-	}
-
-	function ViewB(vm, model, key, addlCtx) {
-		return () => [
-
-		];
-	}
-*/
-	function ViewA(vm) {
-//		console.log(vm.imp.foo);
-		return (vm) =>
+	function ViewA() {
+		return (vm, model) =>
 			["#viewA",
-				vm.imp.foo,
+				model.foo,
 				["br"],
-				vm.imp.bar,
+				model.bar,
 			];
+	}
+
+	function ViewB() {
+		return (vm, model) => ["#viewB", [ViewA, model, false]];
 	}
 
 	// sub-views = [ViewB, null, null, data]?
@@ -1431,41 +1514,450 @@ QUnit.module("impCtx replacement");
 
 	var dataA = {foo: "foo", bar: "bar"},
 		dataB = {foo: "xxx", bar: "yyy"},
-		vmA = null;
+		vmA = null, vmB = null;
 
-	QUnit.test('Initial model correctly rendered', function(assert) {
+	QUnit.test('Initial view correctly rendered', function(assert) {
 		var expcHtml = '<div id="viewA">foo<br>bar</div>';
 
 		instr.start();
 		vmA = domvm.view(ViewA, dataA, false).mount(testyDiv);
 		var callCounts = instr.end();
 
-		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { createElement: 2, insertBefore: 4, createTextNode: 2 });
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { id: 1, createElement: 2, insertBefore: 4, createTextNode: 2 });
 	});
 
-	QUnit.test('Replace impCtx using redraw()', function(assert) {
+	QUnit.test('Imperative replace via vm.update(newModel)', function(assert) {
 		var expcHtml = '<div id="viewA">xxx<br>yyy</div>';
 
 		instr.start();
-		vmA.redraw(0, dataB);
+		vmA.update(dataB);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 2 });
 	});
 
-	QUnit.test('Update impCtx & redraw()', function(assert) {
-		dataB.bar = "yyy2";
-
-		var expcHtml = '<div id="viewA">xxx<br>yyy2</div>';
+	QUnit.test('Declarative sub-view correctly rendered', function(assert) {
+		var expcHtml = '<div id="viewB"><div id="viewA">foo<br>bar</div></div>';
 
 		instr.start();
-		vmA.redraw(0, dataB);
+		vmB = domvm.view(ViewB, dataA, false).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmB.node.el, domvm.html(vmB.node), expcHtml, callCounts, { id: 2, createElement: 3, insertBefore: 5, createTextNode: 2 });
+	});
+
+	QUnit.test('Declarative replace', function(assert) {
+		var expcHtml = '<div id="viewB"><div id="viewA">xxx<br>yyy</div></div>';
+
+		instr.start();
+		vmB.update(dataB);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmB.node.el, domvm.html(vmB.node), expcHtml, callCounts, { nodeValue: 2 });
+	});
+
+	QUnit.test('Ad-hoc model wrapper (keyed by model)', function(assert) {
+		var vmC = null, vmD = null;
+
+		// wraps model in own impCtx for sub-view, but specs model as persitent
+		function ViewC(vm, model) {
+			return () => ["#viewC", [ViewD, {foo: model, addl: myText}, model]];
+		}
+
+		function ViewD() {
+			return (vm, imp, key) =>
+				["#viewD",
+					["span", imp.foo.text],
+					["strong", imp.addl],
+				];
+		}
+
+		var model = {text: "bleh"};
+		var myText = "bar";
+
+		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>bar</strong></div></div>';
+
+		instr.start();
+		vmC = domvm.view(ViewC, model).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmC.node.el, domvm.html(vmC.node), expcHtml, callCounts, { id: 2, createElement: 4, insertBefore: 4, textContent: 2 });
+
+		instr.start();
+		vmC.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmC.node.el, domvm.html(vmC.node), expcHtml, callCounts, { });
+
+		myText = "cow";
+		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>cow</strong></div></div>';
+
+		instr.start();
+		vmC.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmC.node.el, domvm.html(vmC.node), expcHtml, callCounts, { nodeValue: 1 });
+	});
+
+	QUnit.test('Ad-hoc model wrapper (explicitly unkeyed)', function(assert) {
+		var vmC = null, vmD = null;
+
+		// wraps model in own impCtx for sub-view, but specs model as persitent
+		function ViewC(vm, model) {
+			return () => ["#viewC", [ViewD, {foo: model, addl: myText}, false]];
+		}
+
+		function ViewD() {
+			return (vm, imp, key) =>
+				["#viewD",
+					["span", imp.foo.text],
+					["strong", imp.addl],
+				];
+		}
+
+		var model = {text: "bleh"};
+		var myText = "bar";
+
+		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>bar</strong></div></div>';
+
+		instr.start();
+		vmC = domvm.view(ViewC, model).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmC.node.el, domvm.html(vmC.node), expcHtml, callCounts, { id: 2, createElement: 4, insertBefore: 4, textContent: 2 });
+
+		instr.start();
+		vmC.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmC.node.el, domvm.html(vmC.node), expcHtml, callCounts, { });
+
+		myText = "cow";
+		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>cow</strong></div></div>';
+
+		instr.start();
+		vmC.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmC.node.el, domvm.html(vmC.node), expcHtml, callCounts, { nodeValue: 1 });
+	});
+
+	QUnit.test('Ad-hoc model wrapper (non-keyed)', function(assert) {
+		var vmC = null, vmD = null;
+
+		// wraps model in own impCtx for sub-view, but specs model as persitent
+		function ViewC(vm, model) {
+			return () => ["#viewC", [ViewD, {foo: model, addl: myText}]];
+		}
+
+		function ViewD() {
+			return (vm, imp, key) =>
+				["#viewD",
+					["span", imp.foo.text],
+					["strong", imp.addl],
+				];
+		}
+
+		var model = {text: "bleh"};
+		var myText = "bar";
+
+		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>bar</strong></div></div>';
+
+		instr.start();
+		vmC = domvm.view(ViewC, model).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmC.node.el, domvm.html(vmC.node), expcHtml, callCounts, { id: 2, createElement: 4, insertBefore: 4, textContent: 2 });
+
+		instr.start();
+		vmC.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmC.node.el, domvm.html(vmC.node), expcHtml, callCounts, { id: 1, createElement: 3, insertBefore: 3, removeChild: 3, textContent: 2 });
+
+		myText = "cow";
+		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>cow</strong></div></div>';
+
+		instr.start();
+		vmC.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmC.node.el, domvm.html(vmC.node), expcHtml, callCounts, { id: 1, createElement: 3, insertBefore: 3, removeChild: 3, textContent: 2 });
+	});
+
+/*
+	// wraps model in own impCtx for sub-view, but opts out of persistence
+	function ViewD(vm, model) {
+		return () => ["#viewD", [ViewF, {foo: model, addl: "bar"}, false]];
+	}
+
+	function ViewF(vm, model) {
+		return () => {
+			return ["#viewD",
+				model.foo,
+				["br"],
+				model.bar,
+			];
+		}
+	}
+*/
+
+})();
+
+
+QUnit.module("Model persistence keys, vm init, DOM reuse");
+
+(function() {
+	var dataA = {foo: "foo", bar: "bar"},
+		dataB = {foo: "xxx", bar: "yyy"},
+		vmA = null;
+
+	function ViewA(vm) {
+		vmA = vm;
+/*
+		vm.hook({
+			willUnmount: function() {
+				console.log("willUnmount");
+			},
+			didUnmount: function() {
+				console.log("willUnmount");
+			}
+		});
+*/
+		return (vm, model) =>
+			["div",
+				["span", model.foo],
+				["br"],
+				["strong", model.bar],
+			];
+	}
+
+	QUnit.test('Persistent model correctly rendered', function(assert) {
+		var expcHtml = '<div><span>foo</span><br><strong>bar</strong></div>';
+
+		instr.start();
+		vmA = domvm.view(ViewA, dataA).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { createElement: 4, insertBefore: 4, textContent: 2 });
+	});
+/*
+	// should this force unmount the vm and re-create
+	QUnit.test('Persistent model imperatively swapped out (should fail)', function(assert) {
+		var expcHtml = '<div><span>xxx</span><br><strong>yyy</strong></div>';
+
+		instr.start();
+		vmA.update(dataB);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 2 });
+	});
+*/
+})();
+
+
+QUnit.module("Imperative VMs");
+
+(function() {
+	var modelA = {val: "A"},
+		modelB = {val: "B"},
+		modelC = {val: "C"},
+		modelD = {val: "D"};
+
+	var vmA, vmB, vmC, vmD;
+
+	function ViewA(vm, model) {
+		vmA = vm;
+		vmB = domvm.view(ViewB, modelB);
+
+		return function() {
+			return ["div",
+				model.val,
+				vmB,
+				[ViewC, modelC]
+			];
+		};
+	}
+
+	function ViewB(vm, model) {
+		vmB = vm;
+
+		return function() {
+			return ["strong", model.val];
+		};
+	}
+
+	function ViewC(vm, model) {
+		vmC = vm;
+		vmD = domvm.view(ViewD, modelD);
+
+		return function() {
+			return ["em", model.val, vmD];
+		};
+	}
+
+	function ViewD(vm, model) {
+		vmD = vm;
+
+		return function() {
+			return ["span", model.val];
+		};
+	}
+
+	QUnit.test('Initial view built correctly', function(assert) {
+		var expcHtml = '<div>A<strong>B</strong><em>C<span>D</span></em></div>';
+
+		instr.start();
+		domvm.view(ViewA, modelA).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { createElement: 4, createTextNode: 2, insertBefore: 6, textContent: 2 });
+	});
+
+	QUnit.test('A mod, A redraw', function(assert) {
+		var expcHtml = '<div>A+<strong>B</strong><em>C<span>D</span></em></div>';
+
+		modelA.val = "A+";
+
+		instr.start();
+		vmA.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 1 });
 	});
 
-	// todo: ancestor ctx replacement?
+	QUnit.test('B mod, B redraw', function(assert) {
+		var expcHtml = '<div>A+<strong>B+</strong><em>C<span>D</span></em></div>';
+
+		modelB.val = "B+";
+
+		instr.start();
+		vmB.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 1 });
+	});
+
+	QUnit.test('A redraw (should do nothing)', function(assert) {
+		var expcHtml = '<div>A+<strong>B+</strong><em>C<span>D</span></em></div>';
+
+		instr.start();
+		vmB.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, {});
+	});
+
+	QUnit.test('D mod, A redraw', function(assert) {
+		var expcHtml = '<div>A+<strong>B+</strong><em>C<span>D+</span></em></div>';
+
+		modelD.val = "D+";
+
+		instr.start();
+		vmA.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 1 });
+	});
+
+	QUnit.test('C redraw (should do nothing)', function(assert) {
+		var expcHtml = '<div>A+<strong>B+</strong><em>C<span>D+</span></em></div>';
+
+		instr.start();
+		vmC.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, {});
+	});
+
+	QUnit.test('C mod, A redraw, C redraw', function(assert) {
+		var expcHtml = '<div>A+<strong>B+</strong><em>C+<span>D+</span></em></div>';
+
+		modelC.val = "C+";
+
+		instr.start();
+		vmA.redraw();
+		vmC.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 1 });
+	});
+
+	QUnit.test('A mod, C mod, A redraw', function(assert) {
+		var expcHtml = '<div>A++<strong>B+</strong><em>C++<span>D+</span></em></div>';
+
+		modelA.val = "A++";
+		modelC.val = "C++";
+
+		instr.start();
+		vmA.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 2 });
+	});
 })();
+
+QUnit.module("Unjailed refs");
+
+(function() {
+	var footVm;
+
+	var data = {
+		a: "foo",
+		b: "bar",
+		c: "baz",
+	};
+
+	function updateData() {
+		data.a = "moo";
+		data.b = "cow";
+		data.c = "now";
+	}
+
+	function AppView(vm, data) {
+		vm.on("redrawMainAndFooter", function() {
+			vm.refs.main.vm.redraw();
+			vm.refs.footer.vm.redraw();
+		});
+
+		return () =>
+			["div",
+				data.a,
+				[MainView, data],
+				[FooterView, data, "^footer"],
+			];
+	}
+
+	function MainView(vm, data) {
+		return () => ["strong", {_ref: "^main"}, data.b];
+	}
+
+	function FooterView(vm, data) {
+		footVm = vm;
+
+		return () => ["em", data.c];
+	}
+
+	QUnit.test('Modify', function(assert) {
+		instr.start();
+		var vm = domvm.view(AppView, data).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div>foo<strong>bar</strong><em>baz</em></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 3, insertBefore: 4, textContent: 2, createTextNode: 1 });
+
+		updateData();
+
+		instr.start();
+		vm.emit("redrawMainAndFooter");
+		var callCounts = instr.end();
+
+		var expcHtml = '<div>foo<strong>cow</strong><em>now</em></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { nodeValue: 2 });
+	});
+})();
+
 
 // QUnit.module("Keyed model & addlCtx replacement");

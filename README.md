@@ -70,14 +70,12 @@ var domvm = require("domvm");
 
 Each module is a single js file in `/src`. The first 3 are the "core", the rest are optional and can be replaced by your own implementations. For development, just include them in order.
 
-- domvm: namespace & module wrapper
-- domvm.util: generic funcs required by other modules
-- domvm.view: the core view/vdom/template lib
-- domvm.html: vtree -> HTML generator, if you need isomorphism/SSR
-- domvm.watch: auto-redraw helpers - mutation observers, ajax wrappers
-- domvm.route: router & reverse router for single page apps (SPAs)
-
-**Building A Custom Bundle**
+0. `domvm`: namespace & wrapper
+0. `domvm.util`: generic funcs required by other modules
+0. `domvm.view`: the core vdom & template lib
+0. `domvm.html`: vtree => HTML generator, if you need isomorphism/SSR
+0. `domvm.watch`: auto-redraw helpers (mutation observers, ajax wrappers)
+0. `domvm.route`: router & href generator for single page apps (SPAs)
 
 Building is simple: concat the needed modules and minify with tools of your choice. I use [Closure Compiler](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for both:
 
@@ -104,7 +102,8 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 ["input", {type: "checkbox", checked: true}]				// boolean attrs
 ["input", {type: "checkbox", ".checked": true}]				// set property instead of attr
 ["button", {onclick: function(e) {...}}, "Hello"]			// event handlers
-["ul", {onclick: {".item": function(e) {...}}}, "Hello"]	// event handlers (delegated)
+["button", {onclick: [myFn, arg1, arg2]}, "Hello"]			// event handlers (parameterized)
+["ul", {onclick: {".item": function(e) {...}}}, ...]		// event handlers (delegated)
 ["p", {style: "font-size: 10pt;"}, "Hello"]					// style can be a string
 ["p", {style: {fontSize: "10pt"}}, "Hello"]					// or an object (camelCase only)
 ["div", {style: {width: 35}}, "Hello"]						// "px" will be added when needed
@@ -145,15 +144,12 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 	preInitVm,												// pre-initialized ViewModel
 ]
 
-
-// some special props...
+// special _* props
 
 [".myHtml", {_raw: true}, "<p>A am text!</p>"]				// raw innerHTML body
-
-["p", {_key: "myParag"}, "Some text"]						// keyed elements
-
+["p", {_key: "myParag"}, "Some text"]						// keyed nodes
 ["p", {_ref: "myParag"}, "Some text"]						// named refs (via vm.refs.myParag)
-
+["p", {_data: {foo: 123}}, "Some text"]						// per-node data (faster than attr)
 ["div", {_guard: true}]										// guarded/unmanaged node (TODO)
 ```
 
@@ -452,7 +448,7 @@ function SomeView(vm) {
 
 	return function() {
 		return ["div",
-			["strong", {href: "#", _ref: "strongFoo"}, "Strong foo text"],
+			["strong", {_ref: "strongFoo"}, "Strong foo text"],
 			["br"],
 			["a.myBtn", {href: "#", onclick: handleMyBtnClick}, "some link"],
 		];
