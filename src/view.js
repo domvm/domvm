@@ -45,7 +45,7 @@
 			// undefined/null key signals a persistent model
 			key == null && model != null ? model :
 			// string or numeric key - persistent model tracked by key
-			u.isVal(key) ? key :
+			u.isVal(key) || u.isObj(key) || u.isArr(key) || u.isFunc(key) ? key :
 			null
 		);
 	}
