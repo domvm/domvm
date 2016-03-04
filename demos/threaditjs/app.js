@@ -175,19 +175,23 @@ function CommentReplyView(vm, deps, comment) {
 };
 
 function ThreaditRouter(rt, deps) {
+	rt.config({
+		root: "/domvm/demos/threaditjs",
+		useHash: false,
+	});
+
 	var titlePre = "ThreaditjS: domvm | ";
-	var routePre = "/domvm/demos/threaditjs";
 
 	return {
 		threadList: {
-			path: routePre + "/",
+			path: "/",
 			onenter: function(e) {
 				document.title = titlePre + "Thread List";
 				deps.app.getThreads(!e.from);
 			},
 		},
 		thread: {
-			path: routePre + "/thread/:id",
+			path: "/thread/:id",
 			params: {id: /[a-zA-Z0-9]{5,7}/},
 			onenter: function(e, id) {
 				document.title = titlePre + "Thread #" + id;

@@ -2,19 +2,38 @@
 	"use strict";
 
 	domvm.route = function(routeFn, imp) {
+		var useHash = false,
+			root = "";
+
+		function getPath() {
+			return useHash ? (location.hash.substr(1) || "/") : location.pathname;
+		}
+
 		var api = {
 			href: function(name, params, repl) {
-				var fn = function(e) {
-					api.goto(name, params, repl);
-					e.preventDefault();
-					// stop prop?
-				};
+				var path = buildPath(routes, name, params);
 
-				fn.path = buildPath(routes, name, params);
-				return fn;
+			//	console.log(root, path);		// (useHash ? "#" : "") + root +
+
+				if (useHash)
+					return "#" + root + path;
+				else {
+					var fn = function(e) {
+						api.goto(name, params, repl);
+						e.preventDefault();
+						// stop prop?
+					};
+					fn.path = root + path;
+					return fn;
+				}
+			},
+			config: function(opts) {
+				useHash = opts.useHash;
+				if (!useHash)
+					root = opts.root || "";
 			},
 			refresh: function() {
-				api.goto(window.location.pathname);
+				api.goto(getPath(), null, true);
 			},
 			// should this return promise?
 			// pass in some state to save?
@@ -23,7 +42,7 @@
 				params = params || [];
 				repl = repl || initial;
 
-				var targ = getTargRoute(routes, name, params);
+				var targ = getTargRoute(routes, root, name, params);
 				var path = targ.path;
 				name = targ.name;
 				params = targ.params;
@@ -66,7 +85,17 @@
 						//	revert nav?
 						}
 						else {
-							history[repl ? "replaceState" : "pushState"]([name, params], "title", path);
+							if (useHash) {
+								if (repl)
+									location.replace("#"+path);
+								else
+									location.hash = "#"+path;
+
+								setHashState([name, params], "title", path);
+							}
+							else
+								history[repl ? "replaceState" : "pushState"]([name, params], "title", path);
+
 							pos = toPos;
 						}
 					}
@@ -75,7 +104,7 @@
 				}
 			},
 			current: function() {
-				return initial ? getTargRoute(routes, window.location.pathname) : stack[pos];
+				return initial ? getTargRoute(routes, root, getPath()) : stack[pos];
 			//	return stack[pos];
 			},
 	//		next:
@@ -88,20 +117,41 @@
 		var stack = [];
 		var routes = routeFn(api, imp);
 
-		buildRegexPaths(routes);
+		buildRegexPaths(routes, root);
 
 	//	console.log(routes);
 
-		window.onpopstate = function(e) {
-			api.goto.apply(null, e.state.concat(true));
-		};
+		var hashState = {};				// todo: json-serialize to sessionStorage
+
+		function getHashState(path) {
+			return hashState[path];
+		}
+
+		function setHashState(state, title, path) {
+			hashState[path] = state;
+		}
+
+		onhashchange = onpopstate = null;
+
+		if (useHash) {
+			onhashchange = function(e) {
+				var path = getPath();
+				var prevState = getHashState(path);
+				api.goto.apply(null, (prevState || [path]).concat(true));
+			};
+		}
+		else {
+			onpopstate = function(e) {
+				api.goto.apply(null, e.state.concat(true));
+			};
+		}
 
 		return api;
 	};
 
-	function getTargRoute(routes, name, params) {
+	function getTargRoute(routes, root, name, params) {
 		if (name[0] === "/") {
-			var path = name;
+			var path = name;		//  (useHash ? "" : root) +
 			var name = null;
 
 			var match;
@@ -118,7 +168,7 @@
 				name = "_noMatch";
 		}
 		else
-			var path = buildPath(routes, name, params);
+			var path = root + buildPath(routes, name, params);
 
 		return {name: name, route: routes[name], params: params, path: path};
 	}
@@ -130,7 +180,7 @@
 			params = params.slice();
 			var ok = true,
 				out = full.replace(/:([^\/]+)/g, function(m, name) {
-					var p = params.shift();									// should be named? :(
+					var p = params.shift();									// :(
 					if (r.params && r.params[name]) {
 						if ((""+p).match(r.params[name]))
 							return p;
@@ -141,18 +191,21 @@
 						return p;
 				});
 
-			return ok ? out : ok;
+			if (!ok)
+				return ok;
+
+			full = out;
 		}
 
 		return full;
 	}
 
 	// creates full regex paths by merging regex param validations
-	function buildRegexPaths(routes) {
+	function buildRegexPaths(routes, root) {
 		for (var i in routes) {
 			var r = routes[i];
 			// todo: first replace r.path regexp special chrs via RegExp.escape?
-			r.regexPath = new RegExp("^" +
+			r.regexPath = new RegExp("^" + root +
 				r.path.replace(/:([^\/]+)/g, function(m, name) {
 					var regExStr = ""+r.params[name];
 					return "(" + regExStr.substring(1, regExStr.lastIndexOf("/")) + ")";
