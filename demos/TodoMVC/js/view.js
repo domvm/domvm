@@ -62,13 +62,13 @@ view.Main = function Main(vm, todos) {
             mainBody.push(
                 ['input.toggle-all',
                     {
-                        ".checked": allCompleted,
+                        checked: allCompleted,
                         type: 'checkbox',
                         onclick: toggleAll
                     }
                 ],
                 ['ul.todo-list', filterTodos().map(function(todo) {
-                    return [view.Todo, todo, null, {todos: todos}]
+                    return [view.Todo, todos, todo]
                 })]
             );
         }
@@ -78,9 +78,8 @@ view.Main = function Main(vm, todos) {
 }
 
 
-view.Todo = function Todo(vm, todo) {
-    var editing = false,
-        todos   = vm.imp.todos;
+view.Todo = function Todo(vm, todos, todo) {
+    var editing = false;
 
     function toggle() {
         todos.complete(todo, !todo.completed);
@@ -135,7 +134,7 @@ view.Todo = function Todo(vm, todo) {
                 ['input.toggle',
                     {
                         type: 'checkbox',
-                        ".checked": todo.completed,
+                        checked: todo.completed,
                         onclick: toggle,
                     }
                 ],
