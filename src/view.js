@@ -844,7 +844,7 @@
 				// for router
 				if (i == "href") {
 					props.onclick = props[i];
-					props.href = props[i].path;
+					props.href = props[i].href;
 				}
 				else
 					props[i] = props[i]();
