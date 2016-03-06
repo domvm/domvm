@@ -2,7 +2,7 @@
 	"use strict";
 
 	var stack = [], pos = null,		// these should go into sessionStorage
-		useHash = false,
+		useHist = false,
 		root = "";
 
 	domvm.route = function(routeFn, imp) {
@@ -10,7 +10,7 @@
 
 		function routeFromLoc() {
 			var l = location;
-			var href = useHash ? (l.hash.substr(1) || "/") : l.href.substr(l.origin.length);
+			var href = useHist ? l.href.substr(l.origin.length) : (l.hash.substr(1) || "/");
 			return buildRoute(routes, root, href);
 		}
 
@@ -18,7 +18,7 @@
 			href: function(name, segs, query, hash, repl) {
 				var route = buildRoute(routes, root, name, segs, query, hash);
 
-				if (useHash)
+				if (!useHist)
 					return "#" + route.href;		// if repl here then use handler with location.replace?
 				else {
 					var fn = function(e) {
@@ -31,8 +31,8 @@
 				}
 			},
 			config: function(opts) {
-				useHash = opts.useHash;
-				if (!useHash)
+				useHist = opts.useHist;
+				if (useHist)
 					root = opts.root || "";
 				init = opts.init || null;
 			},
@@ -84,14 +84,15 @@
 						//	revert nav?
 						}
 						else {
-							if (useHash) {
+							if (useHist)
+								history[repl ? "replaceState" : "pushState"](null, "title", next.href);
+							else {
 						//		if (repl)
 						//			location.replace("#"+next.href);
 						//		else
 						//			location.hash = "#"+next.href;
 							}
-							else
-								history[repl ? "replaceState" : "pushState"](null, "title", next.href);
+
 
 							pos = toPos;
 						}
@@ -115,7 +116,7 @@
 		buildRegexPaths(routes, root);
 
 		onhashchange = onpopstate = function(e) {
-			if (useHash && e.type == "popstate")
+			if (!useHist && e.type == "popstate")
 				return;
 			api.goto(routeFromLoc(),null,null,null,true);
 		};

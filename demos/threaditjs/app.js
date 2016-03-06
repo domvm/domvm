@@ -6,7 +6,7 @@ domvm.route(ThreaditRouter, app);
 
 function ThreaditRouter(router, app) {
 	router.config({
-		useHash: true,
+		useHist: false,
 		root: "/domvm/demos/threaditjs",
 		init: function() {
 			app.view = domvm.view(ThreaditView, {app: app, router: router});
