@@ -28,7 +28,7 @@ function ThreaditRouter(router, app) {
 	return {
 		threadList: {
 			path: "/",
-			onenter: function(segs, query, hash, e) {
+			onenter: function(e, segs, query, hash) {
 				document.title = titlePre + "Thread List";
 				app.getThreads(!e.from);
 			},
@@ -36,7 +36,7 @@ function ThreaditRouter(router, app) {
 		thread: {
 			path: "/thread/:id",
 			vars: {id: /[a-zA-Z0-9]{5,7}/},
-			onenter: function(segs, query, hash, e) {
+			onenter: function(e, segs, query, hash) {
 				document.title = titlePre + "Thread #" + segs.id;
 				app.getComments(segs.id, !e.from);
 			},

@@ -73,12 +73,12 @@
 
 					if (pos !== null) {
 						var onexit = routes[prev.name].onexit;
-						canExit = !onexit ? true : onexit.apply(null, (prev ? [prev.segs, prev.query, prev.hash] : []).concat({to: next}));
+						canExit = !onexit ? true : onexit.apply(null, [{to: next}].concat(prev ? [prev.segs, prev.query, prev.hash] : []));
 					}
 
 					if (canExit !== false) {
 						var onenter = routes[next.name].onenter;
-						var canEnter = onenter.apply(null, (next ? [next.segs, next.query, next.hash] : []).concat({from: prev}));
+						var canEnter = onenter.apply(null, [{from: prev}].concat(next ? [next.segs, next.query, next.hash] : []));
 
 						if (canEnter === false) {
 						//	revert nav?
