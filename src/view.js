@@ -811,7 +811,7 @@
 				res = fns.call(ctx, e, vnode);
 			// parametrized cb: [cb, arg1...]
 			else if (u.isArr(fns))
-				res = fns[0].apply(ctx, [e, vnode].concat(fns.slice(1)));
+				res = fns[0].apply(ctx, fns.slice(1).concat(e, vnode));
 			// object of deleg handlers {".moo": ...}
 			else if (u.isObj(fns)) {
 				for (var filt in fns) {
@@ -819,7 +819,7 @@
 					if (e.target.matches(filt)) {
 						// deleg + parametrized
 						if (u.isArr(cb))
-							res = cb[0].apply(ctx, [e, vnode].concat(cb.slice(1)));
+							res = cb[0].apply(ctx, cb.slice(1).concat(e, vnode));
 						// deleg & plain cb
 						else if (u.isFunc(cb))
 							res = cb.call(ctx, e, vnode);
