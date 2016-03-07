@@ -800,21 +800,27 @@
 		return node;
 	}
 
+	// note: these handlers are usually defined in the view closure or
+	// render() so already have access to vm, no need to pass it back
 	function wrapHandler(fns, ctx, node, ownerVm) {
 		var handler = function(e) {
 			var res, vnode = e.target._node;
 
-			// pass ownerVm? these handlers are usually defined in the view closure so already have access to vm
+			// plain cb
 			if (u.isFunc(fns))
 				res = fns.call(ctx, e, vnode);
+			// parametrized cb: [cb, arg1...]
 			else if (u.isArr(fns))
-				res = fns[0].apply(ctx, fns.slice(1).concat(e, vnode));
+				res = fns[0].apply(ctx, [e, vnode].concat(fns.slice(1)));
+			// object of deleg handlers {".moo": ...}
 			else if (u.isObj(fns)) {
 				for (var filt in fns) {
 					var cb = fns[filt];
 					if (e.target.matches(filt)) {
+						// deleg + parametrized
 						if (u.isArr(cb))
-							res = cb[0].apply(ctx, cb.slice(1).concat(e, vnode));
+							res = cb[0].apply(ctx, [e, vnode].concat(cb.slice(1)));
+						// deleg & plain cb
 						else if (u.isFunc(cb))
 							res = cb.call(ctx, e, vnode);
 					}
