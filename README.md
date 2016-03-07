@@ -16,7 +16,7 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 
 - Thin API, no dependencies, build = concat & min
 - Small - ~10k min core + ~4k router, isomorphism, observers (~6k everything gzipped)
-- Ultra fast - [dbmonster](http://leeoniya.github.io/domvm/test/bench/dbmonster/), [granular patch](http://leeoniya.github.io/domvm/test/bench/patch/)
+- Fast (2x Mithril, 3x React) - [dbmonster](http://leeoniya.github.io/domvm/test/bench/dbmonster/), [granular patch](http://leeoniya.github.io/domvm/test/bench/patch/)
 - Concise js templates. No html-in-js, js-in-html or other esoteric syntax requiring tooling/compilation
 - Sub-views - declarative *or* imperative, freely composable, stateful and independently refreshable
 - Synthetic events - emit custom events with data to ancestor views
