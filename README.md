@@ -543,9 +543,9 @@ function MyRouter(router, deps) {
 		root: "/myApp",
 		init: function() {
 			// This function will be called once the router has initialized and is able to route.
-			// use it to mount or redraw your app's root view. It's recommended that you dep-inject
-			// the router into your app so it can use href generation for templates and `.location()`
-			// to determine and render the appropriate views
+			// Use it to mount or redraw your app's root view. It's recommended that you dep-inject
+			// the router into your app before mounting so it can use href generation for its templates
+			// and `router.location()` to determine and render the appropriate views
 		}
 	});
 
