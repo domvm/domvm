@@ -59,6 +59,8 @@
 				}
 			};
 
+			var event = {type: "fetch", fetch: {method: method, url: url, body: body}};
+
 			var prom = fetch(url, opts)
 				.then(checkStatus)
 				// decode data
@@ -68,11 +70,12 @@
 				// fire any redraws
 				.then(
 					function(res) {
-						res !== false && api.fire();
+						res !== false && api.fire(event);
 						return res;
 					},
 					function(err) {
-						api.fire();
+						event.error = err;
+						api.fire(event);
 						return err;
 					}
 				);
@@ -103,7 +106,7 @@
 						var oldVal = val;
 						val = newVal;
 						if (runHandlers !== false)
-							api.fire();
+							api.fire({type: "prop", prop: fn, data: {old: oldVal, new: newVal}});
 					}
 
 					return val;
@@ -153,7 +156,7 @@
 					};
 				}
 
-				return function(e) {
+				return function(node, e) {
 					var model = this !== window ? this : null
 
 					if (model && typeof set == "string") {		// could be array ["propName", this]

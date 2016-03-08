@@ -28,17 +28,17 @@ function ThreaditRouter(router, app) {
 	return {
 		threadList: {
 			path: "/",
-			onenter: function(e, segs, query, hash) {
+			onenter: function(segs) {
 				document.title = titlePre + "Thread List";
-				app.getThreads(!e.from);
+				app.getThreads();
 			},
 		},
 		thread: {
-			path: "/thread/:id",
+			path: "/threads/:id",
 			vars: {id: /[a-zA-Z0-9]{5,7}/},
-			onenter: function(e, segs, query, hash) {
+			onenter: function(segs) {
 				document.title = titlePre + "Thread #" + segs.id;
-				app.getComments(segs.id, !e.from);
+				app.getComments(segs.id);
 			},
 		},
 //		_noMatch: {
@@ -60,20 +60,21 @@ function ThreaditApp() {
 	var w0 = domvm.watch();
 
 	this.threads	= w.prop([]);
-	this.comments	= w.prop([]);
+	this.comments	= w.prop({});
 	this.error		= w.prop(null);		// doubles as generic message for "loading"?
 
-	function bustCache() {
-		return "?" + +new Date();
+	function clearCache() {
+		if (self.threads().length || self.comments().root || self.error()) {
+			self.threads([]);
+			self.comments({});
+		}
+
+		self.error(null, false);		// clears error without redraw
 	}
 
 	function setError(err) {
 		self.error(err.message);
-	};
-
-	function clearError() {
-		self.error(null, false);
-	};
+	}
 
 	this.newThread = function(text, cb) {
 		var onOk = function(resp) { self.threads().push(resp.data); cb && cb(); };
@@ -85,20 +86,18 @@ function ThreaditApp() {
 		return w0.post(T.apiUrl + "/comments/create", {text : text, parent: parent.id}, [onOk, setError]);
 	};
 
-	this.getThreads = function(initial) {
-		clearError();
-		!initial && self.threads([]);
+	this.getThreads = function() {
+		clearCache();
 		var onOk = function(resp) { self.threads(resp.data); };
 		T.timeEnd("Setup");
-		return w.get(T.apiUrl + "/threads/" + bustCache(), [onOk, setError]);
+		return w.get(T.apiUrl + "/threads/" + ("?" + +new Date()), [onOk, setError]);
 	};
 
-	this.getComments = function(id, initial) {
-		clearError();
-		!initial && self.comments([]);
+	this.getComments = function(id) {
+		clearCache();
 		var onOk = function(resp) { self.comments(T.transformResponse(resp)); };
 		T.timeEnd("Setup");
-		w.get(T.apiUrl + "/comments/" + id + bustCache(), [onOk, setError]);
+		w.get(T.apiUrl + "/comments/" + id + ("?" + +new Date()), [onOk, setError]);
 	};
 }
 
@@ -135,14 +134,14 @@ function ThreadListView(vm, deps, threads) {
 	function threadListItemTpl(thread) {
 		return [
 			["p",
-				["a", {href: deps.router.href("thread", {id: thread.id})}, T.trimTitle(thread.text)]			//	r.goto("comment", [5]);
+				["a", {href: deps.router.href("thread", {id: thread.id}), _raw: true}, T.trimTitle(thread.text)]			//	r.goto("comment", [5]);
 			],
 			["p.comment_count", thread.comment_count + " comment" + (thread.comment_count !== 1 ? "s" : "")],
 			["hr"],
 		]
 	}
 
-	function newThread(e) {
+	function newThread(node, e) {
 		submitting = true;
 		vm.redraw();
 
@@ -191,13 +190,13 @@ function CommentReplyView(vm, deps, comment) {
 	var submitting = false;
 	var tmpComment = "";
 
-	function toggleReplyMode(e) {
+	function toggleReplyMode(node, e) {
 		replying = !replying;
 		vm.redraw();
 		return false;
 	}
 
-	function newComment(e) {
+	function newComment(node, e) {
 		submitting = true;
 		replying = false;
 		vm.redraw();
@@ -210,8 +209,8 @@ function CommentReplyView(vm, deps, comment) {
 		return false;
 	}
 
-	function previewReply(e) {
-		tmpComment = e.target.value;
+	function previewReply(node, e) {
+		tmpComment = node.el.value;
 		vm.redraw();
 	}
 
@@ -232,4 +231,4 @@ function CommentReplyView(vm, deps, comment) {
 			["a", { href: "#", onclick: toggleReplyMode }, "Reply!"]
 		];
 	}
-};
+}
