@@ -555,6 +555,9 @@ function MyRouter(router, deps) {
 }
 ```
 
+For a working example of this, check out `/demos/threaditjs`: https://github.com/leeoniya/domvm/blob/master/demos/threaditjs/app.js#L3-L48
+
+
 ---
 ### Demos
 
