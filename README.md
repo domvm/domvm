@@ -536,15 +536,16 @@ Some things to keep in mind. The `router` argument passed to the closure is the 
 ```js
 function MyRouter(router, deps) {
 	router.config({
-		// use history API instead of '#' hashes. default is false (see below).
+		// Use history API instead of '#' hashes. Default is false (see below).
 		useHist: false,
-		// a root prefix must be specified if the SPA is not running under
+		// A root prefix must be specified if the SPA is not running under
 		// the domain root (only needed if using the history API)
 		root: "/myApp",
 		init: function() {
-			// this function will be called once the router has initialized and is able to route.
-			// use it to mount or redraw your app's root view, assuming your app uses a `router.location()`
-			// to determine and render the appropriate view
+			// This function will be called once the router has initialized and is able to route.
+			// use it to mount or redraw your app's root view. It's recommended that you dep-inject
+			// the router into your app so it can use href generation for templates and `.location()`
+			// to determine and render the appropriate views
 		}
 	});
 
