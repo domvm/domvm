@@ -39,6 +39,7 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 0. [Synthetic Events, emit(), on:{}](#synthetic-events-emit-on)
 0. [DOM Refs, Raw Element Access](#dom-refs-raw-element-access)
 0. [Isomorphism, html(), attach()](#isomorphism-html-attach)
+0. [Route Module](#route-module)
 0. Keying nodes to prevent recycling
 0. Addl dependency injection and dynamic updates (impCtx)
 0. Exposing private view state and APIs (expCtx)
@@ -475,6 +476,59 @@ var html = domvm.html(vm.node);
 var vm = domvm.view(SomeView, someModel);
 // instead of mount(), use attach()
 vm.attach(document.getElementById("foo"));
+```
+
+---
+### Route Module
+
+The `route` module is an small, unassuming router. It takes your route definitions and invokes handlers on `hashchange` or `popstate` events. It can parse and regex-validate params, generate hrefs & click handlers for use in templates and provides a `goto` API.
+
+High-level example:
+
+```js
+// router closure (should return named routes)
+function MyRouter(router, deps) {
+	return {
+		home: {
+			path: "/",
+			onenter: function() {
+				// do something with injected deps
+				// call apis, load up state, redraw views
+			},
+			onexit: function() {
+				// save state, unload stuff
+			}
+		},
+		blogPost: {
+			path: "/blog/posts/:slug",
+			vars: {slug: /[a-zA-Z0-9]/},
+			onenter: function(segs) {
+				// do something with segs.slug & injected deps
+			},
+		}
+	};
+}
+
+// some initialized model
+var deps = {app: myApp};
+
+// init router, inject deps
+var router = domvm.route(MyRouter, deps);
+
+// use window.location to invoke current route
+router.refresh();
+
+// nav to a string location
+router.goto("/blog/some-viral-heading-2016");
+
+// or a generated location
+router.goto("blogPost", {slug: "some-viral-heading-2016"});
+
+// use the router to generate hrefs (which also implicitly binds onclick in useHist mode)
+["a", {href: router.href("blogPost", {slug: "some-viral-heading-2016"})}, "Some Viral Heading 2016!!!"];
+
+// get the current route object, including parsed params
+var curRoute = router.current();
 ```
 
 ---
