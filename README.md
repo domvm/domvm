@@ -501,7 +501,7 @@ function MyRouter(router, deps) {
 		},
 		blogPost: {
 			path: "/blog/posts/:slug",
-			vars: {slug: /[a-zA-Z0-9]/},
+			vars: {slug: /[a-z0-9\-]+/},
 			onenter: function(segs) {
 				// do something with segs.slug & injected deps
 			},
@@ -519,7 +519,7 @@ var router = domvm.route(MyRouter, deps);
 router.refresh();
 
 // nav to a string location
-router.goto("/blog/some-viral-heading-2016");
+router.goto("/blog/posts/some-viral-heading-2016");
 
 // or a generated location
 router.goto("blogPost", {slug: "some-viral-heading-2016"});
