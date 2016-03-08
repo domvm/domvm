@@ -103,7 +103,7 @@ function ThreaditApp() {
 
 function ThreaditView(vm, deps) {
 	return function() {
-		var route = deps.router.current();
+		var route = deps.router.location();
 
 		return [".body",
 			["p.head_links",
@@ -172,7 +172,7 @@ function ThreadBranchView(vm, deps, comment) {
 	return function() {
 		return [".comment",
 			!comment
-			? ["p", {style: {marginBottom: 20, fontWeight: "bold"}}, "Loading thread " + deps.router.current().segs.id + "..."]
+			? ["p", {style: {marginBottom: 20, fontWeight: "bold"}}, "Loading thread " + deps.router.location().segs.id + "..."]
 			: [
 				["p", {_raw: true}, comment.text],
 				[CommentReplyView, deps, comment],

@@ -481,7 +481,7 @@ vm.attach(document.getElementById("foo"));
 ---
 ### Route Module
 
-The `route` module is an small, unassuming router. It takes your route definitions and invokes handlers on `hashchange` or `popstate` events. It can parse and regex-validate params, generate hrefs & click handlers for use in templates and provides a `goto` API.
+The `route` module is a small, unassuming router. It takes your route definitions and invokes handlers on `hashchange` or `popstate` events. It can parse and regex-validate params, generate hrefs & click handlers for use in templates and provides a `goto` API.
 
 High-level example:
 
@@ -528,7 +528,30 @@ router.goto("blogPost", {slug: "some-viral-heading-2016"});
 ["a", {href: router.href("blogPost", {slug: "some-viral-heading-2016"})}, "Some Viral Heading 2016!!!"];
 
 // get the current route object, including parsed params
-var curRoute = router.current();
+var curRoute = router.location();
+```
+
+Some things to keep in mind. The `router` argument passed to the closure is the same one returned by externally. However, until the closure returns the routes, it is not fully initialized and cannot be used from inside for routing yet. If you perfer to keep everything in the closure, you can set up some config:
+
+```js
+function MyRouter(router, deps) {
+	router.config({
+		// use history API instead of '#' hashes. default is false (see below).
+		useHist: false,
+		// a root prefix must be specified if the SPA is not running under
+		// the domain root (only needed if using the history API)
+		root: "/myApp",
+		init: function() {
+			// this function will be called once the router has initialized and is able to route.
+			// use it to mount or redraw your app's root view, assuming your app uses a `router.location()`
+			// to determine and render the appropriate view
+		}
+	});
+
+	return {
+		// route defs
+	};
+}
 ```
 
 ---

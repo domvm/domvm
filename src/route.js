@@ -101,7 +101,7 @@
 					initial = false;
 				}
 			},
-			current: function() {
+			location: function() {
 				return initial ? routeFromLoc() : stack[pos];
 			//	return stack[pos];
 			},
