@@ -932,7 +932,7 @@
 
 			// add new or mutate existing not matching old
 			// also handles diffing of wrapped event handlers via exposed original (_fn)
-			if (np[name] !== op[name] || name[0] === ".")
+			if (name[0] === "." ? targ[name.substr(1)] !== np[name] : np[name] !== op[name])
 				set(targ, name, np[name], ns, init);
 		}
 		// remove any removed
