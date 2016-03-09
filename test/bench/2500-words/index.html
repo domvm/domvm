@@ -36,19 +36,17 @@
 		for (var i = 0; i < 2500; i++)
 			data.push({text: randStr(7), index: i});
 
-		setTimeout(function() {
-			// initial render
-			console.time("render");
-			var vm = domvm.view(SomeView, data, false).mount(document.body);
-			console.timeEnd("render");
+		// initial render
+		console.time("render");
+		var vm = domvm.view(SomeView, data, false).mount(document.body);
+		console.timeEnd("render");
 
-			// re-render with different selection
-			setTimeout(function() {
-				console.time("redraw");
-				vm.redraw();
-				console.timeEnd("redraw");
-			}, 1000);
-		}, 500);
+		// re-render with different selection
+		setTimeout(function() {
+			console.time("redraw");
+			vm.redraw();
+			console.timeEnd("redraw");
+		}, 1000);
 	</script>
 </body>
 </html>
