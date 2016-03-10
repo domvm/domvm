@@ -304,7 +304,7 @@ var vm = domvm.view(people.view);
 
 **Pattern C:** view-enclosing-model
 
-Continuing our steady march towards progressivly more monolithic components, you can enclose the views in the models to make each component more self-contained. You can also imperatively pre-init the views (vms), for example:
+Continuing our steady march towards progressively more monolithic components, you can enclose the views in the models to make each component more self-contained. You can also imperatively pre-init the views (vms), for example:
 
 ```js
 // view-enclosing OO components with imperative vm init
