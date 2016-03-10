@@ -808,25 +808,25 @@
 
 			// plain cb
 			if (u.isFunc(fns))
-				res = fns.call(ctx, vnode, e);
-			// parametrized cb: [cb, arg1...]
+				res = fns.call(ctx, e, vnode);
+			// parameterized cb: [cb, arg1...]
 			else if (u.isArr(fns)) {
 				data = fns.slice(1);
-				res = fns[0].apply(ctx, data.concat(vnode, e));
+				res = fns[0].apply(ctx, data.concat(e, vnode));
 			}
 			// object of deleg handlers {".moo": ...}
 			else if (u.isObj(fns)) {
 				for (var filt in fns) {
 					var cb = fns[filt];
 					if (e.target.matches(filt)) {
-						// deleg + parametrized
+						// deleg + parameterized
 						if (u.isArr(cb)) {
 							data = cb.slice(1);
-							res = cb[0].apply(ctx, data.concat(vnode, e));
+							res = cb[0].apply(ctx, data.concat(e, vnode));
 						}
 						// deleg & plain cb
 						else if (u.isFunc(cb))
-							res = cb.call(ctx, vnode, e);
+							res = cb.call(ctx, e, vnode);
 					}
 				}
 			}
