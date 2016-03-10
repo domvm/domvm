@@ -1004,6 +1004,8 @@ QUnit.module("Various Others");
 		return () => ["em", "yay!"];
 	}
 
+	var vm;
+
 	QUnit.test('Init sub-view buried in plain nodes', function(assert) {
 		var expcHtml = '<div><div><strong><em>yay!</em></strong></div></div>';
 
@@ -1068,6 +1070,22 @@ QUnit.module("Various Others");
 		var callCounts = instr.end();
 
 		evalOut(assert, em, domvm.html(vm.node), expcHtml, callCounts, { textContent: 2 });		// uses +1 textContent to clear it first
+	});
+
+	QUnit.test('Raw HTML as body', function(assert) {
+		function View5(vm) {
+			return function() {
+				return ["div", {_raw: true}, '<p class="foo">bar</p>&nbsp;baz'];
+			};
+		}
+
+		var expcHtml = '<div><p class="foo">bar</p>&nbsp;baz</div>';
+
+		instr.start();
+		vm = domvm.view(View5).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, innerHTML: 1, insertBefore: 1 });
 	});
 })();
 
