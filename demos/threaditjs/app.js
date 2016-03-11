@@ -141,7 +141,7 @@ function ThreadListView(vm, deps, threads) {
 		]
 	}
 
-	function newThread(node, e) {
+	function newThread(e, node) {
 		submitting = true;
 		vm.redraw();
 
@@ -190,13 +190,13 @@ function CommentReplyView(vm, deps, comment) {
 	var submitting = false;
 	var tmpComment = "";
 
-	function toggleReplyMode(node, e) {
+	function toggleReplyMode(e, node) {
 		replying = !replying;
 		vm.redraw();
 		return false;
 	}
 
-	function newComment(node, e) {
+	function newComment(e, node) {
 		submitting = true;
 		replying = false;
 		vm.redraw();
@@ -209,7 +209,7 @@ function CommentReplyView(vm, deps, comment) {
 		return false;
 	}
 
-	function previewReply(node, e) {
+	function previewReply(e, node) {
 		tmpComment = node.el.value;
 		vm.redraw();
 	}
