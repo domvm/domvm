@@ -312,11 +312,6 @@
 		if (u.isArr(node.body)) {
 			for (var i = 0; i < node.body.length; i++) {
 				var node2 = node.body[i];
-				// handle empty text nodes stripped by innerHTML, inject them into DOM here
-		//		var isEmptyTextNode = node2 && node2.type === u.TYPE_TEXT && node2.body === "";
-		//		if (isEmptyTextNode)
-		//			el.insertBefore(document.createTextNode(""), el.childNodes[i] || null);
-
 				hydrateWith(node2, el.childNodes[i]);
 			}
 		}
