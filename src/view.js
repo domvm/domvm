@@ -308,6 +308,16 @@
 	// (todo: bind/refs)
 	function hydrateWith(node, el) {
 		node.el = el;
+		el._node = node;
+
+		// patch props not present in HTML attrs
+		for (var prop in node.props) {
+			var val = node.props[prop],
+				name = u.isEvProp(prop) ? prop : prop[0] === "."  ? prop.substr(1) : null;
+
+			if (name !== null)
+				el[name] = val;
+		}
 
 		if (u.isArr(node.body)) {
 			for (var i = 0; i < node.body.length; i++) {
