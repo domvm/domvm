@@ -29,6 +29,13 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 - IE9+ (with some ES5/6 polyfills)
 
 ---
+#### Demos
+
+![domvm Demos](demos.png)
+
+https://leeoniya.github.io/domvm/demos/
+
+---
 #### Documentation (WIP, help wanted!)
 
 0. [Installation](#installation)
