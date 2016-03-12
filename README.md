@@ -25,8 +25,8 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 - Lifecycle hooks - view-level and granular node-level for e.g. [async animations](https://leeoniya.github.io/domvm/demos/lifecycle-hooks.html)
 - Decoupled client-side router (for SPAs) & mutation observers (for auto-redraw)
 - Isomorphic - generate markup server-side and attach on client
-- SVG & MathML support: [demo](http://leeoniya.github.io/domvm/demos/svg_mathml.html), [svg tiger](http://leeoniya.github.io/domvm/demos/svg-tiger.html),
-- IE9+ (with some ES5/6 polyfills)
+- SVG & MathML support: [demo](http://leeoniya.github.io/domvm/demos/svg_mathml.html), [svg tiger](http://leeoniya.github.io/domvm/demos/svg-tiger.html)
+- IE9+ with tiny polyfills: `view` ([rAF](/test/lib/request-frame.min.js), [Promise](/test/lib/Promise.min.js)), `watch` ([fetch](/test/lib/fetch.js))
 
 ---
 #### Demos
