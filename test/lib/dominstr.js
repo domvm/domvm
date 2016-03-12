@@ -10,17 +10,21 @@
   (typeof define === "function" && function (m) { define("DOMInstr", m); }) ||
   (function (m) { window.DOMInstr = m(); })
 )(function () {
+	var isEdge = navigator.userAgent.indexOf("Edge") !== -1;
+	var isIE = navigator.userAgent.indexOf("Trident/") !== -1;
+	var isMS = isEdge || isIE;
+
 	var nodeProto = Node.prototype;
 	var textContent = Object.getOwnPropertyDescriptor(nodeProto, "textContent");
 	var nodeValue = Object.getOwnPropertyDescriptor(nodeProto, "nodeValue");
 
-	var elemProto	= Element.prototype;
-	var innerHTML	= Object.getOwnPropertyDescriptor(elemProto, "innerHTML");
-	var className	= Object.getOwnPropertyDescriptor(elemProto, "className");
-	var id			= Object.getOwnPropertyDescriptor(elemProto, "id");
-
 	var htmlProto = HTMLElement.prototype;
 	var innerText = Object.getOwnPropertyDescriptor(htmlProto, "innerText");
+
+	var elemProto	= Element.prototype;
+	var innerHTML	= Object.getOwnPropertyDescriptor(!isMS ? elemProto : htmlProto, "innerHTML");
+	var className	= Object.getOwnPropertyDescriptor(!isIE ? elemProto : htmlProto, "className");
+	var id			= Object.getOwnPropertyDescriptor(!isIE ? elemProto : htmlProto, "id");
 
 	var inpProto = HTMLInputElement.prototype;
 	var areaProto = HTMLTextAreaElement.prototype;
@@ -117,7 +121,7 @@
 			});
 
 			counts.innerHTML = 0;
-			Object.defineProperty(elemProto, "innerHTML", {
+			Object.defineProperty(!isMS ? elemProto : htmlProto, "innerHTML", {
 				set: function(s) {
 					counts.innerHTML++;
 					innerHTML.set.call(this, s);
@@ -125,7 +129,7 @@
 			});
 
 			counts.className = 0;
-			Object.defineProperty(elemProto, "className", {
+			Object.defineProperty(!isIE ? elemProto : htmlProto, "className", {
 				set: function(s) {
 					counts.className++;
 					className.set.call(this, s);
@@ -133,7 +137,7 @@
 			});
 
 			counts.id = 0;
-			Object.defineProperty(elemProto, "id", {
+			Object.defineProperty(!isIE ? elemProto : htmlProto, "id", {
 				set: function(s) {
 					counts.id++;
 					id.set.call(this, s);
@@ -209,9 +213,9 @@
 			Object.defineProperty(nodeProto, "textContent", textContent);
 			Object.defineProperty(nodeProto, "nodeValue", nodeValue);
 			Object.defineProperty(htmlProto, "innerText", innerText);
-			Object.defineProperty(elemProto, "innerHTML", innerHTML);
-			Object.defineProperty(elemProto, "className", className);
-			Object.defineProperty(elemProto, "id", id);
+			Object.defineProperty(!isMS ? elemProto : htmlProto, "innerHTML", innerHTML);
+			Object.defineProperty(!isIE ? elemProto : htmlProto, "className", className);
+			Object.defineProperty(!isIE ? elemProto : htmlProto, "id", id);
 			Object.defineProperty(inpProto,  "checked", inpChecked);
 			Object.defineProperty(inpProto,  "value", inpVal);
 			Object.defineProperty(areaProto, "value", areaVal);

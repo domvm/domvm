@@ -26,7 +26,7 @@ QUnit.module("Prop/attr patch");
 
 (function() {
 	function View() {
-		return () => tpl;
+		return function() { return tpl; }
 	}
 
 	var vm, tpl;
@@ -70,7 +70,7 @@ QUnit.module("Flat List");
 	var list = ["a","b","c"];
 
 	function ListView(vm) {
-		return () => ["ul#list0.test-output", list.map((item) => ["li", item])];
+		return function() { return ["ul#list0.test-output", list.map(function(item) { return ["li", item] })]; }
 	}
 
 	var vm, listEl;
@@ -229,7 +229,7 @@ QUnit.module("Flat List w/keys");
 	var list = ["a","b","c"];
 
 	function ListViewKeyed() {
-		return () => ["ul#list1.test-output", list.map((item) => ["li", {_key: item}, item])];
+		return function() { return ["ul#list1.test-output", list.map(function(item) { return ["li", {_key: item}, item]; })]; }
 	}
 
 	var vm, listEl;
@@ -387,14 +387,14 @@ QUnit.module("Other mods");
 	var tpl;
 
 	function View(vm) {
-		return () => tpl;
+		return function() { return tpl; };
 	}
 
 	QUnit.test('flatten arrays of arrays', function(assert) {
 		var items = ["a","b","c"];
 
 		tpl = ["div", [
-			items.map((item) => ["div", item]),
+			items.map(function(item) { return ["div", item]; }),
 			["br"],
 		]];
 		var expcHtml = '<div><div>a</div><div>b</div><div>c</div><br></div>';
@@ -552,11 +552,11 @@ QUnit.module("Subview List w/keys");
 	var list = ["a","b","c"];
 
 	function ListViewKeyed(vm, list) {
-		return () => ["ul#list2.test-output", list.map((item) => [ListViewItem, item, item])];
+		return function() { return ["ul#list2.test-output", list.map(function(item) { return [ListViewItem, item, item]; })]; };
 	}
 
 	function ListViewItem(vm, item, key) {
-		return () => ["li", item];		// {_key: item}
+		return function() { return ["li", item]; };		// {_key: item}
 	}
 
 	var vm, listEl;
@@ -731,7 +731,7 @@ QUnit.module("Attrs/Props");
 
 	function CheckView(vm, check) {
 		check.vm = vm;
-		return () => ["input#" + check.id, {type: "checkbox", checked: check.checked}];
+		return function() { return ["input#" + check.id, {type: "checkbox", checked: check.checked}]; };
 	};
 
 	var check1 = new Check("check1", false);
@@ -788,8 +788,7 @@ QUnit.module("Attrs/Props");
 
 	QUnit.test("Dynamic props, always sync vtree -> DOM prop", function(assert) {
 		instr.start();
-	//	domvm.view(CheckView, check3).mount(testyDiv);
-		domvm.view(CheckView, check3).mount(document.body);
+		domvm.view(CheckView, check3).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var checkEl = document.getElementById(check3.id);
@@ -918,7 +917,7 @@ QUnit.module("Subview redraw() Branch Consistency");
 
 	function ParentView(vm, parent) {
 		parent.vm = vm;
-		return () => ["ul", parent.kids.map((kid) => kid.view)];
+		return function() { return ["ul", parent.kids.map(function(kid) { return kid.view; })]; };
 	}
 
 	function Child(name) {
@@ -929,7 +928,7 @@ QUnit.module("Subview redraw() Branch Consistency");
 
 	function ChildView(vm, child) {
 		child.vm = vm;
-		return () => ["li", child.name];
+		return function() { return ["li", child.name]; };
 	}
 
 	var mom = new Parent();
@@ -991,17 +990,19 @@ QUnit.module("Various Others");
 
 (function() {
 	function SomeView(vm) {
-		return () => ["div",
-			["div",
-				["strong",
-					[SomeView2]
+		return function() {
+			return ["div",
+				["div",
+					["strong",
+						[SomeView2]
+					]
 				]
-			]
-		];
+			];
+		};
 	}
 
 	function SomeView2(vm) {
-		return () => ["em", "yay!"];
+		return function() { return ["em", "yay!"]; };
 	}
 
 	var vm;
@@ -1018,21 +1019,23 @@ QUnit.module("Various Others");
 
 
 	function FlattenView(vm) {
-		return () => ["div", [
-			["br"],
-			"hello kitteh",
-			[
-				["em", "foo"],
-				["em", "bar"],
-				[SomeView2],
-				"woohoo!",
+		return function() {
+			return ["div", [
+				["br"],
+				"hello kitteh",
 				[
+					["em", "foo"],
+					["em", "bar"],
 					[SomeView2],
-					["i", "another thing"],
-				]
-			],
-			"the end",
-		]];
+					"woohoo!",
+					[
+						[SomeView2],
+						["i", "another thing"],
+					]
+				],
+				"the end",
+			]];
+		};
 	}
 
 	QUnit.test('Flatten child sub-arrays', function(assert) {
@@ -1046,7 +1049,7 @@ QUnit.module("Various Others");
 	});
 
 	function SomeView3() {
-		return () => ["em", {style: {width: 30, zIndex: 5}}, "test"];
+		return function() { return ["em", {style: {width: 30, zIndex: 5}}, "test"]; };
 	}
 
 	QUnit.test('"px" appended only to proper numeric style attrs', function(assert) {
@@ -1094,11 +1097,11 @@ QUnit.module("Function node types & values");
 
 (function() {
 	function ViewAny(vm) {
-		return () => tpl;
+		return function() { return tpl; };
 	}
 
 	function ViewAny2(vm) {
-		return () => tpl2;
+		return function() { return tpl2; };
 	}
 
 	var tpl = null;
@@ -1108,7 +1111,7 @@ QUnit.module("Function node types & values");
 	QUnit.test('Root node is function that returns node', function(assert) {
 		tpl = function() {
 			return ["p", "some text"];
-		}
+		};
 
 		var expcHtml = '<p>some text</p>';
 
@@ -1261,7 +1264,7 @@ QUnit.module("emit() & synthetic events");
 		vm.on("ac", function() { data.ac += "a"; });
 		vm.on("a", function() { data.a += "a"; });
 
-		return () => ["#a", ["strong", [ViewB]]];
+		return function() { return ["#a", ["strong", [ViewB]]]; };
 	}
 
 	function ViewB(vm) {
@@ -1271,7 +1274,7 @@ QUnit.module("emit() & synthetic events");
 		vm.on("bc", function() { data.bc += "b"; });
 		vm.on("b", function() { data.b += "b"; });
 
-		return () => ["#b", ["em", [ViewC]]];
+		return function() { return ["#b", ["em", [ViewC]]]; };
 	}
 
 	function ViewC(vm) {
@@ -1281,7 +1284,7 @@ QUnit.module("emit() & synthetic events");
 		vm.on("ac", function() { data.ac += "c"; });
 		vm.on("c", function() { data.c += "c"; });
 
-		return () => ["#c", "Hello"];
+		return function() { return ["#c", "Hello"]; };
 	}
 
 	domvm.view(ViewA);
@@ -1415,21 +1418,21 @@ QUnit.module("didRedraw() & refs");
 					assert.ok(true, "Self didRedraw()");
 					assert.ok(vm.refs.mySpan3.el === document.getElementById("zzz"), "Self ref");
 					console.log(vm.refs);
+					done();
 				}
 			});
 
-			return () => ["span#zzz", {_ref: "mySpan3"}, "foo"];
+			return function() { return ["span#zzz", {_ref: "mySpan3"}, "foo"]; };
 		}
 
 		var vm = domvm.view(MyView).mount(testyDiv);
-
-		setTimeout(done, 1);
 	});
 
 	QUnit.test('didRedraw() is called on subviews when parent redraws', function(assert) {
 		assert.expect(4);
 
-		var done = assert.async();
+		var done1 = assert.async();
+		var done2 = assert.async();
 
 		function MyView(vm) {
 			vm.hook({
@@ -1437,10 +1440,11 @@ QUnit.module("didRedraw() & refs");
 					assert.ok(true, "Parent didRedraw()");
 					assert.ok(vm.refs.mySpan1.el === document.getElementById("xxx"), "Parent ref");
 					console.log(vm.refs);
+					done2();
 				}
 			});
 
-			return () => ["span#xxx", {_ref: "mySpan1"}, [MyView2]];
+			return function() { return ["span#xxx", {_ref: "mySpan1"}, [MyView2]]; };
 		}
 
 		function MyView2(vm) {
@@ -1449,15 +1453,16 @@ QUnit.module("didRedraw() & refs");
 					assert.ok(true, "Child after()");
 					assert.ok(vm.refs.mySpan2.el === document.getElementById("yyy"), "Child ref");
 					console.log(vm.refs);
+					done1();
 				}
 			});
 
-			return () => ["span#yyy", {_ref: "mySpan2"}, "foo"];
+			return function() { return ["span#yyy", {_ref: "mySpan2"}, "foo"]; };
 		}
 
 		var vm = domvm.view(MyView).mount(testyDiv);
 
-		setTimeout(done, 1);
+	//	setTimeout(done, 1);
 
 		// todo: ensure refs get re-ref'd on redraw/reuse
 	});
@@ -1467,7 +1472,7 @@ QUnit.module("Unrenderable values");
 
 (function() {
 	function ViewAny(vm) {
-		return () => tpl;
+		return function() { return tpl; };
 	}
 
 	var tpl = null,
@@ -1514,16 +1519,17 @@ QUnit.module("Non-persistent model replacement");
 
 (function() {
 	function ViewA() {
-		return (vm, model) =>
-			["#viewA",
+		return function(vm, model) {
+			return ["#viewA",
 				model.foo,
 				["br"],
 				model.bar,
 			];
+		};
 	}
 
 	function ViewB() {
-		return (vm, model) => ["#viewB", [ViewA, model, false]];
+		return function(vm, model) { return ["#viewB", [ViewA, model, false]]; };
 	}
 
 	// sub-views = [ViewB, null, null, data]?
@@ -1580,15 +1586,16 @@ QUnit.module("Non-persistent model replacement");
 
 		// wraps model in own impCtx for sub-view, but specs model as persitent
 		function ViewC(vm, model) {
-			return () => ["#viewC", [ViewD, {foo: model, addl: myText}, model]];
+			return function() { return ["#viewC", [ViewD, {foo: model, addl: myText}, model]]; };
 		}
 
 		function ViewD() {
-			return (vm, imp, key) =>
-				["#viewD",
+			return function(vm, imp, key) {
+				return ["#viewD",
 					["span", imp.foo.text],
 					["strong", imp.addl],
 				];
+			};
 		}
 
 		var model = {text: "bleh"};
@@ -1623,15 +1630,16 @@ QUnit.module("Non-persistent model replacement");
 
 		// wraps model in own impCtx for sub-view, but specs model as persitent
 		function ViewC(vm, model) {
-			return () => ["#viewC", [ViewD, {foo: model, addl: myText}, false]];
+			return function() { return ["#viewC", [ViewD, {foo: model, addl: myText}, false]]; };
 		}
 
 		function ViewD() {
-			return (vm, imp, key) =>
-				["#viewD",
+			return function(vm, imp, key) {
+				return ["#viewD",
 					["span", imp.foo.text],
 					["strong", imp.addl],
 				];
+			};
 		}
 
 		var model = {text: "bleh"};
@@ -1666,15 +1674,16 @@ QUnit.module("Non-persistent model replacement");
 
 		// wraps model in own impCtx for sub-view, but specs model as persitent
 		function ViewC(vm, model) {
-			return () => ["#viewC", [ViewD, {foo: model, addl: myText}]];
+			return function() { return ["#viewC", [ViewD, {foo: model, addl: myText}]]; };
 		}
 
 		function ViewD() {
-			return (vm, imp, key) =>
-				["#viewD",
+			return function(vm, imp, key) {
+				return ["#viewD",
 					["span", imp.foo.text],
 					["strong", imp.addl],
 				];
+			};
 		}
 
 		var model = {text: "bleh"};
@@ -1743,12 +1752,13 @@ QUnit.module("Model persistence keys, vm init, DOM reuse");
 			}
 		});
 */
-		return (vm, model) =>
-			["div",
+		return function(vm, model) {
+			return ["div",
 				["span", model.foo],
 				["br"],
 				["strong", model.bar],
 			];
+		};
 	}
 
 	QUnit.test('Persistent model correctly rendered', function(assert) {
@@ -1939,22 +1949,23 @@ QUnit.module("Unjailed refs");
 			vm.refs.footer.vm.redraw();
 		});
 
-		return () =>
-			["div",
+		return function() {
+			return ["div",
 				data.a,
 				[MainView, data],
 				[FooterView, data, "^footer"],
 			];
+		};
 	}
 
 	function MainView(vm, data) {
-		return () => ["strong", {_ref: "^main"}, data.b];
+		return function() { return ["strong", {_ref: "^main"}, data.b]; };
 	}
 
 	function FooterView(vm, data) {
 		footVm = vm;
 
-		return () => ["em", data.c];
+		return function() { return ["em", data.c]; };
 	}
 
 	QUnit.test('Modify', function(assert) {
