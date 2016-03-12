@@ -115,7 +115,7 @@
 
 		buildRegexPaths(routes, root);
 
-		onhashchange = window.onpopstate = function(e) {
+		window.onhashchange = window.onpopstate = function(e) {
 			if (!useHist && e.type == "popstate")
 				return;
 			api.goto(routeFromLoc(),null,null,null,true);
