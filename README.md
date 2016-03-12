@@ -2,7 +2,7 @@ domvm.js (DOM ViewModel)
 ------------------------
 A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
-### NOTICE: Parts of domvm are not yet stable! v1.0 is scheduled for 2016-04-01. Until then, API is subject to change.
+### NOTICE: Parts of domvm are not yet stable! v1.0 is scheduled for 2016-04-01.
 
 ---
 #### Philosophy
