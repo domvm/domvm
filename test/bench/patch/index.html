@@ -73,7 +73,7 @@
 
 		Table.prototype.updCell = function(rowIdx, colIdx, val) {
 			this.data[rowIdx][colIdx] = val;
-			this.vm.exp.patchCell(rowIdx, colIdx, val);
+			this.vm.api.patchCell(rowIdx, colIdx, val);
 		};
 
 		// view of table component
@@ -85,7 +85,7 @@
 			}
 
 			// exported funcs
-			vm.exp = {
+			vm.api = {
 				patchCell: function(rowIdx, colIdx, val) {
 					var oldCell = vm.node.body[rowIdx].body[colIdx];		// vm.getNode(key1,key2,key3)
 					var newTpl = genCell(val);

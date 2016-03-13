@@ -75,7 +75,7 @@
 			update: function(newModel, doRedraw) {
 				// persistent models cannot be updated with new data via the view
 				// this function is for dumb data re-rendering, key must have been false
-				if (newModel != null && key !== model)
+				if (newModel != null && (key !== model || u.isVal(key)))
 					model = vm.model = newModel;
 				return doRedraw !== false ? redraw(0) : vm;
 			},
