@@ -3,57 +3,57 @@
 <head>
 	<title>domvm lifecycle hooks</title>
 	<style>
-		.items,
-		.items li {
+		.view1,
+		.view1 li {
 			background: transparent;
 			transition: 1000ms;
 			opacity: 1;
 		}
 
-		.items.mounted {
+		.view1.mounted {
 			outline: 2px solid red;
 			transition: none;
 		}
 
-		.items.redrawn {
+		.view1.redrawn {
 			background: lightblue;
 			transition: none;
 		}
 
-		.items.unmounting {
+		.view1.unmounting {
 			background: pink;
 			transition: none;
 		}
 
-		.items.unmounted {
+		.view1.unmounted {
 			opacity: 0;
 		}
 
-		.items .inserted {
+		.view1 .inserted {
 			background: lime;
 			transition: none;
 		}
 
-		.items .removing {
+		.view1 .removing {
 			background: red;
 			transition: none;
 		}
 
-		.items .removed {
+		.view1 .removed {
 			opacity: 0;
 		}
 
-		.items .reused.same {
+		.view1 .reused.same {
 			background: silver;
 			transition: none;
 		}
 
-		.items .reused.changed {
+		.view1 .reused.changed {
 			background: orange;
 			transition: none;
 		}
 
-		.items .moved {
+		.view1 .moved {
 			background: magenta;
 			transition: none;
 		}
@@ -65,7 +65,7 @@
 </head>
 <body>
 	<script>
-		function View(vm, data) {
+		function View1(vm, data) {
 			// DOM node/template level hooks
 			var hooks = {
 				willInsert: function(node) {
@@ -123,9 +123,29 @@
 			};
 
 			return function() {
-				return ["ul.items", data.map(function(word) {
-					return ["li", {_hooks: hooks, _key: word.substr(0,1)}, word];
-				})];
+				return (
+					[".view1",
+						["ul", data.map(function(word) {
+							return ["li", {_hooks: hooks, _key: word.substr(0,1)}, word];
+						})],
+						[View2],
+					]
+				);
+			};
+		}
+
+		function View2(vm) {
+			vm.hook({
+				willRedraw: function() { console.log("willRedraw", vm); },
+				didRedraw: function() { console.log("didRedraw", vm); },
+				willMount: function() { console.log("willMount", "View2", vm); },
+				didMount: function() { console.log("didMount", "View2", vm); },
+				willUnmount: function() { console.log("willUnmount", vm); },
+				didUnmount: function() { console.log("didUnmount", vm); },
+			});
+
+			return function() {
+				return ["p.view2", "Hello World"];
 			};
 		}
 
@@ -134,7 +154,7 @@
 			"1.dog",
 		];
 
-		var vm = domvm.view(View, data);
+		var vm = domvm.view(View1, data);
 
 		// view-level hooks
 		vm.hook({

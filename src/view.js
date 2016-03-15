@@ -189,12 +189,13 @@
 				return targ.vm;
 			}
 
-			vm.hooks && u.execAll(vm.hooks.willRedraw);
+			var old = vm.node;
+
+			old && vm.hooks && u.execAll(vm.hooks.willRedraw);
 
 			vm.refs = {};
 		//	vm.keyMap = {};
 
-			var old = vm.node;
 			var def = vm.render.call(vm.api, vm, model, key);
 			var node = initNode(def, parentNode, idxInParent, vm);
 
@@ -252,7 +253,7 @@
 			// FTW: http://blog.millermedeiros.com/promise-nexttick/
 			// https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
 			Promise.resolve().then(function() {
-				vm.hooks && u.execAll(vm.hooks.didRedraw);
+				old && vm.hooks && u.execAll(vm.hooks.didRedraw);
 			});
 
 			return vm;
