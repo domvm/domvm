@@ -101,8 +101,6 @@
 			},
 		*/
 			mount: function(el, isRoot) {
-				vm.hooks && u.execAll(vm.hooks.willMount);
-
 				if (isRoot)
 					el.textContent = '';
 
@@ -110,8 +108,6 @@
 
 				if (!isRoot)
 					el.insertBefore(vm.node.el, null);
-
-				vm.hooks && u.execAll(vm.hooks.didMount);
 
 				return vm;
 			},
@@ -497,6 +493,9 @@
 	function hydrateNode(node, el, sibAtIdx) {
 		var wasDry = !node.el;
 
+		if (wasDry && node.vm && node.vm.hooks)
+			u.execAll(node.vm.hooks.willMount);
+
 		if (node.type == u.TYPE_ELEM) {
 			if (wasDry) {
 				node.el = el && el.nodeName ? el : node.ns ? doc.createElementNS(NS[node.ns], node.tag) : doc.createElement(node.tag);
@@ -522,21 +521,28 @@
 		else if (node.type == u.TYPE_TEXT && wasDry)
 			node.el = doc.createTextNode(node.body);
 
+		var shouldMove = true;
+
 		// reverse-ref
 		node.el._node = node;
 
 		if (sibAtIdx === node.el)
-			return false;
+			shouldMove = false;
 
 		// slot this element into correct position
 		var par = node.parent;
 
 		// insert and/or reorder
 	//	if (par && par.el && par.el.childNodes[node.idx] !== node.el)
-		if (par && par.el) {
+		if (shouldMove && par && par.el) {
 			fireHooks(node.hooks, wasDry ? "Insert" : "Reinsert", insertNode, [node, sibAtIdx]);
-			return true;
+			shouldMove = true;
 		}
+
+		if (wasDry && node.vm && node.vm.hooks)
+			u.execAll(node.vm.hooks.didMount);
+
+		return shouldMove;
 	}
 
 	function insertNode(node, sibAtIdx) {
