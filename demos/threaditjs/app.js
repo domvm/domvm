@@ -107,12 +107,12 @@ function ThreaditView(vm, deps) {
 
 		return [".body",
 			["p.head_links",
-				["a", {href: "https://github.com/koglerjs/threaditjs/tree/master/examples/domvm"}, "Source"],
+				["a", {href: "https://github.com/leeoniya/domvm/tree/master/demos/threaditjs"}, "Source"],
 				" | ",
 				["a", {href: "http://threaditjs.com"}, "ThreaditJS Home"]
 			],
 			["h2",
-				["a", {href: "http://domvm.threaditjs.com"}, "ThreaditJS: domvm"]
+				["a", {href: "http://leeoniya.github.io/domvm/demos/threaditjs/"}, "ThreaditJS: domvm"]
 			],
 			[".main",
 			 	deps.app.error() ?
