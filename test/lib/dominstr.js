@@ -19,7 +19,7 @@
 	var nodeValue = Object.getOwnPropertyDescriptor(nodeProto, "nodeValue");
 
 	var htmlProto = HTMLElement.prototype;
-	var innerText = Object.getOwnPropertyDescriptor(htmlProto, "innerText");
+//	var innerText = Object.getOwnPropertyDescriptor(htmlProto, "innerText");
 
 	var elemProto	= Element.prototype;
 	var innerHTML	= Object.getOwnPropertyDescriptor(!isMS ? elemProto : htmlProto, "innerHTML");
@@ -111,7 +111,7 @@
 					nodeValue.set.call(this, s);
 				},
 			});
-
+/*
 			counts.innerText = 0;
 			Object.defineProperty(htmlProto, "innerText", {
 				set: function(s) {
@@ -119,7 +119,7 @@
 					innerText.set.call(this, s);
 				},
 			});
-
+*/
 			counts.innerHTML = 0;
 			Object.defineProperty(!isMS ? elemProto : htmlProto, "innerHTML", {
 				set: function(s) {
@@ -212,7 +212,7 @@
 
 			Object.defineProperty(nodeProto, "textContent", textContent);
 			Object.defineProperty(nodeProto, "nodeValue", nodeValue);
-			Object.defineProperty(htmlProto, "innerText", innerText);
+//			Object.defineProperty(htmlProto, "innerText", innerText);
 			Object.defineProperty(!isMS ? elemProto : htmlProto, "innerHTML", innerHTML);
 			Object.defineProperty(!isIE ? elemProto : htmlProto, "className", className);
 			Object.defineProperty(!isIE ? elemProto : htmlProto, "id", id);
