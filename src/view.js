@@ -541,8 +541,11 @@
 			shouldMove = true;
 		}
 
-		if (wasDry && node.vm && node.vm.hooks)
-			u.execAll(node.vm.hooks.didMount);
+		if (wasDry && node.vm && node.vm.hooks) {
+			Promise.resolve().then(function() {
+				u.execAll(node.vm.hooks.didMount);
+			});
+		}
 
 		return shouldMove;
 	}
