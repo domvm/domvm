@@ -191,7 +191,7 @@
 
 			var old = vm.node;
 
-			old && vm.hooks && u.execAll(vm.hooks.willRedraw);
+			old && vm.hooks && u.execAll(vm.hooks.willRedraw, [vm]);
 
 			vm.refs = {};
 		//	vm.keyMap = {};
@@ -253,7 +253,7 @@
 			// FTW: http://blog.millermedeiros.com/promise-nexttick/
 			// https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
 			Promise.resolve().then(function() {
-				old && vm.hooks && u.execAll(vm.hooks.didRedraw);
+				old && vm.hooks && u.execAll(vm.hooks.didRedraw, [vm]);
 			});
 
 			return vm;
@@ -496,7 +496,7 @@
 		var wasDry = !node.el;
 
 		if (wasDry && node.vm && node.vm.hooks)
-			u.execAll(node.vm.hooks.willMount);
+			u.execAll(node.vm.hooks.willMount, [node.vm]);
 
 		if (node.type == u.TYPE_ELEM) {
 			if (wasDry) {
@@ -543,7 +543,7 @@
 
 		if (wasDry && node.vm && node.vm.hooks) {
 			Promise.resolve().then(function() {
-				u.execAll(node.vm.hooks.didMount);
+				u.execAll(node.vm.hooks.didMount, [node.vm]);
 			});
 		}
 
