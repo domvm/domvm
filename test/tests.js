@@ -1426,6 +1426,8 @@ QUnit.module("didRedraw() & refs");
 		}
 
 		var vm = domvm.view(MyView).mount(testyDiv);
+
+		vm.redraw();
 	});
 
 	QUnit.test('didRedraw() is called on subviews when parent redraws', function(assert) {
@@ -1461,6 +1463,8 @@ QUnit.module("didRedraw() & refs");
 		}
 
 		var vm = domvm.view(MyView).mount(testyDiv);
+
+		vm.redraw();
 
 	//	setTimeout(done, 1);
 
