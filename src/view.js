@@ -118,7 +118,7 @@
 			},
 		//	detach: detach,
 			unmount: function() {
-				fireHooks(vm.hooks, "Unmount", unmount, []);
+				fireHooks(vm.hooks, "Unmount", unmount, [], [vm]);
 			},
 			// internal util funcs
 			moveTo: moveTo,
