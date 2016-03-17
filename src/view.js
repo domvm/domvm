@@ -340,8 +340,10 @@
 
 		node.vm = null;
 
-		if (removeSelf && node.el && node.el.parentNode)
+		if (removeSelf && node.el && node.el.parentNode) {
+			node.removed = true;
 			fireHooks(node.hooks, "Remove", removeNode, [node]);
+		}
 	}
 
 	function removeNode(node) {
@@ -501,6 +503,11 @@
 	function hydrateNode(node, withEl, sibAtIdx, parentEl) {
 		var wasDry = !node.el;
 
+		// advance through any nodes marked for removal
+		while (sibAtIdx && sibAtIdx._node.removed)
+			sibAtIdx = sibAtIdx.nextSibling;
+
+
 		if (wasDry && node.vm && node.vm.hooks)
 			u.execAll(node.vm.hooks.willMount, [node.vm]);
 
@@ -511,10 +518,8 @@
 			}
 
 			if (u.isArr(node.body)) {
-				for (var i = 0, sibAtIdx2 = node.el.firstChild; i < node.body.length; i++) {
-					var moved = hydrateNode(node.body[i], null, sibAtIdx2);
-					sibAtIdx2 = moved ? sibAtIdx2 : sibAtIdx2.nextSibling || null;
-				}
+				for (var i = 0, nextSib = node.el.firstChild; i < node.body.length; i++)
+					nextSib = hydrateNode(node.body[i], null, nextSib);		// node.el
 			}
 
 			// for body defs like ["a", "blaahhh"], entire body can be dumped at once
@@ -529,23 +534,16 @@
 		else if (node.type == u.TYPE_TEXT && wasDry)
 			node.el = doc.createTextNode(node.body);
 
-		var shouldMove = true;
-
 		// reverse-ref
 		node.el._node = node;
-
-		if (sibAtIdx === node.el)
-			shouldMove = false;
 
 		// slot this element into correct position
 		var par = node.parent;
 
 		// insert and/or reorder
 	//	if (par && par.el && par.el.childNodes[node.idx] !== node.el)
-		if (shouldMove && (parentEl || par && par.el)) {
+		if (sibAtIdx !== node.el && (parentEl || par && par.el))
 			fireHooks(node.hooks, wasDry ? "Insert" : "Reinsert", insertNode, [node, sibAtIdx, parentEl]);
-			shouldMove = true;
-		}
 
 		if (wasDry && node.vm && node.vm.hooks) {
 			Promise.resolve().then(function() {
@@ -553,7 +551,7 @@
 			});
 		}
 
-		return shouldMove;
+		return sibAtIdx !== node.el ? sibAtIdx : sibAtIdx.nextSibling;
 	}
 
 	function insertNode(node, sibAtIdx, parentEl) {
@@ -760,6 +758,7 @@
 			idx: null,
 			parent: null,
 			moved: false,
+			removed: false,
 			hooks: null,	// willInsert,didInsert,willRecycle,didRecycle,willReinsert,didReinsert,willRemove,didRemove
 			tag: null,
 //			svg: false,
