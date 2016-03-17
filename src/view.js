@@ -208,8 +208,7 @@
 				(u.isVal(node.ref) && node.ref[0] === "^") ? node.ref.substr(1) :
 				null;
 
-			node.key = u.isVal(key) ? key : node.key;
-//			node.key = key != null ? key : node.key;		// todo post-1.0, full vm<->root congruence
+			node.key = key != null ? key : node.key;
 
 			// set parent vm for easy traversal
 			var ancest = parentNode;
@@ -388,7 +387,7 @@
 						else if (u.isArr(def2[0]))
 							mergeIt = true;
 						else if (u.isFunc(def2[0]))		// decl sub-view
-							key = getViewKey(def[1], def[2]);
+							key = getViewKey(def2[1], def2[2]);
 						else {
 							node2 = initNode(def2, node, i, ownerVm);
 							key = node2.key;
@@ -451,7 +450,7 @@
 			var lastContigDonor2Idx = 0;
 
 			node.body.forEach(function(kid, i) {
-				var isView = u.isArr(kid);
+				var isDeclView = u.isArr(kid);
 
 				if (donor) {
 					var donor2loc = findDonor(kid, node, donor, lastContigDonor2Idx);			// , i, i		// if flagged node._static, just use i,i / DONOR_NODE
@@ -466,13 +465,20 @@
 
 						var donor2 = donor.body[donor2idx];
 
-						if (isView && donor2.vm) {
-							if (donor2type === DONOR_NODE)
-								donor2.vm.moveTo(node, i, kid[1]);
-							else if (donor2type === DONOR_DOM) {
-								// TODO: instead, re-use old dom with new node here (loose match)
-								createView(kid[0], kid[1], kid[2], kid[3], node, i);
-								return;
+						if (donor2.vm) {
+							if (isDeclView) {
+								if (donor2type === DONOR_NODE)
+									donor2.vm.moveTo(node, i, kid[1]);
+								else if (donor2type === DONOR_DOM) {
+									// TODO: instead, re-use old dom with new node here (loose match)
+									createView(kid[0], kid[1], kid[2], kid[3], node, i);
+									return;
+								}
+							}
+							// pre-init vm
+							else if (kid.vm) {
+								if (donor2type === DONOR_NODE && kid.vm === donor2.vm)
+								donor2.vm.moveTo(node, i);
 							}
 						}
 						else
@@ -482,7 +488,7 @@
 					}
 				}
 				// fall through no donor found
-				if (isView)
+				if (isDeclView)
 					createView(kid[0], kid[1], kid[2], kid[3], node, i);
 				else
 					node.body[i] = buildNode(kid);
@@ -559,7 +565,7 @@
 
 	function findDonor(node, newParent, oldParent, fromIdx, toIdx) {
 		var newIsView = u.isArr(node);
-		var newKey = newIsView ? node[2] || null : node.key;
+		var newKey = newIsView ? getViewKey(node[1], node[2]) : node.key;
 		var oldKeys = oldParent.hasKeys;
 		var newKeys = newParent.hasKeys;
 		var oldBody = oldParent.body;
@@ -570,6 +576,7 @@
 			var idx = u.indexOfKey(newKey, oldBody);
 			if (idx > -1)
 				return [idx, DONOR_NODE];
+			return null;
 		}
 
 		// if from or to > newbody length, return null

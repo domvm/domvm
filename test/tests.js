@@ -310,7 +310,7 @@ QUnit.module("Flat List w/keys");
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>bar</li><li>a</li><li>fff</li><li>moo</li><li>xxx</li><li>zzz</li><li>b</li><li>c</li><li>baz</li><li>cow</li></ul>';
-		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { nodeValue: 1 });
+		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, removeChild: 1, textContent: 1 });
 	});
 
 	QUnit.test("Update last", function(assert) {
@@ -321,7 +321,7 @@ QUnit.module("Flat List w/keys");
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>bar</li><li>a</li><li>fff</li><li>moo</li><li>xxx</li><li>zzz</li><li>b</li><li>c</li><li>baz</li><li>10</li></ul>';
-		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { nodeValue: 1 });
+		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, removeChild: 1, textContent: 1 });
 	});
 
 	QUnit.test("Update middle", function(assert) {
@@ -332,7 +332,7 @@ QUnit.module("Flat List w/keys");
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>bar</li><li>a</li><li>666</li><li>moo</li><li>xxx</li><li>zzz</li><li>b</li><li>c</li><li>baz</li><li>10</li></ul>';
-		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { nodeValue: 1 });
+		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, removeChild: 1, textContent: 1 });
 	});
 
 	QUnit.test("Update many (sort)", function(assert) {
@@ -543,6 +543,36 @@ QUnit.module("Other mods");
 		// TODO-optim: can be replaceChild instead of removeChild/insertBefore
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { removeChild: 1, createTextNode: 1, insertBefore: 1 });
 	});
+/*
+	QUnit.test('Model as node _key', function(assert) {
+		var model = {text: "a"};
+
+		function View() {
+			return function() {
+				return ["div", ["p", {_key: model}, model.text]];
+			};
+		}
+
+		var expcHtml = '<div><p>a</p></div>';
+
+		instr.start();
+		var vm = domvm.view(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 2, textContent: 1, insertBefore: 2 });
+
+		// swap model, should kill off node
+		model = {text: "b"};
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><p>b</p></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, removeChild: 1, textContent: 1, insertBefore: 1 });
+	});
+*/
 })();
 
 
