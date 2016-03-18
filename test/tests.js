@@ -924,6 +924,18 @@ QUnit.module("Elems & id/class");
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, className: 1 });
 	});
 
+	// classes should be additive, id should override
+	QUnit.test('[".class1"] + {class: "class2 class3"}', function(assert) {
+		var tpl = ["#abc.class1", {id: "qwerty", class: "class2 class3"}];
+
+		instr.start();
+		var vm = domvm.view(anonView(tpl)).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div id="qwerty" class="class1 class2 class3"></div>';
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, className: 1, id: 1 });
+	});
+
 	QUnit.test('Style Obj (camelCase)', function(assert) {
 		var tpl = ["div", {style: { backgroundColor: "red" }}];
 

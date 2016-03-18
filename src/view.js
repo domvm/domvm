@@ -741,11 +741,18 @@
 
 		node.tag = tagObj.tag;
 
-		if (tagObj.id || tagObj.class) {
-			node.props = node.props || {};
+		var hasId    = tagObj.id    != null,
+			hasClass = tagObj.class != null;
 
-			node.props.id = tagObj.id;
-			node.props.class = tagObj.class;
+		if (hasId || hasClass) {
+			var p = node.props || {};
+
+			if (p.id == null)
+				p.id = tagObj.id;
+			if (hasClass)
+				p.class = tagObj.class + (p.class != null ? (" " + p.class) : "");
+
+			node.props = p;
 		}
 	}
 
