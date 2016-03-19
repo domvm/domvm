@@ -249,9 +249,11 @@
 				}
 			}
 
-			old && vm.hooks && setTimeout(function() {
-				u.execAll(vm.hooks.didRedraw, [vm]);
-			}, 0);
+			old && vm.hooks && Promise.resolve().then(function() {
+				requestAnimationFrame(function() {
+					u.execAll(vm.hooks.didRedraw, [vm]);
+				});
+			});
 
 			return vm;
 		}
