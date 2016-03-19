@@ -156,7 +156,7 @@
 					};
 				}
 
-				return function(node, e) {
+				return function(e, node, vm) {
 					var model = this !== window ? this : null
 
 					if (model && typeof set == "string") {		// could be array ["propName", this]

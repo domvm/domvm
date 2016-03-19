@@ -249,11 +249,9 @@
 				}
 			}
 
-			// FTW: http://blog.millermedeiros.com/promise-nexttick/
-			// https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
-			Promise.resolve().then(function() {
-				old && vm.hooks && u.execAll(vm.hooks.didRedraw, [vm]);
-			});
+			old && vm.hooks && setTimeout(function() {
+				u.execAll(vm.hooks.didRedraw, [vm]);
+			}, 0);
 
 			return vm;
 		}
