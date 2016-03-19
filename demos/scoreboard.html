@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Scoreboard</title>
+
+	<script src="../src/domvm.js"></script>
+	<script src="../src/util.js"></script>
+	<script src="../src/view.js"></script>
+
+	<style>
+		html {
+			box-sizing: border-box;
+		}
+
+		*,
+		*:before,
+		*:after {
+			box-sizing: inherit;
+		}
+
+		#scoreboard {
+			max-width: 400px;
+			margin: auto;
+		}
+
+		.board,
+		.admin {
+			padding: 10px;
+		}
+
+		.board {
+			background: #BCFFBC;
+			margin-bottom: 20px;
+		}
+
+		.admin {
+			background: #FFE0E6;
+		}
+
+		.player {
+			display: flex;
+		}
+
+		.score {
+			margin-left: auto;
+			max-width: 50px;
+		}
+
+		.player button {
+			width: 40px;
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<script>
+		function Scoreboard(vm, players) {
+			var sorted = sortedByScoreDesc(players),
+				lastPos = new WeakMap(),
+				curPos = new WeakMap();
+
+			vm.hook("didRedraw", function() {
+				for (var i in vm.refs) {
+					var ref = vm.refs[i];
+					if (curPos.has(ref.data))						// checks if ref is a player node and not admin form field
+						vm.patch(ref, tplPlayer(ref.data, true));
+				}
+			});
+
+			return function() {
+				sorted.forEach(function(p,i) { lastPos.set(p, i); });
+				sorted = sortedByScoreDesc(players);
+				sorted.forEach(function(p,i) { curPos.set(p, i); });
+
+				return ["#scoreboard",
+					[".board", sorted.map(player => tplPlayer(player))],
+					["form.admin",
+						players.map(player =>
+							[".player",
+								player.name,
+								["input.score", {type: "number", value: player.score, onchange: [handleScoreChange, player]}],
+								["button",      {type: "button", onclick: [handleDeleteClick, player]}, "X"],
+							]
+						),
+						[".player",
+							["input",       {type: "text",   name: "name",  _ref: "name", placeholder: "New player..."}],
+							["input.score", {type: "number", name: "score", _ref: "score"}],
+							["button",      {type: "button", onclick: handleAddClick}, "Add"],
+						],
+					],
+				];
+			};
+
+			// makes a sorted copy
+			function sortedByScoreDesc(players) {
+				return players.slice().sort(function(a, b) {
+					if (b.score == a.score)
+						return a.name.localeCompare(b.name);		// stabalize the sort
+					return b.score - a.score;
+
+				});
+			}
+
+			function tplPlayer(player, delayed) {
+				return [".player", {style: calcPlayerStyle(player, delayed), _ref: "player." + player.name, _data: player},
+					[".name", player.name],
+					[".score", player.score],
+				];
+			}
+
+			// gets transform for prior pos order
+			function calcPlayerStyle(player, delayed) {
+				// delayed
+				if (delayed)
+					return {transition: "250ms", transform: null};
+				// initial
+				else {
+					var offset = (lastPos.get(player) * 18) - (curPos.get(player) * 18);
+					return {
+						transform: "translateY(" + offset + "px)",
+						transition: null//offset == 0 ? "",
+					};
+				}
+			}
+
+			function handleScoreChange(player, e, node) {
+				var score = +node.el.value;
+
+				if (isNaN(+score))
+					return;
+
+				player.score = score;
+				vm.redraw();
+			}
+
+			function handleAddClick(e, node) {
+				var name = vm.refs.name.el.value;
+				var score = +vm.refs.score.el.value;
+
+				if (!name.length || isNaN(+score))
+					return;
+
+				players.push({name: name, score: score});
+				vm.redraw();
+			}
+
+			function handleDeleteClick(player, e) {
+				players.splice(curPos[player], 1);
+				vm.redraw();
+			}
+		}
+
+		var players = [
+			{
+				name: "Mark",
+				score: 3,
+			},
+			{
+				name: "Troy",
+				score: 2,
+			},
+			{
+				name: "Jenny",
+				score: 1,
+			},
+			{
+				name: "David",
+				score: 8,
+			},
+		];
+
+		domvm.view(Scoreboard, players).mount(document.body);
+	</script>
+</body>
+</html>
