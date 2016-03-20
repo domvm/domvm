@@ -353,7 +353,10 @@
 
 		if (removeSelf && node.el && node.el.parentNode) {
 			node.removed = true;
-			fireHooks(node.hooks, "Remove", removeNode, [node]);
+			if (node.hooks)
+				fireHooks(node.hooks, "Remove", removeNode, [node]);
+			else
+				removeNode(node);
 		}
 	}
 
@@ -453,8 +456,12 @@
 	// def is tpl returned by render()
 	// old is matched donor vnode obj
 	function buildNode(node, donor) {
-		if (donor)
-			fireHooks(node.hooks, "Recycle", graftNode, [donor, node]);
+		if (donor) {
+			if (node.hooks)
+				fireHooks(node.hooks, "Recycle", graftNode, [donor, node]);
+			else
+				graftNode(donor, node);
+		}
 
 		if (u.isArr(node.body)) {
 			// this is an optimization so a full old branch rescan is not needed to find a donor for each new node.
@@ -553,8 +560,12 @@
 
 		// insert and/or reorder
 	//	if (par && par.el && par.el.childNodes[node.idx] !== node.el)
-		if (sibAtIdx !== node.el && (parentEl || par && par.el))
-			fireHooks(node.hooks, wasDry ? "Insert" : "Reinsert", insertNode, [node, sibAtIdx, parentEl]);
+		if (sibAtIdx !== node.el && (parentEl || par && par.el)) {
+			if (node.hooks)
+				fireHooks(node.hooks, wasDry ? "Insert" : "Reinsert", insertNode, [node, sibAtIdx, parentEl]);
+			else
+				insertNode(node, sibAtIdx, parentEl);
+		}
 
 		if (wasDry && node.vm && node.vm.hooks) {
 			Promise.resolve().then(function() {
