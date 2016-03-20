@@ -64,7 +64,7 @@
 				for (var i in vm.refs) {
 					var ref = vm.refs[i];
 					if (curPos.has(ref.data))						// checks if ref is a player node and not admin form field
-						vm.patch(ref, tplPlayer(ref.data, true));
+						vm.patch(ref, {style: calcPlayerStyle(ref.data, true)});
 				}
 			});
 
@@ -74,7 +74,12 @@
 				sorted.forEach(function(p,i) { curPos.set(p, i); });
 
 				return ["#scoreboard",
-					[".board", sorted.map(player => tplPlayer(player))],
+					[".board", sorted.map(player =>
+						[".player", {style: calcPlayerStyle(player), _ref: "player." + player.name, _data: player},
+							[".name", player.name],
+							[".score", player.score],
+						]
+					)],
 					["form.admin",
 						players.map(player =>
 							[".player",
@@ -100,13 +105,6 @@
 					return b.score - a.score;
 
 				});
-			}
-
-			function tplPlayer(player, delayed) {
-				return [".player", {style: calcPlayerStyle(player, delayed), _ref: "player." + player.name, _data: player},
-					[".name", player.name],
-					[".score", player.score],
-				];
 			}
 
 			// gets transform for prior pos order

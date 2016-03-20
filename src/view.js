@@ -168,17 +168,28 @@
 
 		// need disclaimer that old and new nodes must be same type
 		// and must have matching keyes if are keyed
+		// newTpl can be object with {class: , style: }
 		function patchNode(oldNode, newTpl) {
-		//	execAll(vm.hooks.willRedraw);
+			if (u.isObj(newTpl)) {
+				var newNode = {
+					tag: oldNode.tag,
+					el: oldNode.el,
+					ns: oldNode.ns,
+					props: {
+						class: newTpl.class || oldNode.props.class,
+						style: newTpl.style || oldNode.props.style,
+					}
+				};
 
-			var donor = oldNode,
-				parent = donor.parent,
-				newNode = buildNode(initNode(newTpl, parent, donor.idx, vm), donor);
+				patchProps(newNode, oldNode);
+			}
+			else {
+				var donor = oldNode,
+					parent = donor.parent,
+					newNode = buildNode(initNode(newTpl, parent, donor.idx, vm), donor);
 
-			parent.body[donor.idx] = newNode;
-
-
-		//	execAll(vm.hooks.didRedraw);
+				parent.body[donor.idx] = newNode;
+			}
 		}
 
 		function redraw(level, isRedrawRoot) {
