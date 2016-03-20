@@ -176,8 +176,8 @@
 					el: oldNode.el,
 					ns: oldNode.ns,
 					props: {
-						class: newTpl.class || oldNode.props.class,
-						style: newTpl.style || oldNode.props.style,
+						class: "class" in newTpl ? newTpl.class : oldNode.props.class,
+						style: "style" in newTpl ? newTpl.style : oldNode.props.style,
 					}
 				};
 
