@@ -53,7 +53,7 @@
 					var toPos = null;
 					var dir = 0;
 					for (var i = 0; i < stack.length; i++) {
-						if (stack[i].path === dest.path) {		// set repl?
+						if (stack[i].href === dest.href) {		// set repl?
 							toPos = i;
 							break;
 						}
