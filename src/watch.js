@@ -177,16 +177,7 @@
 
 			// then, onStart, onEnd, onProgress
 	*/
-			fetch:	function(meth, url, body, cb, opts) {
-				// payload methods: http://stackoverflow.com/questions/5905916/payloads-of-http-request-methods
-				if (meth != "put" && meth != "post" && meth != "patch") {
-					opts = cb;
-					cb = body;
-					body = null;
-				}
-
-				return initFetch(meth, url, body, cb, opts);
-			},
+			fetch:	initFetch,
 
 			get:	function(url, query, cb) {
 				if (!cb)  cb = query;
