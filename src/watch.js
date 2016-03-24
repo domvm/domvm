@@ -11,14 +11,13 @@
 
 		function noop() {};
 
-		function initFetch(method, url, body, cb, opts) {
+		function initFetch(meth, url, body, cb, opts) {
 			opts = opts || {};
 
-			opts.method = (opts.method || method).toUpperCase();
+			opts.method = meth.toUpperCase();
 
 			if (body !== null) {
-				var type = Object.prototype.toString.call(body);
-				if (type === "[object Array]" || type === "[object Object]") {
+				if (u.isArr(body) || u.isObj(body)) {
 					opts.headers = opts.headers || new Headers();
 					opts.headers.set("Content-Type", "application/json");
 					opts.body = JSON.stringify(body);
@@ -59,7 +58,7 @@
 				}
 			};
 
-			var event = {type: "fetch", fetch: {method: method, url: url, body: body}};
+			var event = {type: "fetch", fetch: {method: meth, url: url, body: body}};
 
 			var prom = fetch(url, opts)
 				.then(checkStatus)
@@ -80,7 +79,7 @@
 					}
 				);
 
-			prom._fetchArgs = [method, url, body, [okFn, errFn], opts];
+			prom._fetchArgs = [meth, url, body, [okFn, errFn], opts];
 
 			return prom;
 		}
@@ -177,29 +176,50 @@
 			},
 
 			// then, onStart, onEnd, onProgress
-
-			fetch: function(url, cb, opts) {
-				return fetch(url, opts).then(ok, err).then(handler, noop);
-			},
 	*/
-			get:	function(url, cb, opts) {
-				return initFetch("get", url, null, cb, opts);
+			fetch:	function(meth, url, body, cb, opts) {
+				// payload methods: http://stackoverflow.com/questions/5905916/payloads-of-http-request-methods
+				if (meth != "put" && meth != "post" && meth != "patch") {
+					opts = cb;
+					cb = body;
+					body = null;
+				}
+
+				return initFetch(meth, url, body, cb, opts);
 			},
 
-			delete:	function(url, cb, opts) {
-				return initFetch("delete", url, null, cb, opts);
+			get:	function(url, query, cb) {
+				if (!cb)  cb = query;
+				else      url += api.query(query);
+				return initFetch("get", url, null, cb);
 			},
 
-			post:	function(url, body, cb, opts) {
-				return initFetch("post", url, body, cb, opts);
+			delete:	function(url, query, cb) {
+				if (!cb)  cb = query;
+				else      url += api.query(query);
+				return initFetch("delete", url, null, cb);
 			},
 
-			put:	function(url, body, cb, opts) {
-				return initFetch("put", url, body, cb, opts);
+			post:	function(url, body, cb) {
+				return initFetch("post", url, body, cb);
 			},
 
-			patch:	function(url, body, cb, opts) {
-				return initFetch("patch", url, body, cb, opts);
+			put:	function(url, body, cb) {
+				return initFetch("put", url, body, cb);
+			},
+
+			patch:	function(url, body, cb) {
+				return initFetch("patch", url, body, cb);
+			},
+
+			query: function(obj) {
+				if (!u.isObj(obj))
+					return "";
+				var parts = [],
+					enc = encodeURIComponent;
+				for (var i in obj)
+					parts.push(enc(i) + "=" + enc(obj[i]));
+				return parts.length ? ("?" + parts.join("&")) : "";
 			},
 		};
 
