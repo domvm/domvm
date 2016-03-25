@@ -1375,7 +1375,36 @@ QUnit.module("emit() & synthetic events");
 		test("c",		{ abc: "", a: "", ab: "", ac: "", b: "", bc: "", c: "" });
 	});
 
-	// todo: w/args
+	QUnit.test('Emit w/args', function(assert) {
+		assert.expect(2);
+
+		var vmY;
+
+		function ViewY(vm) {
+			vmY = vm;
+
+			return function() {
+				return ["div", "meh"];
+			};
+		}
+
+		function ViewX(vm) {
+			vm.on({
+				testEv: function(arg1, arg2) {
+					assert.equal(arg1, "arg1", "Arg1");
+					assert.equal(arg2, "arg2", "Arg2");
+				}
+			});
+
+			return function() {
+				return ["div", [ViewY]];
+			};
+		}
+
+		domvm.view(ViewX);
+
+		vmY.emit("testEv", "arg1", "arg2");
+	});
 })();
 
 QUnit.module("redraw() ancestors");

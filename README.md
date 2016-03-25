@@ -435,7 +435,7 @@ function ParentView(vm) {
 
 function ChildView(vm) {
 	var handleClick = function(e) {
-		vm.emit("myEvent", ["arg1", "arg2"]);
+		vm.emit("myEvent", "arg1", "arg2");
 	};
 
 	return function() {
