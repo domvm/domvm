@@ -569,7 +569,7 @@
 
 		if (wasDry && node.vm && node.vm.hooks) {
 			Promise.resolve().then(function() {
-				u.execAll(node.vm.hooks.didMount, [node.vm]);
+				!node.moved && u.execAll(node.vm.hooks.didMount, [node.vm]);
 			});
 		}
 
