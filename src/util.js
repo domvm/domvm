@@ -73,7 +73,7 @@
 		isDynProp: function(tag, attr) {
 			switch (tag) {
 				case "input":
-				case "textarea": 
+				case "textarea":
 				case "select":
 				case "option":
 					switch (attr) {
@@ -90,6 +90,18 @@
 		},
 		autoPx: function(name, val) {
 			return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
+		},
+		deepSet: function(targ, path, val) {
+			var segs = path.split(".");
+			var last = segs.pop();
+
+			segs.forEach(function(s) {
+				if (!targ[s])
+					targ[s] = {};
+				targ = targ[s];
+			});
+
+			targ[last] = val;
 		},
 		indexOfKey: function(key, nodes, start, end) {
 			for (var i = 0; i < nodes.length; i++)
