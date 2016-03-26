@@ -61,10 +61,9 @@
 				curPos = new WeakMap();
 
 			vm.hook("didRedraw", function() {
-				for (var i in vm.refs) {
-					var ref = vm.refs[i];
-					if (curPos.has(ref.data))						// checks if ref is a player node and not admin form field
-						vm.patch(ref, {style: calcPlayerStyle(ref.data, true)});
+				for (var i in vm.refs.player) {
+					var ref = vm.refs.player[i];
+					vm.patch(ref, {style: calcPlayerStyle(ref.data, true)});
 				}
 			});
 
