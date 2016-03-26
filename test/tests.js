@@ -22,7 +22,7 @@ function anonView(tpl) {
 	}
 }
 
-QUnit.module("Prop/attr patch");
+QUnit.module("Prop/attr mutation");
 
 (function() {
 	function View() {
@@ -1488,7 +1488,7 @@ QUnit.module("didRedraw() & refs");
 				didRedraw: function() {
 					assert.ok(true, "Self didRedraw()");
 					assert.ok(vm.refs.mySpan3.el === document.getElementById("zzz"), "Self ref");
-					console.log(vm.refs);
+				//	console.log(vm.refs);
 					done();
 				}
 			});
@@ -1512,7 +1512,7 @@ QUnit.module("didRedraw() & refs");
 				didRedraw: function() {
 					assert.ok(true, "Parent didRedraw()");
 					assert.ok(vm.refs.mySpan1.el === document.getElementById("xxx"), "Parent ref");
-					console.log(vm.refs);
+				//	console.log(vm.refs);
 					done2();
 				}
 			});
@@ -1525,7 +1525,7 @@ QUnit.module("didRedraw() & refs");
 				didRedraw: function() {
 					assert.ok(true, "Child after()");
 					assert.ok(vm.refs.mySpan2.el === document.getElementById("yyy"), "Child ref");
-					console.log(vm.refs);
+				//	console.log(vm.refs);
 					done1();
 				}
 			});
@@ -2064,5 +2064,101 @@ QUnit.module("Unjailed refs");
 	});
 })();
 
+QUnit.module("Namespaced refs");
+
+(function() {
+	function TestView() {
+		return function() {
+			return ["div", {_ref: "a.b.c"}];
+		}
+	}
+
+	function TestView1() {
+		return function() {
+			return ["div", [TestView2]];
+		}
+	}
+
+	var vm2;
+	function TestView2(vm) {
+		vm2 = vm;
+		return function() {
+			return ["div", {_ref: "^a.b.c"}];
+		}
+	}
+
+	QUnit.test('Normal a.b.c', function(assert) {
+		instr.start();
+		var vm = domvm.view(TestView).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });
+
+		assert.equal(vm.refs.a.b.c, vm.node);
+	});
+
+	QUnit.test('Unjailed ^a.b.c', function(assert) {
+		instr.start();
+		var vm = domvm.view(TestView1).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><div></div></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 2, insertBefore: 2 });
+
+		assert.equal(vm.refs.a.b.c, vm2.node);
+	});
+})();
+
+// also tests additive classes (doesnt test creating new class)
+
+QUnit.module("Patch");
+
+(function() {
+	function getTpl(marg, klass, body) {
+		return ["p.moo", {class: klass, style: {margin: marg}}, body];
+	}
+
+	function TestView() {
+		return function() {
+			return ["div", getTpl(10, "cow", "hey")];
+		};
+	}
+
+	var vm;
+	QUnit.test('Create', function(assert) {
+		instr.start();
+		vm = domvm.view(TestView).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><p class="moo cow" style="margin: 10px;">hey</p></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 2, textContent: 1, className: 1, insertBefore: 2 });
+	});
+
+	QUnit.test('Full child tpl', function(assert) {
+		instr.start();
+		vm.patch(vm.node.el.firstChild._node, getTpl(20, "baz", "yo"));
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><p class="moo baz" style="margin: 20px;">yo</p></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { className: 1, nodeValue: 1 });
+
+//		console.log(vm.node.el.firstChild._node);
+	});
+
+	QUnit.test('Child class/style', function(assert) {
+		instr.start();
+		vm.patch(vm.node.el.firstChild._node, {class: "xxx", style: {margin: 5, color: "red"}});
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><p class="moo xxx" style="margin: 5px; color: red;">yo</p></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { className: 1 });
+	});
+})();
 
 // QUnit.module("Keyed model & addlCtx replacement");

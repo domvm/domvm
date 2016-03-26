@@ -176,12 +176,15 @@
 					el: oldNode.el,
 					ns: oldNode.ns,
 					props: {
-						class: "class" in newTpl ? newTpl.class : oldNode.props.class,
+						class: "class" in newTpl ? (oldNode.class != null ? oldNode.class + " " : "") + newTpl.class : oldNode.props.class,
 						style: "style" in newTpl ? newTpl.style : oldNode.props.style,
 					}
 				};
 
 				patchProps(newNode, oldNode);
+
+				oldNode.props.class = newNode.props.class;
+				oldNode.props.style = newNode.props.style;
 			}
 			else {
 				var donor = oldNode,
@@ -660,6 +663,9 @@
 		n.el = o.el;
 		o.el = null;
 
+		if (n.el)
+			n.el._node = n;
+
 		if (n.type === u.TYPE_TEXT && n.body !== o.body) {
 			n.el.nodeValue = n.body;
 			return;
@@ -771,8 +777,10 @@
 
 			if (p.id == null)
 				p.id = tagObj.id;
-			if (hasClass)
+			if (hasClass) {
+				node.class = tagObj.class;
 				p.class = tagObj.class + (p.class != null ? (" " + p.class) : "");
+			}
 
 			node.props = p;
 		}
@@ -790,6 +798,7 @@
 			removed: false,
 			hooks: null,	// willInsert,didInsert,willRecycle,didRecycle,willReinsert,didReinsert,willRemove,didRemove
 			tag: null,
+			class: null,	// this is the fixed class parsed from the tag, since "tag.class" is additive to {class:...}
 //			svg: false,
 //			math: false,
 			ns: null,
