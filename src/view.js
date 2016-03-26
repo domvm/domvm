@@ -944,11 +944,11 @@
 			u.isVal(props.id)	? props.id		:
 			u.isVal(props.name)	? props.name	: null;
 
-		if (props._ref)
+		if (props._ref != null)
 			node.ref = props._ref;
 		if (props._raw)
 			node.raw = true;
-		if (props._data)
+		if (props._data != null)
 			node.data = props._data;
 		if (props._guard)
 			node.guard = true;
