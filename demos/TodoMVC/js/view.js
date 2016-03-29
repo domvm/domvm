@@ -145,7 +145,7 @@ view.Todo = function Todo(vm, todos, todo) {
                 {
                     _ref: 'editor',
                     type: 'text',
-                    ".value": todo.title,
+                    value: todo.title,
                     onblur: commitEditing,
                     onkeydown: editorKeydown
                 }

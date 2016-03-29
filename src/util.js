@@ -103,10 +103,18 @@
 
 			targ[last] = val;
 		},
-		indexOfKey: function(key, nodes, start, end) {
-			for (var i = 0; i < nodes.length; i++)
-				if (nodes[i].key === key)
-					return i;
+		keyedIdx: function(key, nodes, viewFn, start, end) {
+			for (var i = 0; i < nodes.length; i++) {
+				var n = nodes[i];
+				if (n.key === key) {
+					if (viewFn) {
+						if (n.vm && n.vm.view[0] === viewFn)
+							return i;
+					}
+					else
+						return i;
+				}
+			}
 			return -1;
 		},
 		// https://github.com/darsain/raft
