@@ -1857,6 +1857,47 @@ QUnit.module("Model persistence keys, vm init, DOM reuse");
 		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 2 });
 	});
 */
+	QUnit.test('Same model/handle, diff sib views', function(assert) {
+		function ViewX(vm, model) {
+			return function() {
+				return ["div",
+					[ViewY, model],
+					[ViewZ, model],
+				];
+			};
+		}
+
+		function ViewY(vm, model) {
+			return function() {
+				return ["em", model.a];
+			};
+		}
+
+		function ViewZ(vm, model) {
+			return function() {
+				return ["strong", model.b];
+			};
+		}
+
+		var model = {
+			a: "foo",
+			b: "bar",
+		};
+
+		var expcHtml = '<div><em>foo</em><strong>bar</strong></div>';
+
+		instr.start();
+		var vm = domvm.view(ViewX, model).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 3, insertBefore: 3, textContent: 2 });
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { });
+	});
 })();
 
 
