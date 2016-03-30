@@ -15,8 +15,8 @@
 
 	var cfg = {
 		useRaf: true,
-		viewScan: false,	// enables aggressive unkeyed view Recycle
-		useDOM: false,
+	//	viewScan: false,	// enables aggressive unkeyed view Recycle
+	//	useDOM: false,
 	};
 
 	domvm.view = createView;
@@ -276,6 +276,7 @@
 			vm.hooks && u.execAll(vm.hooks.willUnmount);
 
 			if (parentNode) {
+				/*
 				if (live) {
 					for (var i = idxInParent + 1; i < parentNode.body.length; i++) {
 						var n = parentNode.body[i];
@@ -287,6 +288,7 @@
 					parentNode.body.splice(idxInParent, 1);
 				}
 				else
+				*/
 					parentNode.body[idxInParent] = null;
 			}
 
@@ -625,6 +627,7 @@
 
 					var existsInNew = false;
 
+					/*
 					// it's expensive without WeakMaps to check if unkeyed views' old view/model combo
 					// exists in new tree, so they will be destroyed and dom re-used....unless domvm.viewScan = true
 					if (cfg.viewScan) {
@@ -639,6 +642,7 @@
 							}
 						}
 					}
+					*/
 
 					// removed keyed view = can reuse its DOM if by end of list, no exacts were found
 					if (!existsInNew && !approx && newKeys && u.keyedIdx(o.key, newBody, o.vm.view[0]) == -1)
