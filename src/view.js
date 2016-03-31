@@ -575,9 +575,9 @@
 			fireHook(node, "did" + type, node);
 		}
 
-		if (wasDry && node.vm && node.vm.hooks) {
-			Promise.resolve().then(function() {
-				!node.moved && fireHook(node.vm, "didMount", node.vm);
+		if (wasDry && node.vm && node.vm.hooks && !node.moved) {
+			u.tick(function() {
+				fireHook(node.vm, "didMount", node.vm);
 			});
 		}
 
