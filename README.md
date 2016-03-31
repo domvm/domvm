@@ -81,7 +81,7 @@ var domvm = require("domvm");
 Each module is a single js file in `/src`. The first 3 are the "core", the rest are optional and can be replaced by your own implementations. For development, just include them in order.
 
 0. `domvm`: namespace & wrapper
-0. `domvm.util`: generic funcs required by other modules
+0. `domvm.utils`: generic funcs required by other modules
 0. `domvm.view`: the core vdom & template lib
 0. `domvm.html`: vtree => HTML generator, if you need isomorphism/SSR
 0. `domvm.watch`: auto-redraw helpers (mutation observers, ajax wrappers)
@@ -93,7 +93,7 @@ Building is simple: concat the needed modules and minify with tools of your choi
 java -jar compiler.jar
 	--language_in ECMASCRIPT5
 	--js src/domvm.js
-	--js src/util.js
+	--js src/utils.js
 	--js src/view.js
 	--js src/html.js
 	--js src/watch.js

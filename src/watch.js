@@ -1,7 +1,7 @@
 (function(domvm) {
 	"use strict";
 
-	var u = domvm.util;
+	var u = domvm.utils;
 
 	domvm.watch = function(handler) {
 		var handlers = [];

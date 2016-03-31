@@ -1,5 +1,5 @@
 require("./src/domvm.js");
-require("./src/util.js");
+require("./src/utils.js");
 require("./src/view.js");
 require("./src/html.js");
 require("./src/watch.js");

@@ -3,7 +3,7 @@
 
 	var voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
 
-	var u = domvm.util;
+	var u = domvm.utils;
 
 	domvm.html = function(node) {
 		var html = "";

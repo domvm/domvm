@@ -33,7 +33,7 @@
 		vmExts.push(ext);
 	};
 
-	var u = domvm.util;
+	var u = domvm.utils;
 
 	return domvm;
 
