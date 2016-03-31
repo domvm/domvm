@@ -145,7 +145,7 @@
 			}
 
 			function handleDeleteClick(player, e) {
-				players.splice(curPos[player], 1);
+				players.splice(players.indexOf(player), 1);
 				vm.redraw();
 			}
 		}
