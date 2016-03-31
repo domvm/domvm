@@ -26,7 +26,7 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 - Decoupled client-side router (for SPAs) & mutation observers (for auto-redraw)
 - Isomorphic - generate markup server-side and attach on client
 - SVG & MathML support: [demo](http://leeoniya.github.io/domvm/demos/svg_mathml.html), [svg tiger](http://leeoniya.github.io/domvm/demos/svg-tiger.html)
-- IE9+ with tiny polyfills/shims [sources](src/polyfills), [all compressed](dist/polyfills.min.js): `view` (rAF, Promise, element.matches), `watch` (fetch)
+- IE9+ with tiny polyfills/shims [sources](src/polyfills), [all compressed](dist/polyfills.min.js): `view` (rAF, element.matches), `watch` (Promise, fetch)
 
 ---
 #### Demos
