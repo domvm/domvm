@@ -66,6 +66,11 @@
 			});
 			return out;
 		},
+		tick: function(fn) {
+			requestAnimationFrame(function() {
+				requestAnimationFrame(fn);
+			});
+		},
 		insertArr: function(targ, arr, pos, rem) {
 			targ.splice.apply(targ, [pos, rem].concat(arr));
 		},

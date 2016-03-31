@@ -263,10 +263,8 @@
 					insertNode(node, oldParentEl.childNodes[old.idx], oldParentEl);
 			}
 
-			old && vm.hooks && Promise.resolve().then(function() {
-				requestAnimationFrame(function() {
-					fireHook(vm, "didRedraw", vm);
-				});
+			old && vm.hooks && u.tick(function() {
+				fireHook(vm, "didRedraw", vm);
 			});
 
 			return vm;
