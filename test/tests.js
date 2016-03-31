@@ -423,7 +423,7 @@ QUnit.module("Other mods");
 		vm.redraw();
 		var callCounts = instr.end();
 
-		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, setAttribute: 1, replaceChild: 1, textContent: 1 });
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, setAttribute: 1, removeChild: 1, insertBefore: 1, textContent: 1 });
 	});
 
 	QUnit.test('(child) span -> a', function(assert) {

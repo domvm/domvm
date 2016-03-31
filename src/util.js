@@ -59,10 +59,12 @@
 			return typeof val === "object" && u.isFunc(val.then);
 		},
 		// saves from having to do fn && fn()
-		execAll: function(fnArr, args) {
-			fnArr && (!u.isArr(fnArr) ? [fnArr] : fnArr).forEach(function(fn) {
-				return fn.apply(null, args);
+		execAll: function(fnArr, arg1, arg2, arg3, arg4, arg5) {
+			var out;
+			fnArr && (u.isArr(fnArr) ? fnArr : [fnArr]).forEach(function(fn) {
+				out = fn.call(null, arg1, arg2, arg3, arg4, arg5);
 			});
+			return out;
 		},
 		insertArr: function(targ, arr, pos, rem) {
 			targ.splice.apply(targ, [pos, rem].concat(arr));

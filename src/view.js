@@ -118,7 +118,7 @@
 			},
 		//	detach: detach,
 			unmount: function() {
-				fireHooks(vm.hooks, "Unmount", unmount, [], [vm]);
+				cleanNode(vm.node);
 			},
 			// internal util funcs
 			moveTo: moveTo,
@@ -127,7 +127,7 @@
 
 		opts && opts.hooks && vm.hook(opts.hooks);
 
-		u.execAll(vmExts, [vm]);
+		u.execAll(vmExts, vm);
 
 		vm.render = viewFn.call(vm.api, vm, model, key);
 
@@ -205,7 +205,7 @@
 
 			var old = vm.node;
 
-			old && vm.hooks && u.execAll(vm.hooks.willRedraw, [vm]);
+			old && fireHook(vm, "willRedraw", vm);
 
 			vm.refs = {};
 		//	vm.keyMap = {};
@@ -243,6 +243,7 @@
 			if (old && (node.type !== old.type || node.tag !== old.tag)) {
 				donor = null;
 				var repl = true;
+				var oldParentEl = old.el.parentNode;
 			}
 
 			buildNode(node, donor);
@@ -257,58 +258,29 @@
 				// hydrate on all but initial root createView/redraw (handled in mount()/attach())
 				(old || !isRootNode) && hydrateNode(node, null, node.el);			// parentNode.el.firstChild?
 
-				if (repl) {
-					old.el.parentNode.replaceChild(node.el, old.el);
-					old.el = null;
-				}
+				// bug: this bypasses hooks
+				if (repl)
+					insertNode(node, oldParentEl.childNodes[old.idx], oldParentEl);
 			}
 
 			old && vm.hooks && Promise.resolve().then(function() {
 				requestAnimationFrame(function() {
-					u.execAll(vm.hooks.didRedraw, [vm]);
+					fireHook(vm, "didRedraw", vm);
 				});
 			});
 
 			return vm;
 		}
 
-		function unmount(live) {
-			vm.hooks && u.execAll(vm.hooks.willUnmount);
-
-			if (parentNode) {
-				/*
-				if (live) {
-					for (var i = idxInParent + 1; i < parentNode.body.length; i++) {
-						var n = parentNode.body[i];
-						n.idx = i - 1;
-						if (n.vm)
-							n.vm.updIdx(n.idx);
-					}
-
-					parentNode.body.splice(idxInParent, 1);
-				}
-				else
-				*/
-					parentNode.body[idxInParent] = null;
-			}
-
-			cleanNode(vm.node, true);
-
-			vm.node.vm = null;
-
-			// more cleanup?
-
-			vm.hooks && u.execAll(vm.hooks.didUnmount);
-		}
-
 		function emit(event) {
-			var args = Array.prototype.slice.call(arguments, 1);
+			var args = Array.prototype.slice.call(arguments);
 
-			var targ = vm;
+			var targ = vm, ev;
 
 			while (targ) {
-				if (targ.events[event]) {
-					u.execAll(targ.events[event], args);
+				if (ev = targ.events[event]) {
+					args[0] = ev;
+					u.execAll.apply(null, args);
 					break;
 				}
 				targ = targ.parent;
@@ -340,35 +312,71 @@
 		}
 	}
 
-	function cleanNode(node, removeSelf) {
-		if (u.isArr(node.body)) {
-			node.body.forEach(function(n, i) {
-				if (!n) return;
-
-				if (n.vm && !n.moved)
-					n.vm.unmount();
-				else
-					cleanNode(n, true);
-			});
-
-			node.body = null;
-		}
-
-		node.vm = null;
-
-		if (removeSelf && node.el && node.el.parentNode) {
-			node.removed = true;
-			if (node.hooks)
-				fireHooks(node.hooks, "Remove", removeNode, [node]);
-			else
-				removeNode(node);
+	function fireHook(ctx, name, arg1, arg2, arg3, arg4) {
+		if (ctx && ctx.hooks) {
+			var hooks = ctx.hooks[name];
+			if (!hooks) return;
+			return u.execAll(hooks, arg1, arg2, arg3, arg4);
 		}
 	}
 
-	function removeNode(node) {
-		node.el.parentNode.removeChild(node.el);
-		node.el = null;
-//		return [node];
+	function cleanNode(node, prom) {
+		var removeSelf = node.el && !node.moved;
+
+		if (removeSelf) {
+			var resUnm = fireHook(node.vm, "willUnmount", node.vm);
+			var resRem = fireHook(node, "willRemove", node);
+
+			var newProm = resUnm || resRem;
+
+			node.removed = true;
+		}
+
+		if (u.isArr(node.body)) {
+			node.body.forEach(function(n, i) {
+				if (!n.vm || !n.moved)
+					cleanNode(n, prom || newProm);
+			});
+
+		//	node.body = null;
+		}
+
+		if (!prom) {
+			if (newProm) {
+				newProm.then(function() {
+					removeNode(node, removeSelf);
+				});
+			}
+			else
+				removeNode(node, removeSelf);
+		}
+	}
+
+	function removeNode(node, removeSelf) {
+		if (node.el == null || !node.el.parentNode)
+			return;
+
+		if (removeSelf) {
+			node.el.parentNode.removeChild(node.el);
+			node.el = null;
+
+	//		if (node.parent)
+	//			node.parent.body[node.idx] = null;
+
+			// fire hooks, get promises
+			var resUnm = fireHook(node.vm, "didUnmount", node.vm);
+			var resRem = fireHook(node, "didRemove", node);
+
+		//	node.vm = null;
+		}
+
+		if (u.isArr(node.body)) {
+			node.body.forEach(function(n, i) {
+				removeNode(n, true);
+			});
+		}
+
+	//	node.body = null;
 	}
 
 	// builds out node, excluding views
@@ -462,10 +470,9 @@
 	// old is matched donor vnode obj
 	function buildNode(node, donor) {
 		if (donor) {
-			if (node.hooks)
-				fireHooks(node.hooks, "Recycle", graftNode, [donor, node]);
-			else
-				graftNode(donor, node);
+			fireHook(node, "willRecycle", donor, node);
+			graftNode(donor, node);
+			fireHook(node, "didRecycle", donor, node);
 		}
 
 		if (u.isArr(node.body)) {
@@ -530,9 +537,7 @@
 		while (sibAtIdx && sibAtIdx._node.removed)
 			sibAtIdx = sibAtIdx.nextSibling;
 
-
-		if (wasDry && node.vm && node.vm.hooks)
-			u.execAll(node.vm.hooks.willMount, [node.vm]);
+		wasDry && fireHook(node.vm, "willMount", node.vm);
 
 		if (node.type == u.TYPE_ELEM) {
 			if (wasDry) {
@@ -566,15 +571,15 @@
 		// insert and/or reorder
 	//	if (par && par.el && par.el.childNodes[node.idx] !== node.el)
 		if (sibAtIdx !== node.el && (parentEl || par && par.el)) {
-			if (node.hooks)
-				fireHooks(node.hooks, wasDry ? "Insert" : "Reinsert", insertNode, [node, sibAtIdx, parentEl]);
-			else
-				insertNode(node, sibAtIdx, parentEl);
+			var type = wasDry ? "Insert" : "Reinsert";
+			fireHook(node, "will" + type, node);
+			insertNode(node, sibAtIdx, parentEl);
+			fireHook(node, "did" + type, node);
 		}
 
 		if (wasDry && node.vm && node.vm.hooks) {
 			Promise.resolve().then(function() {
-				!node.moved && u.execAll(node.vm.hooks.didMount, [node.vm]);
+				!node.moved && fireHook(node.vm, "didMount", node.vm);
 			});
 		}
 
@@ -698,40 +703,6 @@
 		o.moved = true;
 
 	//	return [o, n];
-	}
-
-	function fireHooks(handlers, baseName, execFn, execArgs, willArgs, didArgs) {
-		if (!handlers)
-			execFn.apply(null, execArgs);
-		else {
-			var will = handlers["will" + baseName];
-
-			// does not handle executing multiple hooks cause cannot coalese returned promises, etc
-			if (u.isArr(will))
-				will = will[0];
-
-			var did = handlers["did" + baseName];
-
-			if (u.isArr(did))
-				did = did[0];
-
-			var execAndDid = function() {
-			//	var didArgs = execFn.apply(null, execArgs);
-				execFn.apply(null, execArgs);
-				did && did.apply(null, didArgs || willArgs || execArgs);
-			};
-
-			if (will) {
-				var willRes = will.apply(null, willArgs || execArgs);
-
-				if (u.isProm(willRes))
-					willRes.then(execAndDid);
-				else
-					execAndDid();
-			}
-			else
-				execAndDid();
-		}
 	}
 
 	function parseTag(rawTag) {
