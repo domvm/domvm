@@ -332,11 +332,8 @@
 
 		if (u.isArr(node.body)) {
 			node.body.forEach(function(n, i) {
-				if (!n.vm || !n.moved)
-					cleanNode(n, prom || newProm);
+				cleanNode(n, prom || newProm);
 			});
-
-		//	node.body = null;
 		}
 
 		if (!prom) {
@@ -365,7 +362,6 @@
 			var resUnm = fireHook(node.vm, "didUnmount", node.vm);
 			var resRem = fireHook(node, "didRemove", node);
 
-		//	node.vm = null;
 		}
 
 		if (u.isArr(node.body)) {
@@ -374,7 +370,7 @@
 			});
 		}
 
-	//	node.body = null;
+		node.vm = node.body = null;
 	}
 
 	// builds out node, excluding views
