@@ -69,8 +69,12 @@
 			return out;
 		},
 		tick: function(fn, howMany) {
-			if (!howMany || !rAF)
-				fn();
+			if (!howMany || !rAF) {
+				if (u.isArr(fn))
+					fn[0].apply(null, fn.slice(1));
+				else
+					fn();
+			}
 			else if (rAF)
 				rAF(function() { u.tick(fn, howMany - 1); });
 		},

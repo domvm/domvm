@@ -13,6 +13,15 @@
 	var DONOR_DOM	= 1;
 	var DONOR_NODE	= 2;
 
+	// queue for did* hooks to ensure they all fire in same anim frame
+	var didHooks = [];
+
+	function drainDidHooks() {
+		var item;
+		while (item = didHooks.pop())
+			item[0].apply(null, item.slice(1));
+	}
+
 	var cfg = {
 		useRaf: true,
 	//	viewScan: false,	// enables aggressive unkeyed view Recycle
@@ -166,28 +175,39 @@
 		function spliceNodes() {}
 		*/
 
-		// need disclaimer that old and new nodes must be same type
+		// need disclaimer that targ and new must be same type
 		// and must have matching keyes if are keyed
 		// newTpl can be object with {class: , style: }
-		function patchNode(oldNode, newTpl) {
+		function patchNode(targNode, newTpl) {
+			var isCurNode = targNode.el != null;
+
 			if (u.isObj(newTpl)) {
-				var newNode = {
-					tag: oldNode.tag,
-					el: oldNode.el,
-					ns: oldNode.ns,
-					props: {
-						class: "class" in newTpl ? (oldNode.class != null ? oldNode.class + " " : "") + newTpl.class : oldNode.props.class,
-						style: "style" in newTpl ? newTpl.style : oldNode.props.style,
-					}
-				};
+				var cls = "class" in newTpl ? (targNode.class != null ? targNode.class + " " : "") + newTpl.class : targNode.props.class;
+				var sty = "style" in newTpl ? newTpl.style : targNode.props.style;
 
-				patchProps(newNode, oldNode);
+				// only create faux newNode if no followup graftNode() is expected as with willRecycle()
+				// hooks...and we're simply patching the current/old node in-place
+				if (isCurNode) {
+					var newNode = {
+						tag: targNode.tag,
+						el: targNode.el,
+						ns: targNode.ns,
+						props: {
+							class: cls,
+							style: sty,
+						}
+					};
 
-				oldNode.props.class = newNode.props.class;
-				oldNode.props.style = newNode.props.style;
+					patchProps(newNode, targNode);
+				}
+
+				// if we're patching newly created node, then it's sufficient to reset the new node's props and
+				// allow any followup graftNode to handle the patching
+				targNode.props.class = cls;
+				targNode.props.style = sty;
 			}
 			else {
-				var donor = oldNode,
+				var donor = targNode,
 					parent = donor.parent,
 					newNode = buildNode(initNode(newTpl, parent, donor.idx, vm), donor);
 
@@ -263,9 +283,10 @@
 					insertNode(node, oldParentEl.childNodes[old.idx], oldParentEl);
 			}
 
-			old && vm.hooks && u.tick(function() {
-				fireHook(vm, "didRedraw", vm);
-			}, cfg.useRaf ? 2 : 0);
+			old && fireHook(vm, "didRedraw", vm);
+
+			if (isRedrawRoot !== false)
+				u.tick(drainDidHooks, 2);
 
 			return vm;
 		}
@@ -314,7 +335,11 @@
 		if (ctx && ctx.hooks) {
 			var hooks = ctx.hooks[name];
 			if (!hooks) return;
-			return u.execAll(hooks, arg1, arg2, arg3, arg4);
+
+			if (cfg.useRaf && name.substr(0,3) == "did")
+				didHooks.push([u.execAll, hooks, arg1, arg2, arg3, arg4]);
+			else
+				return u.execAll(hooks, arg1, arg2, arg3, arg4);
 		}
 	}
 
@@ -571,11 +596,8 @@
 			fireHook(node, "did" + type, node);
 		}
 
-		if (wasDry && node.vm && node.vm.hooks && !node.moved) {
-			u.tick(function() {
-				fireHook(node.vm, "didMount", node.vm);
-			}, cfg.useRaf ? 2 : 0);
-		}
+		if (wasDry && node.vm && node.vm.hooks && !node.moved)
+			fireHook(node.vm, "didMount", node.vm);
 
 		return sibAtIdx !== node.el ? sibAtIdx : sibAtIdx.nextSibling;
 	}
