@@ -6,6 +6,9 @@
 		math: "http://www.w3.org/1998/Math/MathML",
 	};
 
+	// must be in this order: tag#id.class1.class2
+	var tagRe = /^([\w\-]+)?(?:#([\w\-]+))?((?:\.[\w\-]+)+)?$/;
+
 	var seenTags = {};  // memoized parsed tags, todo: clean this?
 
 	var doc = typeof document == "undefined" ? {} : document;
@@ -731,8 +734,6 @@
 			class: null,
 		};
 
-		// must be in this order: tag#id.class1.class2
-		var tagRe = /^([\w\-]+)?(?:#([\w\-]+))?((?:\.[\w\-]+)+)?$/;
 		tagObj.tag = rawTag.replace(tagRe, function(full, tag, id, classes) {
 			var props = {};
 
