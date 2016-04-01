@@ -1132,6 +1132,46 @@ QUnit.module("Various Others");
 
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, innerHTML: 1, insertBefore: 1 });
 	});
+
+	QUnit.test('Remove/clean child of sub-view', function(assert) {
+		var data = ["a"];
+		var data2 = ["b", "c"];
+
+		function View6(vm) {
+			return function() {
+				return ["div",
+					["p", data[0]],
+					[View7, data2],
+				];
+			};
+		}
+
+		function View7(vm, data2) {
+			return function() {
+				return ["ul", data2.map(function(v) {
+					return ["li", v];
+				})];
+			};
+		}
+
+		instr.start();
+		vm = domvm.view(View6).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><p>a</p><ul><li>b</li><li>c</li></ul></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 5, textContent: 3, insertBefore: 5 });
+
+		data2.shift();
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><p>a</p><ul><li>c</li></ul></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { removeChild: 1, nodeValue: 1 });
+	});
 })();
 
 
