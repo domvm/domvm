@@ -8,9 +8,9 @@
 			var circles = [];
 			for (var i = 0 ; i < benchmark.circles; i++) {
 				circles.push(
-					["div", {"class": "box-view"}, [
+					["div", {"class": "box-view"},
 						["div", {"class": "box", style: getStyle() }, count % 100]
-					]]
+					]
 				);
 			}
 			return ["div", circles];

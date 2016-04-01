@@ -3,6 +3,8 @@
 
 	var win = typeof window == "undefined" ? {} : window;
 
+	var rAF = win.requestAnimationFrame;
+
 	var t = true;
 	var unitlessProps = {
 		animationIterationCount: t,
@@ -66,10 +68,11 @@
 			});
 			return out;
 		},
-		tick: function(fn) {
-			requestAnimationFrame(function() {
-				requestAnimationFrame(fn);
-			});
+		tick: function(fn, immediate) {
+			if (!immediate && rAF)
+				rAF(function() { rAF(fn); });
+			else
+				fn();
 		},
 		insertArr: function(targ, arr, pos, rem) {
 			targ.splice.apply(targ, [pos, rem].concat(arr));
@@ -127,7 +130,7 @@
 		// https://github.com/darsain/raft
 		// rAF throttler, aggregates multiple repeated redraw calls within single animframe
 		raft: function(fn) {
-			if (!win.requestAnimationFrame)
+			if (!rAF)
 				return fn;
 
 			var id, ctx, args;
@@ -140,7 +143,7 @@
 			return function() {
 				ctx = this;
 				args = arguments;
-				if (!id) id = win.requestAnimationFrame(call);
+				if (!id) id = rAF(call);
 			};
 		}
 	};

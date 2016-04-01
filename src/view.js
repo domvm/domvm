@@ -265,7 +265,7 @@
 
 			old && vm.hooks && u.tick(function() {
 				fireHook(vm, "didRedraw", vm);
-			});
+			}, !cfg.useRaf);
 
 			return vm;
 		}
@@ -574,7 +574,7 @@
 		if (wasDry && node.vm && node.vm.hooks && !node.moved) {
 			u.tick(function() {
 				fireHook(node.vm, "didMount", node.vm);
-			});
+			}, !cfg.useRaf);
 		}
 
 		return sibAtIdx !== node.el ? sibAtIdx : sibAtIdx.nextSibling;
