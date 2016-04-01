@@ -68,11 +68,11 @@
 			});
 			return out;
 		},
-		tick: function(fn, immediate) {
-			if (!immediate && rAF)
-				rAF(function() { rAF(fn); });
-			else
+		tick: function(fn, howMany) {
+			if (!howMany || !rAF)
 				fn();
+			else if (rAF)
+				rAF(function() { u.tick(fn, howMany - 1); });
 		},
 		insertArr: function(targ, arr, pos, rem) {
 			targ.splice.apply(targ, [pos, rem].concat(arr));
