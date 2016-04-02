@@ -1,0 +1,16 @@
+{
+  "name": "domvm",
+  "description": "DOM ViewModel - A thin, fast, dependency-free vdom view layer",
+  "license" : "MIT",
+  "homepage": "https://github.com/leeoniya/domvm",
+  "author": "Leon Sorokin <leeoniya@gmail.com>",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leeoniya/domvm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leeoniya/domvm/issues"
+  }
+}
