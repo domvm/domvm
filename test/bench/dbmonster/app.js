@@ -60,7 +60,6 @@ var instr = new DOMInstr(true);
 
 var dbmon = new DBMon();
 
-
 console.time("initial render");
 	console.time("vtree build");
 		var vw = domvm.view(DBMonView, dbmon);
@@ -72,15 +71,14 @@ console.time("initial render");
 	console.timeEnd("mount");
 console.timeEnd("initial render");
 
-
 /*
 //	isomorphic test
-var vw0 = domvm(DBMonView, dbmon);
-var html = vw0.html();
+var vw0 = domvm.view(DBMonView, dbmon);
+var html = domvm.html(vw0.node);
 var appEl = document.getElementById("app");
 appEl.innerHTML = html;
 
-var vw = domvm(DBMonView, dbmon);
+var vw = domvm.view(DBMonView, dbmon);
 vw.attach(appEl.firstChild);
 */
 
