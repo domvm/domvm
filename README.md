@@ -67,7 +67,7 @@ https://leeoniya.github.io/domvm/demos/
 <script src="domvm.min.js"></script>
 ```
 
-**Node (works, but not yet on npm)**
+**Node**
 
 ```js
 var domvm = require("domvm");
