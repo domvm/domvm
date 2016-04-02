@@ -175,6 +175,10 @@
 		function spliceNodes() {}
 		*/
 
+		function coerceEmpty(val) {
+			return val == null ? "" : val;
+		}
+
 		// need disclaimer that targ and new must be same type
 		// and must have matching keyes if are keyed
 		// newTpl can be object with {class: , style: }
@@ -182,7 +186,8 @@
 			var isCurNode = targNode.el != null;
 
 			if (u.isObj(newTpl)) {
-				var cls = "class" in newTpl ? (targNode.class != null ? targNode.class + " " : "") + newTpl.class : targNode.props.class;
+				// (won't work to removeAttr class/style attrs via setting to false)
+				var cls = "class" in newTpl ? ((coerceEmpty(targNode.class) + " ") + coerceEmpty(newTpl.class)).trim() : targNode.props.class;
 				var sty = "style" in newTpl ? newTpl.style : targNode.props.style;
 
 				// only create faux newNode if no followup graftNode() is expected as with willRecycle()
