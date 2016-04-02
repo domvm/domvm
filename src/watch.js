@@ -93,23 +93,31 @@
 				handlers.splice(handlers.indexOf(handler), 1);
 				return api;
 			},
-			fire: u.raft(function() {
-				u.execAll(handlers, arguments);
+			fire: u.raft(function(e) {
+				u.execAll(handlers, e);
 				return api;
 			}),
 			prop: function prop(initVal, asyncVal) {		// , model, name (if you want the handler to know ctx)
 				var val = initVal;
 
-				var fn = function(newVal, runHandlers) {
+				// TODO: DRY out with .sync setter, add deepSet?
+				var fn = function(newVal, handler, ev) {
 					if (arguments.length && newVal !== val) {
 						var oldVal = val;
 						val = newVal;
-						if (runHandlers !== false)
-							api.fire({type: "prop", prop: fn, data: {old: oldVal, new: newVal}});
+
+						ev = ev || {type: "prop", prop: fn, data: {old: oldVal, new: newVal}};
+
+						if (u.isFunc(handler))
+							handler(ev);
+						else if (handler !== false)
+							api.fire(ev);
 					}
 
 					return val;
 				};
+
+				fn._prop = true;
 
 				// TODO: also provide caching policy so redraws can re-fetch implicitly
 				if (asyncVal && asyncVal.then) {
@@ -143,31 +151,51 @@
 				return fn;
 			},
 
-			sync: function(get, set, altHandler) {
+			sync: function(get, set, handler) {
 				var getFn = get,
 					setFn = set;
 
-				if (typeof get == "string") {		// todo: deep props .style.outerWidth, or e.which		e.clientX		e.target.value
-					getFn = function(e) {
-						if (get.substr(0,2) === "e.")
-							return e[get.substr(2)];
-						return e.target[get];
+				// converted string or array shorthand getter to func
+				if (!u.isFunc(getFn)) {
+					getFn = function(e, node, vm) {
+						if (typeof get == "string") {
+							var targ, path;
+
+							if (get.substr(0,2) == "e.") {
+								targ = e;
+								path = get.substr(2);
+							}
+							else {
+								targ = e.target;
+								path = get;
+							}
+						}
+
+					//	if (u.isArr(get))
+							return u.deepGet(targ, path);
+					};
+				}
+
+				// setter must be array or func
+				if (u.isArr(setFn)) {
+					// TODO: DRY out with .prop setter
+					setFn = function(newVal, handler, ev) {
+						var oldVal = u.deepGet(set[0], set[1]);
+
+						if (newVal !== oldVal) {
+							u.deepSet(set[0], set[1], newVal);
+
+							if (u.isFunc(handler))
+								handler(ev);
+							else if (handler !== false)
+								api.fire(ev);
+						}
 					};
 				}
 
 				return function(e, node, vm) {
-					var model = this !== window ? this : null
-
-					if (model && typeof set == "string") {		// could be array ["propName", this]
-						setFn = function(newVal, altHandler) {
-							var oldVal = model[set];
-							model[set] = newVal;
-							if (handler && newVal !== oldVal && altHandler !== false)
-								handler();
-						};
-					}
-
-					setFn(getFn(e), altHandler);
+					var ev = {type: "sync", vm: vm, node: node, event: e};
+					setFn(getFn(e, node, vm), handler, ev);
 				};
 			},
 	/*

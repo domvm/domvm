@@ -105,6 +105,7 @@
 		autoPx: function(name, val) {
 			return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
 		},
+		// todo: handle fn invocaion if encountered
 		deepSet: function(targ, path, val) {
 			var segs = path.split(".");
 			var last = segs.pop();
@@ -116,6 +117,16 @@
 			});
 
 			targ[last] = val;
+		},
+		// todo: handle fn invocaion if encountered
+		deepGet: function(targ, path) {
+			var segs = path.split(".");
+
+			do {
+				targ = targ[segs.shift()];
+			} while (segs.length);
+
+			return targ;
 		},
 		keyedIdx: function(key, nodes, viewFn, start, end) {
 			for (var i = 0; i < nodes.length; i++) {
