@@ -193,14 +193,16 @@
 				// only create faux newNode if no followup graftNode() is expected as with willRecycle()
 				// hooks...and we're simply patching the current/old node in-place
 				if (isCurNode) {
+					var props = Object.create(targNode.props);
+
+					props.class = cls;
+					props.style = sty;
+
 					var newNode = {
 						tag: targNode.tag,
 						el: targNode.el,
 						ns: targNode.ns,
-						props: {
-							class: cls,
-							style: sty,
-						}
+						props: props,
 					};
 
 					patchProps(newNode, targNode);

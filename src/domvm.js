@@ -8,7 +8,7 @@
 */
 
 /**
-* @preserve https://github.com/leeoniya/domvm
+* @preserve https://github.com/leeoniya/domvm (1.x-dev)
 */
 
 (typeof global !== "undefined" ? global : this).domvm = {};
