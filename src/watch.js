@@ -16,6 +16,9 @@
 
 			opts.method = meth.toUpperCase();
 
+			if (!("credentials" in opts))
+				opts.credentials = "same-origin";
+
 			if (body !== null) {
 				if (u.isArr(body) || u.isObj(body)) {
 					opts.headers = opts.headers || new Headers();
