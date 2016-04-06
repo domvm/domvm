@@ -1628,6 +1628,26 @@ QUnit.module("Unrenderable values");
 
 		evalOut(assert, vm2.node.el, domvm.html(vm2.node), expcHtml, callCounts, { createElement: 3, insertBefore: 3, textContent: 2 });
 	});
+
+	QUnit.test('Null values in 0 idx should not be treated as tags', function(assert) {
+		tpl = ["table.display-panel",
+			["tbody", [
+				null,
+				["tr", null, [
+					null,
+					["td.A20", "X"],
+				]],
+			]]
+		];
+
+		var expcHtml = '<table class="display-panel"><tbody><tr><td class="A20">X</td></tr></tbody></table>';
+
+		instr.start();
+		var vm2 = domvm.view(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm2.node.el, domvm.html(vm2.node), expcHtml, callCounts, { createElement: 4, className: 2, insertBefore: 4, textContent: 1 });
+	});
 })();
 
 QUnit.module("Non-persistent model replacement");
