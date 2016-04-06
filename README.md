@@ -123,8 +123,8 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 ]
 
 ["h1", [													// explicit child array can be provided
-	["em", "Important!"],									// (but first child cannot be a getter
-	["sub", "tiny"],										// or text/number...cause ambiguous)
+	["em", "Important!"],									// (but first child cannot be a function
+	["sub", "tiny"],										// or string...cause ambiguous)
 	[														// any sub-arrays will get flattened
 		["strong", "stuff"],								// but are subject to same conditions
 		["em", "more stuff"],
