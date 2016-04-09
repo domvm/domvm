@@ -6,8 +6,6 @@
 		math: "http://www.w3.org/1998/Math/MathML",
 	};
 
-	var seenTags = {};  // memoized parsed tags, todo: clean this?
-
 	var doc = typeof document == "undefined" ? {} : document;
 
 	var DONOR_DOM	= 1;
@@ -732,60 +730,32 @@
 	//	return [o, n];
 	}
 
-	function parseTag(rawTag) {
-		if (rawTag in seenTags)
-			return seenTags[rawTag];
-
-		var tagObj = {
-			tag: null,
-			id: null,
-			class: null,
-		};
+	function procTag(node) {
+		if (!/[.#]/.test(node.tag))
+			return;
 
 		// must be in this order: tag#id.class1.class2
 		var tagRe = /^([\w\-]+)?(?:#([\w\-]+))?((?:\.[\w\-]+)+)?$/;
-		tagObj.tag = rawTag.replace(tagRe, function(full, tag, id, classes) {
-			var props = {};
 
-			if (id)
-				tagObj.id = id;
+		node.tag = node.tag.replace(tagRe, function(full, tag, id, classes) {
 			if (classes)
-				tagObj.class = classes.replace(/\./g, " ").trim();
+				classes = classes.replace(/\./g, " ").trim();
+
+			if (id || classes) {
+				var p = node.props || {};
+
+				if (id && p.id == null)
+					p.id = id;
+				if (classes) {
+					node.class = classes;
+					p.class = classes + (p.class != null ? (" " + p.class) : "");
+				}
+
+				node.props = p;
+			}
 
 			return tag || "div";
 		});
-
-		seenTags[rawTag] = tagObj;
-
-		return tagObj;
-	}
-
-	function procTag(rawTag, node) {
-		// fast precheck for simple
-		if (!/[.#]/.test(rawTag)) {
-			node.tag = rawTag;
-			return;
-		}
-
-		var tagObj = parseTag(rawTag);
-
-		node.tag = tagObj.tag;
-
-		var hasId    = tagObj.id    != null,
-			hasClass = tagObj.class != null;
-
-		if (hasId || hasClass) {
-			var p = node.props || {};
-
-			if (p.id == null)
-				p.id = tagObj.id;
-			if (hasClass) {
-				node.class = tagObj.class;
-				p.class = tagObj.class + (p.class != null ? (" " + p.class) : "");
-			}
-
-			node.props = p;
-		}
 	}
 
 	function procNode(raw, ownerVm) {
@@ -834,7 +804,9 @@
 					node.body = raw.slice(bodyIdx);
 			}
 
-			procTag(raw[0], node);
+			node.tag = raw[0];
+
+			procTag(node);
 
 			if (node.props)
 				procProps(node.props, node, ownerVm);
