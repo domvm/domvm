@@ -1,10 +1,9 @@
-// no cheating
 domvm.view.config({useRaf: false});
 
 function DBMonView(vm, dbmon) {
 	dbmon.vm = vm;
 
-	return function(data) {
+	return function() {
 		return ["div",
 			["table", { class: "table table-striped latest-data" },
 				["tbody",
@@ -19,7 +18,7 @@ function DBMonView(vm, dbmon) {
 									["span", query.formatElapsed],
 									["div", { class: "popover left" },
 										["div", { class: "popover-content" }, query.query],
-										["div", { class: "arrow" }, ""]
+										["div", { class: "arrow" }]
 									]
 								];
 							})
