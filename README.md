@@ -107,14 +107,17 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 ```js
 ["p", "Hello"]												// plain tags
 ["p#foo.bar.baz", "Hello"]									// id and class shorthands
-["input", {type: "checkbox", checked: true}]				// boolean attrs
-["input", {type: "checkbox", ".checked": true}]				// set property instead of attr
-["button", {onclick: function(e) {...}}, "Hello"]			// event handlers
+
+["input",  {type: "checkbox",    checked: true}]			// boolean attrs
+["input",  {type: "checkbox", ".checked": true}]			// set property instead of attr
+
+["button", {onclick: function(e) {...}},  "Hello"]			// event handlers
 ["button", {onclick: [myFn, arg1, arg2]}, "Hello"]			// event handlers (parameterized)
-["ul", {onclick: {".item": function(e) {...}}}, ...]		// event handlers (delegated)
-["p", {style: "font-size: 10pt;"}, "Hello"]					// style can be a string
-["p", {style: {fontSize: "10pt"}}, "Hello"]					// or an object (camelCase only)
-["div", {style: {width: 35}}, "Hello"]						// "px" will be added when needed
+["ul",     {onclick: {".item": function(e) {...}}}, ...]	// event handlers (delegated)
+
+["p",      {style: "font-size: 10pt;"}, "Hello"]			// style can be a string
+["p",      {style: {fontSize: "10pt"}}, "Hello"]			// or an object (camelCase only)
+["div",    {style: {width: 35}},        "Hello"]			// "px" will be added when needed
 
 ["h1", {class: "header"},									// (props object is optional)
 	["em", "Important!"],									// child nodes follow tag
