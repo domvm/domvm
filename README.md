@@ -34,7 +34,7 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 https://leeoniya.github.io/domvm/demos/
 
 ---
-#### Documentation (WIP, help wanted!)
+#### Documentation (WIP, help wanted! https://github.com/leeoniya/domvm/issues/36)
 
 0. [Installation](#installation)
 0. [Modules, Building](#modules-building)
