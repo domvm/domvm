@@ -89,7 +89,7 @@ console.time("initial render");
 console.timeEnd("initial render");
 
 /*
-//	isomorphic test
+// isomorphic test
 var data = genData();
 
 var vw0 = domvm.view(DBsView, data, false);
