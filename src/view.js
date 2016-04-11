@@ -752,9 +752,8 @@
 	//	return [o, n];
 	}
 
-	function procTag(node) {
-		var raw = node.tag,
-			tag = tagCache[raw];
+	function procTag(raw, node) {
+		var tag = tagCache[raw];
 
 		if (!tag) {
 			var dflt = ["",""];
@@ -814,10 +813,12 @@
 		if (u.isFunc(raw))
 			raw = raw();
 
-		if (u.isArr(raw) && raw.length) {
+		var len = raw.length;
+
+		if (u.isArr(raw) && len) {
 			node.type = u.TYPE_ELEM;
 
-			if (raw.length > 1) {
+			if (len > 1) {
 				var bodyIdx = 1;
 
 				if (u.isObj(raw[1])) {
@@ -825,15 +826,13 @@
 					bodyIdx = 2;
 				}
 
-				if (raw.length == bodyIdx + 1)
+				if (len == bodyIdx + 1)
 					node.body = u.isVal(raw[bodyIdx]) ? raw[bodyIdx] : u.isFunc(raw[bodyIdx]) ? raw[bodyIdx]() : raw.slice(bodyIdx);
 				else
 					node.body = raw.slice(bodyIdx);
 			}
 
-			node.tag = raw[0];
-
-			procTag(node);
+			procTag(raw[0], node);
 
 			if (node.props)
 				procProps(node.props, node, ownerVm);
