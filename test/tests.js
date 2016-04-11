@@ -902,6 +902,17 @@ QUnit.module("Elems & id/class");
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, className: 1 });
 	});
 
+	QUnit.test('["strong.class1.class2#foo"]', function(assert) {
+		var tpl = ["strong.class1.class2#foo"];
+
+		instr.start();
+		var vm = domvm.view(anonView(tpl)).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<strong id="foo" class="class1 class2"></strong>';
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, className: 1 });
+	});
+
 	QUnit.test('["#foo.class1.class2"]', function(assert) {
 		var tpl = ["#foo.class1.class2"];
 
@@ -913,15 +924,15 @@ QUnit.module("Elems & id/class");
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, className: 1 });
 	});
 
-	QUnit.test('[".class1.class2"]', function(assert) {
-		var tpl = ["div.class1.class2"];
+	QUnit.test('[".class1.class2#foo"]', function(assert) {
+		var tpl = [".class1.class2#foo"];
 
 		instr.start();
 		var vm = domvm.view(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
-		var expcHtml = '<div class="class1 class2"></div>';
-		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, className: 1 });
+		var expcHtml = '<div id="foo" class="class1 class2"></div>';
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, className: 1 });
 	});
 
 	// classes should be additive, id should override

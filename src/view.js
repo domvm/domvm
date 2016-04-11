@@ -11,6 +11,8 @@
 	var DONOR_DOM	= 1;
 	var DONOR_NODE	= 2;
 
+	var tagCache = {};
+
 	// queue for did* hooks to ensure they all fire in same anim frame
 	var didHooks = [];
 
@@ -751,31 +753,35 @@
 	}
 
 	function procTag(node) {
-		if (!/[.#]/.test(node.tag))
-			return;
+		var raw = node.tag,
+			tag = tagCache[raw];
 
-		// must be in this order: tag#id.class1.class2
-		var tagRe = /^([\w\-]+)?(?:#([\w\-]+))?((?:\.[\w\-]+)+)?$/;
+		if (!tag) {
+			var dflt = ["",""];
 
-		node.tag = node.tag.replace(tagRe, function(full, tag, id, classes) {
-			if (classes)
-				classes = classes.replace(/\./g, " ").trim();
+			tag = {
+				tag:   (raw.match( /^[-\w]+/)    || ["div"])[0],
+				id:    (raw.match( /#([-\w]+)/)  ||    dflt)[1],
+				class: (raw.match(/\.([-\w.]+)/) ||    dflt)[1].replace(/\./g, " "),
+			};
 
-			if (id || classes) {
-				var p = node.props || {};
+			tagCache[raw] = tag;
+		}
 
-				if (id && p.id == null)
-					p.id = id;
-				if (classes) {
-					node.class = classes;
-					p.class = classes + (p.class != null ? (" " + p.class) : "");
-				}
+		node.tag = tag.tag;
 
-				node.props = p;
+		if (tag.id || tag.class) {
+			var p = node.props || {};
+
+			if (tag.id && p.id == null)
+				p.id = tag.id;
+			if (tag.class) {
+				node.class = tag.class;
+				p.class = tag.class + (p.class != null ? (" " + p.class) : "");
 			}
 
-			return tag || "div";
-		});
+			node.props = p;
+		}
 	}
 
 	function procNode(raw, ownerVm) {
