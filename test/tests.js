@@ -1664,7 +1664,9 @@ QUnit.module("Non-persistent model replacement");
 	}
 
 	function ViewB() {
-		return function(vm, model) { return ["#viewB", [ViewA, model, false]]; };
+		return function(vm, model) {
+			return ["#viewB", [ViewA, model, false]];
+		};
 	}
 
 	// sub-views = [ViewB, null, null, data]?
@@ -1674,7 +1676,7 @@ QUnit.module("Non-persistent model replacement");
 
 	var dataA = {foo: "foo", bar: "bar"},
 		dataB = {foo: "xxx", bar: "yyy"},
-		vmA = null, vmB = null;
+		vmA = null, vmB = null, vmC = null;
 
 	QUnit.test('Initial view correctly rendered', function(assert) {
 		var expcHtml = '<div id="viewA">foo<br>bar</div>';
@@ -1714,6 +1716,53 @@ QUnit.module("Non-persistent model replacement");
 		var callCounts = instr.end();
 
 		evalOut(assert, vmB.node.el, domvm.html(vmB.node), expcHtml, callCounts, { nodeValue: 2 });
+	});
+
+	QUnit.test('Declarative sub-view render() returns false -> reuse', function(assert) {
+		function ViewC() {
+			return function(vm, model) {
+				return ["strong", [ViewD, model.thing, false]];
+			};
+		}
+
+		var subRedraws = 0;
+
+		function ViewD() {
+			var oldThing = null;
+
+			return function(vm, thing) {
+				if (thing === oldThing)
+					return false;
+
+				oldThing = thing;
+
+				subRedraws++;
+
+				return ["em", ["span", thing.text]];
+			};
+		}
+
+		var model = {
+			thing: { text: "foo" }
+		};
+
+		var expcHtml = '<strong><em><span>foo</span></em></strong>';
+
+		instr.start();
+		var vmC = domvm.view(ViewC, model, false).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmC.node.el, domvm.html(vmC.node), expcHtml, callCounts, { createElement: 3, insertBefore: 3, textContent: 1 });
+
+		instr.start();
+		vmC.redraw();
+		vmC.redraw();
+		vmC.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmC.node.el, domvm.html(vmC.node), expcHtml, callCounts, { });
+
+		assert.equal(subRedraws, 1, "Subview redraws");
 	});
 
 	QUnit.test('Ad-hoc model wrapper (keyed by model)', function(assert) {

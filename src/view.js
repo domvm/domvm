@@ -157,10 +157,14 @@
 		}
 
 		// transplants node into tree, optionally updating model
+		// TODO: should this set node.moved = true?
 		function moveTo(parentNodeNew, idxInParentNew, newModel) {
 			parentNode = parentNodeNew;
 			updIdx(idxInParentNew);
 			vm.update(newModel, false);
+
+			if (vm.node != null)
+				parentNode.body[idxInParent] = vm.node;
 
 			return redraw(0, false);
 		}
@@ -232,10 +236,22 @@
 
 			old && fireHook(vm, "willRedraw", vm);
 
-			vm.refs = {};
+			var oldRefs = vm.refs;
+			vm.refs = {};	// null?
+
 		//	vm.keyMap = {};
 
 			var def = vm.render.call(vm.api, vm, model, key);
+
+			// return false to reuse (indicates no changes)
+			// todo: fire hooks?
+			if (def === false) {
+				vm.node.moved = true;
+				vm.node.wasSame = true;
+				vm.refs = oldRefs;
+				return vm;
+			}
+
 			var node = initNode(def, parentNode, idxInParent, vm);
 
 			node.vm = vm;
@@ -360,21 +376,27 @@
 			node.removed = true;
 		}
 
-		if (u.isArr(node.body)) {
-			node.body.forEach(function(n, i) {
-				cleanNode(n, prom || newProm);
-			});
-		}
-
-		if (!prom) {
-			if (newProm) {
-				newProm.then(function() {
-					removeNode(node, removeSelf);
+		if (node.wasSame)
+			node.wasSame = false;
+		else {
+			if (u.isArr(node.body)) {
+				node.body.forEach(function(n, i) {
+					cleanNode(n, prom || newProm);
 				});
 			}
-			else
-				removeNode(node, removeSelf);
+
+			if (!prom) {
+				if (newProm) {
+					newProm.then(function() {
+						removeNode(node, removeSelf);
+					});
+				}
+				else
+					removeNode(node, removeSelf);
+			}
 		}
+
+		node.moved = false;
 	}
 
 	function removeNode(node, removeSelf) {
@@ -396,11 +418,9 @@
 
 		if (u.isArr(node.body)) {
 			node.body.forEach(function(n, i) {
-				removeNode(n, true);
+				removeNode(n, !n.moved);
 			});
 		}
-
-		node.vm = node.body = null;
 	}
 
 	// builds out node, excluding views
@@ -767,6 +787,7 @@
 			idx: null,
 			parent: null,
 			moved: false,
+			wasSame: false,
 			removed: false,
 			hooks: null,	// willInsert,didInsert,willRecycle,didRecycle,willReinsert,didReinsert,willRemove,didRemove
 			tag: null,

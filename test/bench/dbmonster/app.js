@@ -8,24 +8,37 @@ function DBMonView(vm, dbmon) {
 			["table", { class: "table table-striped latest-data" },
 				["tbody",
 					dbmon.data.map(function(db) {
-						return ["tr",
-							["td", { class: "dbname" }, db.dbname],
-							["td", { class: "query-count" },
-								["span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries]
-							],
-							db.lastSample.topFiveQueries.map(function(query) {
-								return ["td", { class: "Query " + query.elapsedClassName },
-									["span", query.formatElapsed],
-									["div", { class: "popover left" },
-										["div", { class: "popover-content" }, query.query],
-										["div", { class: "arrow" }]
-									]
-								];
-							})
-						];
+						return [DBView, db, false];
 					})
 				]
 			]
+		];
+	};
+}
+
+function DBView() {
+	var oldDb = null;
+
+	return function(vm, db) {
+		if (db === oldDb)
+			return false;
+
+		oldDb = db;
+
+		return ["tr",
+			["td", { class: "dbname" }, db.dbname],
+			["td", { class: "query-count" },
+				["span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries]
+			],
+			db.lastSample.topFiveQueries.map(function(query) {
+				return ["td", { class: "Query " + query.elapsedClassName },
+					["span", query.formatElapsed],
+					["div", { class: "popover left" },
+						["div", { class: "popover-content" }, query.query],
+						["div", { class: "arrow" }]
+					]
+				];
+			})
 		];
 	};
 }
