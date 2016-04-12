@@ -106,7 +106,7 @@
 			return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
 		},
 		// todo: handle fn invocaion if encountered
-		deepSet: function(targ, path, val) {
+		deepSet: function(targ, path, val, arg2, arg3, arg4) {
 			var segs = path.split(".");
 			var last = segs.pop();
 
@@ -116,7 +116,10 @@
 				targ = targ[s];
 			});
 
-			targ[last] = val;
+			if (u.isFunc(targ[last]))		// fn invocation at end only (deep w.prop())
+				targ[last](val, arg2, arg3, arg4);
+			else
+				targ[last] = val;
 		},
 		// todo: handle fn invocaion if encountered
 		deepGet: function(targ, path) {

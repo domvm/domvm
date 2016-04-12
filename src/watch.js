@@ -183,10 +183,16 @@
 				if (u.isArr(setFn)) {
 					// TODO: DRY out with .prop setter
 					setFn = function(newVal, handler, ev) {
-						var oldVal = u.deepGet(set[0], set[1]);
+						var targ = set[0],
+							path = set[1];
+
+						if (u.isFunc(path))						// path getter within target
+							path = path(ev.event, ev.node, ev.vm);
+
+						var oldVal = u.deepGet(targ, path);
 
 						if (newVal !== oldVal) {
-							u.deepSet(set[0], set[1], newVal);
+							u.deepSet(targ, path, newVal, handler, ev);
 
 							if (u.isFunc(handler))
 								handler(ev);
@@ -195,6 +201,7 @@
 						}
 					};
 				}
+				// TODO?: else chain an api firing to it (if not setFn._prop and is altHandler)
 
 				return function(e, node, vm) {
 					var ev = {type: "sync", vm: vm, node: node, event: e};
