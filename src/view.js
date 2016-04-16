@@ -478,6 +478,8 @@
 							node2 = def2.node;
 							key = def2.view[1];
 						}
+						else if (u.isElem(def2))
+							node2 = initNode(def2, node, i, ownerVm);
 						else {
 							node.body[i--] = ""+def2;
 							continue;
@@ -821,7 +823,7 @@
 			if (len > 1) {
 				var bodyIdx = 1;
 
-				if (u.isObj(raw[1])) {
+				if (u.isObj(raw[1]) && !u.isElem(raw[1])) {
 					node.props = raw[1];
 					bodyIdx = 2;
 				}
@@ -847,15 +849,12 @@
 			node.type = u.TYPE_TEXT;
 			node.body = raw;
 		}
-		/*
 		// raw elements
-		else if (u.isObj(raw) && raw.nodeType) {
+		else if (u.isElem(raw)) {
 			node.type = u.TYPE_ELEM;
 			node.el = raw;
-			node.tag = raw.nodeName;
-		//  node.props?
+			node.tag = raw.nodeName.toLowerCase();
 		}
-		*/
 
 		return node;
 	}
@@ -954,14 +953,11 @@
 			node.raw = true;
 		if (props._data != null)
 			node.data = props._data;
-		if (props._guard)
-			node.guard = true;
 
 		props._ref =
 		props._key =
 		props._raw =
-		props._data =
-		props._guard = null;
+		props._data = null;
 	}
 
 	function patchProps(n, o) {

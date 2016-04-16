@@ -53,7 +53,6 @@ https://leeoniya.github.io/domvm/demos/
 0. Auto-redraw: mutation observers wrappers, ajax wrappers, async/Promise nodes
 0. Routing, reverse-routing (href generation)
 0. Disjoint view redraw: imperative vms & dep-inject, unjailed keys, contained event bus
-0. guard, absorb(), etc.
 0. Optimizations: event delegation, node patch()
 0. Hacking internals: vtree traversal, vm transplanting, etc.
 0. Useful patterns and idiomatic solutions to common problems
@@ -122,6 +121,7 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 ["h1", {class: "header"},									// (props object is optional)
 	["em", "Important!"],									// child nodes follow tag
 	"foo",													// and can be text nodes
+	myElement,												// or existing DOM nodes
 	function() { return ["div", "clown"]; },				// or getters returning a child
 ]
 
@@ -161,7 +161,6 @@ domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 ["p", {_key: "myParag"}, "Some text"]						// keyed nodes
 ["p", {_ref: "myParag"}, "Some text"]						// named refs (via vm.refs.myParag)
 ["p", {_data: {foo: 123}}, "Some text"]						// per-node data (faster than attr)
-["div", {_guard: true}]										// guarded/unmanaged node (TODO)
 ```
 
 ---
