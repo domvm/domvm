@@ -105,6 +105,17 @@
 		autoPx: function(name, val) {
 			return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
 		},
+		cmpArr: function(a, b) {
+			var i = a.length;
+
+			if (i != b.length)
+				return false;
+			while (i--) {
+				if (a[i] !== b[i])
+					return false;
+			}
+			return true;
+		},
 		// todo: handle fn invocaion if encountered
 		deepSet: function(targ, path, val, arg2, arg3, arg4) {
 			var segs = path.split(".");

@@ -878,6 +878,7 @@
 			else if (u.isObj(fns)) {
 				for (var filt in fns) {
 					var cb = fns[filt];
+					if (cb == null || filt[0] == "_") continue;
 					if (e.target.matches(filt)) {
 						// deleg + parameterized
 						if (u.isArr(cb)) {
@@ -907,8 +908,11 @@
 
 	function procProps(props, node, ownerVm) {
 		for (var i in props) {
-			if (u.isEvProp(i))
-				props[i] = wrapHandler(props[i], ownerVm.opts.evctx || ownerVm.model || null, node, ownerVm);
+			// wrapHandler() runs later in patch() and needs the vm + node
+			if (u.isEvProp(i)) {
+				props[i]._vm = ownerVm;
+				props[i]._node = node;
+			}
 			// getters
 			else if (u.isFunc(props[i])) {
 				// for router
@@ -988,12 +992,20 @@
 	// op = old props, np = new props, set = setter, del = unsetter
 	function patch(targ, tag, op, np, set, del, ns, init) {
 		for (var name in np) {
-			if (np[name] === null) continue;
+			var nval = np[name];
 
-			// add new or mutate existing not matching old
-			// also handles diffing of wrapped event handlers via exposed original (_fn)
-			if (name[0] === "." ? targ[name.substr(1)] !== np[name] : np[name] !== op[name])
-				set(targ, name, np[name], ns, init);
+			if (nval === null) continue;
+
+			// get old value from old node (attrs) or from DOM (props)
+			var oval = name[0] === "." ? targ[name.substr(1)] : op[name];
+
+			if (nval !== oval) {
+				// shallow-diffs array props, eg. onclick: [fn, arg1, arg2]
+				if (u.isArr(nval) && u.isArr(oval) && u.cmpArr(nval, oval))
+					continue;
+				// add new or mutate existing not matching old
+				set(targ, name, nval, ns, init);
+			}
 		}
 		// remove any removed
 		for (var name in op) {
@@ -1023,8 +1035,13 @@
 		}
 		else if (name === "class")
 			targ.className = val;
-		else if (name === "id" || u.isEvProp(name))
-			targ[name] = val;	  // else test delegation for val === function vs object
+		else if (name === "id")
+			targ[name] = val;
+		else if (u.isEvProp(name)) {	// else test delegation for val === function vs object
+			var vm   = val._vm,
+				node = val._node;
+			targ[name] = wrapHandler(val, vm.opts.evctx || vm.model || null, node, vm);
+		}
 		else if (val === false)
 			delAttr(targ, name, ns, init);
 		else
