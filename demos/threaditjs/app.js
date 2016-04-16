@@ -204,6 +204,7 @@ function CommentReplyView(vm, deps, comment) {
 
 		deps.app.newComment(comment, tmpComment, function() {
 			submitting = false;
+			tmpComment = "";
 			vm.redraw(1);	// redraw parent
 		});
 
