@@ -34,7 +34,7 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 https://leeoniya.github.io/domvm/demos/
 
 ---
-#### Documentation (WIP, help wanted! https://github.com/leeoniya/domvm/issues/36)
+#### Documentation
 
 0. [Installation](#installation)
 0. [Modules, Building](#modules-building)
@@ -47,15 +47,7 @@ https://leeoniya.github.io/domvm/demos/
 0. [DOM Refs, Raw Element Access](#dom-refs-raw-element-access)
 0. [Isomorphism, html(), attach()](#isomorphism-html-attach)
 0. [Route Module](#route-module)
-0. Keying nodes to prevent recycling
-0. Addl dependency injection and dynamic updates (impCtx)
-0. Exposing private view state and APIs (expCtx)
-0. Auto-redraw: mutation observers wrappers, ajax wrappers, async/Promise nodes
-0. Routing, reverse-routing (href generation)
-0. Disjoint view redraw: imperative vms & dep-inject, unjailed keys, contained event bus
-0. Optimizations: event delegation, node patch()
-0. Hacking internals: vtree traversal, vm transplanting, etc.
-0. Useful patterns and idiomatic solutions to common problems
+0. ...WIP, help wanted! https://github.com/leeoniya/domvm/issues/36
 
 ---
 #### Installation
