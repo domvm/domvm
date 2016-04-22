@@ -95,6 +95,14 @@ java -jar compiler.jar
 
 domvm templates are a superset of [JSONML](http://www.jsonml.org/)
 
+If you prefer *hyperscript*, just use this wrapper:
+
+```js
+function h() {
+	return Array.prototype.slice.call(arguments);
+}
+```
+
 ```js
 ["p", "Hello"]												// plain tags
 ["p#foo.bar.baz", "Hello"]									// id and class shorthands
