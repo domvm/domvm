@@ -285,7 +285,7 @@ function PeopleView(vm, people) {
 	people.vm = vm;
 
 	return function() {
-		return ["ul.people-list", people.map(function(person) {
+		return ["ul.people-list", people.list.map(function(person) {
 			// declarative sub-view composition (model exposes its own binding)
 			return person.view;
 		})];
@@ -325,7 +325,7 @@ function People(list) {
 
 	function PeopleView(vm, people) {
 		return function() {
-			return ["ul.people-list", people.map(function(person) {
+			return ["ul.people-list", people.list.map(function(person) {
 				// imperative sub-view composition (model exposes its own view)
 				return person.vm;
 			})];
