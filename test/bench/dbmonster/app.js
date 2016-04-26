@@ -1,5 +1,33 @@
 domvm.view.config({useRaf: false});
 
+//----------------------------------------------------
+// viewport occlusion culling
+var rectCache = new WeakMap();
+window.onscroll = window.onresize = domvm.utils.raft(function() {
+	rectCache = new WeakMap();
+});
+
+// adapted from http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport/26039199#26039199
+function isElementPartiallyInViewport(el) {
+	var rect = rectCache.get(el);
+
+	if (!rect) {
+		rect = el.getBoundingClientRect();
+		rectCache.set(el, rect);
+	}
+
+    // DOMRect { x: 8, y: 8, width: 100, height: 100, top: 8, right: 108, bottom: 108, left: 8 }
+    var windowHeight = (window.innerHeight || document.documentElement.clientHeight);
+    var windowWidth = (window.innerWidth || document.documentElement.clientWidth);
+
+    // http://stackoverflow.com/questions/325933/determine-whether-two-date-ranges-overlap
+    var vertInView = (rect.top <= windowHeight) && ((rect.top + rect.height) >= 0);
+    var horInView = (rect.left <= windowWidth) && ((rect.left + rect.width) >= 0);
+
+    return (vertInView && horInView);
+}
+//----------------------------------------------------
+
 function DBsView() {
 	return function(vm, dbs) {
 		return ["div",
@@ -17,12 +45,19 @@ function DBsView() {
 
 // diffing/caching sub-view
 function DBView() {
-	var oldDb = null;
+	// immutable db memoization
+	var oldver = null;
 
 	return function(vm, db) {
-		if (db === oldDb)
+		var newver = db.lastMutationId;
+
+		// TODO: ensure that new model is re-injected, should only avoid hydrate/patch step
+		if (oldver == newver || vm.node && !isElementPartiallyInViewport(vm.node.el))
 			return false;
-		return rowTpl(oldDb = db);
+
+		oldver = newver;
+
+		return rowTpl(db);
 	};
 }
 
