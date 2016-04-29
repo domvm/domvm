@@ -908,10 +908,7 @@
 	function procProps(props, node, ownerVm) {
 		for (var i in props) {
 			// wrapHandler() runs later in patch() and needs the vm + node
-			if (u.isEvProp(i)) {
-				props[i]._vm = ownerVm;
-				props[i]._node = node;
-			}
+			if (u.isEvProp(i)) {}
 			// getters
 			else if (u.isFunc(props[i])) {
 				// for router
@@ -973,12 +970,12 @@
 			var ns = np.style;
 
 			if (u.isObj(os) || u.isObj(ns)) {
-				patch(n.el, n.tag, os || {}, ns || {}, setCss, delCss, n.ns, init);
+				patch(n.el, n.tag, os || {}, ns || {}, setCss, delCss, n.ns, init, n);
 				op.style = np.style = null;
 			}
 
 			// alter attributes
-			patch(n.el, n.tag, op, np, setAttr, delAttr, n.ns, init);
+			patch(n.el, n.tag, op, np, setAttr, delAttr, n.ns, init, n);
 
 			if (ns)
 				np.style = ns;
@@ -986,7 +983,7 @@
 	}
 
 	// op = old props, np = new props, set = setter, del = unsetter
-	function patch(targ, tag, op, np, set, del, ns, init) {
+	function patch(targ, tag, op, np, set, del, ns, init, node) {
 		for (var name in np) {
 			var nval = np[name];
 
@@ -1000,7 +997,7 @@
 				if (u.isArr(nval) && u.isArr(oval) && u.cmpArr(nval, oval))
 					continue;
 				// add new or mutate existing not matching old
-				set(targ, name, nval, ns, init);
+				set(targ, name, nval, ns, init, node);
 			}
 		}
 		// remove any removed
@@ -1021,7 +1018,7 @@
 	function setCss(targ, name, val) {targ.style[name] = u.autoPx(name, val);}
 	function delCss(targ, name) {targ.style[name] = "";}
 
-	function setAttr(targ, name, val, ns, init) {
+	function setAttr(targ, name, val, ns, init, node) {
 		if (name[0] === ".") {
 			var n = name.substr(1);
 			if (ns === "svg")
@@ -1034,9 +1031,10 @@
 		else if (name === "id")
 			targ[name] = val;
 		else if (u.isEvProp(name)) {	// else test delegation for val === function vs object
-			var vm   = val._vm,
-				node = val._node;
-			targ[name] = wrapHandler(val, vm.opts.evctx || vm.model || null, node, vm);
+			var par = node;
+			while (!par.vm)
+				par = par.parent;
+			targ[name] = wrapHandler(val, par.vm.opts.evctx || par.vm.model || null, node, par.vm);
 		}
 		else if (val === false)
 			delAttr(targ, name, ns, init);
