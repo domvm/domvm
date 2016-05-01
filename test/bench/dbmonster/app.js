@@ -1,4 +1,4 @@
-domvm.view.config({useRaf: false});
+// domvm.view.config({useRaf: false});
 
 //----------------------------------------------------
 // viewport occlusion culling
@@ -52,8 +52,10 @@ function DBView() {
 		var newver = db.lastMutationId;
 
 		// TODO: ensure that new model is re-injected, should only avoid hydrate/patch step
-		if (oldver == newver || vm.node && !isElementPartiallyInViewport(vm.node.el))
+		if (oldver == newver)
 			return false;
+//		if (vm.node && !isElementPartiallyInViewport(vm.node.el))
+//			return false;
 
 		oldver = newver;
 
@@ -85,19 +87,23 @@ function genData() {
 	return ENV.generateData().toArray();
 }
 
-var to;
+var rAF;
 
 function stop() {
-	clearTimeout(to);
+	cancelAnimationFrame(rAF);
 }
 
 function update(loop) {
-	dbmon.update(genData());
+	perfMonitor.startProfile('data update');
+	var data = ENV.generateData().toArray();
+	perfMonitor.endProfile('data update');
 
-	Monitoring.renderRate.ping();
+	perfMonitor.startProfile('view update');
+	dbmon.update(data);
+	perfMonitor.endProfile('view update');
 
-	if (loop)
-		to = setTimeout(function() { update(loop); }, ENV.timeout);
+	if (loop !== false)
+		rAF = requestAnimationFrame(update);
 }
 
 function step() {
@@ -107,10 +113,15 @@ function step() {
 }
 
 function loop() {
-	update(true);
+	update();
 }
 
 var instr = new DOMInstr(true);
+
+perfMonitor.startFPSMonitor();
+perfMonitor.startMemMonitor();
+perfMonitor.initProfiler('data update');
+perfMonitor.initProfiler('view update');
 
 console.time("initial render");
 	console.time("vtree build");

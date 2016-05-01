@@ -6,12 +6,24 @@
 	<link href="bootstrap.min.css" rel="stylesheet">
 	<link href="styles.css" rel="stylesheet">
 	<title>dbmon (domvm)</title>
+
+	<style>
+		#ctrls {
+			position: fixed;
+			bottom: 50%;
+			left: calc(50% - 100px);
+			border: 1px solid silver;
+			padding: 10px;
+			background: rgba(186,104,200,.5);
+			z-index: 100;
+		}
+	</style>
 </head>
 <body>
-	<div id="body">
+	<div id="ctrls">
 		<button onclick="step()">Step</button>
-		<button onclick="loop()">Run</button>
-		<button onclick="stop()">Stop</button>
+		<button onclick="update()">Run</button>
+		<button onclick="cancelAnimationFrame(rAF)">Stop</button>
 	</div>
 	<div id="app"></div>
 
@@ -21,8 +33,7 @@
 	<script src="../../../src/html.js"></script>
 
 	<script src="../../lib/dominstr.js"></script>
-	<script src="../../lib/memory-stats.js"></script>
-	<script src="../../lib/monitor.js"></script>
+	<script src="../../lib/perf-monitor.js"></script>
 
 	<script src="ENV.js"></script>
 	<script src="app.js"></script>
