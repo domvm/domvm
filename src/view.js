@@ -245,16 +245,16 @@
 
 			var def = vm.render.call(vm.api, vm, model, key);
 
-			// return false to reuse (indicates no changes)
-			// todo: fire hooks?
-			if (def === false) {
-				vm.node.moved = true;
-				vm.node.wasSame = true;
+			var node;
+
+			// return false from render or _diff to reuse (indicates no changes)
+			// todo: re-bubble ^ refs?, fire hooks?
+			if (def === false || (node = initNode(def, parentNode, idxInParent, vm, true)) && isSame(old, node)) {
+				old.moved = true;
+				old.wasSame = true;
 				vm.refs = oldRefs;
 				return vm;
 			}
-
-			var node = initNode(def, parentNode, idxInParent, vm);
 
 			node.vm = vm;
 			vm.node = node;
@@ -426,7 +426,7 @@
 	}
 
 	// builds out node, excluding views
-	function initNode(def, parentNode, idxInParent, ownerVm) {
+	function initNode(def, parentNode, idxInParent, ownerVm, noBody) {
 		var node = procNode(def, ownerVm);
 
 		// store a ref to this node for later ref collection to avoid full tree walking
@@ -437,90 +437,102 @@
 		node.idx = idxInParent;
 		node.ns = parentNode && parentNode.ns ? parentNode.ns : (node.tag === "svg" || node.tag === "math") ? node.tag : null;
 
-		if (u.isArr(node.body)) {
-			for (var i = 0, len = node.body.length; i < len; i++) {
-				var def2 = node.body[i];
-
-				var key = null, node2 = null, killIt = false, mergeIt = false;
-
-				// getters
-				if (u.isFunc(def2))
-					def2 = def2();
-
-				// kill null and undefined nodes
-				if (def2 == null)
-					killIt = true;
-				else {
-					var def2IsArr = u.isArr(def2),
-						def2IsObj = def2IsArr ? false : u.isObj(def2);		// technically, isPlainObj
-
-					if (def2IsArr) {
-						// kill empty array nodes
-						if (!def2.length)
-							killIt = true;
-						// tag node
-						else if (typeof def2[0] == "string" && def2[0] !== "") {
-							node2 = initNode(def2, node, i, ownerVm);
-							key = node2.key;
-						}
-						// decl sub-view
-						else if (u.isFunc(def2[0]))
-							key = getViewKey(def2[1], def2[2]);
-						// handle arrays of arrays, avoids need for concat() in tpls
-//						else if (u.isArr(def2[0]))
-//							mergeIt = true;
-						else
-							mergeIt = true;
-					}
-					else if (def2IsObj) {
-						if (u.isFunc(def2.redraw)) {	// pre-init vm
-							def2.moveTo(node, i);
-							node2 = def2.node;
-							key = def2.view[1];
-						}
-						else if (u.isElem(def2))
-							node2 = initNode(def2, node, i, ownerVm);
-						else {
-							node.body[i--] = ""+def2;
-							continue;
-						}
-					}
-					else {
-						if (def2 === "")
-							killIt = true;
-						// merge if adjacent text nodes
-						else if (i > 0 && node.body[i-1].type === u.TYPE_TEXT) {		//  && u.isVal(def2)
-							node.body[i-1].body += ""+def2;
-							killIt = true;
-						}
-						else
-							node2 = initNode(""+def2, node, i, ownerVm);
-					}
-				}
-
-				if (killIt || mergeIt) {
-					if (mergeIt)
-						u.insertArr(node.body, def2, i, 1);
-					else
-						node.body.splice(i,1);
-
-					len = node.body.length;
-					i--; continue;	// avoids de-opt
-				}
-
-				if (key !== null)
-					node.hasKeys = true;
-
-				node.body[i] = node2 || def2;
-			}
-		}
+		if (!noBody && !node.diff && u.isArr(node.body))
+			initBody(node, ownerVm);
 
 		return node;
+	}
+
+	function initBody(node, ownerVm) {
+		for (var i = 0, len = node.body.length; i < len; i++) {
+			var def2 = node.body[i];
+
+			var key = null, node2 = null, killIt = false, mergeIt = false;
+
+			// getters
+			if (u.isFunc(def2))
+				def2 = def2();
+
+			// kill null and undefined nodes
+			if (def2 == null)
+				killIt = true;
+			else {
+				var def2IsArr = u.isArr(def2),
+					def2IsObj = def2IsArr ? false : u.isObj(def2);		// technically, isPlainObj
+
+				if (def2IsArr) {
+					// kill empty array nodes
+					if (!def2.length)
+						killIt = true;
+					// tag node
+					else if (typeof def2[0] == "string" && def2[0] !== "") {
+						node2 = initNode(def2, node, i, ownerVm);
+						key = node2.key;
+					}
+					// decl sub-view
+					else if (u.isFunc(def2[0]))
+						key = getViewKey(def2[1], def2[2]);
+					// handle arrays of arrays, avoids need for concat() in tpls
+//					else if (u.isArr(def2[0]))
+//						mergeIt = true;
+					else
+						mergeIt = true;
+				}
+				else if (def2IsObj) {
+					if (u.isFunc(def2.redraw)) {	// pre-init vm
+						def2.moveTo(node, i);
+						node2 = def2.node;
+						key = def2.view[1];
+					}
+					else if (u.isElem(def2))
+						node2 = initNode(def2, node, i, ownerVm);
+					else {
+						node.body[i--] = ""+def2;
+						continue;
+					}
+				}
+				else {
+					if (def2 === "")
+						killIt = true;
+					// merge if adjacent text nodes
+					else if (i > 0 && node.body[i-1].type === u.TYPE_TEXT) {		//  && u.isVal(def2)
+						node.body[i-1].body += ""+def2;
+						killIt = true;
+					}
+					else
+						node2 = initNode(""+def2, node, i, ownerVm);
+				}
+			}
+
+			if (killIt || mergeIt) {
+				if (mergeIt)
+					u.insertArr(node.body, def2, i, 1);
+				else
+					node.body.splice(i,1);
+
+				len = node.body.length;
+				i--; continue;	// avoids de-opt
+			}
+
+			if (key !== null)
+				node.hasKeys = true;
+
+			node.body[i] = node2 || def2;
+		}
+
+		// flag body as processed
+		node.body._init = true;
 	}
 
 	// def is tpl returned by render()
 	// old is matched donor vnode obj
 	function buildNode(node, donor) {
+		if (isSame(donor, node)) {
+			donor.moved = true;
+			donor.wasSame = true;
+			return donor;
+		}
+
 		if (donor) {
 			fireHook(node, "willRecycle", donor, node);
 			graftNode(donor, node);
@@ -528,6 +540,13 @@
 		}
 
 		if (u.isArr(node.body)) {
+			if (!node.body._init) {
+				var par = node;
+				while (!par.vm)
+					par = par.parent;
+				initBody(node, par.vm);
+			}
+
 			// this is an optimization so a full old branch rescan is not needed to find a donor for each new node.
 			// if nodes are contiguously donated (as in mostly static branches), then we know nothing to donate above
 			// them and start search lower on every iteration
@@ -710,6 +729,14 @@
 		}
 
 		return approx;
+	}
+
+	function isSame(o, n) {
+		if (o && o.diff && n.diff && o.diff[0] === n.diff[0]) {
+			var params = o.diff.slice(1).concat(n.diff.slice(1));
+			return !n.diff[0].apply(null, params);
+		}
+		return false;
 	}
 
 	function areSimilar(o, n) {
@@ -950,11 +977,14 @@
 			node.raw = true;
 		if (props._data != null)
 			node.data = props._data;
+		if (props._diff)
+			node.diff = props._diff;
 
 		props._ref =
 		props._key =
 		props._raw =
-		props._data = null;
+		props._data =
+		props._diff = null;
 	}
 
 	function patchProps(n, o) {
