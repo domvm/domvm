@@ -1,43 +1,32 @@
-/*
-// domvm.view.config({useRaf: false});
+function DBMon() {
+	var dbDiff = function(mutOld, mutNew) {
+		return mutOld !== mutNew;
+	};
 
-//----------------------------------------------------
-// viewport occlusion culling
-var rectCache = new WeakMap();
-window.onscroll = window.onresize = domvm.utils.raft(function() {
-	rectCache = new WeakMap();
-});
+	var queryDiff = function(oldQuery, newQuery) {
+		return oldQuery !== newQuery || oldQuery.elapsed !== newQuery.elapsed;
+	};
 
-// adapted from http://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport/26039199#26039199
-function isElementPartiallyInViewport(el) {
-	var rect = rectCache.get(el);
-
-	if (!rect) {
-		rect = el.getBoundingClientRect();
-		rectCache.set(el, rect);
-	}
-
-    // DOMRect { x: 8, y: 8, width: 100, height: 100, top: 8, right: 108, bottom: 108, left: 8 }
-    var windowHeight = (window.innerHeight || document.documentElement.clientHeight);
-    var windowWidth = (window.innerWidth || document.documentElement.clientWidth);
-
-    // http://stackoverflow.com/questions/325933/determine-whether-two-date-ranges-overlap
-    var vertInView = (rect.top <= windowHeight) && ((rect.top + rect.height) >= 0);
-    var horInView = (rect.left <= windowWidth) && ((rect.left + rect.width) >= 0);
-
-    return (vertInView && horInView);
-}
-//----------------------------------------------------
-*/
-
-function DBsView() {
 	return function(vm, dbs) {
 		return ["div",
 			["table.table.table-striped.latest-data",
 				["tbody",
 					dbs.map(function(db) {
-						return [DBView, db, false];
-					//	return rowTpl(db);
+						return ["tr", { _diff: [dbDiff, db.lastMutationId] },
+							["td.dbname", db.dbname],
+							["td.query-count",
+								["span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries]
+							],
+							db.lastSample.topFiveQueries.map(function(query) {
+								return ["td.Query", { class: query.elapsedClassName, _diff: [queryDiff, query] },
+									["span", query.formatElapsed],
+									[".popover.left",
+										[".popover-content", query.query],
+										[".arrow"],
+									]
+								];
+							})
+						];
 					})
 				]
 			]
@@ -45,55 +34,7 @@ function DBsView() {
 	};
 }
 
-// diffing/caching sub-view
-function DBView() {
-	// immutable db memoization
-	var oldver = null;
-
-	return function(vm, db) {
-		var newver = db.lastMutationId;
-
-		// TODO: ensure that new model is re-injected, should only avoid hydrate/patch step
-		if (oldver == newver)
-			return false;
-//		if (vm.node && !isElementPartiallyInViewport(vm.node.el))
-//			return false;
-
-		oldver = newver;
-
-		return rowTpl(db);
-	};
-}
-
-function rowTpl(db) {
-	var last = db.lastSample;
-
-	return ["tr",
-		["td.dbname", db.dbname],
-		["td.query-count",
-			["span", { class: last.countClassName }, last.nbQueries]
-		],
-		last.topFiveQueries.map(function(query) {
-			return ["td.Query", { class: query.elapsedClassName },
-				["span", query.formatElapsed],
-				[".popover.left",
-					[".popover-content", query.query],
-					[".arrow"],
-				]
-			];
-		})
-	];
-}
-
-function genData() {
-	return ENV.generateData().toArray();
-}
-
 var rAF;
-
-function stop() {
-	cancelAnimationFrame(rAF);
-}
 
 function update(loop) {
 	perfMonitor.startProfile('data update');
@@ -109,42 +50,32 @@ function update(loop) {
 }
 
 function step() {
+	var instr = new DOMInstr(true);
 	instr.start(true);
 	update(false);
 	console.log(instr.end());
 }
-
-function loop() {
-	update();
-}
-
-var instr = new DOMInstr(true);
 
 perfMonitor.startFPSMonitor();
 perfMonitor.startMemMonitor();
 perfMonitor.initProfiler('data update');
 perfMonitor.initProfiler('view update');
 
-console.time("initial render");
-	console.time("vtree build");
-		var dbmon = domvm.view(DBsView, genData(), false);
-	console.timeEnd("vtree build");
-	console.time("mount");
-		instr.start(true);
-		dbmon.mount(document.getElementById("app"));
-		console.log(instr.end());
-	console.timeEnd("mount");
-console.timeEnd("initial render");
+var data = ENV.generateData().toArray();
+
+var dbmon = domvm.view(DBMon, data, false);
+
+dbmon.mount(document.getElementById("app"));
 
 /*
 // isomorphic test
 var data = genData();
 
-var vw0 = domvm.view(DBsView, data, false);
+var vw0 = domvm.view(DBMon, data, false);
 var html = domvm.html(vw0.node);
 var appEl = document.getElementById("app");
 appEl.innerHTML = html;
 
-var dbmon = domvm.view(DBsView, data, false);
+var dbmon = domvm.view(DBMon, data, false);
 dbmon.attach(appEl.firstChild);
 */
