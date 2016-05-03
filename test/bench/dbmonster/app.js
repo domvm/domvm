@@ -1,3 +1,4 @@
+/*
 // domvm.view.config({useRaf: false});
 
 //----------------------------------------------------
@@ -27,6 +28,7 @@ function isElementPartiallyInViewport(el) {
     return (vertInView && horInView);
 }
 //----------------------------------------------------
+*/
 
 function DBsView() {
 	return function(vm, dbs) {
