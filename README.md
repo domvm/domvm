@@ -16,7 +16,7 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 
 - Thin API, no dependencies, build = concat & min
 - Fast (2x Mithril, React, Riot; 1.3x Vue, Angular 2, Aurelia) - [dbmonster](http://leeoniya.github.io/domvm/test/bench/dbmonster/), [granular patch](http://leeoniya.github.io/domvm/test/bench/patch/)
-- Small - ~10k min core + ~5k router, isomorphism, observers (~6k everything gzipped)
+- Small - ~7k all modules gzipped: 11k view core, 2k router, 2.3k observers, 0.8k isomorphism
 - Concise js templates. No html-in-js, js-in-html or other esoteric syntax requiring tooling/compilation
 - Sub-views - declarative *or* imperative, freely composable, stateful and independently refreshable
 - Synthetic events - emit custom events with data to ancestor views
@@ -34,7 +34,7 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 https://leeoniya.github.io/domvm/demos/
 
 ---
-#### Documentation (WIP, help wanted! https://github.com/leeoniya/domvm/issues/36)
+#### Documentation
 
 0. [Installation](#installation)
 0. [Modules, Building](#modules-building)
@@ -47,15 +47,7 @@ https://leeoniya.github.io/domvm/demos/
 0. [DOM Refs, Raw Element Access](#dom-refs-raw-element-access)
 0. [Isomorphism, html(), attach()](#isomorphism-html-attach)
 0. [Route Module](#route-module)
-0. Keying nodes to prevent recycling
-0. Addl dependency injection and dynamic updates (impCtx)
-0. Exposing private view state and APIs (expCtx)
-0. Auto-redraw: mutation observers wrappers, ajax wrappers, async/Promise nodes
-0. Routing, reverse-routing (href generation)
-0. Disjoint view redraw: imperative vms & dep-inject, unjailed keys, contained event bus
-0. Optimizations: event delegation, node patch()
-0. Hacking internals: vtree traversal, vm transplanting, etc.
-0. Useful patterns and idiomatic solutions to common problems
+0. ...WIP, help wanted! https://github.com/leeoniya/domvm/issues/36
 
 ---
 #### Installation
@@ -84,7 +76,7 @@ Each module is a single js file in `/src`. The first 3 are the "core", the rest 
 0. `domvm.watch`: auto-redraw helpers (mutation observers, ajax wrappers)
 0. `domvm.route`: router & href generator for single page apps (SPAs)
 
-Building is simple: concat the needed modules and minify with tools of your choice. I use [Closure Compiler](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for both:
+Building is simple: concat the needed modules and minify with tools of your choice. [Closure Compiler](https://developers.google.com/closure/compiler/docs/gettingstarted_app) is recommended for both:
 
 ```
 java -jar compiler.jar
@@ -102,6 +94,14 @@ java -jar compiler.jar
 #### Template Reference
 
 domvm templates are a superset of [JSONML](http://www.jsonml.org/)
+
+If you prefer *hyperscript*, just use this wrapper:
+
+```js
+function h() {
+	return Array.prototype.slice.call(arguments);
+}
+```
 
 ```js
 ["p", "Hello"]												// plain tags
@@ -285,7 +285,7 @@ function PeopleView(vm, people) {
 	people.vm = vm;
 
 	return function() {
-		return ["ul.people-list", people.map(function(person) {
+		return ["ul.people-list", people.list.map(function(person) {
 			// declarative sub-view composition (model exposes its own binding)
 			return person.view;
 		})];
@@ -325,7 +325,7 @@ function People(list) {
 
 	function PeopleView(vm, people) {
 		return function() {
-			return ["ul.people-list", people.map(function(person) {
+			return ["ul.people-list", people.list.map(function(person) {
 				// imperative sub-view composition (model exposes its own view)
 				return person.vm;
 			})];

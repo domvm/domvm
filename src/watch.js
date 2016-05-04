@@ -100,7 +100,7 @@
 				u.execAll(handlers, e);
 				return api;
 			}),
-			prop: function prop(initVal, asyncVal) {		// , model, name (if you want the handler to know ctx)
+			prop: function prop(initVal, asyncVal, middleWare) {		// , model, name (if you want the handler to know ctx)
 				var val = initVal;
 
 				// TODO: DRY out with .sync setter, add deepSet?
@@ -110,6 +110,14 @@
 						val = newVal;
 
 						ev = ev || {type: "prop", prop: fn, data: {old: oldVal, new: newVal}};
+
+						if (middleWare)
+							ev.new = middleWare(ev);
+
+						if (ev.new === oldVal)
+							return;
+						else
+							val = ev.new;
 
 						if (u.isFunc(handler))
 							handler(ev);

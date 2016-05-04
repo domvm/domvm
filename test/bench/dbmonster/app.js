@@ -1,13 +1,32 @@
-domvm.view.config({useRaf: false});
+function DBMon() {
+	var dbDiff = function(mutOld, mutNew) {
+		return mutOld !== mutNew;
+	};
 
-function DBsView() {
+	var queryDiff = function(oldQuery, newQuery) {
+		return oldQuery !== newQuery || oldQuery.elapsed !== newQuery.elapsed;
+	};
+
 	return function(vm, dbs) {
 		return ["div",
 			["table.table.table-striped.latest-data",
 				["tbody",
 					dbs.map(function(db) {
-						return [DBView, db, false];
-					//	return rowTpl(db);
+						return ["tr", { _diff: [dbDiff, db.lastMutationId] },
+							["td.dbname", db.dbname],
+							["td.query-count",
+								["span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries]
+							],
+							db.lastSample.topFiveQueries.map(function(query) {
+								return ["td.Query", { class: query.elapsedClassName, _diff: [queryDiff, query] },
+									["span", query.formatElapsed],
+									[".popover.left",
+										[".popover-content", query.query],
+										[".arrow"],
+									]
+								];
+							})
+						];
 					})
 				]
 			]
@@ -15,88 +34,48 @@ function DBsView() {
 	};
 }
 
-// diffing/caching sub-view
-function DBView() {
-	var oldDb = null;
-
-	return function(vm, db) {
-		if (db === oldDb)
-			return false;
-		return rowTpl(oldDb = db);
-	};
-}
-
-function rowTpl(db) {
-	var last = db.lastSample;
-
-	return ["tr",
-		["td.dbname", db.dbname],
-		["td.query-count",
-			["span", { class: last.countClassName }, last.nbQueries]
-		],
-		last.topFiveQueries.map(function(query) {
-			return ["td.Query", { class: query.elapsedClassName },
-				["span", query.formatElapsed],
-				[".popover.left",
-					[".popover-content", query.query],
-					[".arrow"],
-				]
-			];
-		})
-	];
-}
-
-function genData() {
-	return ENV.generateData().toArray();
-}
-
-var to;
-
-function stop() {
-	clearTimeout(to);
-}
+var rAF;
 
 function update(loop) {
-	dbmon.update(genData());
+	perfMonitor.startProfile('data update');
+	var data = ENV.generateData().toArray();
+	perfMonitor.endProfile('data update');
 
-	Monitoring.renderRate.ping();
+	perfMonitor.startProfile('view update');
+	dbmon.update(data);
+	perfMonitor.endProfile('view update');
 
-	if (loop)
-		to = setTimeout(function() { update(loop); }, ENV.timeout);
+	if (loop !== false)
+		rAF = requestAnimationFrame(update);
 }
 
 function step() {
+	var instr = new DOMInstr(true);
 	instr.start(true);
 	update(false);
 	console.log(instr.end());
 }
 
-function loop() {
-	update(true);
-}
+perfMonitor.startFPSMonitor();
+perfMonitor.startMemMonitor();
+perfMonitor.initProfiler('data update');
+perfMonitor.initProfiler('view update');
 
-var instr = new DOMInstr(true);
+var data = ENV.generateData().toArray();
 
-console.time("initial render");
-	console.time("vtree build");
-		var dbmon = domvm.view(DBsView, genData(), false);
-	console.timeEnd("vtree build");
-	console.time("mount");
-		instr.start(true);
-		dbmon.mount(document.getElementById("app"));
-		console.log(instr.end());
-	console.timeEnd("mount");
-console.timeEnd("initial render");
+var dbmon = domvm.view(DBMon, data, false);
+
+dbmon.mount(document.getElementById("app"));
 
 /*
 // isomorphic test
 var data = genData();
 
-var vw0 = domvm.view(DBsView, data, false);
+var vw0 = domvm.view(DBMon, data, false);
 var html = domvm.html(vw0.node);
 var appEl = document.getElementById("app");
 appEl.innerHTML = html;
 
-var dbmon = domvm.view(DBsView, data, false);
+var dbmon = domvm.view(DBMon, data, false);
 dbmon.attach(appEl.firstChild);
 */

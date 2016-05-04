@@ -172,7 +172,7 @@ var ENV = ENV || (function() {
     };
   }
 
-  var mutationsValue = 1;
+  var mutationsValue = 0.5;
 
   function mutations(value) {
     if (value) {
