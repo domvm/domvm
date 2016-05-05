@@ -106,18 +106,15 @@
 				// TODO: DRY out with .sync setter, add deepSet?
 				var fn = function(newVal, handler, ev) {
 					if (arguments.length && newVal !== val) {
-						var oldVal = val;
-						val = newVal;
-
-						ev = ev || {type: "prop", prop: fn, data: {old: oldVal, new: newVal}};
+						ev = ev || {type: "prop", prop: fn, data: {old: val, new: newVal}};
 
 						if (middleWare)
-							ev.new = middleWare(ev);
+							newVal = middleWare(ev);
 
-						if (ev.new === oldVal)
-							return;
+						if (typeof newVal == "undefined" || newVal === val)
+							return val;
 						else
-							val = ev.new;
+							val = ev.data.new = newVal;
 
 						if (u.isFunc(handler))
 							handler(ev);
