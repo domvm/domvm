@@ -31,7 +31,6 @@
 
     var MONITOR_GRAPH_HEIGHT = 30;
     var MONITOR_GRAPH_WIDTH = 100;
-    var MAX_SAMPLES = MONITOR_GRAPH_WIDTH;
     var container = null;
     var initialized = false;
     var frameTasks = [];
@@ -52,8 +51,8 @@
      */
     function checkInit() {
         if (!container) {
-            container = document.createElement('div');
-            container.style.cssText = 'position: fixed;' + 'opacity: 0.9;' + 'right: 0;' + 'bottom: 0';
+            container = document.createElement("div");
+            container.style.cssText = "position: fixed;" + "opacity: 0.9;" + "right: 0;" + "bottom: 0";
             document.body.appendChild(container);
         }
         initialized = true;
@@ -97,7 +96,7 @@
         }
 
         babelHelpers.createClass(Data, [{
-            key: 'addSample',
+            key: "addSample",
             value: function addSample(v) {
                 if (this.samples.length === this.maxSamples) {
                     this.samples.shift();
@@ -105,7 +104,7 @@
                 this.samples.push(v);
             }
         }, {
-            key: 'calc',
+            key: "calc",
             value: function calc() {
                 var min = this.samples[0];
                 var max = this.samples[0];
@@ -138,11 +137,15 @@
             this._syncView = function () {
                 var result = _this.results[_this.results.length - 1];
                 var scale = MONITOR_GRAPH_HEIGHT / (result.max * 1.2);
-                _this.text.innerHTML = '' + ((_this.flags & 1 /* HideMin */) === 0 ? '<div>min: &nbsp;' + result.mean.toFixed(2) + _this.unitName + '</div>' : '') + ((_this.flags & 2 /* HideMax */) === 0 ? '<div>max: &nbsp;' + result.max.toFixed(2) + _this.unitName + '</div>' : '') + ((_this.flags & 4 /* HideMean */) === 0 ? '<div>mean: ' + result.mean.toFixed(2) + _this.unitName + '</div>' : '') + ((_this.flags & 8 /* HideNow */) === 0 ? '<div>now: &nbsp;' + result.now.toFixed(2) + _this.unitName + '</div>' : '');
+                var min = (_this.flags & 32 /* RoundValues */) === 0 ? result.min.toFixed(2) : "" + Math.round(result.min);
+                var max = (_this.flags & 32 /* RoundValues */) === 0 ? result.max.toFixed(2) : "" + Math.round(result.max);
+                var mean = (_this.flags & 32 /* RoundValues */) === 0 ? result.mean.toFixed(2) : "" + Math.round(result.mean);
+                var now = (_this.flags & 32 /* RoundValues */) === 0 ? result.now.toFixed(2) : "" + Math.round(result.now);
+                _this.text.innerHTML = "" + ((_this.flags & 1 /* HideMin */) === 0 ? "<div>min: &nbsp;" + min + _this.unitName + "</div>" : "") + ((_this.flags & 2 /* HideMax */) === 0 ? "<div>max: &nbsp;" + max + _this.unitName + "</div>" : "") + ((_this.flags & 4 /* HideMean */) === 0 ? "<div>mean: " + mean + _this.unitName + "</div>" : "") + ((_this.flags & 8 /* HideNow */) === 0 ? "<div>now: &nbsp;" + now + _this.unitName + "</div>" : "");
                 if ((_this.flags & 16 /* HideGraph */) === 0) {
-                    _this.ctx.fillStyle = '#010';
+                    _this.ctx.fillStyle = "#010";
                     _this.ctx.fillRect(0, 0, MONITOR_GRAPH_WIDTH, MONITOR_GRAPH_HEIGHT);
-                    _this.ctx.fillStyle = '#0f0';
+                    _this.ctx.fillStyle = "#0f0";
                     for (var i = 0; i < _this.results.length; i++) {
                         _this.ctx.fillRect(i, MONITOR_GRAPH_HEIGHT, 1, -(_this.results[i].now * scale));
                     }
@@ -153,20 +156,20 @@
             this.unitName = unitName;
             this.flags = flags;
             this.results = [];
-            this.element = document.createElement('div');
-            this.element.style.cssText = 'padding: 2px;' + 'background-color: #020;' + 'font-family: monospace;' + 'font-size: 12px;' + 'color: #0f0';
-            this.label = document.createElement('div');
-            this.label.style.cssText = 'text-align: center';
+            this.element = document.createElement("div");
+            this.element.style.cssText = "padding: 2px;" + "background-color: #020;" + "font-family: monospace;" + "font-size: 12px;" + "color: #0f0";
+            this.label = document.createElement("div");
+            this.label.style.cssText = "text-align: center";
             this.label.textContent = this.name;
-            this.text = document.createElement('div');
+            this.text = document.createElement("div");
             this.element.appendChild(this.label);
             this.element.appendChild(this.text);
             if ((flags & 16 /* HideGraph */) === 0) {
-                this.canvas = document.createElement('canvas');
-                this.canvas.style.cssText = 'display: block; padding: 0; margin: 0';
+                this.canvas = document.createElement("canvas");
+                this.canvas.style.cssText = "display: block; padding: 0; margin: 0";
                 this.canvas.width = MONITOR_GRAPH_WIDTH;
                 this.canvas.height = MONITOR_GRAPH_HEIGHT;
-                this.ctx = this.canvas.getContext('2d');
+                this.ctx = this.canvas.getContext("2d");
                 this.element.appendChild(this.canvas);
             } else {
                 this.canvas = null;
@@ -176,7 +179,7 @@
         }
 
         babelHelpers.createClass(MonitorWidget, [{
-            key: 'addResult',
+            key: "addResult",
             value: function addResult(result) {
                 if (this.results.length === MONITOR_GRAPH_WIDTH) {
                     this.results.shift();
@@ -185,7 +188,7 @@
                 this.invalidate();
             }
         }, {
-            key: 'invalidate',
+            key: "invalidate",
             value: function invalidate() {
                 if (!this._dirty) {
                     this._dirty = true;
@@ -203,7 +206,7 @@
     function startFPSMonitor() {
         checkInit();
         var data = new Data();
-        var w = new MonitorWidget('FPS', 'fps', 2 /* HideMax */ | 1 /* HideMin */ | 4 /* HideMean */);
+        var w = new MonitorWidget("FPS", "", 2 /* HideMax */ | 1 /* HideMin */ | 4 /* HideMean */ | 32 /* RoundValues */);
         container.appendChild(w.element);
         var samples = [];
         var last = 0;
@@ -242,7 +245,7 @@
                 };
 
                 var data = new Data();
-                var w = new MonitorWidget('Memory', 'MB', 1 /* HideMin */ | 4 /* HideMean */);
+                var w = new MonitorWidget("Memory", "MB", 1 /* HideMin */ | 4 /* HideMean */);
                 container.appendChild(w.element);
                 var mem = performance.memory;
 
@@ -281,7 +284,7 @@
         checkInit();
         var profiler = profilerInstances[name];
         if (profiler === void 0) {
-            profilerInstances[name] = profiler = new Profiler(name, 'ms');
+            profilerInstances[name] = profiler = new Profiler(name, "ms");
             container.appendChild(profiler.widget.element);
         }
     }
