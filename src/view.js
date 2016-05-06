@@ -104,6 +104,7 @@
 			emit: emit,
 			refs: {},
 			parent: null,
+			body: [],
 		/*
 			html: function() {
 				return collectHtml(vm.node);
@@ -240,6 +241,7 @@
 
 			var oldRefs = vm.refs;
 			vm.refs = {};	// null?
+			vm.body = [];	// null?
 
 		//	vm.keyMap = {};
 
@@ -271,8 +273,10 @@
 			var ancest = parentNode;
 			while (ancest) {
 				if (ancest.vm) {
-					if (!vm.parent)
+					if (!vm.parent) {
 						vm.parent = ancest.vm;
+						ancest.vm.body.push(vm);
+					}
 					if (unjRef !== null)
 						u.deepSet(ancest.vm.refs, unjRef, node);
 				}
