@@ -67,7 +67,7 @@ var domvm = require("domvm");
 ---
 #### Modules, Building
 
-Each module is a single js file in `/src`. The first 3 are the "core", the rest are optional and can be replaced by your own implementations. For development, just include them in order.
+Each module is a single js file in `/src`. The first 3 are the "core", the rest are optional and can be replaced by your own implementations. For development, just include each via `<script>` tags.
 
 0. `domvm`: namespace & wrapper
 0. `domvm.utils`: generic funcs required by other modules
