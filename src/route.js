@@ -3,7 +3,8 @@
 
 	var stack = [], pos = null,		// these should go into sessionStorage
 		useHist = false,
-		root = "";
+		root = "",
+		anySeg = /^[^\/]+$/;
 
 	domvm.route = function(routeFn, imp) {
 		var init = null;
@@ -182,12 +183,11 @@
 
 			var rtDef = routes[name],
 				pathDef = root + rtDef.path,
-				segDef = rtDef.vars || {},
-				any = /^[^\/]+$/;
+				segDef = rtDef.vars || {};
 
 			if (pathDef.indexOf(":") !== -1) {
 				href = path = pathDef.replace(/:([^\/]+)/g, function(m, segName) {
-					if ((segDef[segName] || any).test(segs[segName]))
+					if ((segDef[segName] || anySeg).test(segs[segName]))
 						return (segs[segName] += "");
 
 					throw new Error("Invalid value for route '"+pathDef+"' segment '"+segName+"': '"+segs[segName]+"'");
@@ -223,7 +223,8 @@
 			// todo: first replace r.path regexp special chrs via RegExp.escape?
 			r.regexPath = new RegExp("^" + root +
 				r.path.replace(/:([^\/]+)/g, function(m, name) {
-					var regExStr = ""+r.vars[name];
+					var segDef = r.vars || {};
+					var regExStr = ""+(segDef[name] || anySeg);
 					return "(" + regExStr.substring(1, regExStr.lastIndexOf("/")) + ")";
 				})
 			+ "$");
