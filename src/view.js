@@ -105,11 +105,6 @@
 			refs: {},
 			parent: null,
 			body: [],
-		/*
-			html: function() {
-				return collectHtml(vm.node);
-			},
-		*/
 			mount: function(parentEl, isRoot) {
 				var withEl = null;
 
