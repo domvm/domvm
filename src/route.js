@@ -41,8 +41,6 @@
 			},
 			// dest can be route key, href or route object from buildRoute()
 			goto: function(dest, segs, query, hash, repl) {
-				repl = repl || initial;
-
 				if (!dest.href)
 					dest = buildRoute(routes, root, dest, segs, query, hash);
 
@@ -84,40 +82,54 @@
 						//	revert nav?
 						}
 						else {
-							if (useHist)
+							if (useHist) {
+								gotoLocChg = true;
 								history[repl ? "replaceState" : "pushState"](null, "title", next.href);
+							}
 							else {
-						//		if (repl)
-						//			location.replace("#"+next.href);
-						//		else
-						//			location.hash = "#"+next.href;
+								var hash = "#"+next.href;
+
+								if (location.hash !== hash) {
+									gotoLocChg = true;
+
+									if (repl)
+										location.replace(hash);
+									else
+										location.hash = hash;
+								}
 							}
 
 
 							pos = toPos;
 						}
 					}
-
-					initial = false;
 				}
 			},
 			location: function() {
-				return initial ? routeFromLoc() : stack[pos];
+				return pos == null ? routeFromLoc() : stack[pos];
 			//	return stack[pos];
 			},
 	//		next:
 	//		prev:		// revert path
 		};
 
-		var initial = true;
-
 		var routes = routeFn(api, imp);
 
 		buildRegexPaths(routes, root);
 
+		// tmp flag that indicates that hash or location changed as result of a goto call rather than natively.
+		// prevents cyclic goto->hashchange->goto...
+		var gotoLocChg = false;
+
 		window.onhashchange = window.onpopstate = function(e) {
 			if (!useHist && e.type == "popstate")
 				return;
+
+			if (gotoLocChg) {
+				gotoLocChg = false;
+				return;
+			}
+
 			api.goto(routeFromLoc(),null,null,null,true);
 		};
 
