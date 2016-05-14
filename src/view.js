@@ -18,7 +18,7 @@
 
 	function drainDidHooks() {
 		var item;
-		while (item = didHooks.pop())
+		while (item = didHooks.shift())
 			item[0].apply(null, item.slice(1));
 	}
 
