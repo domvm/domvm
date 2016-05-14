@@ -16,10 +16,15 @@
 	// queue for did* hooks to ensure they all fire in same anim frame
 	var didHooks = [];
 
+	var pendRedraws = [];
+
 	function drainDidHooks() {
-		var item;
-		while (item = didHooks.shift())
-			item[0].apply(null, item.slice(1));
+		var item, queue, queues = [didHooks, pendRedraws];
+
+		while (queue = queues.shift()) {
+			while (item = queue.shift())
+				item[0].apply(null, item.slice(1));
+		}
 	}
 
 	var cfg = {
@@ -223,6 +228,13 @@
 		}
 
 		function redraw(level, isRedrawRoot) {
+			isRedrawRoot = isRedrawRoot !== false;
+
+			if (isRedrawRoot && didHooks.length) {
+				pendRedraws.push([redraw, level, isRedrawRoot]);
+				return vm;
+			}
+
 			if (level) {
 				var targ = vm;
 				while (level-- && targ.parent) { targ = targ.parent; }
@@ -294,7 +306,7 @@
 			if (parentNode)
 				parentNode.body[idxInParent] = node;
 
-			if (isRedrawRoot !== false) {
+			if (isRedrawRoot) {
 				old && cleanNode(old);
 
 				// hydrate on all but initial root createView/redraw (handled in mount()/attach())
