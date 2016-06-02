@@ -657,7 +657,7 @@ QUnit.module("Subview List w/keys");
 		var expcHtml = '<ul id="list2" class="test-output"><li>foo</li><li>bar</li><li>a</li><li>fff</li><li>moo</li><li>xxx</li><li>zzz</li><li>b</li><li>c</li><li>baz</li><li>cow</li></ul>';
 		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 2 });
 	});
-
+    
 /*	these tests are unfair because the changed value is also the key, meaning that the sub-view is replaced
 	but expected DOM ops expect full re-use of removed view. this is a TODO, but an unrealistic scenario
 
@@ -744,6 +744,30 @@ QUnit.module("Subview List w/keys");
 		var expcHtml = '<ul id=\"list2\" class=\"test-output\"><li>b</li><li>bar</li><li>baz</li><li>fff</li><li>foo</li><li>moo</li><li>xxx</li></ul>';
 		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { removeChild: 2 });
 	});
+
+	QUnit.test('Empty list', function(assert) {
+		var l = list.length;
+		list.splice(0, l);
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul id="list2" class="test-output"></ul>';
+		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { removeChild: l});
+    });
+
+	QUnit.test('Append to empty list', function(assert) {
+		list.push('hello');
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul id="list2" class="test-output"><li>hello</li></ul>';
+		evalOut(assert, listEl, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
+    });
+
 })();
 
 
