@@ -678,7 +678,6 @@
 		var oldKeys = oldParent.hasKeys;
 		var newKeys = newParent.hasKeys;
 		var oldBody = oldParent.body;
-		var oldBodyLength = oldBody ? oldBody.length : 0;
 		var newBody = newParent.body;
 
 		// fast exact match by key
@@ -692,8 +691,8 @@
 		// if from or to > newbody length, return null
 		// todo: from keys here
 		fromIdx = fromIdx || 0;
-		if (fromIdx > oldBodyLength - 1) return null;
-		toIdx = toIdx === 0 ? 0 : toIdx || oldBodyLength - 1;
+		if (fromIdx > oldBody.length - 1) return null;
+		toIdx = toIdx === 0 ? 0 : toIdx || oldBody.length - 1;
 
 		var approx = null;
 
