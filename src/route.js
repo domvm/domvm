@@ -125,7 +125,7 @@
 			if (!useHist && e.type == "popstate")
 				return;
 
-			if (gotoLocChg) {
+			if (!useHist && gotoLocChg) {
 				gotoLocChg = false;
 				return;
 			}
