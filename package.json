@@ -4,7 +4,7 @@
   "license" : "MIT",
   "homepage": "https://github.com/leeoniya/domvm",
   "author": "Leon Sorokin <leeoniya@gmail.com>",
-  "version": "1.x-dev",
+  "version": "1.2.2",
   "main": "index.js",
   "repository": {
     "type": "git",
