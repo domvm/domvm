@@ -79,9 +79,9 @@
 
 					if (pos !== null) {
 						if (willExit)
-							canExit = willExit(prev, next) !== false;
+							canExit = willExit(prev, next);
 
-						if (canExit) {
+						if (canExit !== false) {
 							var onexit = routes[prev.name].onexit;
 							canExit = !onexit ? true : onexit.apply(null, (prev ? [prev.segs, prev.query, prev.hash] : []).concat(next));
 						}
@@ -92,14 +92,14 @@
 
 					if (canExit !== false) {
 						if (willEnter)
-							canEnter = willEnter(next, prev) !== false;
+							canEnter = willEnter(next, prev);
 
-						if (canEnter) {
+						if (canEnter !== false) {
 							var onenter = routes[next.name].onenter;
 							canEnter = onenter.apply(null, (next ? [next.segs, next.query, next.hash] : []).concat(prev));
 						}
 
-						if (canEnter) {
+						if (canEnter !== false) {
 							if (useHist) {
 								gotoLocChg = true;
 								history[repl ? "replaceState" : "pushState"](null, "title", next.href);
