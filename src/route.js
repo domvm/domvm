@@ -3,6 +3,8 @@
 
 	var stack = [], pos = null,		// these should go into sessionStorage
 		useHist = false,
+		willEnter = null,
+		willExit = null,
 		root = "";
 
 	domvm.route = function(routeFn, imp) {
@@ -32,8 +34,13 @@
 			},
 			config: function(opts) {
 				useHist = opts.useHist;
+
 				if (useHist)
 					root = opts.root || "";
+
+				willEnter = opts.willEnter || null;
+				willExit = opts.willExit || null;
+
 				init = opts.init || null;
 			},
 			refresh: function() {
@@ -70,11 +77,13 @@
 					var canExit = true;
 
 					if (pos !== null) {
+						willExit && willExit(prev, next);
 						var onexit = routes[prev.name].onexit;
 						canExit = !onexit ? true : onexit.apply(null, (prev ? [prev.segs, prev.query, prev.hash] : []).concat(next));
 					}
 
 					if (canExit !== false) {
+						willEnter && willEnter(next, prev);
 						var onenter = routes[next.name].onenter;
 						var canEnter = onenter.apply(null, (next ? [next.segs, next.query, next.hash] : []).concat(prev));
 
