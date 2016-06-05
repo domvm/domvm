@@ -75,22 +75,31 @@
 					var next = stack[toPos];
 
 					var canExit = true;
+					var canEnter = true;
 
 					if (pos !== null) {
-						willExit && willExit(prev, next);
-						var onexit = routes[prev.name].onexit;
-						canExit = !onexit ? true : onexit.apply(null, (prev ? [prev.segs, prev.query, prev.hash] : []).concat(next));
+						if (willExit)
+							canExit = willExit(prev, next) !== false;
+
+						if (canExit) {
+							var onexit = routes[prev.name].onexit;
+							canExit = !onexit ? true : onexit.apply(null, (prev ? [prev.segs, prev.query, prev.hash] : []).concat(next));
+						}
+						else {
+						//	revert nav?
+						}
 					}
 
 					if (canExit !== false) {
-						willEnter && willEnter(next, prev);
-						var onenter = routes[next.name].onenter;
-						var canEnter = onenter.apply(null, (next ? [next.segs, next.query, next.hash] : []).concat(prev));
+						if (willEnter)
+							canEnter = willEnter(next, prev) !== false;
 
-						if (canEnter === false) {
-						//	revert nav?
+						if (canEnter) {
+							var onenter = routes[next.name].onenter;
+							canEnter = onenter.apply(null, (next ? [next.segs, next.query, next.hash] : []).concat(prev));
 						}
-						else {
+
+						if (canEnter) {
 							if (useHist) {
 								gotoLocChg = true;
 								history[repl ? "replaceState" : "pushState"](null, "title", next.href);
@@ -108,8 +117,10 @@
 								}
 							}
 
-
 							pos = toPos;
+						}
+						else {
+						//	revert nav?
 						}
 					}
 				}

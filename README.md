@@ -555,7 +555,11 @@ function MyRouter(router, deps) {
 			// Use it to mount or redraw your app's root view. It's recommended that you dep-inject
 			// the router into your app before mounting so it can use href generation for its templates
 			// and `router.location()` to determine and render the appropriate views
-		}
+		},
+		// if provided, the funcs below will fire after a route is matched but before its handler is invoked.
+		// they can return `false` to prevent route's onenter/onexit handlers from firing
+		willEnter: function(to, from) {},
+		willExit:  function(from, to) {},
 	});
 
 	return {
