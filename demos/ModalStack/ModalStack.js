@@ -1,4 +1,6 @@
 function ModalStack(ctnr, opts) {
+	this.opts = opts || {};
+
 	this.stack = [];
 
 	this.push = function(modal) {
@@ -26,6 +28,15 @@ function ModalStack(ctnr, opts) {
 }
 
 function ModalStackView(vm, mod) {
+	var opts = mod.opts;
+
+	if (opts.popOnEsc) {
+		document.addEventListener("keyup", function(e) {
+			if (e.keyCode == 27)
+				mod.pop();
+		});
+	}
+
 	function genProps(handle, cache) {
 		var push = handle.onpush;
 		var pop = handle.onpop;
@@ -79,12 +90,21 @@ function ModalStackView(vm, mod) {
 	var oProps = new PropCache();
 	var cProps = new PropCache();
 
+	function popOne(e) {
+		mod.pop();
+		return false;
+	}
+
 	function modalTpl(i, stack) {
 		var modal = stack[i];
 		var isLast = i === stack.length - 1;
 
-		return ["aside.modal.modal-overlay", genProps(modal.overlay, oProps),
-			["section.modal-content", genProps(modal.content, cProps),
+		// requires overlay.onpush.initial to exist
+		if (opts.popOnClick)
+			modal.overlay.onpush.initial.onclick = {".dvm-modal-overlay": popOne};
+
+		return ["aside.dvm-modal-overlay", genProps(modal.overlay, oProps),
+			["section.dvm-modal-content", genProps(modal.content, cProps),
 				modal.content.body,
 				isLast ? null : modalTpl(i + 1, stack),
 			]

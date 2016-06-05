@@ -10,7 +10,39 @@
 	<script src="../../src/utils.js"></script>
 	<script src="../../src/view.js"></script>
 
-	<link rel="stylesheet" href="styles.css">
+	<link rel="stylesheet" href="ModalStack.css">
+
+	<style>
+		html {
+			box-sizing: border-box;
+		}
+
+		*,
+		*:before,
+		*:after {
+			box-sizing: inherit;
+		}
+
+		body {
+			position: relative;
+			margin: auto;
+			max-width: 800px;
+			padding: 10px;
+		}
+
+		.dismiss {
+			display: block;
+			margin-top: 10px;
+		}
+
+		.dvm-modal-content {
+			width: 300px;
+			height: 300px;
+			left: calc(50% - 150px);
+			top: 20px;
+			position: absolute;
+		}
+	</style>
 
 	<script src="cloner.js"></script>
 	<script src="PropCache.js"></script>
@@ -110,7 +142,7 @@
 			modals.pop();
 		}
 
-		var modals = new ModalStack(document.body);
+		var modals = new ModalStack(document.body, {popOnEsc: true, popOnClick: true});
 
 		setTimeout(function() {
 			modals.push(modalA);
