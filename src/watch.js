@@ -30,7 +30,7 @@
 			}
 
 			var okFn = cb,
-				errFn = noop;
+				errFn = function (err) { return Promise.reject(err); }; 
 
 			if (cb instanceof Array) {
 				okFn = cb[0];
@@ -78,7 +78,7 @@
 					function(err) {
 						event.error = err;
 						api.fire(event);
-						return err;
+						return Promise.reject(err);
 					}
 				);
 

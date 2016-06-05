@@ -16,10 +16,15 @@
 	// queue for did* hooks to ensure they all fire in same anim frame
 	var didHooks = [];
 
+	var pendRedraws = [];
+
 	function drainDidHooks() {
-		var item;
-		while (item = didHooks.pop())
-			item[0].apply(null, item.slice(1));
+		var item, queue, queues = [didHooks, pendRedraws];
+
+		while (queue = queues.shift()) {
+			while (item = queue.shift())
+				item[0].apply(null, item.slice(1));
+		}
 	}
 
 	var cfg = {
@@ -104,11 +109,7 @@
 			emit: emit,
 			refs: {},
 			parent: null,
-		/*
-			html: function() {
-				return collectHtml(vm.node);
-			},
-		*/
+			body: [],
 			mount: function(parentEl, isRoot) {
 				var withEl = null;
 
@@ -227,6 +228,13 @@
 		}
 
 		function redraw(level, isRedrawRoot) {
+			isRedrawRoot = isRedrawRoot !== false;
+
+			if (isRedrawRoot && didHooks.length) {
+				pendRedraws.push([redraw, level, isRedrawRoot]);
+				return vm;
+			}
+
 			if (level) {
 				var targ = vm;
 				while (level-- && targ.parent) { targ = targ.parent; }
@@ -240,6 +248,7 @@
 
 			var oldRefs = vm.refs;
 			vm.refs = {};	// null?
+			vm.body = [];	// null?
 
 		//	vm.keyMap = {};
 
@@ -271,8 +280,10 @@
 			var ancest = parentNode;
 			while (ancest) {
 				if (ancest.vm) {
-					if (!vm.parent)
+					if (!vm.parent) {
 						vm.parent = ancest.vm;
+						ancest.vm.body.push(vm);
+					}
 					if (unjRef !== null)
 						u.deepSet(ancest.vm.refs, unjRef, node);
 				}
@@ -295,7 +306,7 @@
 			if (parentNode)
 				parentNode.body[idxInParent] = node;
 
-			if (isRedrawRoot !== false) {
+			if (isRedrawRoot) {
 				old && cleanNode(old);
 
 				// hydrate on all but initial root createView/redraw (handled in mount()/attach())

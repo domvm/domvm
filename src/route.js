@@ -3,6 +3,8 @@
 
 	var stack = [], pos = null,		// these should go into sessionStorage
 		useHist = false,
+		willEnter = null,
+		willExit = null,
 		root = "";
 
 	domvm.route = function(routeFn, imp) {
@@ -32,8 +34,13 @@
 			},
 			config: function(opts) {
 				useHist = opts.useHist;
+
 				if (useHist)
 					root = opts.root || "";
+
+				willEnter = opts.willEnter || null;
+				willExit = opts.willExit || null;
+
 				init = opts.init || null;
 			},
 			refresh: function() {
@@ -41,8 +48,6 @@
 			},
 			// dest can be route key, href or route object from buildRoute()
 			goto: function(dest, segs, query, hash, repl) {
-				repl = repl || initial;
-
 				if (!dest.href)
 					dest = buildRoute(routes, root, dest, segs, query, hash);
 
@@ -70,54 +75,81 @@
 					var next = stack[toPos];
 
 					var canExit = true;
+					var canEnter = true;
 
 					if (pos !== null) {
-						var onexit = routes[prev.name].onexit;
-						canExit = !onexit ? true : onexit.apply(null, (prev ? [prev.segs, prev.query, prev.hash] : []).concat(next));
+						if (willExit)
+							canExit = willExit(prev, next) !== false;
+
+						if (canExit) {
+							var onexit = routes[prev.name].onexit;
+							canExit = !onexit ? true : onexit.apply(null, (prev ? [prev.segs, prev.query, prev.hash] : []).concat(next));
+						}
+						else {
+						//	revert nav?
+						}
 					}
 
 					if (canExit !== false) {
-						var onenter = routes[next.name].onenter;
-						var canEnter = onenter.apply(null, (next ? [next.segs, next.query, next.hash] : []).concat(prev));
+						if (willEnter)
+							canEnter = willEnter(next, prev) !== false;
 
-						if (canEnter === false) {
-						//	revert nav?
+						if (canEnter) {
+							var onenter = routes[next.name].onenter;
+							canEnter = onenter.apply(null, (next ? [next.segs, next.query, next.hash] : []).concat(prev));
 						}
-						else {
-							if (useHist)
-								history[repl ? "replaceState" : "pushState"](null, "title", next.href);
-							else {
-						//		if (repl)
-						//			location.replace("#"+next.href);
-						//		else
-						//			location.hash = "#"+next.href;
-							}
 
+						if (canEnter) {
+							if (useHist) {
+								gotoLocChg = true;
+								history[repl ? "replaceState" : "pushState"](null, "title", next.href);
+							}
+							else {
+								var hash = "#"+next.href;
+
+								if (location.hash !== hash) {
+									gotoLocChg = true;
+
+									if (repl)
+										location.replace(hash);
+									else
+										location.hash = hash;
+								}
+							}
 
 							pos = toPos;
 						}
+						else {
+						//	revert nav?
+						}
 					}
-
-					initial = false;
 				}
 			},
 			location: function() {
-				return initial ? routeFromLoc() : stack[pos];
+				return pos == null ? routeFromLoc() : stack[pos];
 			//	return stack[pos];
 			},
 	//		next:
 	//		prev:		// revert path
 		};
 
-		var initial = true;
-
 		var routes = routeFn(api, imp);
 
 		buildRegexPaths(routes, root);
 
+		// tmp flag that indicates that hash or location changed as result of a goto call rather than natively.
+		// prevents cyclic goto->hashchange->goto...
+		var gotoLocChg = false;
+
 		window.onhashchange = window.onpopstate = function(e) {
 			if (!useHist && e.type == "popstate")
 				return;
+
+			if (!useHist && gotoLocChg) {
+				gotoLocChg = false;
+				return;
+			}
+
 			api.goto(routeFromLoc(),null,null,null,true);
 		};
 
@@ -182,12 +214,11 @@
 
 			var rtDef = routes[name],
 				pathDef = root + rtDef.path,
-				segDef = rtDef.vars || {},
-				any = /^[^\/]+$/;
+				segDef = rtDef.vars || {};
 
 			if (pathDef.indexOf(":") !== -1) {
 				href = path = pathDef.replace(/:([^\/]+)/g, function(m, segName) {
-					if ((segDef[segName] || any).test(segs[segName]))
+					if ((segDef[segName] || /^[^\/]+$/).test(segs[segName]))
 						return (segs[segName] += "");
 
 					throw new Error("Invalid value for route '"+pathDef+"' segment '"+segName+"': '"+segs[segName]+"'");
@@ -223,7 +254,8 @@
 			// todo: first replace r.path regexp special chrs via RegExp.escape?
 			r.regexPath = new RegExp("^" + root +
 				r.path.replace(/:([^\/]+)/g, function(m, name) {
-					var regExStr = ""+r.vars[name];
+					var segDef = r.vars || {};
+					var regExStr = ""+(segDef[name] || /[^\/]+/);
 					return "(" + regExStr.substring(1, regExStr.lastIndexOf("/")) + ")";
 				})
 			+ "$");
