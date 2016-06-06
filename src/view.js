@@ -861,7 +861,7 @@
 			if (len > 1) {
 				var bodyIdx = 1;
 
-				if (u.isObj(raw[1]) && !u.isElem(raw[1])) {
+				if (u.isObj(raw[1]) && !raw[1].redraw && !u.isElem(raw[1])) {
 					node.props = raw[1];
 					bodyIdx = 2;
 				}
