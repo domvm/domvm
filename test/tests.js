@@ -2029,7 +2029,7 @@ QUnit.module("Imperative VMs");
 		modelC = {val: "C"},
 		modelD = {val: "D"};
 
-	var vmA, vmB, vmC, vmD;
+	var vmA, vmB, vmC, vmD, vmE, vmF;
 
 	function ViewA(vm, model) {
 		vmA = vm;
@@ -2066,6 +2066,18 @@ QUnit.module("Imperative VMs");
 
 		return function() {
 			return ["span", model.val];
+		};
+	}
+
+	function ViewE(vm) {
+		return function() {
+			return ["span", "moo"];
+		};
+	}
+
+	function ViewF(vm) {
+		return function() {
+			return ["div", vmE];
 		};
 	}
 
@@ -2159,6 +2171,18 @@ QUnit.module("Imperative VMs");
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 2 });
+	});
+
+	QUnit.test('First-child VM should not be confused with props object', function(assert) {
+		vmE = domvm.view(ViewE);
+
+		var expcHtml = '<div><span>moo</span></div>';
+
+		instr.start();
+		vmF = domvm.view(ViewF).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmF.node.el, domvm.html(vmF.node), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
 	});
 })();
 
