@@ -755,6 +755,8 @@
 	}
 
 	function graftNode(o, n) {
+		if (!o.el) return;
+
 		// move element over
 		n.el = o.el;
 		o.el = null;

@@ -2184,6 +2184,39 @@ QUnit.module("Imperative VMs");
 
 		evalOut(assert, vmF.node.el, domvm.html(vmF.node), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
 	});
+
+	QUnit.test('Avoid grafting unmounted sub-vm nodes', function(assert) {
+		var a = null;
+
+		function View() {
+			return function() {
+				return ["div", a];
+			};
+		}
+
+		function A() {
+			let i = 0;
+			return function() {
+				return ["div", "A" + i++];
+			};
+		}
+
+		instr.start();
+		var vm = domvm.view(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div></div>';
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });
+
+		a = domvm.view(A);
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><div>A1</div></div>';
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
+	});
 })();
 
 QUnit.module("Unjailed refs");
