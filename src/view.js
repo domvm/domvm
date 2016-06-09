@@ -13,6 +13,8 @@
 
 	var tagCache = {};
 
+	var pool = [];
+
 	// queue for did* hooks to ensure they all fire in same anim frame
 	var didHooks = [];
 
@@ -413,8 +415,10 @@
 	}
 
 	function removeNode(node, removeSelf) {
-		if (node.el == null || !node.el.parentNode)
+		if (node.el == null || !node.el.parentNode) {
+			free(node);
 			return;
+		}
 
 		if (removeSelf) {
 			node.el.parentNode.removeChild(node.el);
@@ -434,6 +438,8 @@
 				removeNode(n, !n.moved);
 			});
 		}
+
+		free(node);
 	}
 
 	// builds out node, excluding views
@@ -755,6 +761,8 @@
 	}
 
 	function graftNode(o, n) {
+		if (!o.el) return;
+
 		// move element over
 		n.el = o.el;
 		o.el = null;
@@ -823,8 +831,8 @@
 		}
 	}
 
-	function procNode(raw, ownerVm) {
-		var node = {
+	function alloc() {
+		var node = pool.length > 0 ? pool.pop() : {
 			type: null,		// elem, text, frag (todo)
 //			name: null,		// view name populated externally by createView
 			key: null,		// view key populated externally by createView
@@ -849,6 +857,27 @@
 			body: null,
 		};
 
+		node.el =
+		node.key =
+		node.vm =
+		node.body =
+		node.props = null;
+
+		node.moved =
+		node.wasSame =
+		node.removed = false;
+
+		return node;
+	}
+
+	function free(node) {
+	//	console.log(node.el);		// hmm
+		pool.push(node);
+	}
+
+	function procNode(raw, ownerVm) {
+		var node = alloc();
+
 		// getters
 		if (u.isFunc(raw))
 			raw = raw();
@@ -861,7 +890,7 @@
 			if (len > 1) {
 				var bodyIdx = 1;
 
-				if (u.isObj(raw[1]) && !u.isElem(raw[1])) {
+				if (u.isObj(raw[1]) && !raw[1].redraw && !u.isElem(raw[1])) {
 					node.props = raw[1];
 					bodyIdx = 2;
 				}
