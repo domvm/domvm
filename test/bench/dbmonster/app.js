@@ -1,24 +1,16 @@
 function DBMon() {
-	var dbDiff = function(mutOld, mutNew) {
-		return mutOld !== mutNew;
-	};
-
-	var queryDiff = function(oldQuery, newQuery) {
-		return oldQuery !== newQuery || oldQuery.elapsed !== newQuery.elapsed;
-	};
-
 	return function(vm, dbs) {
 		return ["div",
 			["table.table.table-striped.latest-data",
 				["tbody",
 					dbs.map(function(db) {
-						return ["tr", { _diff: [dbDiff, db.lastMutationId] },
+						return ["tr",
 							["td.dbname", db.dbname],
 							["td.query-count",
 								["span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries]
 							],
 							db.lastSample.topFiveQueries.map(function(query) {
-								return ["td.Query", { class: query.elapsedClassName, _diff: [queryDiff, query] },
+								return ["td.Query", { class: query.elapsedClassName },
 									["span", query.formatElapsed],
 									[".popover.left",
 										[".popover-content", query.query],
