@@ -2195,7 +2195,7 @@ QUnit.module("Imperative VMs");
 		}
 
 		function A() {
-			let i = 0;
+			var i = 0;
 			return function() {
 				return ["div", "A" + i++];
 			};
