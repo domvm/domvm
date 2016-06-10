@@ -193,6 +193,8 @@
 			var isCurNode = targNode.el != null;
 
 			if (u.isObj(newTpl)) {
+				targNode.props = targNode.props || {};
+
 				// (won't work to removeAttr class/style attrs via setting to false)
 				var cls = "class" in newTpl ? ((coerceEmpty(targNode.class) + " ") + coerceEmpty(newTpl.class)).trim() : targNode.props.class;
 				var sty = "style" in newTpl ? newTpl.style : targNode.props.style;
