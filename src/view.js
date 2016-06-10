@@ -415,10 +415,10 @@
 	}
 
 	function removeNode(node, removeSelf) {
-		if (node.el == null || !node.el.parentNode) {
-			free(node);
+		free(node);
+
+		if (node.el == null || !node.el.parentNode)
 			return;
-		}
 
 		if (removeSelf) {
 			node.el.parentNode.removeChild(node.el);
@@ -430,16 +430,7 @@
 			// fire hooks, get promises
 			var resUnm = fireHook(node.vm, "didUnmount", node.vm);
 			var resRem = fireHook(node, "didRemove", node);
-
 		}
-
-		if (u.isArr(node.body)) {
-			node.body.forEach(function(n, i) {
-				removeNode(n, !n.moved);
-			});
-		}
-
-		free(node);
 	}
 
 	// builds out node, excluding views
@@ -855,14 +846,20 @@
 			el: null,
 			hasKeys: false,	// holds idxs of any keyed children
 			body: null,
+			data: null,
+			diff: null,
 		};
 
 		node.el =
 		node.key =
+		node.ref =
+		node.data =
+		node.diff =
 		node.vm =
 		node.body =
 		node.props = null;
 
+		node.raw =
 		node.moved =
 		node.wasSame =
 		node.removed = false;
