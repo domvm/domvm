@@ -1,4 +1,4 @@
-domvm.view.config({useRaf: false});
+domvm.view.config({ debounce: false });
 
 var instr = new DOMInstr();
 

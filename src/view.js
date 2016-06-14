@@ -18,19 +18,18 @@
 	// queue for did* hooks to ensure they all fire in same anim frame
 	var didHooks = [];
 
-	var pendRedraws = [];
+	function drainDidHooks(node) {
+		cfg.repaint && u.repaint(node);
 
-	function drainDidHooks() {
-		var item, queue, queues = [didHooks, pendRedraws];
+		var item;
 
-		while (queue = queues.shift()) {
-			while (item = queue.shift())
-				item[0].apply(null, item.slice(1));
-		}
+		while (item = didHooks.shift())
+			item[0].apply(null, item.slice(1));
 	}
 
 	var cfg = {
-		useRaf: true,
+		debounce: true,		// will debounce redraws using rAF
+		repaint: true,		// will force repaint prior to any did* hooks firing
 	//	viewScan: false,	// enables aggressive unkeyed view Recycle
 	//	useDOM: false,
 	};
@@ -38,7 +37,8 @@
 	domvm.view = createView;
 
 	domvm.view.config = function(newCfg) {
-		cfg = newCfg;
+		for (var name in newCfg)
+			cfg[name] = newCfg[name];
 	};
 
 	// for lib-assisted auto monkey patching
@@ -105,7 +105,7 @@
 		//	off: function(ev, fn) {},
 			events: {},		// targeted bubbling events & _redraw requests
 			hooks: null,		// willMount,didMount,willRedraw,didRedraw,willUnmount,didUnmount,
-			redraw: cfg.useRaf ? u.raft(redraw) : redraw,
+			redraw: cfg.debounce ? u.raft(redraw) : redraw,
 		//	patch: cfg.useRaf ? raft(patchNode) : patchNode,		// why no repaint?
 			patch: patchNode,
 			emit: emit,
@@ -122,6 +122,9 @@
 				}
 
 				hydrateNode(vm.node, withEl, null, parentEl);
+
+				drainDidHooks(vm.node);
+
 				return vm;
 			},
 			attach: function(rootEl) {
@@ -234,11 +237,6 @@
 		function redraw(level, isRedrawRoot) {
 			isRedrawRoot = isRedrawRoot !== false;
 
-			if (isRedrawRoot && didHooks.length) {
-				pendRedraws.push([redraw, level, isRedrawRoot]);
-				return vm;
-			}
-
 			if (level) {
 				var targ = vm;
 				while (level-- && targ.parent) { targ = targ.parent; }
@@ -306,7 +304,7 @@
 
 			buildNode(node, donor);
 
-			// slot sef into parent
+			// slot self into parent
 			if (parentNode)
 				parentNode.body[idxInParent] = node;
 
@@ -323,8 +321,8 @@
 
 			old && fireHook(vm, "didRedraw", vm);
 
-			if (isRedrawRoot !== false)
-				u.tick(drainDidHooks, 2);
+			if (isRedrawRoot && old && didHooks.length)
+				drainDidHooks(node);
 
 			return vm;
 		}
@@ -374,7 +372,7 @@
 			var hooks = ctx.hooks[name];
 			if (!hooks) return;
 
-			if (cfg.useRaf && name.substr(0,3) == "did")
+			if (name.substr(0,3) == "did")
 				didHooks.push([u.execAll, hooks, arg1, arg2, arg3, arg4]);
 			else
 				return u.execAll(hooks, arg1, arg2, arg3, arg4);
@@ -405,7 +403,7 @@
 			if (!prom) {
 				if (newProm) {
 					newProm.then(function() {
-						removeNode(node, removeSelf);
+						removeNode(node, removeSelf, true);
 					});
 				}
 				else
@@ -416,7 +414,7 @@
 		node.moved = false;
 	}
 
-	function removeNode(node, removeSelf) {
+	function removeNode(node, removeSelf, wasDeferred) {
 		free(node);
 
 		if (node.el == null || !node.el.parentNode)
@@ -432,6 +430,9 @@
 			// fire hooks, get promises
 			var resUnm = fireHook(node.vm, "didUnmount", node.vm);
 			var resRem = fireHook(node, "didRemove", node);
+
+			if (wasDeferred)
+				drainDidHooks(node.parent);
 		}
 	}
 
@@ -618,7 +619,8 @@
 		while (sibAtIdx && sibAtIdx._node.removed)
 			sibAtIdx = sibAtIdx.nextSibling;
 
-		wasDry && fireHook(node.vm, "willMount", node.vm);
+		if (wasDry && node.vm)
+			fireHook(node.vm, "willMount", node.vm);
 
 		if (node.type == u.TYPE_ELEM) {
 			if (wasDry) {

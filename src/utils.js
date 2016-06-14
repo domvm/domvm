@@ -71,15 +71,8 @@
 			});
 			return out;
 		},
-		tick: function(fn, howMany) {
-			if (!howMany || !rAF) {
-				if (u.isArr(fn))
-					fn[0].apply(null, fn.slice(1));
-				else
-					fn();
-			}
-			else if (rAF)
-				rAF(function() { u.tick(fn, howMany - 1); });
+		repaint: function(node) {
+			var h = node.el.offsetHeight;
 		},
 		insertArr: function(targ, arr, pos, rem) {
 			targ.splice.apply(targ, [pos, rem].concat(arr));

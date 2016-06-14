@@ -14,7 +14,7 @@ function ThreaditRouter(router, app) {
 			app.view.mount(document.body);
 
 			// add follow-up redraw timer
-			domvm.view.config({useRaf: false});
+			domvm.view.config({repaint: false});
 			app.view.hook({
 				willRedraw: function() { T.time("Full redraw()"); },
 				didRedraw: function() { T.timeEnd("Full redraw()"); },
