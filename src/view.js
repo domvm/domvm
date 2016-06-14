@@ -106,7 +106,7 @@
 			events: {},		// targeted bubbling events & _redraw requests
 			hooks: null,		// willMount,didMount,willRedraw,didRedraw,willUnmount,didUnmount,
 			redraw: cfg.debounce ? u.raft(redraw) : redraw,
-		//	patch: cfg.useRaf ? raft(patchNode) : patchNode,		// why no repaint?
+		//	patch: cfg.debounce ? u.raft(patchNode) : patchNode,		// why no repaint?
 			patch: patchNode,
 			emit: emit,
 			refs: {},
