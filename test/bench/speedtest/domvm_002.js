@@ -1,6 +1,4 @@
 (function(){
-	domvm.view.config({useRaf: false});
-
 	var count = 0;
 
 	function View(refresh, refs, emit) {

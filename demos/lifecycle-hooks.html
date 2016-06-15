@@ -11,7 +11,7 @@
 		}
 
 		.view1.mounted {
-			outline: 2px solid red;
+			background: #20B2AA;
 			transition: none;
 		}
 
@@ -73,11 +73,11 @@
 			// DOM node/template level hooks
 			var hooks = {
 				willInsert: function(node) {
-//					console.log("willInsert", node);
+				//	console.log("willInsert", node);
 					vm.patch(node, {class: "inserted"});
 				},
 				didInsert: function(node) {
-//					console.log("didInsert", node);
+				//	console.log("didInsert", node);
 					vm.patch(node, {class: ""});
 				},
 				willRecycle: function(oldNode, newNode) {
@@ -102,7 +102,8 @@
 				willRemove: function(node) {
 				//	console.log("willRemove", node);
 					vm.patch(node, {class: "removing"});
-					u.tick([vm.patch, node, {class: "removed"}], 1);
+					u.repaint(node);
+					vm.patch(node, {class: "removed"});
 
 					return new Promise(function(resolve, reject) {
 						node.el.addEventListener("transitionend", resolve);
@@ -155,7 +156,8 @@
 			didRedraw: function(vm) {
 			//	console.log("didRedraw", vm);
 				vm.patch(vm.node, {class: "redrawn"});
-				u.tick([vm.patch, vm.node, {class: ""}], 1);
+				u.repaint(vm.node);
+				vm.patch(vm.node, {class: ""});
 			},
 			willMount: function(vm) {
 			//	console.log("willMount", vm);
@@ -163,12 +165,14 @@
 			didMount: function(vm) {
 			//	console.log("didMount", vm);
 				vm.patch(vm.node, {class: "mounted"});
-				u.tick([vm.patch, vm.node, {class: ""}], 1);
+				u.repaint(vm.node);
+				vm.patch(vm.node, {class: ""});
 			},
 			willUnmount: function(vm) {
 			//	console.log("willUnmount", vm);
 				vm.patch(vm.node, {class: "unmounting"});
-				u.tick([vm.patch, vm.node, {class: "unmounted"}], 1);
+				u.repaint(vm.node);
+				vm.patch(vm.node, {class: "unmounted"});
 
 				return new Promise(function(resolve, reject) {
 					vm.node.el.addEventListener("transitionend", resolve);

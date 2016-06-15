@@ -69,8 +69,6 @@
 		// hooks for perf timing and DOM op counters, see console
 		var instr = new DOMInstr(true);
 
-		domvm.view.config({useRaf: false});
-
 		var opts = { hooks: {
 			willRedraw: function() { instr.start(); },
 			didRedraw: function() { console.log(instr.end()); },
