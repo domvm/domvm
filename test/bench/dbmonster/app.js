@@ -1,3 +1,4 @@
+// naive implementation
 function DBMon() {
 	return function(vm, dbs) {
 		return ["div",
@@ -25,6 +26,64 @@ function DBMon() {
 		];
 	};
 }
+
+/*
+// split sub-views implementation. uncomment the immutable
+// opimizations inside the sub-views below for even more speed
+function DBMon() {
+	return function(vm, dbs) {
+		return ["div",
+			["table.table.table-striped.latest-data",
+				["tbody",
+					dbs.map(function(db) {
+						return [DB, db, false]
+					})
+				]
+			]
+		];
+	};
+}
+
+function DB() {
+//	var lastMutationId = null;
+
+	return function(vm, db) {
+//		if (db.lastMutationId == lastMutationId)
+//			return false;
+
+//		lastMutationId = db.lastMutationId;
+
+		return ["tr",
+			["td.dbname", db.dbname],
+			["td.query-count",
+				["span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries]
+			],
+			db.lastSample.topFiveQueries.map(function(query) {
+				return [Query, query, false]
+			}),
+		];
+	};
+}
+
+function Query() {
+//	var oldQuery = null;
+
+	return function(vm, query) {
+//		if (oldQuery == query && oldQuery.elapsed == query.elapsed)
+//			return false;
+
+//		oldQuery = query;
+
+		return ["td.Query", { class: query.elapsedClassName },
+			["span", query.formatElapsed],
+			[".popover.left",
+				[".popover-content", query.query],
+				[".arrow"],
+			]
+		];
+	}
+}
+*/
 
 var rAF;
 
