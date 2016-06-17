@@ -151,7 +151,6 @@ function h() {
 ])
 
 ["#ui",														// same as "div#ui"
-	[SomeViewFn],											// sub-view w/closured data
 	[NavBarView, navbar],									// sub-view w/model
 	[PanelView, panel, "panelA"],							// sub-view w/model & key
 	preInitVm,												// pre-initialized ViewModel
