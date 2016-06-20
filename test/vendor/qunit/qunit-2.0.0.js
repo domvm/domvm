@@ -1,12 +1,12 @@
 /*!
- * QUnit 1.23.0
+ * QUnit 2.0.0
  * https://qunitjs.com/
  *
  * Copyright jQuery Foundation and other contributors
  * Released under the MIT license
  * https://jquery.org/license
  *
- * Date: 2016-03-25T19:37Z
+ * Date: 2016-06-16T17:09Z
  */
 
 ( function( global ) {
@@ -42,6 +42,8 @@ var defined = {
 var fileName = ( sourceFromStacktrace( 0 ) || "" ).replace( /(:\d+)+\)?/, "" ).replace( /.+\//, "" );
 var globalStartCalled = false;
 var runStarted = false;
+
+var autorun = false;
 
 var toString = Object.prototype.toString,
 	hasOwn = Object.prototype.hasOwnProperty;
@@ -100,16 +102,10 @@ function objectValues ( obj ) {
 function extend( a, b, undefOnly ) {
 	for ( var prop in b ) {
 		if ( hasOwn.call( b, prop ) ) {
-
-			// Avoid "Member not found" error in IE8 caused by messing with window.constructor
-			// This block runs on every environment, so `global` is being used instead of `window`
-			// to avoid errors on node.
-			if ( prop !== "constructor" || a !== global ) {
-				if ( b[ prop ] === undefined ) {
-					delete a[ prop ];
-				} else if ( !( undefOnly && typeof a[ prop ] !== "undefined" ) ) {
-					a[ prop ] = b[ prop ];
-				}
+			if ( b[ prop ] === undefined ) {
+				delete a[ prop ];
+			} else if ( !( undefOnly && typeof a[ prop ] !== "undefined" ) ) {
+				a[ prop ] = b[ prop ];
 			}
 		}
 	}
@@ -157,7 +153,7 @@ function is( type, obj ) {
 	return QUnit.objectType( obj ) === type;
 }
 
-// Doesn't support IE6 to IE9, it will return undefined on these browsers
+// Doesn't support IE9, it will return undefined on these browsers
 // See also https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error/Stack
 function extractStacktrace( e, offset ) {
 	offset = offset === undefined ? 4 : offset;
@@ -182,17 +178,6 @@ function extractStacktrace( e, offset ) {
 			}
 		}
 		return stack[ offset ];
-
-	// Support: Safari <=6 only
-	} else if ( e.sourceURL ) {
-
-		// Exclude useless self-reference for generated Error objects
-		if ( /qunit.js$/.test( e.sourceURL ) ) {
-			return;
-		}
-
-		// For actual exceptions, this is useful
-		return e.sourceURL + ":" + e.line;
 	}
 }
 
@@ -266,8 +251,6 @@ var config = {
 // Push a loose unnamed module to the modules collection
 config.modules.push( config.currentModule );
 
-var loggingCallbacks = {};
-
 // Register logging callbacks
 function registerLoggingCallbacks( obj ) {
 	var i, l, key,
@@ -284,11 +267,6 @@ function registerLoggingCallbacks( obj ) {
 
 			config.callbacks[ key ].push( callback );
 		};
-
-		// DEPRECATED: This will be removed on QUnit 2.0.0+
-		// Stores the registered functions allowing restoring
-		// at verifyLoggingCallbacks() if modified
-		loggingCallbacks[ key ] = loggingCallback;
 
 		return loggingCallback;
 	}
@@ -311,34 +289,6 @@ function runLoggingCallbacks( key, args ) {
 	callbacks = config.callbacks[ key ];
 	for ( i = 0, l = callbacks.length; i < l; i++ ) {
 		callbacks[ i ]( args );
-	}
-}
-
-// DEPRECATED: This will be removed on 2.0.0+
-// This function verifies if the loggingCallbacks were modified by the user
-// If so, it will restore it, assign the given callback and print a console warning
-function verifyLoggingCallbacks() {
-	var loggingCallback, userCallback;
-
-	for ( loggingCallback in loggingCallbacks ) {
-		if ( QUnit[ loggingCallback ] !== loggingCallbacks[ loggingCallback ] ) {
-
-			userCallback = QUnit[ loggingCallback ];
-
-			// Restore the callback function
-			QUnit[ loggingCallback ] = loggingCallbacks[ loggingCallback ];
-
-			// Assign the deprecated given callback
-			QUnit[ loggingCallback ]( userCallback );
-
-			if ( global.console && global.console.warn ) {
-				global.console.warn(
-					"QUnit." + loggingCallback + " was replaced with a new value.\n" +
-					"Please, check out the documentation on how to apply logging callbacks.\n" +
-					"Reference: https://api.qunitjs.com/category/callbacks/"
-				);
-			}
-		}
 	}
 }
 
@@ -384,7 +334,7 @@ function verifyLoggingCallbacks() {
 QUnit.isLocal = !( defined.document && window.location.protocol !== "file:" );
 
 // Expose the current QUnit version
-QUnit.version = "1.23.0";
+QUnit.version = "2.0.0";
 
 extend( QUnit, {
 
@@ -394,31 +344,30 @@ extend( QUnit, {
 		var currentModule = config.currentModule;
 
 		if ( arguments.length === 2 ) {
-			if ( testEnvironment instanceof Function ) {
+			if ( objectType( testEnvironment ) === "function" ) {
 				executeNow = testEnvironment;
 				testEnvironment = undefined;
 			}
 		}
 
-		// DEPRECATED: handles setup/teardown functions,
-		// beforeEach and afterEach should be used instead
-		if ( testEnvironment && testEnvironment.setup ) {
-			testEnvironment.beforeEach = testEnvironment.setup;
-			delete testEnvironment.setup;
-		}
-		if ( testEnvironment && testEnvironment.teardown ) {
-			testEnvironment.afterEach = testEnvironment.teardown;
-			delete testEnvironment.teardown;
-		}
-
 		module = createModule();
 
+		if ( testEnvironment && ( testEnvironment.setup || testEnvironment.teardown ) ) {
+			console.warn(
+				"Module's `setup` and `teardown` are not hooks anymore on QUnit 2.0, use " +
+				"`beforeEach` and `afterEach` instead\n" +
+				"Details in our upgrade guide at https://qunitjs.com/upgrade-guide-2.x/"
+			);
+		}
+
 		moduleFns = {
+			before: setHook( module, "before" ),
 			beforeEach: setHook( module, "beforeEach" ),
-			afterEach: setHook( module, "afterEach" )
+			afterEach: setHook( module, "afterEach" ),
+			after: setHook( module, "after" )
 		};
 
-		if ( executeNow instanceof Function ) {
+		if ( objectType( executeNow ) === "function" ) {
 			config.moduleStack.push( module );
 			setCurrentModule( module );
 			executeNow.call( module.testEnvironment, moduleFns );
@@ -437,11 +386,13 @@ extend( QUnit, {
 				name: moduleName,
 				parentModule: parentModule,
 				tests: [],
-				moduleId: generateHash( moduleName )
+				moduleId: generateHash( moduleName ),
+				testsRun: 0
 			};
 
 			var env = {};
 			if ( parentModule ) {
+				parentModule.childModule = module;
 				extend( env, parentModule.testEnvironment );
 				delete env.beforeEach;
 				delete env.afterEach;
@@ -459,17 +410,12 @@ extend( QUnit, {
 
 	},
 
-	// DEPRECATED: QUnit.asyncTest() will be removed in QUnit 2.0.
-	asyncTest: asyncTest,
-
 	test: test,
 
 	skip: skip,
 
 	only: only,
 
-	// DEPRECATED: The functionality of QUnit.start() will be altered in QUnit 2.0.
-	// In QUnit 2.0, invoking it will ONLY affect the `QUnit.config.autostart` blocking behavior.
 	start: function( count ) {
 		var globalStartAlreadyCalled = globalStartCalled;
 
@@ -477,7 +423,7 @@ extend( QUnit, {
 			globalStartCalled = true;
 
 			if ( runStarted ) {
-				throw new Error( "Called start() outside of a test context while already started" );
+				throw new Error( "Called start() while test already started running" );
 			} else if ( globalStartAlreadyCalled || count > 1 ) {
 				throw new Error( "Called start() outside of a test context too many times" );
 			} else if ( config.autostart ) {
@@ -490,53 +436,14 @@ extend( QUnit, {
 				return;
 			}
 		} else {
-
-			// If a test is running, adjust its semaphore
-			config.current.semaphore -= count || 1;
-
-			// If semaphore is non-numeric, throw error
-			if ( isNaN( config.current.semaphore ) ) {
-				config.current.semaphore = 0;
-
-				QUnit.pushFailure(
-					"Called start() with a non-numeric decrement.",
-					sourceFromStacktrace( 2 )
-				);
-				return;
-			}
-
-			// Don't start until equal number of stop-calls
-			if ( config.current.semaphore > 0 ) {
-				return;
-			}
-
-			// Throw an Error if start is called more often than stop
-			if ( config.current.semaphore < 0 ) {
-				config.current.semaphore = 0;
-
-				QUnit.pushFailure(
-					"Called start() while already started (test's semaphore was 0 already)",
-					sourceFromStacktrace( 2 )
-				);
-				return;
-			}
+			throw new Error(
+				"QUnit.start cannot be called inside a test context. This feature is removed in " +
+				"QUnit 2.0. For async tests, use QUnit.test() with assert.async() instead.\n" +
+				"Details in our upgrade guide at https://qunitjs.com/upgrade-guide-2.x/"
+			);
 		}
 
 		resumeProcessing();
-	},
-
-	// DEPRECATED: QUnit.stop() will be removed in QUnit 2.0.
-	stop: function( count ) {
-
-		// If there isn't a test running, don't allow QUnit.stop() to be called
-		if ( !config.current ) {
-			throw new Error( "Called stop() outside of a test context" );
-		}
-
-		// If a test is running, adjust its semaphore
-		config.current.semaphore += count || 1;
-
-		pauseProcessing();
 	},
 
 	config: config,
@@ -584,8 +491,6 @@ function begin() {
 
 		// Record the time of the test run's beginning
 		config.started = now();
-
-		verifyLoggingCallbacks();
 
 		// Delete the loose unnamed module if unused.
 		if ( config.modules[ 0 ].name === "" && config.modules[ 0 ].tests.length === 0 ) {
@@ -638,34 +543,36 @@ function process( last ) {
 	}
 }
 
-function pauseProcessing() {
+function pauseProcessing( test ) {
 	config.blocking = true;
 
 	if ( config.testTimeout && defined.setTimeout ) {
 		clearTimeout( config.timeout );
 		config.timeout = setTimeout( function() {
-			if ( config.current ) {
-				config.current.semaphore = 0;
-				QUnit.pushFailure( "Test timed out", sourceFromStacktrace( 2 ) );
-			} else {
-				throw new Error( "Test timed out" );
-			}
-			resumeProcessing();
+			test.semaphore = 0;
+			QUnit.pushFailure( "Test timed out", sourceFromStacktrace( 2 ) );
+			resumeProcessing( test );
 		}, config.testTimeout );
 	}
 }
 
-function resumeProcessing() {
+function resumeProcessing( test ) {
 	runStarted = true;
 
 	// A slight delay to allow this iteration of the event loop to finish (more assertions, etc.)
 	if ( defined.setTimeout ) {
 		setTimeout( function() {
-			if ( config.current && config.current.semaphore > 0 ) {
+			var current = test || config.current;
+			if ( current && ( current.semaphore > 0 || current.resumed ) ) {
 				return;
 			}
+
 			if ( config.timeout ) {
 				clearTimeout( config.timeout );
+			}
+
+			if ( current ) {
+				current.resumed = true;
 			}
 
 			begin();
@@ -678,7 +585,7 @@ function resumeProcessing() {
 function done() {
 	var runtime, passed;
 
-	config.autorun = true;
+	autorun = true;
 
 	// Log the last module results
 	if ( config.previousModule ) {
@@ -714,15 +621,16 @@ function setHook( module, hookName ) {
 	};
 }
 
-var focused = false;
-var priorityCount = 0;
-var unitSampler;
+var unitSampler,
+	focused = false,
+	priorityCount = 0;
 
 function Test( settings ) {
 	var i, l;
 
 	++Test.count;
 
+	this.expected = null;
 	extend( this, settings );
 	this.assertions = [];
 	this.semaphore = 0;
@@ -791,8 +699,10 @@ Test.prototype = {
 		config.current = this;
 
 		if ( this.module.testEnvironment ) {
+			delete this.module.testEnvironment.before;
 			delete this.module.testEnvironment.beforeEach;
 			delete this.module.testEnvironment.afterEach;
+			delete this.module.testEnvironment.after;
 		}
 		this.testEnvironment = extend( {}, this.module.testEnvironment );
 
@@ -814,7 +724,7 @@ Test.prototype = {
 		config.current = this;
 
 		if ( this.async ) {
-			QUnit.stop();
+			internalStop( this );
 		}
 
 		this.callbackStarted = now();
@@ -835,7 +745,7 @@ Test.prototype = {
 
 			// Restart the tests if they're blocking
 			if ( config.blocking ) {
-				QUnit.start();
+				internalStart( this );
 			}
 		}
 
@@ -849,10 +759,22 @@ Test.prototype = {
 		checkPollution();
 	},
 
-	queueHook: function( hook, hookName ) {
+	queueHook: function( hook, hookName, hookOwner ) {
 		var promise,
 			test = this;
 		return function runHook() {
+			if ( hookName === "before" ) {
+				if ( hookOwner.testsRun !== 0 ) {
+					return;
+				}
+
+				test.preserveEnvironment = true;
+			}
+
+			if ( hookName === "after" && hookOwner.testsRun !== numberOfTests( hookOwner ) - 1 ) {
+				return;
+			}
+
 			config.current = test;
 			if ( config.notrycatch ) {
 				callHook();
@@ -882,7 +804,7 @@ Test.prototype = {
 			}
 			if ( module.testEnvironment &&
 				QUnit.objectType( module.testEnvironment[ handler ] ) === "function" ) {
-				hooks.push( test.queueHook( module.testEnvironment[ handler ], handler ) );
+				hooks.push( test.queueHook( module.testEnvironment[ handler ], handler, module ) );
 			}
 		}
 
@@ -921,6 +843,7 @@ Test.prototype = {
 			}
 		}
 
+		notifyTestsRan( this.module );
 		runLoggingCallbacks( "testDone", {
 			name: this.testName,
 			module: this.module.name,
@@ -935,18 +858,17 @@ Test.prototype = {
 			testId: this.testId,
 
 			// Source of Test
-			source: this.stack,
-
-			// DEPRECATED: this property will be removed in 2.0.0, use runtime instead
-			duration: this.runtime
+			source: this.stack
 		} );
 
-		// QUnit.reset() is deprecated and will be replaced for a new
-		// fixture reset function on QUnit 2.0/2.1.
-		// It's still called here for backwards compatibility handling
-		QUnit.reset();
-
 		config.current = undefined;
+	},
+
+	preserveTestEnvironment: function() {
+		if ( this.preserveEnvironment ) {
+			this.module.testEnvironment = this.testEnvironment;
+			this.testEnvironment = extend( {}, this.module.testEnvironment );
+		}
 	},
 
 	queue: function() {
@@ -965,16 +887,25 @@ Test.prototype = {
 					test.before();
 				},
 
+				test.hooks( "before" ),
+
+				function() {
+					test.preserveTestEnvironment();
+				},
+
 				test.hooks( "beforeEach" ),
+
 				function() {
 					test.run();
 				},
 
 				test.hooks( "afterEach" ).reverse(),
+				test.hooks( "after" ).reverse(),
 
 				function() {
 					test.after();
 				},
+
 				function() {
 					test.finish();
 				}
@@ -1054,10 +985,10 @@ Test.prototype = {
 		if ( promise != null ) {
 			then = promise.then;
 			if ( QUnit.objectType( then ) === "function" ) {
-				QUnit.stop();
+				internalStop( test );
 				then.call(
 					promise,
-					function() { QUnit.start(); },
+					function() { internalStart( test ); },
 					function( error ) {
 						message = "Promise rejected " +
 							( !phase ? "during" : phase.replace( /Each$/, "" ) ) +
@@ -1068,7 +999,7 @@ Test.prototype = {
 						saveGlobal();
 
 						// Unblock
-						QUnit.start();
+						internalStart( test );
 					}
 				);
 			}
@@ -1153,28 +1084,6 @@ Test.prototype = {
 	}
 };
 
-// Resets the test setup. Useful for tests that modify the DOM.
-/*
-DEPRECATED: Use multiple tests instead of resetting inside a test.
-Use testStart or testDone for custom cleanup.
-This method will throw an error in 2.0, and will be removed in 2.1
-*/
-QUnit.reset = function() {
-
-	// Return on non-browser environments
-	// This is necessary to not break on node tests
-	if ( !defined.document ) {
-		return;
-	}
-
-	var fixture = defined.document && document.getElementById &&
-			document.getElementById( "qunit-fixture" );
-
-	if ( fixture ) {
-		fixture.innerHTML = config.fixture;
-	}
-};
-
 QUnit.pushFailure = function() {
 	if ( !QUnit.config.current ) {
 		throw new Error( "pushFailure() assertion outside test context, in " +
@@ -1236,7 +1145,7 @@ function synchronize( callback, priority, seed ) {
 		config.queue.push( callback );
 	}
 
-	if ( config.autorun && !config.blocking ) {
+	if ( autorun && !config.blocking ) {
 		process( last );
 	}
 }
@@ -1295,31 +1204,14 @@ function checkPollution() {
 	}
 }
 
-// Will be exposed as QUnit.asyncTest
-function asyncTest( testName, expected, callback ) {
-	if ( arguments.length === 2 ) {
-		callback = expected;
-		expected = null;
-	}
-
-	QUnit.test( testName, expected, callback, true );
-}
-
 // Will be exposed as QUnit.test
-function test( testName, expected, callback, async ) {
+function test( testName, callback ) {
 	if ( focused )  { return; }
 
 	var newTest;
 
-	if ( arguments.length === 2 ) {
-		callback = expected;
-		expected = null;
-	}
-
 	newTest = new Test( {
 		testName: testName,
-		expected: expected,
-		async: async,
 		callback: callback
 	} );
 
@@ -1339,7 +1231,7 @@ function skip( testName ) {
 }
 
 // Will be exposed as QUnit.only
-function only( testName, expected, callback, async ) {
+function only( testName, callback ) {
 	var newTest;
 
 	if ( focused )  { return; }
@@ -1347,19 +1239,70 @@ function only( testName, expected, callback, async ) {
 	QUnit.config.queue.length = 0;
 	focused = true;
 
-	if ( arguments.length === 2 ) {
-		callback = expected;
-		expected = null;
-	}
-
 	newTest = new Test( {
 		testName: testName,
-		expected: expected,
-		async: async,
 		callback: callback
 	} );
 
 	newTest.queue();
+}
+
+function internalStop( test ) {
+
+	// If a test is running, adjust its semaphore
+	test.semaphore += 1;
+
+	pauseProcessing( test );
+}
+
+function internalStart( test ) {
+
+	// If a test is running, adjust its semaphore
+	test.semaphore -= 1;
+
+	// If semaphore is non-numeric, throw error
+	if ( isNaN( test.semaphore ) ) {
+		test.semaphore = 0;
+
+		QUnit.pushFailure(
+			"Invalid value on test.semaphore",
+			sourceFromStacktrace( 2 )
+		);
+		return;
+	}
+
+	// Don't start until equal number of stop-calls
+	if ( test.semaphore > 0 ) {
+		return;
+	}
+
+	// Throw an Error if start is called more often than stop
+	if ( test.semaphore < 0 ) {
+		test.semaphore = 0;
+
+		QUnit.pushFailure(
+			"Tried to restart test while already started (test's semaphore was 0 already)",
+			sourceFromStacktrace( 2 )
+		);
+		return;
+	}
+
+	resumeProcessing( test );
+}
+
+function numberOfTests( module ) {
+	var count = module.tests.length;
+	while ( module = module.childModule ) {
+		count += module.tests.length;
+	}
+	return count;
+}
+
+function notifyTestsRan( module ) {
+	module.testsRun++;
+	while ( module = module.parentModule ) {
+		module.testsRun++;
+	}
 }
 
 function Assert( testContext ) {
@@ -1392,7 +1335,7 @@ QUnit.assert = Assert.prototype = {
 
 		test.semaphore += 1;
 		test.usedAsync = true;
-		pauseProcessing();
+		pauseProcessing( test );
 
 		return function done() {
 
@@ -1408,7 +1351,7 @@ QUnit.assert = Assert.prototype = {
 
 			test.semaphore -= 1;
 			popped = true;
-			resumeProcessing();
+			resumeProcessing( test );
 		};
 	},
 
@@ -1565,9 +1508,17 @@ QUnit.assert = Assert.prototype = {
 			currentTest = ( this instanceof Assert && this.test ) || QUnit.config.current;
 
 		// 'expected' is optional unless doing string comparison
-		if ( message == null && typeof expected === "string" ) {
-			message = expected;
-			expected = null;
+		if ( QUnit.objectType( expected ) === "string" ) {
+			if ( message == null ) {
+				message = expected;
+				expected = null;
+			} else {
+				throw new Error(
+					"throws/raises does not accept a string value for the expected argument.\n" +
+					"Use a non-string object value (e.g. regExp) instead if it's necessary." +
+					"Details in our upgrade guide at https://qunitjs.com/upgrade-guide-2.x/"
+				);
+			}
 		}
 
 		currentTest.ignoreGlobalErrors = true;
@@ -1589,10 +1540,6 @@ QUnit.assert = Assert.prototype = {
 			// Expected is a regexp
 			} else if ( expectedType === "regexp" ) {
 				ok = expected.test( errorString( actual ) );
-
-			// Expected is a string
-			} else if ( expectedType === "string" ) {
-				ok = expected === errorString( actual );
 
 			// Expected is a constructor, maybe an Error constructor
 			} else if ( expectedType === "function" && actual instanceof expected ) {
@@ -1624,7 +1571,7 @@ QUnit.assert = Assert.prototype = {
 // Known to us are: Closure Compiler, Narwhal
 ( function() {
 	/*jshint sub:true */
-	Assert.prototype.raises = Assert.prototype.throws;
+	Assert.prototype.raises = Assert.prototype [ "throws" ]; //jscs:ignore requireDotNotation
 }() );
 
 function errorString( error ) {
@@ -1947,6 +1894,21 @@ QUnit.dump = ( function() {
 		return join( "[", ret, "]" );
 	}
 
+	function isArray( obj ) {
+		return (
+
+			//Native Arrays
+			toString.call( obj ) === "[object Array]" ||
+
+			// NodeList objects
+			( typeof obj.length === "number" && obj.item !== undefined ) &&
+			( obj.length ?
+				obj.item( 0 ) === obj[ 0 ] :
+				( obj.item( 0 ) === null && obj[ 0 ] === undefined )
+			)
+		);
+	}
+
 	var reName = /^function (\w+)/,
 		dump = {
 
@@ -1974,6 +1936,7 @@ QUnit.dump = ( function() {
 			},
 			typeOf: function( obj ) {
 				var type;
+
 				if ( obj === null ) {
 					type = "null";
 				} else if ( typeof obj === "undefined" ) {
@@ -1992,16 +1955,7 @@ QUnit.dump = ( function() {
 					type = "document";
 				} else if ( obj.nodeType ) {
 					type = "node";
-				} else if (
-
-					// Native arrays
-					toString.call( obj ) === "[object Array]" ||
-
-					// NodeList objects
-					( typeof obj.length === "number" && obj.item !== undefined &&
-					( obj.length ? obj.item( 0 ) === obj[ 0 ] : ( obj.item( 0 ) === null &&
-					obj[ 0 ] === undefined ) ) )
-				) {
+				} else if ( isArray( obj ) ) {
 					type = "array";
 				} else if ( obj.constructor === Error.prototype.constructor ) {
 					type = "error";
@@ -2182,54 +2136,72 @@ QUnit.dump = ( function() {
 // Back compat
 QUnit.jsDump = QUnit.dump;
 
-// Deprecated
-// Extend assert methods to QUnit for Backwards compatibility
-( function() {
-	var i,
-		assertions = Assert.prototype;
+function applyDeprecated( name ) {
+	return function() {
+		throw new Error(
+			name + " is removed in QUnit 2.0.\n" +
+			"Details in our upgrade guide at https://qunitjs.com/upgrade-guide-2.x/"
+		);
+	};
+}
 
-	function applyCurrent( current ) {
-		return function() {
-			var assert = new Assert( QUnit.config.current );
-			current.apply( assert, arguments );
-		};
-	}
+Object.keys( Assert.prototype ).forEach( function( key ) {
+	QUnit[ key ] = applyDeprecated( "`QUnit." + key + "`" );
+} );
 
-	for ( i in assertions ) {
-		QUnit[ i ] = applyCurrent( assertions[ i ] );
-	}
-}() );
+QUnit.asyncTest = function() {
+	throw new Error(
+		"asyncTest is removed in QUnit 2.0, use QUnit.test() with assert.async() instead.\n" +
+		"Details in our upgrade guide at https://qunitjs.com/upgrade-guide-2.x/"
+	);
+};
 
-// For browser, export only select globals
+QUnit.stop = function() {
+	throw new Error(
+		"QUnit.stop is removed in QUnit 2.0, use QUnit.test() with assert.async() instead.\n" +
+		"Details in our upgrade guide at https://qunitjs.com/upgrade-guide-2.x/"
+	);
+};
+
+function resetThrower() {
+	throw new Error(
+		"QUnit.reset is removed in QUnit 2.0 without replacement.\n" +
+		"Details in our upgrade guide at https://qunitjs.com/upgrade-guide-2.x/"
+	);
+}
+
+Object.defineProperty( QUnit, "reset", {
+	get: function() {
+		return resetThrower;
+	},
+	set: resetThrower
+} );
+
 if ( defined.document ) {
+	if ( window.QUnit ) {
+		throw new Error( "QUnit has already been defined." );
+	}
 
-	( function() {
-		var i, l,
-			keys = [
-				"test",
-				"module",
-				"expect",
-				"asyncTest",
-				"start",
-				"stop",
-				"ok",
-				"notOk",
-				"equal",
-				"notEqual",
-				"propEqual",
-				"notPropEqual",
-				"deepEqual",
-				"notDeepEqual",
-				"strictEqual",
-				"notStrictEqual",
-				"throws",
-				"raises"
-			];
-
-		for ( i = 0, l = keys.length; i < l; i++ ) {
-			window[ keys[ i ] ] = QUnit[ keys[ i ] ];
-		}
-	}() );
+	[
+		"test",
+		"module",
+		"expect",
+		"start",
+		"ok",
+		"notOk",
+		"equal",
+		"notEqual",
+		"propEqual",
+		"notPropEqual",
+		"deepEqual",
+		"notDeepEqual",
+		"strictEqual",
+		"notStrictEqual",
+		"throws",
+		"raises"
+	].forEach( function( key ) {
+		window[ key ] = applyDeprecated( "The global `" + key + "`" );
+	} );
 
 	window.QUnit = QUnit;
 }
@@ -2258,6 +2230,47 @@ if ( typeof define === "function" && define.amd ) {
 }( ( function() {
 	return this;
 }() ) ) );
+
+( function() {
+
+if ( typeof window === "undefined" || !window.document ) {
+	return;
+}
+
+var config = QUnit.config,
+	hasOwn = Object.prototype.hasOwnProperty;
+
+// Stores fixture HTML for resetting later
+function storeFixture() {
+
+	// Avoid overwriting user-defined values
+	if ( hasOwn.call( config, "fixture" ) ) {
+		return;
+	}
+
+	var fixture = document.getElementById( "qunit-fixture" );
+	if ( fixture ) {
+		config.fixture = fixture.innerHTML;
+	}
+}
+
+QUnit.begin( storeFixture );
+
+// Resets the fixture DOM element if available.
+function resetFixture() {
+	if ( config.fixture == null ) {
+		return;
+	}
+
+	var fixture = document.getElementById( "qunit-fixture" );
+	if ( fixture ) {
+		fixture.innerHTML = config.fixture;
+	}
+}
+
+QUnit.testStart( resetFixture );
+
+}() );
 
 ( function() {
 
@@ -2338,11 +2351,11 @@ function getUrlParams() {
 	for ( i = 0; i < length; i++ ) {
 		if ( params[ i ] ) {
 			param = params[ i ].split( "=" );
-			name = decodeURIComponent( param[ 0 ] );
+			name = decodeQueryParam( param[ 0 ] );
 
 			// Allow just a key to turn on a flag, e.g., test.html?noglobals
 			value = param.length === 1 ||
-				decodeURIComponent( param.slice( 1 ).join( "=" ) ) ;
+				decodeQueryParam( param.slice( 1 ).join( "=" ) ) ;
 			if ( urlParams[ name ] ) {
 				urlParams[ name ] = [].concat( urlParams[ name ], value );
 			} else {
@@ -2354,27 +2367,20 @@ function getUrlParams() {
 	return urlParams;
 }
 
+function decodeQueryParam( param ) {
+	return decodeURIComponent( param.replace( /\+/g, "%20" ) );
+}
+
 // Don't load the HTML Reporter on non-browser environments
 if ( typeof window === "undefined" || !window.document ) {
 	return;
 }
 
-// Deprecated QUnit.init - Ref #530
-// Re-initialize the configuration options
 QUnit.init = function() {
-	var config = QUnit.config;
-
-	config.stats = { all: 0, bad: 0 };
-	config.moduleStats = { all: 0, bad: 0 };
-	config.started = 0;
-	config.updateRate = 1000;
-	config.blocking = false;
-	config.autostart = true;
-	config.autorun = false;
-	config.filter = "";
-	config.queue = [];
-
-	appendInterface();
+	throw new Error(
+		"QUnit.init is removed in QUnit 2.0, use QUnit.test() with assert.async() instead.\n" +
+		"Details in our upgrade guide at https://qunitjs.com/upgrade-guide-2.x/"
+	);
 };
 
 var config = QUnit.config,
@@ -2397,9 +2403,7 @@ var config = QUnit.config,
 	},
 	modulesList = [];
 
-/**
-* Escape text for attribute or text content.
-*/
+// Escape text for attribute or text content.
 function escapeText( s ) {
 	if ( !s ) {
 		return "";
@@ -2423,35 +2427,14 @@ function escapeText( s ) {
 	} );
 }
 
-/**
- * @param {HTMLElement} elem
- * @param {string} type
- * @param {Function} fn
- */
 function addEvent( elem, type, fn ) {
-	if ( elem.addEventListener ) {
-
-		// Standards-based browsers
-		elem.addEventListener( type, fn, false );
-	} else if ( elem.attachEvent ) {
-
-		// Support: IE <9
-		elem.attachEvent( "on" + type, function() {
-			var event = window.event;
-			if ( !event.target ) {
-				event.target = event.srcElement || document;
-			}
-
-			fn.call( elem, event );
-		} );
-	}
+	elem.addEventListener( type, fn, false );
 }
 
-/**
- * @param {Array|NodeList} elems
- * @param {string} type
- * @param {Function} fn
- */
+function removeEvent( elem, type, fn ) {
+	elem.removeEventListener( type, fn, false );
+}
+
 function addEvents( elems, type, fn ) {
 	var i = elems.length;
 	while ( i-- ) {
@@ -2493,6 +2476,16 @@ function id( name ) {
 	return document.getElementById && document.getElementById( name );
 }
 
+function interceptNavigation( ev ) {
+	applyUrlParams();
+
+	if ( ev && ev.preventDefault ) {
+		ev.preventDefault();
+	}
+
+	return false;
+}
+
 function getUrlConfigHtml() {
 	var i, j, val,
 		escaped, escapedTooltip,
@@ -2515,12 +2508,12 @@ function getUrlConfigHtml() {
 		escapedTooltip = escapeText( val.tooltip );
 
 		if ( !val.value || typeof val.value === "string" ) {
-			urlConfigHtml += "<input id='qunit-urlconfig-" + escaped +
+			urlConfigHtml += "<label for='qunit-urlconfig-" + escaped +
+				"' title='" + escapedTooltip + "'><input id='qunit-urlconfig-" + escaped +
 				"' name='" + escaped + "' type='checkbox'" +
 				( val.value ? " value='" + escapeText( val.value ) + "'" : "" ) +
 				( config[ val.id ] ? " checked='checked'" : "" ) +
-				" title='" + escapedTooltip + "' /><label for='qunit-urlconfig-" + escaped +
-				"' title='" + escapedTooltip + "'>" + val.label + "</label>";
+				" title='" + escapedTooltip + "' />" + escapeText( val.label ) + "</label>";
 		} else {
 			urlConfigHtml += "<label for='qunit-urlconfig-" + escaped +
 				"' title='" + escapedTooltip + "'>" + val.label +
@@ -2616,20 +2609,23 @@ function setUrl( params ) {
 }
 
 function applyUrlParams() {
-	var selectedModule,
-		modulesList = id( "qunit-modulefilter" ),
+	var i,
+		selectedModules = [],
+		modulesList = id( "qunit-modulefilter-dropdown-list" ).getElementsByTagName( "input" ),
 		filter = id( "qunit-filter-input" ).value;
 
-	selectedModule = modulesList ?
-		decodeURIComponent( modulesList.options[ modulesList.selectedIndex ].value ) :
-		undefined;
+	for ( i = 0; i < modulesList.length; i++ )  {
+		if ( modulesList[ i ].checked ) {
+			selectedModules.push( modulesList[ i ].value );
+		}
+	}
 
 	window.location = setUrl( {
-		module: ( selectedModule === "" ) ? undefined : selectedModule,
 		filter: ( filter === "" ) ? undefined : filter,
+		moduleId: ( selectedModules.length === 0 ) ? undefined : selectedModules,
 
-		// Remove moduleId and testId filters
-		moduleId: undefined,
+		// Remove module and testId filter
+		module: undefined,
 		testId: undefined
 	} );
 }
@@ -2640,10 +2636,7 @@ function toolbarUrlConfigContainer() {
 	urlConfigContainer.innerHTML = getUrlConfigHtml();
 	addClass( urlConfigContainer, "qunit-url-config" );
 
-	// For oldIE support:
-	// * Add handlers to the individual elements instead of the container
-	// * Use "click" instead of "change" for checkboxes
-	addEvents( urlConfigContainer.getElementsByTagName( "input" ), "click", toolbarChanged );
+	addEvents( urlConfigContainer.getElementsByTagName( "input" ), "change", toolbarChanged );
 	addEvents( urlConfigContainer.getElementsByTagName( "select" ), "change", toolbarChanged );
 
 	return urlConfigContainer;
@@ -2669,59 +2662,160 @@ function toolbarLooseFilter() {
 	label.appendChild( input );
 
 	filter.appendChild( label );
+	filter.appendChild( document.createTextNode( " " ) );
 	filter.appendChild( button );
-	addEvent( filter, "submit", function( ev ) {
-		applyUrlParams();
-
-		if ( ev && ev.preventDefault ) {
-			ev.preventDefault();
-		}
-
-		return false;
-	} );
+	addEvent( filter, "submit", interceptNavigation );
 
 	return filter;
 }
 
-function toolbarModuleFilterHtml() {
-	var i,
-		moduleFilterHtml = "";
+function moduleListHtml () {
+	var i, checked,
+		html = "";
 
-	if ( !modulesList.length ) {
-		return false;
+	for ( i = 0; i < config.modules.length; i++ ) {
+		if ( config.modules[ i ].name !== "" ) {
+			checked = config.moduleId.indexOf( config.modules[ i ].moduleId ) > -1;
+			html += "<li><label class='clickable" + ( checked ? " checked" : "" ) +
+				"'><input type='checkbox' " + "value='" + config.modules[ i ].moduleId + "'" +
+				( checked ? " checked='checked'" : "" ) + " />" +
+				escapeText( config.modules[ i ].name ) + "</label></li>";
+		}
 	}
 
-	moduleFilterHtml += "<label for='qunit-modulefilter'>Module: </label>" +
-		"<select id='qunit-modulefilter' name='modulefilter'><option value='' " +
-		( QUnit.urlParams.module === undefined ? "selected='selected'" : "" ) +
-		">< All Modules ></option>";
-
-	for ( i = 0; i < modulesList.length; i++ ) {
-		moduleFilterHtml += "<option value='" +
-			escapeText( encodeURIComponent( modulesList[ i ] ) ) + "' " +
-			( QUnit.urlParams.module === modulesList[ i ] ? "selected='selected'" : "" ) +
-			">" + escapeText( modulesList[ i ] ) + "</option>";
-	}
-	moduleFilterHtml += "</select>";
-
-	return moduleFilterHtml;
+	return html;
 }
 
-function toolbarModuleFilter() {
-	var toolbar = id( "qunit-testrunner-toolbar" ),
-		moduleFilter = document.createElement( "span" ),
-		moduleFilterHtml = toolbarModuleFilterHtml();
+function toolbarModuleFilter () {
+	var allCheckbox, commit, reset,
+		moduleFilter = document.createElement( "form" ),
+		label = document.createElement( "label" ),
+		moduleSearch = document.createElement( "input" ),
+		dropDown = document.createElement( "div" ),
+		actions = document.createElement( "span" ),
+		dropDownList = document.createElement( "ul" ),
+		dirty = false;
 
-	if ( !toolbar || !moduleFilterHtml ) {
-		return false;
+	moduleSearch.id = "qunit-modulefilter-search";
+	addEvent( moduleSearch, "input", searchInput );
+	addEvent( moduleSearch, "input", searchFocus );
+	addEvent( moduleSearch, "focus", searchFocus );
+	addEvent( moduleSearch, "click", searchFocus );
+
+	label.id = "qunit-modulefilter-search-container";
+	label.innerHTML = "Module: ";
+	label.appendChild( moduleSearch );
+
+	actions.id = "qunit-modulefilter-actions";
+	actions.innerHTML =
+		"<button style='display:none'>Apply</button>" +
+		"<button type='reset' style='display:none'>Reset</button>" +
+		"<label class='clickable" +
+		( config.moduleId.length ? "" : " checked" ) +
+		"'><input type='checkbox'" + ( config.moduleId.length ? "" : " checked='checked'" ) +
+		">All modules</label>";
+	allCheckbox = actions.lastChild.firstChild;
+	commit = actions.firstChild;
+	reset = commit.nextSibling;
+	addEvent( commit, "click", applyUrlParams );
+
+	dropDownList.id = "qunit-modulefilter-dropdown-list";
+	dropDownList.innerHTML = moduleListHtml();
+
+	dropDown.id = "qunit-modulefilter-dropdown";
+	dropDown.style.display = "none";
+	dropDown.appendChild( actions );
+	dropDown.appendChild( dropDownList );
+	addEvent( dropDown, "change", selectionChange );
+	selectionChange();
+
+	moduleFilter.id = "qunit-modulefilter";
+	moduleFilter.appendChild( label );
+	moduleFilter.appendChild( dropDown ) ;
+	addEvent( moduleFilter, "submit", interceptNavigation );
+	addEvent( moduleFilter, "reset", function() {
+
+		// Let the reset happen, then update styles
+		window.setTimeout( selectionChange );
+	} );
+
+	// Enables show/hide for the dropdown
+	function searchFocus() {
+		if ( dropDown.style.display !== "none" ) {
+			return;
+		}
+
+		dropDown.style.display = "block";
+		addEvent( document, "click", hideHandler );
+		addEvent( document, "keydown", hideHandler );
+
+		// Hide on Escape keydown or outside-container click
+		function hideHandler( e )  {
+			var inContainer = moduleFilter.contains( e.target );
+
+			if ( e.keyCode === 27 || !inContainer ) {
+				if ( e.keyCode === 27 && inContainer ) {
+					moduleSearch.focus();
+				}
+				dropDown.style.display = "none";
+				removeEvent( document, "click", hideHandler );
+				removeEvent( document, "keydown", hideHandler );
+				moduleSearch.value = "";
+				searchInput();
+			}
+		}
 	}
 
-	moduleFilter.setAttribute( "id", "qunit-modulefilter-container" );
-	moduleFilter.innerHTML = moduleFilterHtml;
+	// Processes module search box input
+	function searchInput() {
+		var i, item,
+			searchText = moduleSearch.value.toLowerCase(),
+			listItems = dropDownList.children;
 
-	addEvent( moduleFilter.lastChild, "change", applyUrlParams );
+		for ( i = 0; i < listItems.length; i++ ) {
+			item = listItems[ i ];
+			if ( !searchText || item.textContent.toLowerCase().indexOf( searchText ) > -1 ) {
+				item.style.display = "";
+			} else {
+				item.style.display = "none";
+			}
+		}
+	}
 
-	toolbar.appendChild( moduleFilter );
+	// Processes selection changes
+	function selectionChange( evt ) {
+		var i,
+			checkbox = evt && evt.target || allCheckbox,
+			modulesList = dropDownList.getElementsByTagName( "input" ),
+			selectedNames = [];
+
+		toggleClass( checkbox.parentNode, "checked", checkbox.checked );
+
+		dirty = false;
+		if ( checkbox.checked && checkbox !== allCheckbox ) {
+		   allCheckbox.checked = false;
+		   removeClass( allCheckbox.parentNode, "checked" );
+		}
+		for ( i = 0; i < modulesList.length; i++ )  {
+			if ( !evt ) {
+				toggleClass( modulesList[ i ].parentNode, "checked", modulesList[ i ].checked );
+			} else if ( checkbox === allCheckbox && checkbox.checked ) {
+				modulesList[ i ].checked = false;
+				removeClass( modulesList[ i ].parentNode, "checked" );
+			}
+			dirty = dirty || ( checkbox.checked !== checkbox.defaultChecked );
+			if ( modulesList[ i ].checked ) {
+				selectedNames.push( modulesList[ i ].parentNode.textContent );
+			}
+		}
+
+		commit.style.display = reset.style.display = dirty ? "" : "none";
+		moduleSearch.placeholder = selectedNames.join( ", " ) || allCheckbox.parentNode.textContent;
+		moduleSearch.title = "Type to filter list. Current selection:\n" +
+			( selectedNames.join( "\n" ) || allCheckbox.parentNode.textContent );
+	}
+
+	return moduleFilter;
 }
 
 function appendToolbar() {
@@ -2729,8 +2823,9 @@ function appendToolbar() {
 
 	if ( toolbar ) {
 		toolbar.appendChild( toolbarUrlConfigContainer() );
+		toolbar.appendChild( toolbarModuleFilter() );
 		toolbar.appendChild( toolbarLooseFilter() );
-		toolbarModuleFilter();
+		toolbar.appendChild( document.createElement( "div" ) ).className = "clearfix";
 	}
 }
 
@@ -2766,13 +2861,6 @@ function appendTestResults() {
 		result.className = "result";
 		tests.parentNode.insertBefore( result, tests );
 		result.innerHTML = "Running...<br />&#160;";
-	}
-}
-
-function storeFixture() {
-	var fixture = id( "qunit-fixture" );
-	if ( fixture ) {
-		config.fixture = fixture.innerHTML;
 	}
 }
 
@@ -2877,9 +2965,6 @@ QUnit.begin( function( details ) {
 	modulesList.sort( function( a, b ) {
 		return a.localeCompare( b );
 	} );
-
-	// Capture fixture HTML from the page
-	storeFixture();
 
 	// Initialize QUnit elements
 	appendInterface();
