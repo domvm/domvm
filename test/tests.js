@@ -406,8 +406,8 @@ QUnit.module("Other mods");
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 5, insertBefore: 5, textContent: 3 });
 	});
 
-/*	temp disabled, since pool/freeing logic unlinks old vnodes as soon as they're removed
-	QUnit.test('(root) span -> a', function(assert) {
+//	temp disabled, since pool/freeing logic unlinks old vnodes as soon as they're removed
+	QUnit.skip('(root) span -> a', function(assert) {
 		tpl = ["span", "foo"];
 		var expcHtml = '<span>foo</span>';
 
@@ -431,7 +431,6 @@ QUnit.module("Other mods");
 
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, setAttribute: 1, removeChild: 1, insertBefore: 1, textContent: 1 });
 	});
-*/
 
 	QUnit.test('(child) span -> a', function(assert) {
 		tpl = ["div", [["span", "foo"]]];
