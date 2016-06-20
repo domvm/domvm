@@ -415,14 +415,13 @@
 	}
 
 	function removeNode(node, removeSelf, wasDeferred) {
-		free(node);
-
 		if (node.el == null || !node.el.parentNode)
-			return;
-
-		if (removeSelf) {
+			free(node);
+		else if (removeSelf) {
 			node.el.parentNode.removeChild(node.el);
 			node.el = null;
+
+			free(node);
 
 	//		if (node.parent)
 	//			node.parent.body[node.idx] = null;
@@ -827,7 +826,7 @@
 	}
 
 	function alloc() {
-		var node = pool.length > 0 ? pool.pop() : {
+		return pool.length > 0 ? pool.pop() : {
 			type: null,		// elem, text, frag (todo)
 //			name: null,		// view name populated externally by createView
 			key: null,		// view key populated externally by createView
@@ -853,6 +852,11 @@
 			data: null,
 			diff: null,
 		};
+	}
+
+	function free(node) {
+		if (node.removed && node.vm)
+			node.vm.node = null;
 
 		node.el =
 		node.key =
@@ -868,10 +872,6 @@
 		node.wasSame =
 		node.removed = false;
 
-		return node;
-	}
-
-	function free(node) {
 	//	console.log(node.el);		// hmm
 		pool.push(node);
 	}
