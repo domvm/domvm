@@ -415,18 +415,13 @@ QUnit.module("Other mods");
 		var vm = domvm.view(View).mount(testyDiv);
 		var callCounts = instr.end();
 
-		console.log(vm.node.el);
-
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
-
-		console.log(vm.node.el);
 
 		tpl = ["a", {href: "#"}, "bar"];
 		var expcHtml = '<a href="#">bar</a>';
 
 		instr.start();
 		vm.redraw();
-		console.log(vm.node.el);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, setAttribute: 1, removeChild: 1, insertBefore: 1, textContent: 1 });
