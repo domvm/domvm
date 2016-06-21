@@ -315,8 +315,11 @@
 				(old || !isRootNode) && hydrateNode(node, null, node.el);			// parentNode.el.firstChild?
 
 				// bug: this bypasses hooks
-				if (repl)
+				if (repl) {
 					insertNode(node, oldParentEl.childNodes[old.idx], oldParentEl);
+					// cleanNode would have unset this binding (by assuming root elem removal == unmount)
+					vm.node = node;
+				}
 			}
 
 			old && fireHook(vm, "didRedraw", vm);

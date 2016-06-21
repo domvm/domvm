@@ -406,8 +406,7 @@ QUnit.module("Other mods");
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 5, insertBefore: 5, textContent: 3 });
 	});
 
-//	temp disabled, since pool/freeing logic unlinks old vnodes as soon as they're removed
-	QUnit.skip('(root) span -> a', function(assert) {
+	QUnit.test('(root) span -> a', function(assert) {
 		tpl = ["span", "foo"];
 		var expcHtml = '<span>foo</span>';
 
