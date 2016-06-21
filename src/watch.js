@@ -30,7 +30,7 @@
 			}
 
 			var okFn = cb,
-				errFn = function (err) { return Promise.reject(err); }; 
+				errFn = function (err) { return Promise.reject(err); };
 
 			if (cb instanceof Array) {
 				okFn = cb[0];
