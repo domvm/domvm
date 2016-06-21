@@ -477,6 +477,8 @@
 					// kill empty array nodes
 					if (!def2.length)
 						killIt = true;
+					else if (def2._expl)
+						mergeIt = true;
 					// tag node
 					else if (typeof def2[0] == "string" && def2[0] !== "") {
 						node2 = initNode(def2, node, i, ownerVm);

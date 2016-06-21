@@ -1659,6 +1659,22 @@ QUnit.module("Unrenderable values");
 
 		evalOut(assert, vm2.node.el, domvm.html(vm2.node), expcHtml, callCounts, { createElement: 4, className: 2, insertBefore: 4, textContent: 1 });
 	});
+
+	QUnit.test('Allow explicit sub-array tagging (kids._expl)', function(assert) {
+		var kids2 = ["c","d","e"];
+		var kids = ["a","b",kids2];
+
+		kids2._expl = kids._expl = true;
+
+		tpl = ["div", kids];
+
+		var expcHtml = '<div>abcde</div>';
+		instr.start();
+		var vm2 = domvm.view(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm2.node.el, domvm.html(vm2.node), expcHtml, callCounts, { createElement: 1, createTextNode: 1, insertBefore: 2 });
+	});
 })();
 
 QUnit.module("Non-persistent model replacement");
