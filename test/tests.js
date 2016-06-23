@@ -2453,4 +2453,85 @@ QUnit.module("Patch");
 	});
 })();
 
+QUnit.module("Lifecycle hooks");
+
+(function() {
+	var vm;
+
+	QUnit.test('willUpdate (root/explicit)', function(assert) {
+		function A(vm, model) {
+			vm.hook({
+				willUpdate: function(vm, newModel) {
+					model = newModel;
+				}
+			});
+
+			return function() {
+				return ["div", model.text];
+			};
+		}
+
+		instr.start();
+		vm = domvm.view(A, {text: "abc"}, false).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div>abc</div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, textContent: 1, insertBefore: 1 });
+
+		instr.start();
+		vm.update({text: "def"});
+		var callCounts = instr.end();
+
+		var expcHtml = '<div>def</div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { nodeValue: 1 });
+	});
+
+	QUnit.test('willUpdate (sub-view/implicit)', function(assert) {
+		function B(vm, model) {
+			vm.hook({
+				willUpdate: function(vm, newModel) {
+					model = newModel;
+				}
+			});
+
+			return function() {
+				return ["div",
+					[C, model, false]
+				];
+			};
+		}
+
+		function C(vm, model) {
+			vm.hook({
+				willUpdate: function(vm, newModel) {
+					model = newModel;
+				}
+			});
+
+			return function() {
+				return ["strong", model.text];
+			};
+		}
+
+		instr.start();
+		vm = domvm.view(B, {text: "abc"}, false).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><strong>abc</strong></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 2, textContent: 1, insertBefore: 2 });
+
+		instr.start();
+		vm.update({text: "def"});
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><strong>def</strong></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { nodeValue: 1 });
+	});
+})();
+
+
 // QUnit.module("Keyed model & addlCtx replacement");
