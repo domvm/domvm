@@ -143,7 +143,7 @@
 				var n = nodes[i];
 				if (n.key === key) {
 					if (viewFn) {
-						if (n.vm && n.vm.view[0] === viewFn)
+						if (n.vm && n.vm.ident[0] === viewFn)
 							return i;
 					}
 					else
