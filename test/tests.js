@@ -406,8 +406,7 @@ QUnit.module("Other mods");
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 5, insertBefore: 5, textContent: 3 });
 	});
 
-//	temp disabled, since pool/freeing logic unlinks old vnodes as soon as they're removed
-	QUnit.skip('(root) span -> a', function(assert) {
+	QUnit.test('(root) span -> a', function(assert) {
 		tpl = ["span", "foo"];
 		var expcHtml = '<span>foo</span>';
 
@@ -1660,6 +1659,22 @@ QUnit.module("Unrenderable values");
 
 		evalOut(assert, vm2.node.el, domvm.html(vm2.node), expcHtml, callCounts, { createElement: 4, className: 2, insertBefore: 4, textContent: 1 });
 	});
+
+	QUnit.test('Allow explicit sub-array tagging (kids._expl)', function(assert) {
+		var kids2 = ["c","d","e"];
+		var kids = ["a","b",kids2];
+
+		kids2._expl = kids._expl = true;
+
+		tpl = ["div", kids];
+
+		var expcHtml = '<div>abcde</div>';
+		instr.start();
+		var vm2 = domvm.view(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm2.node.el, domvm.html(vm2.node), expcHtml, callCounts, { createElement: 1, createTextNode: 1, insertBefore: 2 });
+	});
 })();
 
 QUnit.module("Non-persistent model replacement");
@@ -2437,5 +2452,86 @@ QUnit.module("Patch");
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { className: 1 });
 	});
 })();
+
+QUnit.module("Lifecycle hooks");
+
+(function() {
+	var vm;
+
+	QUnit.test('willUpdate (root/explicit)', function(assert) {
+		function A(vm, model) {
+			vm.hook({
+				willUpdate: function(vm, newModel) {
+					model = newModel;
+				}
+			});
+
+			return function() {
+				return ["div", model.text];
+			};
+		}
+
+		instr.start();
+		vm = domvm.view(A, {text: "abc"}, false).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div>abc</div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, textContent: 1, insertBefore: 1 });
+
+		instr.start();
+		vm.update({text: "def"});
+		var callCounts = instr.end();
+
+		var expcHtml = '<div>def</div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { nodeValue: 1 });
+	});
+
+	QUnit.test('willUpdate (sub-view/implicit)', function(assert) {
+		function B(vm, model) {
+			vm.hook({
+				willUpdate: function(vm, newModel) {
+					model = newModel;
+				}
+			});
+
+			return function() {
+				return ["div",
+					[C, model, false]
+				];
+			};
+		}
+
+		function C(vm, model) {
+			vm.hook({
+				willUpdate: function(vm, newModel) {
+					model = newModel;
+				}
+			});
+
+			return function() {
+				return ["strong", model.text];
+			};
+		}
+
+		instr.start();
+		vm = domvm.view(B, {text: "abc"}, false).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><strong>abc</strong></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 2, textContent: 1, insertBefore: 2 });
+
+		instr.start();
+		vm.update({text: "def"});
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><strong>def</strong></div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { nodeValue: 1 });
+	});
+})();
+
 
 // QUnit.module("Keyed model & addlCtx replacement");

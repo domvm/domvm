@@ -84,15 +84,17 @@
 		var vm = {
 			api: {},
 			node: null,
-			view: [viewFn, key],	// immutable vm handle
+			ident: [viewFn, key],	// immutable vm handle
 			model: model,
 			opts: opts || {},
 			render: null,
 			update: function(newModel, doRedraw) {
 				// persistent models cannot be updated with new data via the view
 				// this function is for dumb data re-rendering, key must have been false
-				if (newModel != null && (key !== model || u.isVal(key)))
+				if (newModel != null && (key !== model || u.isVal(key))) {
+					fireHook(vm, "willUpdate", vm, newModel);
 					model = vm.model = newModel;
+				}
 				return doRedraw !== false ? redraw(0) : vm;
 			},
 			on: function(ev, fn) {
@@ -315,8 +317,11 @@
 				(old || !isRootNode) && hydrateNode(node, null, node.el);			// parentNode.el.firstChild?
 
 				// bug: this bypasses hooks
-				if (repl)
+				if (repl) {
 					insertNode(node, oldParentEl.childNodes[old.idx], oldParentEl);
+					// cleanNode would have unset this binding (by assuming root elem removal == unmount)
+					vm.node = node;
+				}
 			}
 
 			old && fireHook(vm, "didRedraw", vm);
@@ -474,6 +479,8 @@
 					// kill empty array nodes
 					if (!def2.length)
 						killIt = true;
+					else if (def2._expl)
+						mergeIt = true;
 					// tag node
 					else if (typeof def2[0] == "string" && def2[0] !== "") {
 						node2 = initNode(def2, node, i, ownerVm);
@@ -492,7 +499,7 @@
 					if (u.isFunc(def2.redraw)) {	// pre-init vm
 						def2.moveTo(node, i);
 						node2 = def2.node;
-						key = def2.view[1];
+						key = def2.ident[1];
 					}
 					else if (u.isElem(def2))
 						node2 = initNode(def2, node, i, ownerVm);
@@ -704,9 +711,9 @@
 			// views can only graft from other views
 			if (newIsView && o.vm) {
 				// approx match by viewFn
-				if (o.vm.view[0] === node[0]) {
+				if (o.vm.ident[0] === node[0]) {
 					// exact match by key
-					if (o.vm.view[1] === getViewKey(node[1], node[2]))
+					if (o.vm.ident[1] === getViewKey(node[1], node[2]))
 						return [i, DONOR_NODE];
 
 					var existsInNew = false;
@@ -717,7 +724,7 @@
 					if (cfg.viewScan) {
 						for (var j = 0; j < newBody.length; j++) {
 							var n = newBody[j];
-							if (!n.el && n.vm && n.vm.view[0] === o.vm.view[0] && n.vm.view[1] === o.vm.view[1]) {
+							if (!n.el && n.vm && n.vm.ident[0] === o.vm.ident[0] && n.vm.ident[1] === o.vm.ident[1]) {
 								existsInNew = true;
 								break;
 								// TODO: should be able to push-graft new one here, to avoid
@@ -729,13 +736,13 @@
 					*/
 
 					// removed keyed view = can reuse its DOM if by end of list, no exacts were found
-					if (!existsInNew && !approx && newKeys && u.keyedIdx(o.key, newBody, o.vm.view[0]) == -1)
+					if (!existsInNew && !approx && newKeys && u.keyedIdx(o.key, newBody, o.vm.ident[0]) == -1)
 						approx = [i, DONOR_DOM];
 				}
 			}
 			else if (areSimilar(o, node))
 				// matching dom nodes without keys
-				if (o.key === null || (!newKeys || u.keyedIdx(o.key, newBody, o.vm ? o.vm.view[0] : null) == -1))
+				if (o.key === null || (!newKeys || u.keyedIdx(o.key, newBody, o.vm ? o.vm.ident[0] : null) == -1))
 					return [i, DONOR_DOM];
 		}
 
