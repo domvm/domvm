@@ -251,6 +251,7 @@
 			old && fireHook(vm, "willRedraw", vm);
 
 			var oldRefs = vm.refs;
+			var oldBody = vm.body;
 			vm.refs = {};	// null?
 			vm.body = [];	// null?
 
@@ -266,6 +267,7 @@
 				old.moved = true;
 				old.wasSame = true;
 				vm.refs = oldRefs;
+				vm.body = oldBody;
 				return vm;
 			}
 
