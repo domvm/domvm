@@ -257,7 +257,12 @@
 
 		//	vm.keyMap = {};
 
-			var def = vm.render.call(vm.api, vm, model, key);
+//			try {
+				var def = vm.render.call(vm.api, vm, model, key);
+//			} catch (e) {
+//				console.log(e);
+//				def = false;
+//			}
 
 			var node;
 
