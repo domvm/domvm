@@ -158,9 +158,8 @@
 
 					// can ajax re-fetch module's state here eg: GET /state?mods[]=orders
 
-					// when changing module via API directly, this sets the url
-					// without invoking handlers (would be cyclic)
-				//	this.router.route(modName);
+					// when changing module via API directly, this sets the url without invoking handlers (would be cyclic)
+					this.router.route(modName);
 
 					this.view.redraw();
 				}
