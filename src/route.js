@@ -5,6 +5,7 @@
 		useHist = false,
 		willEnter = null,
 		willExit = null,
+		notFound = null,
 		root = "";
 
 	domvm.route = function(routeFn, imp) {
@@ -20,17 +21,15 @@
 			href: function(name, segs, query, hash, repl) {
 				var route = buildRoute(routes, root, name, segs, query, hash);
 
-				if (!useHist)
-					return "#" + route.href;		// if repl here then use handler with location.replace?
-				else {
-					var fn = function(e) {
-						api.goto(route,null,null,null,repl);
-						e.preventDefault();
-						// stop prop?
-					};
-					fn.href = route.href;
-					return fn;
-				}
+				var fn = function(e) {
+					api.goto(route, segs, query, hash, repl);
+					e.preventDefault();
+					// stop prop?
+				};
+
+				fn.href = (useHist ? "" : "#") + route.href;
+
+				return fn;
 			},
 			config: function(opts) {
 				useHist = opts.useHist;
@@ -40,6 +39,7 @@
 
 				willEnter = opts.willEnter || null;
 				willExit = opts.willExit || null;
+				notFound = opts.notFound || null;
 
 				init = opts.init || null;
 			},
@@ -47,14 +47,20 @@
 				api.goto(routeFromLoc(),null,null,null,true);
 			},
 			// dest can be route key, href or route object from buildRoute()
-			goto: function(dest, segs, query, hash, repl) {
+			goto: function(dest, segs, query, hash, repl, noFns) {
 				if (!dest.href)
 					dest = buildRoute(routes, root, dest, segs, query, hash);
 
 				// is "_noMatch" a route? not really since there are multiple views, nomatch needs to accept original intended route
-				if (dest.name === false)
-					console.log("Could not find route");		// loop back to _noMatch?
+				if (dest.name === false) {
+					if (notFound)
+						notFound(dest);		// || .apply(null, arguments)?
+					else
+						console.log("Could not find route");		// loop back to _noMatch?
+				}
 				else {
+					// BUG?: this will push dest onto stack before running can* checks, so
+
 					var toPos = null;
 					var dir = 0;
 					for (var i = 0; i < stack.length; i++) {
@@ -79,11 +85,11 @@
 
 					if (pos !== null) {
 						if (willExit)
-							canExit = willExit(prev, next);
+							canExit = noFns || willExit(prev, next);
 
 						if (canExit !== false) {
 							var onexit = routes[prev.name].onexit;
-							canExit = !onexit ? true : onexit.apply(null, (prev ? [prev.segs, prev.query, prev.hash] : []).concat(next));
+							canExit = !onexit ? true : noFns || onexit.apply(null, (prev ? [prev.segs, prev.query, prev.hash] : []).concat(next));
 						}
 						else {
 						//	revert nav?
@@ -92,11 +98,11 @@
 
 					if (canExit !== false) {
 						if (willEnter)
-							canEnter = willEnter(next, prev);
+							canEnter = noFns || willEnter(next, prev);
 
 						if (canEnter !== false) {
 							var onenter = routes[next.name].onenter;
-							canEnter = onenter.apply(null, (next ? [next.segs, next.query, next.hash] : []).concat(prev));
+							canEnter = noFns || onenter.apply(null, (next ? [next.segs, next.query, next.hash] : []).concat(prev));
 						}
 
 						if (canEnter !== false) {
@@ -125,13 +131,21 @@
 					}
 				}
 			},
-			location: function() {
-				return pos == null ? routeFromLoc() : stack[pos];
-			//	return stack[pos];
+			// in contrast to goto(), this route getter/setter does not
+			// invoke handlers and is designed to reflect an already changed
+			// app/view state rather than requesting a state change
+			route: function(dest, segs, query, hash, repl) {
+				if (dest != null)
+					api.goto(dest, segs, query, hash, repl, true);				// TODO: avoid setting current if same as dest
+				else
+					return pos == null ? routeFromLoc() : stack[pos];
 			},
 	//		next:
 	//		prev:		// revert path
 		};
+
+		// BC compat
+		api.location = api.route;
 
 		var routes = routeFn(api, imp);
 
