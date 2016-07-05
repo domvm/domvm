@@ -1123,7 +1123,7 @@
 		if (name === "class")
 			targ.className = "";
 		else if (name === "id")
-			targ.id = null;
+			targ.id = "";
 		else if (name[0] === ".") {
 			var n = name.substr(1);
 			if (ns === "svg")
