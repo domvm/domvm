@@ -1015,31 +1015,21 @@
 			}
 		}
 
-		if (u.isObj(props._hooks)) {
-			node.hooks = props._hooks;
-			props._hooks = null;
-		}
-
 		node.key =
 			u.isVal(props._key)	? props._key	:
 			u.isVal(props._ref)	? props._ref	:
 			u.isVal(props.id)	? props.id		:
 			u.isVal(props.name)	? props.name	: null;
 
-		if (props._ref != null)
-			node.ref = props._ref;
-		if (props._raw)
-			node.raw = true;
-		if (props._data != null)
-			node.data = props._data;
-		if (props._diff)
-			node.diff = props._diff;
+		if (props._key != null)
+			delete props._key;
 
-		props._ref =
-		props._key =
-		props._raw =
-		props._data =
-		props._diff = null;
+		for (var name in props) {
+			if (name[0] == "_") {
+				node[name.substr(1)] = props[name];
+				delete props[name];
+			}
+		}
 	}
 
 	function patchProps(n, o) {
@@ -1104,17 +1094,17 @@
 	function delCss(targ, name) {targ.style[name] = "";}
 
 	function setAttr(targ, name, val, ns, init, node) {
-		if (name[0] === ".") {
+		if (name === "class")
+			targ.className = val;
+		else if (name === "id")
+			targ.id = val;
+		else if (name[0] === ".") {
 			var n = name.substr(1);
 			if (ns === "svg")
 				targ[n].baseVal = val;
 			else
 				targ[n] = val;
 		}
-		else if (name === "class")
-			targ.className = val;
-		else if (name === "id")
-			targ[name] = val;
 		else if (u.isEvProp(name)) {	// else test delegation for val === function vs object
 			var par = node;
 			while (!par.vm)
@@ -1130,16 +1120,18 @@
 	function delAttr(targ, name, ns, init) {
 		if (init) return;
 
-		if (name[0] === ".") {
+		if (name === "class")
+			targ.className = "";
+		else if (name === "id")
+			targ.id = null;
+		else if (name[0] === ".") {
 			var n = name.substr(1);
 			if (ns === "svg")
 				targ[n].baseVal = null;
 			else
 				targ[n] = null;					// or = ""?
 		}
-		else if (name === "class")
-			targ.className = "";
-		else if (name === "id" || u.isEvProp(name))
+		else if (u.isEvProp(name))
 			targ[name] = null;
 		else
 			targ.removeAttribute(name);
