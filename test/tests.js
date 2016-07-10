@@ -2234,7 +2234,6 @@ QUnit.module("Imperative VMs");
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
 	});
 
-
 	QUnit.test('Sever `node.vm.node` binding when freeing unmounted sub-vms\' nodes into pool', function(assert) {
 		function A() {
 			return function() {
@@ -2290,6 +2289,63 @@ QUnit.module("Imperative VMs");
 
 		var expcHtml = '<main><aside><section>bar</section><h3>baz</h3></aside></main>';
 		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { createElement: 3, insertBefore: 3, textContent: 2, removeChild: 1 });
+	});
+
+	QUnit.test("Replace root node during sub-vm swapping", function(assert) {
+		function App() {
+			this.a = null;
+			this.b = null;
+
+			this.vm2 = domvm.view(View2, this);
+			this.vm  = domvm.view(View, this);
+		}
+
+		function View(vm, app) {
+			return function() {
+				if (app.a == null)
+					return ["h3", "Loading 1..."];
+				if (app.b != null)
+					return [".one", app.vm2];
+
+				return [".one", "View 1"];
+			};
+		}
+
+		function View2(vm, app) {
+			return function() {
+				if (app.a == null)
+					return ["h3", "Loading 2..."]
+
+				return [".two", "View 2"];
+			};
+		}
+
+		var app = new App();
+
+		instr.start();
+		app.vm.mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<h3>Loading 1...</h3>';
+		evalOut(assert, app.vm.node.el, domvm.html(app.vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
+
+		app.a = [1, 2];
+
+		instr.start();
+		app.vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div class="one">View 1</div>';
+		evalOut(assert, app.vm.node.el, domvm.html(app.vm.node), expcHtml, callCounts, { className: 1, createElement: 1, insertBefore: 1, removeChild: 1, textContent: 1 });
+
+		app.b = 0;
+
+		instr.start();
+		app.vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div class="one"><div class="two">View 2</div></div>';
+		evalOut(assert, app.vm.node.el, domvm.html(app.vm.node), expcHtml, callCounts, { className: 1, createElement: 1, insertBefore: 1, textContent: 2 });
 	});
 })();
 

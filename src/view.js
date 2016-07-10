@@ -305,7 +305,7 @@
 			var donor = old;
 
 			// clear donor if new tag, will replaceNode
-			if (old && (node.type !== old.type || node.tag !== old.tag)) {
+			if (old && old.el && (node.type !== old.type || node.tag !== old.tag)) {
 				donor = null;
 				var repl = true;
 				var oldParentEl = old.el.parentNode;
