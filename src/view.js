@@ -115,6 +115,12 @@
 			parent: null,
 			body: [],
 			mount: function(parentEl, isRoot) {
+				if (!vm.node)
+					redraw(0);
+
+				if (parentEl == null)
+					return vm;
+
 				var withEl = null;
 
 				if (isRoot) {
@@ -130,7 +136,11 @@
 				return vm;
 			},
 			attach: function(rootEl) {
+				if (!vm.node)
+					redraw(0);
+
 				hydrateWith(vm.node, rootEl);		// will/didAttach?
+
 				return vm;
 			},
 		//	detach: detach,
@@ -150,8 +160,10 @@
 
 		if (parentNode)
 			return moveTo(parentNode, idxInParent);
-		else
-			return redraw(0);
+//		else
+//			return redraw(0);
+
+		return vm;
 
 		function addHandlers(ctx, ev, fn) {
 			if (fn) {

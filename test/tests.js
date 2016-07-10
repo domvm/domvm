@@ -1380,7 +1380,7 @@ QUnit.module("emit() & synthetic events");
 		return function() { return ["#c", "Hello"]; };
 	}
 
-	domvm.view(ViewA);
+	domvm.view(ViewA).mount()
 
 	function mkTest(assert, vm) {
 		return function test(ev, exp) {
@@ -1452,7 +1452,7 @@ QUnit.module("emit() & synthetic events");
 			};
 		}
 
-		domvm.view(ViewX);
+		domvm.view(ViewX).mount();
 
 		vmY.emit("testEv", "arg1", "arg2");
 	});
@@ -1488,7 +1488,7 @@ QUnit.module("redraw() ancestors");
 		};
 	}
 
-	domvm.view(ViewA);
+	domvm.view(ViewA).mount();
 
 	function mkTest(assert, vm) {
 		return function test(targ, exp) {
@@ -2230,7 +2230,7 @@ QUnit.module("Imperative VMs");
 		vm.redraw();
 		var callCounts = instr.end();
 
-		var expcHtml = '<div><div>A1</div></div>';
+		var expcHtml = '<div><div>A0</div></div>';
 		evalOut(assert, vm.node.el, domvm.html(vm.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
 	});
 
