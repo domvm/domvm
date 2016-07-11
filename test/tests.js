@@ -1792,6 +1792,54 @@ QUnit.module("Non-persistent model replacement");
 		assert.equal(subRedraws, 1, "Subview redraws");
 	});
 
+	QUnit.test('vm.diff(getArgs) should reuse view if [arg1, arg2...] is same between redraws', function(assert) {
+		var redraws = 0;
+
+		function ViewA(vm, model) {
+			vm.diff(function(model) {
+				return [model.class, model.text];
+			});
+
+			return function() {
+				redraws++;
+				return ["strong", {class: model.class}, model.text];
+			};
+		}
+
+		var model = {
+			class: "classy",
+			text: "texture",
+		};
+
+		var expcHtml = '<strong class="classy">texture</strong>';
+
+		instr.start();
+		var vmA = domvm.view(ViewA, model).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1, className: 1 });
+
+		instr.start();
+		vmA.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { });
+
+		assert.equal(redraws, 1, "Subview redraws");
+
+		model.text = "fabric";
+
+		var expcHtml = '<strong class="classy">fabric</strong>';
+
+		instr.start();
+		vmA.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA.node), expcHtml, callCounts, { nodeValue: 1 });
+
+		assert.equal(redraws, 2, "Subview redraws");
+	});
+
 	QUnit.test('Ad-hoc model wrapper (keyed by model)', function(assert) {
 		var vmC = null, vmD = null;
 
