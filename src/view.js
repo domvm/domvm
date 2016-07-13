@@ -95,6 +95,7 @@
 			for (var i = 0; i < newVals.length; i++) {
 				if (newVals[i] !== oldVals[i]) {
 					oldVals = newVals;
+				//	oldVals.push(idxInParent);
 					return true;
 				}
 			}
@@ -174,7 +175,7 @@
 			},
 			// internal util funcs
 			moveTo: moveTo,
-			updIdx: updIdx,
+		//	updIdx: updIdx,
 		};
 
 		opts && opts.hooks && vm.hook(opts.hooks);
@@ -207,17 +208,15 @@
 		// TODO: should this set node.moved = true?
 		function moveTo(parentNodeNew, idxInParentNew, newModel) {
 			parentNode = parentNodeNew;
-			updIdx(idxInParentNew);
+			idxInParent = idxInParentNew;
 			vm.update(newModel, false);
 
-			if (vm.node != null)
+			if (vm.node != null) {
+				vm.node.idx = idxInParent;
 				parentNode.body[idxInParent] = vm.node;
+			}
 
 			return redraw(0, false);
-		}
-
-		function updIdx(idxInParentNew) {
-			idxInParent = idxInParentNew;
 		}
 
 		/* TODO
@@ -916,6 +915,8 @@
 		node.diff =
 		node.vm =
 		node.body =
+//		node.idx =
+//		node.parent =
 		node.props = null;
 
 		node.raw =
