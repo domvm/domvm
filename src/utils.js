@@ -2,6 +2,7 @@
 	"use strict";
 
 	var win = typeof window == "undefined" ? {} : window;
+	var domEnv = typeof HTMLElement == "function";
 
 	var rAF = win.requestAnimationFrame;
 
@@ -61,7 +62,7 @@
 			return typeof val === "object" && u.isFunc(val.then);
 		},
 		isElem: function(val) {
-			return val instanceof HTMLElement;
+			return domEnv ? val instanceof HTMLElement : false;
 		},
 		// saves from having to do fn && fn()
 		execAll: function(fnArr, arg1, arg2, arg3, arg4, arg5) {
@@ -72,7 +73,7 @@
 			return out;
 		},
 		repaint: function(node) {
-			var h = node.el.offsetHeight;
+			node && node.el && node.el.offsetHeight;
 		},
 		insertArr: function(targ, arr, pos, rem) {
 			targ.splice.apply(targ, [pos, rem].concat(arr));

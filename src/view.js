@@ -81,6 +81,28 @@
 
 		key = getViewKey(model, key);
 
+		var oldVals = true;
+		var getVals = function(model) {
+			return true;
+		};
+
+		function diff() {
+			var newVals = getVals(model);
+
+			if (oldVals === newVals)
+				return true;
+
+			for (var i = 0; i < newVals.length; i++) {
+				if (newVals[i] !== oldVals[i]) {
+					oldVals = newVals;
+				//	oldVals.push(idxInParent);
+					return true;
+				}
+			}
+
+			return false;
+		};
+
 		var vm = {
 			api: {},
 			node: null,
@@ -95,6 +117,7 @@
 					fireHook(vm, "willUpdate", vm, newModel);
 					model = vm.model = newModel;
 				}
+
 				return doRedraw !== false ? redraw(0) : vm;
 			},
 			on: function(ev, fn) {
@@ -103,6 +126,9 @@
 			hook: function(ev, fn) {
 				vm.hooks = vm.hooks || {};
 				addHandlers(vm.hooks, ev, fn);
+			},
+			diff: function(_getVals) {
+				getVals = _getVals;
 			},
 		//	off: function(ev, fn) {},
 			events: {},		// targeted bubbling events & _redraw requests
@@ -115,6 +141,12 @@
 			parent: null,
 			body: [],
 			mount: function(parentEl, isRoot) {
+				if (!vm.node)
+					redraw(0);
+
+				if (parentEl == null)
+					return vm;
+
 				var withEl = null;
 
 				if (isRoot) {
@@ -130,7 +162,11 @@
 				return vm;
 			},
 			attach: function(rootEl) {
+				if (!vm.node)
+					redraw(0);
+
 				hydrateWith(vm.node, rootEl);		// will/didAttach?
+
 				return vm;
 			},
 		//	detach: detach,
@@ -139,7 +175,7 @@
 			},
 			// internal util funcs
 			moveTo: moveTo,
-			updIdx: updIdx,
+		//	updIdx: updIdx,
 		};
 
 		opts && opts.hooks && vm.hook(opts.hooks);
@@ -150,8 +186,10 @@
 
 		if (parentNode)
 			return moveTo(parentNode, idxInParent);
-		else
-			return redraw(0);
+//		else
+//			return redraw(0);
+
+		return vm;
 
 		function addHandlers(ctx, ev, fn) {
 			if (fn) {
@@ -170,17 +208,15 @@
 		// TODO: should this set node.moved = true?
 		function moveTo(parentNodeNew, idxInParentNew, newModel) {
 			parentNode = parentNodeNew;
-			updIdx(idxInParentNew);
+			idxInParent = idxInParentNew;
 			vm.update(newModel, false);
 
-			if (vm.node != null)
+			if (vm.node != null) {
+				vm.node.idx = idxInParent;
 				parentNode.body[idxInParent] = vm.node;
+			}
 
 			return redraw(0, false);
-		}
-
-		function updIdx(idxInParentNew) {
-			idxInParent = idxInParentNew;
 		}
 
 		/* TODO
@@ -251,12 +287,18 @@
 			old && fireHook(vm, "willRedraw", vm);
 
 			var oldRefs = vm.refs;
+			var oldBody = vm.body;
 			vm.refs = {};	// null?
 			vm.body = [];	// null?
 
 		//	vm.keyMap = {};
 
-			var def = vm.render.call(vm.api, vm, model, key);
+//			try {
+				var def = diff() && vm.render.call(vm.api, vm, model, key);
+//			} catch (e) {
+//				console.log(e);
+//				def = false;
+//			}
 
 			var node;
 
@@ -266,6 +308,7 @@
 				old.moved = true;
 				old.wasSame = true;
 				vm.refs = oldRefs;
+				vm.body = oldBody;
 				return vm;
 			}
 
@@ -298,7 +341,7 @@
 			var donor = old;
 
 			// clear donor if new tag, will replaceNode
-			if (old && (node.type !== old.type || node.tag !== old.tag)) {
+			if (old && old.el && (node.type !== old.type || node.tag !== old.tag)) {
 				donor = null;
 				var repl = true;
 				var oldParentEl = old.el.parentNode;
@@ -872,6 +915,8 @@
 		node.diff =
 		node.vm =
 		node.body =
+//		node.idx =
+//		node.parent =
 		node.props = null;
 
 		node.raw =
@@ -1008,31 +1053,21 @@
 			}
 		}
 
-		if (u.isObj(props._hooks)) {
-			node.hooks = props._hooks;
-			props._hooks = null;
-		}
-
 		node.key =
 			u.isVal(props._key)	? props._key	:
 			u.isVal(props._ref)	? props._ref	:
 			u.isVal(props.id)	? props.id		:
 			u.isVal(props.name)	? props.name	: null;
 
-		if (props._ref != null)
-			node.ref = props._ref;
-		if (props._raw)
-			node.raw = true;
-		if (props._data != null)
-			node.data = props._data;
-		if (props._diff)
-			node.diff = props._diff;
+		if (props._key != null)
+			delete props._key;
 
-		props._ref =
-		props._key =
-		props._raw =
-		props._data =
-		props._diff = null;
+		for (var name in props) {
+			if (name[0] == "_") {
+				node[name.substr(1)] = props[name];
+				delete props[name];
+			}
+		}
 	}
 
 	function patchProps(n, o) {
@@ -1097,17 +1132,17 @@
 	function delCss(targ, name) {targ.style[name] = "";}
 
 	function setAttr(targ, name, val, ns, init, node) {
-		if (name[0] === ".") {
+		if (name === "class")
+			targ.className = val;
+		else if (name === "id")
+			targ.id = val;
+		else if (name[0] === ".") {
 			var n = name.substr(1);
 			if (ns === "svg")
 				targ[n].baseVal = val;
 			else
 				targ[n] = val;
 		}
-		else if (name === "class")
-			targ.className = val;
-		else if (name === "id")
-			targ[name] = val;
 		else if (u.isEvProp(name)) {	// else test delegation for val === function vs object
 			var par = node;
 			while (!par.vm)
@@ -1123,16 +1158,18 @@
 	function delAttr(targ, name, ns, init) {
 		if (init) return;
 
-		if (name[0] === ".") {
+		if (name === "class")
+			targ.className = "";
+		else if (name === "id")
+			targ.id = "";
+		else if (name[0] === ".") {
 			var n = name.substr(1);
 			if (ns === "svg")
 				targ[n].baseVal = null;
 			else
 				targ[n] = null;					// or = ""?
 		}
-		else if (name === "class")
-			targ.className = "";
-		else if (name === "id" || u.isEvProp(name))
+		else if (u.isEvProp(name))
 			targ[name] = null;
 		else
 			targ.removeAttribute(name);

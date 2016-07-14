@@ -1,0 +1,305 @@
+<!doctype html>
+<html>
+	<head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+		<title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<link rel="stylesheet" href="normalize.css">
+
+		<style>
+			html {
+				box-sizing: border-box;
+			}
+
+			*,
+			*:before,
+			*:after {
+				box-sizing: inherit;
+			}
+
+			#app {
+				max-width: 1000px;
+				margin: auto;
+				padding: 10px;
+				box-shadow: 0 0 5px silver;
+			}
+
+			.tabs ul {
+				padding: 0;
+				margin: 0;
+			}
+
+			.tab {
+				display: inline-block;
+				width: 25%;
+				text-align: center;
+			}
+
+			.tab a {
+				display: block;
+				padding: 5px;
+				text-decoration: none;
+				color: #333;
+				border-bottom: 2px solid white;
+			}
+
+			.tab.active a {
+				font-weight: bold;
+				border-bottom: 2px solid #aaa;
+			}
+
+			main {
+				min-height: 480px;
+			}
+
+			#auth > * {
+				display: block;
+			}
+
+			h2 {
+				margin-top: 0;
+			}
+
+			#module {
+				padding: 20px 0;
+			}
+		</style>
+
+		<script src="../../src/domvm.js"></script>
+		<script src="../../src/utils.js"></script>
+		<script src="../../src/view.js"></script>
+		<script src="../../src/route.js"></script>
+		<script src="../../src/watch.js"></script>
+		<script src="../../src/html.js"></script>
+	</head>
+	<body>
+		<script>
+			document.addEventListener("DOMContentLoaded", function() {
+				var router = domvm.route(Router);
+			});
+
+			function Router(router) {
+				var app = null;
+
+				router.config({
+					init: function() {
+						// maybe ajax-fetch some state from the server
+
+						// ...plus inject router so views can generate hrefs
+						var state = {
+							router: router
+						};
+						app = new App(state);
+						app.view.mount(document.body);
+
+						// evaluate current url, invoke handler
+						router.refresh();
+					},
+//					willExit: function(from, to) {},
+					willEnter: function(to, from) {
+						// when entering non-auth module without a token, redirect to auth mod
+						if (app.mods.auth.token == null && to.name !== "auth") {
+							router.goto("auth");
+							return false;
+						}
+					},
+					notFound: function(route) {
+						// if hitting root path, redirect to auth
+						if (route.href == "/") {
+							router.goto("auth");
+							return false;
+						}
+						else
+							console.log("Route '" + route.href + "' not found!");
+					},
+				});
+
+				// all routes in this example follow a uniform pattern, so a loop can build them
+				var routes = {};
+
+				var mods = ["auth","orders","inventory","production"];
+
+				mods.forEach(function(modName) {
+					routes[modName] = {
+						path: "/" + modName,
+						onenter: function() {
+							app.setMod(modName);
+							document.title = app.activeMod.title;
+						},
+					};
+				});
+
+				return routes;
+			}
+
+			function App(state) {
+				this.router = state.router;
+
+				// loaded modules
+				this.mods = {
+					auth: new AuthMod({}, this),
+					orders: new OrdersMod({}, this),
+					inventory: new InventoryMod({}, this),
+					production: new ProductionMod({}, this),
+				};
+
+				this.activeMod = null;
+
+				this.view = domvm.view(AppView, this);
+			}
+
+			App.prototype = {
+				// module switcher
+				setMod: function(modName) {
+					this.activeMod = this.mods[modName];
+
+					// can ajax re-fetch module's state here eg: GET /state?mods[]=orders
+
+					// when changing module via API directly, this sets the url without invoking handlers (would be cyclic)
+					this.router.route(modName);
+
+					this.view.redraw();
+				}
+			};
+
+			function AppView(vm, app) {
+				var rt = app.router;
+
+				return function() {
+					var loggedIn = app.mods.auth.token != null;
+
+					return ["#app",
+						["header",
+						 	["h2", "Admin!!!11one"],
+						 	["nav.tabs",
+							 	!loggedIn ? null :
+							 	["ul", Object.keys(app.mods).map(function(modName) {
+									var isActive = app.mods[modName] === app.activeMod;
+									var href = rt.href(modName);
+									return ["li.tab", {class: isActive ? "active" : null}, ["a", {href: href}, app.mods[modName].title]];
+								})]
+							]
+						],
+						["main#module", app.activeMod ? app.activeMod.view : null],
+						["footer", "Footer..."],
+					];
+				};
+			}
+
+			function AuthMod(state, app) {
+				this.app		= app;
+
+				this.token		= state.token || null;
+				this.username	= state.username || null;
+				this.loginTime	= state.loginTime || null;
+
+				this.title = "Auth";
+				this.view = domvm.view(AuthModView, this);
+			}
+
+			AuthMod.prototype = {
+				login: function(username, password) {
+					// invoke an ajax/fetch to an auth endpoint, eg: POST /auth
+					this.token = "abcdefg";
+					this.username = username;
+					this.app.view.redraw();
+				},
+				logout: function() {
+					// invoke an ajax/fetch to an auth endpoint, eg: DELETE /auth/<token>
+					this.token = null;
+					this.app.view.redraw();
+				}
+			};
+
+			function AuthModView(vm, auth) {
+				function login(e) {
+					var inps = e.target.elements;
+					auth.login(inps.username.value, inps.password.value);
+				//	http://stackoverflow.com/questions/21191336/getting-chrome-to-prompt-to-save-password-when-using-ajax-to-login/33113374#33113374
+					return false;
+				}
+
+				function logout(e) {
+					auth.logout();
+					return false;
+				}
+
+				return function() {
+					if (auth.token == null) {
+						return ["form#auth.login", {onsubmit: login},
+							["input",  {type: "text",     name: "username", placeholder: "Username", required: true}],
+							["input",  {type: "password", name: "password", placeholder: "Password", required: true}],
+							["br"],
+							["button", {type: "submit"}, "Login"],
+						];
+					}
+					else {
+						return ["form#auth.logout", {onsubmit: logout},
+							["strong", auth.username],
+							["br"],
+							["button", {type: "submit"}, "Logout"],
+						];
+					}
+				};
+			}
+
+			function OrdersMod(state, app) {
+				this.orders = [
+					{number: 1001, date: "2016-06-23", total: 3190.65, buyer: "Bob's Builders"},
+					{number: 1002, date: "2016-06-11", total: 1724.32, buyer: "Great Lakes Mfg"},
+					{number: 1003, date: "2016-05-20", total: 9074.27, buyer: "Pro Contracting, Inc."},
+				];
+
+				this.title = "Orders";
+				this.view = domvm.view(OrdersModView, this);
+			}
+
+			function OrdersModView(vm, ords) {
+				return function() {
+					return ["table#orders",
+						["thead",
+							["th", "#"],
+							["th", "Date"],
+							["th", "Buyer"],
+							["th", "Total"],
+						],
+						["tbody", ords.orders.map(function(o) {
+							return ["tr.order",
+								["td", o.number],
+								["td", o.date],
+								["td", o.buyer],
+								["td", "$" + o.total.toFixed(2)],
+							]
+						})],
+					];
+				}
+			}
+
+			function InventoryMod(state, app) {
+				this.title = "Inventory";
+				this.view = domvm.view(InventoryModView, this);
+			}
+
+			function InventoryModView(vm, inv) {
+				return function() {
+					return ["#inventory", "Inventory list..."]
+				};
+			}
+
+
+			function ProductionMod(state, app) {
+				this.title = "Production";
+				this.view = domvm.view(ProductionModView, this);
+			}
+
+			function ProductionModView(vm, prod) {
+				return function() {
+					return ["#production", "Production orders..."]
+				};
+			}
+		</script>
+	</body>
+</html>

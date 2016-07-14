@@ -478,7 +478,7 @@ function SomeView(vm) {
 }
 
 // on the backend
-var vm = domvm.view(SomeView, someModel);
+var vm = domvm.view(SomeView, someModel).mount();
 // have server barf this html into the returned document
 var html = domvm.html(vm.node);
 
