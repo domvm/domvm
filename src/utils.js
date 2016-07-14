@@ -62,7 +62,7 @@
 			return typeof val === "object" && u.isFunc(val.then);
 		},
 		isElem: function(val) {
-			return domEnv ? val instanceof HTMLElement : false;
+			return domEnv && val instanceof HTMLElement;
 		},
 		// saves from having to do fn && fn()
 		execAll: function(fnArr, arg1, arg2, arg3, arg4, arg5) {

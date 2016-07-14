@@ -16,6 +16,10 @@
 		var html = "";
 		switch (node.type) {
 			case u.TYPE_ELEM:
+				// pre-existing dom elements (does not currently account for any props applied to them)
+				if (node.body == null && node.el)
+					return node.el.outerHTML;
+
 				html += "<" + node.tag;
 
 				if (node.props) {

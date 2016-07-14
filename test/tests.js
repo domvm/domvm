@@ -1144,6 +1144,25 @@ QUnit.module("Various Others");
 		evalOut(assert, vm.node.el, domvm.html(vm), expcHtml, callCounts, { createElement: 1, innerHTML: 1, insertBefore: 1 });
 	});
 
+	QUnit.test('Existing DOM element as child', function(assert) {
+		function View6(vm) {
+			return function() {
+				return ["div", el, "abc"];
+			};
+		}
+
+		var el = document.createElement("strong");
+		el.textContent = "cow";
+
+		var expcHtml = '<div><strong>cow</strong>abc</div>';
+
+		instr.start();
+		vm = domvm.view(View6).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, domvm.html(vm), expcHtml, callCounts, { createElement: 1, createTextNode: 1, insertBefore: 3 });
+	});
+
 	QUnit.test('Remove/clean child of sub-view', function(assert) {
 		var data = ["a"];
 		var data2 = ["b", "c"];
