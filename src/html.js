@@ -6,6 +6,13 @@
 	var u = domvm.utils;
 
 	domvm.html = function(node) {
+		// handle if node is vm
+		if (node.render) {
+			if (!node.node)
+				node.mount();
+			node = node.node;
+		}
+
 		var html = "";
 		switch (node.type) {
 			case u.TYPE_ELEM:
