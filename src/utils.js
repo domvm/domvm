@@ -73,7 +73,7 @@
 			return out;
 		},
 		repaint: function(node) {
-			var h = node.el.offsetHeight;
+			node && node.el && node.el.offsetHeight;
 		},
 		insertArr: function(targ, arr, pos, rem) {
 			targ.splice.apply(targ, [pos, rem].concat(arr));
