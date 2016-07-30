@@ -140,7 +140,10 @@
 			return targ;
 		},
 		keyedIdx: function(key, nodes, viewFn, start, end) {
-			for (var i = 0; i < nodes.length; i++) {
+			start = start || 0;
+			end = end || nodes.length;
+
+			for (var i = start; i < end; i++) {
 				var n = nodes[i];
 				if (n.key === key) {
 					if (viewFn) {

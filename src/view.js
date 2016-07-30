@@ -732,7 +732,7 @@
 
 		// fast exact match by key
 		if (newKey !== null && oldKeys) {
-			var idx = u.keyedIdx(newKey, oldBody, newIsView ? node[0] : null);
+			var idx = u.keyedIdx(newKey, oldBody, newIsView ? node[0] : null, fromIdx, toIdx);
 			if (idx > -1)
 				return [idx, DONOR_NODE];
 			return null;
@@ -779,13 +779,13 @@
 					*/
 
 					// removed keyed view = can reuse its DOM if by end of list, no exacts were found
-					if (!existsInNew && !approx && newKeys && u.keyedIdx(o.key, newBody, o.vm.ident[0]) == -1)
+					if (!existsInNew && !approx && newKeys && u.keyedIdx(o.key, newBody, o.vm.ident[0], fromIdx, toIdx) == -1)
 						approx = [i, DONOR_DOM];
 				}
 			}
 			else if (areSimilar(o, node))
 				// matching dom nodes without keys
-				if (o.key === null || (!newKeys || u.keyedIdx(o.key, newBody, o.vm ? o.vm.ident[0] : null) == -1))
+				if (o.key === null || (!newKeys || u.keyedIdx(o.key, newBody, o.vm ? o.vm.ident[0] : null, fromIdx, toIdx) == -1))
 					return [i, DONOR_DOM];
 		}
 
