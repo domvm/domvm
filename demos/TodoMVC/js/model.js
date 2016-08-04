@@ -14,6 +14,8 @@ model.Todos = {
 
     store: [],
 
+    currentFilter: null,
+
     add: function(obj) {
         this.store.push(new model.Todo(obj));
         this.save();

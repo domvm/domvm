@@ -1,12 +1,9 @@
-
 (function(global) {
 
 global.view = {};
 
-var ENTER_KEY     = 13,
-    ESC_KEY       = 27,
-    currentFilter = 'all';
-
+var ENTER_KEY = 13,
+    ESC_KEY   = 27;
 
 view.App = function App(vm, todos) {
 
@@ -48,11 +45,12 @@ view.Main = function Main(vm, todos) {
     }
 
     function filterTodos() {
-        switch (currentFilter) {
+        switch (model.Todos.currentFilter) {
             case 'active'    : return todos.findActive();
             case 'completed' : return todos.findCompleted();
-            default          : return todos.all();
+            case 'all'       : return todos.all();
         }
+        return [];
     }
 
     return function() {
@@ -157,21 +155,9 @@ view.Todo = function Todo(vm, todos, todo) {
 
 
 view.Footer = function Footer(vm, todos) {
-    var filters = {};
-
-    function makeFilter(filtr) {
-        if (! filters.hasOwnProperty(filtr)) {
-            filters[filtr] = function() {
-                currentFilter = filtr;
-                vm.redraw(1000);
-                return false;
-            }
-        }
-        return filters[filtr];
-    }
 
     function makeCls(filtr) {
-        return filtr === currentFilter ? 'selected' : '';
+        return filtr === model.Todos.currentFilter ? 'selected' : '';
     }
 
     function destroyCompleted() {
@@ -190,13 +176,13 @@ view.Footer = function Footer(vm, todos) {
             ],
             ['ul.filters',
                 ['li',
-                    ['a', {href: '#', class: makeCls('all'), onclick: makeFilter('all')}, 'All']
+                    ['a', {href: '#all', class: makeCls('all')}, 'All']
                 ],
                 ['li',
-                    ['a', {href: '#', class: makeCls('active'), onclick: makeFilter('active')}, 'Active']
+                    ['a', {href: '#active', class: makeCls('active')}, 'Active']
                 ],
                 ['li',
-                    ['a', {href: '#', class: makeCls('completed'), onclick: makeFilter('completed')}, 'Completed']
+                    ['a', {href: '#completed', class: makeCls('completed')}, 'Completed']
                 ]
             ],
             ['button',
