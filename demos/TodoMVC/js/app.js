@@ -1,5 +1,4 @@
 
-model.Todos.all();
 var appView = domvm.view(view.App, model.Todos);
 
 domvm.route(function router(router) {
