@@ -172,6 +172,7 @@
 		//	detach: detach,
 			unmount: function() {
 				cleanNode(vm.node);
+				drainDidHooks(parentNode);
 			},
 			// internal util funcs
 			moveTo: moveTo,
@@ -469,14 +470,14 @@
 			node.el.parentNode.removeChild(node.el);
 			node.el = null;
 
+			// fire hooks, get promises
+			var resRem = fireHook(node, "didRemove", node);
+			var resUnm = fireHook(node.vm, "didUnmount", node.vm);
+
 			free(node);
 
 	//		if (node.parent)
 	//			node.parent.body[node.idx] = null;
-
-			// fire hooks, get promises
-			var resUnm = fireHook(node.vm, "didUnmount", node.vm);
-			var resRem = fireHook(node, "didRemove", node);
 
 			if (wasDeferred)
 				drainDidHooks(node.parent);

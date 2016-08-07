@@ -2581,6 +2581,75 @@ QUnit.module("Lifecycle hooks");
 (function() {
 	var vm;
 
+	QUnit.test('will/did: mount/insert/remove/unmount (self)', function(assert) {
+		var i = 0;
+
+		var willMount = -1;
+		var willInsert = -1;
+		var didInsert = -1;
+		var didMount = -1;
+
+		var willUnmount = -1;
+		var willRemove = -1;
+		var didRemove = -1;
+		var didUnmount = -1;
+
+		function A(vm) {
+			vm.hook({
+				willMount: function(vm) {
+					willMount = i++;
+				},
+				didMount: function(vm) {
+					didMount = i++;
+				},
+				willUnmount: function(vm) {
+					willUnmount = i++;
+				},
+				didUnmount: function(vm) {
+					didUnmount = i++;
+				}
+			});
+
+			return function() {
+				var hooks = {
+					willInsert: function(node) {
+						willInsert = i++;
+					},
+					didInsert: function(node) {
+						didInsert = i++;
+					},
+					willRemove: function(node) {
+						willRemove = i++;
+					},
+					didRemove: function(node) {
+						didRemove = i++;
+					},
+				};
+
+				return ["div", {_hooks: hooks}, "abc"];
+			};
+		}
+
+		instr.start();
+		vm = domvm.view(A).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div>abc</div>';
+
+		evalOut(assert, vm.node.el, domvm.html(vm), expcHtml, callCounts, { createElement: 1, textContent: 1, insertBefore: 1 });
+
+		vm.unmount();
+
+		assert.equal(willMount, 0, "willMount");
+		assert.equal(willInsert, 1, "willInsert");
+		assert.equal(didInsert, 2, "didInsert");
+		assert.equal(didMount, 3, "didMount");
+		assert.equal(willUnmount, 4, "willUnmount");
+		assert.equal(willRemove, 5, "willRemove");
+		assert.equal(didRemove, 6, "didRemove");
+		assert.equal(didUnmount, 7, "didUnmount");
+	});
+
 	QUnit.test('willUpdate (root/explicit)', function(assert) {
 		function A(vm, model) {
 			vm.hook({
