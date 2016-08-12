@@ -1,23 +1,6 @@
+(function(global){
 
-var appView = domvm.view(view.App, model.Todos);
-
-domvm.route(function router(router) {
-    router.config({
-        init: function() {
-            if (['', '#'].indexOf(window.location.hash) !== -1) {
-                // go to `all` route if no route is provided
-                appView.mount(document.querySelector('.todoapp'));
-                router.goto('all');
-            } else {
-                // if a valid route is provided
-                // mount the view first, then refresh the router
-                // because each route handler *set the filter up* and redraw app view
-                appView.mount(document.querySelector('.todoapp'));
-                router.refresh();
-            }
-        }
-    });
-
+function Router() {
     return {
         all: {
             path: 'all',
@@ -43,4 +26,21 @@ domvm.route(function router(router) {
             }
         }
     }
-})
+}
+
+var router  = domvm.route(Router),
+    appView = domvm.view(view.App, model.Todos);
+
+if (router.route().href = '/') {
+    // go to `all` route if no route is provided
+    appView.mount(document.querySelector('.todoapp'));
+    router.goto('all');
+} else {
+    // if a valid route is provided
+    // mount the view first, then refresh the router
+    // because each route handler *set the filter up* and redraw app view
+    appView.mount(document.querySelector('.todoapp'));
+    router.refresh();
+}
+
+})(this)
