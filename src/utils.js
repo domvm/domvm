@@ -62,7 +62,7 @@
 			return typeof val === "object" && u.isFunc(val.then);
 		},
 		isElem: function(val) {
-			return domEnv ? val instanceof HTMLElement : false;
+			return domEnv && val instanceof HTMLElement;
 		},
 		// saves from having to do fn && fn()
 		execAll: function(fnArr, arg1, arg2, arg3, arg4, arg5) {
@@ -140,7 +140,10 @@
 			return targ;
 		},
 		keyedIdx: function(key, nodes, viewFn, start, end) {
-			for (var i = 0; i < nodes.length; i++) {
+			start = start || 0;
+			end = end || nodes.length;
+
+			for (var i = start; i < end; i++) {
 				var n = nodes[i];
 				if (n.key === key) {
 					if (viewFn) {

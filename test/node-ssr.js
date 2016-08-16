@@ -4,8 +4,8 @@ function View() {
 	return () => [".foo", {class: 'baz'}, "bar"];
 }
 
-var vm = domvm.view(View).mount();
+var vm = domvm.view(View);
 
-var html = domvm.html(vm.node);
+var html = domvm.html(vm);
 
 console.log(html);

@@ -172,6 +172,7 @@
 		//	detach: detach,
 			unmount: function() {
 				cleanNode(vm.node);
+				drainDidHooks(parentNode);
 			},
 			// internal util funcs
 			moveTo: moveTo,
@@ -469,14 +470,14 @@
 			node.el.parentNode.removeChild(node.el);
 			node.el = null;
 
+			// fire hooks, get promises
+			var resRem = fireHook(node, "didRemove", node);
+			var resUnm = fireHook(node.vm, "didUnmount", node.vm);
+
 			free(node);
 
 	//		if (node.parent)
 	//			node.parent.body[node.idx] = null;
-
-			// fire hooks, get promises
-			var resUnm = fireHook(node.vm, "didUnmount", node.vm);
-			var resRem = fireHook(node, "didRemove", node);
 
 			if (wasDeferred)
 				drainDidHooks(node.parent);
@@ -732,7 +733,7 @@
 
 		// fast exact match by key
 		if (newKey !== null && oldKeys) {
-			var idx = u.keyedIdx(newKey, oldBody, newIsView ? node[0] : null);
+			var idx = u.keyedIdx(newKey, oldBody, newIsView ? node[0] : null, fromIdx, toIdx);
 			if (idx > -1)
 				return [idx, DONOR_NODE];
 			return null;
@@ -779,13 +780,13 @@
 					*/
 
 					// removed keyed view = can reuse its DOM if by end of list, no exacts were found
-					if (!existsInNew && !approx && newKeys && u.keyedIdx(o.key, newBody, o.vm.ident[0]) == -1)
+					if (!existsInNew && !approx && newKeys && u.keyedIdx(o.key, newBody, o.vm.ident[0], fromIdx, toIdx) == -1)
 						approx = [i, DONOR_DOM];
 				}
 			}
 			else if (areSimilar(o, node))
 				// matching dom nodes without keys
-				if (o.key === null || (!newKeys || u.keyedIdx(o.key, newBody, o.vm ? o.vm.ident[0] : null) == -1))
+				if (o.key === null || (!newKeys || u.keyedIdx(o.key, newBody, o.vm ? o.vm.ident[0] : null, fromIdx, toIdx) == -1))
 					return [i, DONOR_DOM];
 		}
 
