@@ -5,6 +5,8 @@
 		useHist = false,
 		willEnter = null,
 		willExit = null,
+		didEnter = null,
+		didExit = null,
 		notFound = null,
 		root = "";
 
@@ -39,6 +41,8 @@
 
 				willEnter = opts.willEnter || null;
 				willExit = opts.willExit || null;
+				didEnter = opts.didEnter || null;
+				didExit = opts.didExit || null;
 				notFound = opts.notFound || null;
 
 				init = opts.init || null;
@@ -90,6 +94,9 @@
 						if (canExit !== false) {
 							var onexit = routes[prev.name].onexit;
 							canExit = !onexit ? true : noFns || onexit.apply(null, (prev ? [prev.segs, prev.query, prev.hash] : []).concat(next));
+
+							if (didExit)
+								didExit(prev, next);
 						}
 						else {
 						//	revert nav?
@@ -103,6 +110,9 @@
 						if (canEnter !== false) {
 							var onenter = routes[next.name].onenter;
 							canEnter = noFns || onenter.apply(null, (next ? [next.segs, next.query, next.hash] : []).concat(prev));
+
+							if (didEnter)
+								didEnter(next, prev);
 						}
 
 						if (canEnter !== false) {
