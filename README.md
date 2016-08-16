@@ -558,9 +558,11 @@ function MyRouter(router, deps) {
 			// and `router.location()` to determine and render the appropriate views
 		},
 		// if provided, the funcs below will fire after a route is matched but before its handler is invoked.
-		// they can return `false` to prevent route's onenter/onexit handlers from firing
+		// willEnter/willExit can return `false` to prevent route's onenter/onexit handlers from firing
 		willEnter: function(to, from) {},
 		willExit:  function(from, to) {},
+		didEnter: function(to, from) {},
+		didExit:  function(from, to) {},
 	});
 
 	return {
