@@ -1,0 +1,28 @@
+{
+  "name": "domvm",
+  "description": "DOM ViewModel - A thin, fast, dependency-free vdom view layer",
+  "keywords": ["virtual-dom","mvvm","view-model","framework"],
+  "license" : "MIT",
+  "homepage": "https://github.com/leeoniya/domvm",
+  "author": "Leon Sorokin <leeoniya@gmail.com>",
+  "version": "2.0.0-dev",
+  "main": "index.js",
+  "scripts": {
+    "start": "rollup -c -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leeoniya/domvm.git"
+  },
+  "devDependencies": {
+    "buble": "*",
+    "uglify-js": "*",
+    "rollup": "*",
+    "rollup-plugin-buble": "*",
+    "rollup-plugin-uglify": "*",
+    "rollup-watch": "*"
+  },
+  "bugs": {
+    "url": "https://github.com/leeoniya/domvm/issues"
+  }
+}
