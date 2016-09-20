@@ -8,7 +8,7 @@
   "version": "2.0.0-dev",
   "main": "index.js",
   "scripts": {
-    "start": "rollup -c -w"
+    "watch": "rollup -c -w"
   },
   "repository": {
     "type": "git",
