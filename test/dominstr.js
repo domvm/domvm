@@ -26,6 +26,10 @@
 	var className	= Object.getOwnPropertyDescriptor(!isIE ? elemProto : htmlProto, "className");
 	var id			= Object.getOwnPropertyDescriptor(!isIE ? elemProto : htmlProto, "id");
 
+	var styleProto	= CSSStyleDeclaration.prototype;
+
+	var cssText		= Object.getOwnPropertyDescriptor(styleProto, "cssText");
+
 	var inpProto = HTMLInputElement.prototype;
 	var areaProto = HTMLTextAreaElement.prototype;
 	var selProto = HTMLSelectElement.prototype;
@@ -136,6 +140,14 @@
 				},
 			});
 
+			counts.cssText = 0;
+			Object.defineProperty(styleProto, "cssText", {
+				set: function(s) {
+					counts.cssText++;
+					cssText.set.call(this, s);
+				},
+			});
+
 			counts.id = 0;
 			Object.defineProperty(!isIE ? elemProto : htmlProto, "id", {
 				set: function(s) {
@@ -223,6 +235,7 @@
 			Object.defineProperty(selProto,  "selectedIndex", selIndex);
 			Object.defineProperty(optProto,  "selected", optSel);
 		//	Object.defineProperty(styleProto, "setProperty", setProperty);
+			Object.defineProperty(styleProto, "cssText", cssText);
 
 			var out = {};
 
