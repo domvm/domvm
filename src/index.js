@@ -12,6 +12,8 @@ import { defineElementFixed } from './view/defineElementFixed';
 
 import { html } from "./view/html";
 
+import { patchNode } from "./view/patch";
+
 export {
 	createView,
 
@@ -24,6 +26,8 @@ export {
 	injectElement,
 
 	defineElementFixed,
+
+	patchNode,
 
 	html,
 };

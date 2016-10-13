@@ -42,6 +42,16 @@ function isFunc(val) {
 
 
 
+function assignObj(targ) {
+	var args = arguments;
+
+	for (var i = 1; i < args.length; i++)
+		{ for (var k in args[i])
+			{ targ[k] = args[i][k]; } }
+
+	return targ;
+}
+
 /*
 export function cmpArr(a, b) {
 	const alen = a.length;
@@ -567,7 +577,30 @@ function parseTag(raw) {
 
 
 // newNode can be either {class: style: } or full new VNode
+function patchNode(o, n) {
+	if (n._type != null) {
+		// full new node
+	}
+	else {
+		// shallow-clone target
+		var donor = Object.create(o);
+		// fixate orig attrs
+		donor._attrs = assignObj({}, o._attrs);
+		// assign new attrs into live targ node
+		assignObj(o._attrs, donor._attrs, n);
+		// prepend any fixed shorthand class
+		if (o._class != null) {
+			var aclass = o._attrs.class;
 
+			if (aclass != null)
+				{ o._attrs.class = o._class + " " + aclass; }
+			else
+				{ o._attrs.class = o._class; }
+		}
+
+		patchAttrs(o, donor);
+	}
+}
 
 function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 	var oldBody = oPar._body;
@@ -1298,6 +1331,7 @@ exports.defineView = defineView;
 exports.injectView = injectView;
 exports.injectElement = injectElement;
 exports.defineElementFixed = defineElementFixed;
+exports.patchNode = patchNode;
 exports.html = html;
 
 Object.defineProperty(exports, '__esModule', { value: true });

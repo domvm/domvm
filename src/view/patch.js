@@ -1,5 +1,5 @@
 import { VTYPE } from './VTYPE';
-import { isArr, isVal, isFunc, isObj } from '../utils';
+import { isArr, isVal, isFunc, isObj, assignObj } from '../utils';
 import { autoPx, isStyleProp, isSplProp, isEvProp } from './utils';
 import { syncChildren } from './syncChildren';
 import { setAttr, remAttr } from './attrs';
@@ -12,10 +12,26 @@ import { defineElement } from './defineElement';
 // newNode can be either {class: style: } or full new VNode
 export function patchNode(o, n) {
 	if (n._type != null) {
+		// full new node
 	}
 	else {
-	//	patch(o, defineElement(o._tag));
-	//	patch class, patch style
+		// shallow-clone target
+		var donor = Object.create(o);
+		// fixate orig attrs
+		donor._attrs = assignObj({}, o._attrs);
+		// assign new attrs into live targ node
+		assignObj(o._attrs, donor._attrs, n);
+		// prepend any fixed shorthand class
+		if (o._class != null) {
+			var aclass = o._attrs.class;
+
+			if (aclass != null)
+				o._attrs.class = o._class + " " + aclass;
+			else
+				o._attrs.class = o._class;
+		}
+
+		patchAttrs(o, donor);
 	}
 }
 

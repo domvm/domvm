@@ -2755,12 +2755,14 @@ QUnit.module("Patch");
 
 (function() {
 	function getTpl(marg, klass, body) {
-		return ["p.moo", {class: klass, style: {margin: marg}}, body];
+		return el("p.moo", {class: klass, style: {margin: marg}}, body);
 	}
 
 	function TestView() {
 		return function() {
-			return ["div", getTpl(10, "cow", "hey")];
+			return el("div", [
+				getTpl(10, "cow", "hey")
+			]);
 		};
 	}
 
@@ -2775,7 +2777,17 @@ QUnit.module("Patch");
 		evalOut(assert, vm._node._el, domvm.html(vm), expcHtml, callCounts, { createElement: 2, textContent: 1, className: 1, insertBefore: 2 });
 	});
 
-	QUnit.test('Full child tpl', function(assert) {
+	QUnit.test('Child class/style', function(assert) {
+		instr.start();
+		domvm.patchNode(vm._node._el.firstChild._node, {class: "xxx", style: {margin: 5, color: "red"}});
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><p class="moo xxx" style="margin: 5px; color: red;">hey</p></div>';
+
+		evalOut(assert, vm._node._el, domvm.html(vm), expcHtml, callCounts, { className: 1 });
+	});
+
+	QUnit.skip('Full child tpl', function(assert) {
 		instr.start();
 		vm.patch(vm._node._el.firstChild._node, getTpl(20, "baz", "yo"));
 		var callCounts = instr.end();
@@ -2785,16 +2797,6 @@ QUnit.module("Patch");
 		evalOut(assert, vm._node._el, domvm.html(vm), expcHtml, callCounts, { className: 1, nodeValue: 1 });
 
 //		console.log(vm._node._el.firstChild._node);
-	});
-
-	QUnit.test('Child class/style', function(assert) {
-		instr.start();
-		vm.patch(vm._node._el.firstChild._node, {class: "xxx", style: {margin: 5, color: "red"}});
-		var callCounts = instr.end();
-
-		var expcHtml = '<div><p class="moo xxx" style="margin: 5px; color: red;">yo</p></div>';
-
-		evalOut(assert, vm._node._el, domvm.html(vm), expcHtml, callCounts, { className: 1 });
 	});
 })();
 

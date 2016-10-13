@@ -35,6 +35,16 @@ export function isElem(val) {
 	return ENV_DOM && val instanceof HTMLElement;
 }
 
+export function assignObj(targ) {
+	var args = arguments;
+
+	for (var i = 1; i < args.length; i++)
+		for (var k in args[i])
+			targ[k] = args[i][k];
+
+	return targ;
+}
+
 /*
 export function cmpArr(a, b) {
 	const alen = a.length;
