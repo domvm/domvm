@@ -587,15 +587,11 @@ function patchNode(o, n) {
 		// fixate orig attrs
 		donor._attrs = assignObj({}, o._attrs);
 		// assign new attrs into live targ node
-		assignObj(o._attrs, donor._attrs, n);
+		var oattrs = assignObj(o._attrs, donor._attrs, n);
 		// prepend any fixed shorthand class
 		if (o._class != null) {
-			var aclass = o._attrs.class;
-
-			if (aclass != null)
-				{ o._attrs.class = o._class + " " + aclass; }
-			else
-				{ o._attrs.class = o._class; }
+			var aclass = oattrs.class;
+			oattrs.class = aclass != null ? o._class + " " + aclass : o._class;
 		}
 
 		patchAttrs(o, donor);
