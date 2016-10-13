@@ -8,19 +8,16 @@
   "version": "2.0.0-dev",
   "main": "index.js",
   "scripts": {
-    "watch": "rollup -c -w"
+    "watch": "node watch.js"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/leeoniya/domvm.git"
   },
   "devDependencies": {
-    "buble": "*",
-    "uglify-js": "*",
+	"node-watch": "*",
     "rollup": "*",
-    "rollup-plugin-buble": "*",
-    "rollup-plugin-uglify": "*",
-    "rollup-watch": "*"
+    "rollup-plugin-buble": "*"
   },
   "bugs": {
     "url": "https://github.com/leeoniya/domvm/issues"
