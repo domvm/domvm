@@ -2706,13 +2706,13 @@ QUnit.module("Namespaced refs");
 (function() {
 	function TestView() {
 		return function() {
-			return ["div", {_ref: "a.b.c"}];
+			return el("div", {_ref: "a.b.c"});
 		}
 	}
 
 	function TestView1() {
 		return function() {
-			return ["div", [TestView2]];
+			return el("div", vw(TestView2));
 		}
 	}
 
@@ -2720,7 +2720,7 @@ QUnit.module("Namespaced refs");
 	function TestView2(vm) {
 		vm2 = vm;
 		return function() {
-			return ["div", {_ref: "^a.b.c"}];
+			return el("div", {_ref: "^a.b.c"});
 		}
 	}
 
@@ -2733,7 +2733,7 @@ QUnit.module("Namespaced refs");
 
 		evalOut(assert, vm._node._el, domvm.html(vm), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });
 
-		assert.equal(vm.refs.a.b.c, vm.node);
+		assert.equal(vm.refs.a.b.c, vm._node);
 	});
 
 	QUnit.test('Unjailed ^a.b.c', function(assert) {
