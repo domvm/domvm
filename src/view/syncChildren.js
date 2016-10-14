@@ -69,24 +69,16 @@ export function removeChild(parEl, el) {
 	hooks && fireHooks("didRemove", node);
 }
 
-const willInsert = "willInsert";
-const didInsert = "didInsert";
-const willReinsert = "willReinsert";
-const didReinsert = "didReinsert";
-
 // todo: hooks
 export function insertBefore(parEl, el, refEl) {
 	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
-	hooks && fireHooks(inDom ? willReinsert : willInsert, node);
+	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
 	parEl.insertBefore(el, refEl);
-	hooks && fireHooks(inDom ? didReinsert : didInsert, node);
+	hooks && fireHooks(inDom ? "didReinsert" : "didInsert", node);
 }
 
 function insertAfter(parEl, el, refEl) {
-	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
-	hooks && fireHooks(inDom ? willReinsert : willInsert, node);
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
-	hooks && fireHooks(inDom ? didReinsert : didInsert, node);
 }
 
 function tmpEdges(fn, parEl, lftSib, rgtSib) {
