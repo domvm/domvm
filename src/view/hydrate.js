@@ -10,12 +10,12 @@ import { insertBefore } from './syncChildren';
 import { patchAttrs2 } from './patch';
 import { VNode } from './VNode';
 const fakeDonor = new VNode(VTYPE.ELEMENT);
-fakeDonor._attrs = {};
+fakeDonor.attrs = {};
 */
 
 // TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT
 function patchAttrs2(vnode) {
-	var nattrs = vnode._attrs;
+	var nattrs = vnode.attrs;
 
 	for (var key in nattrs) {
 		var nval = nattrs[key];
@@ -32,40 +32,40 @@ function patchAttrs2(vnode) {
 
 //  TODO: DRY this out. reusing normal patch here negatively affects V8's JIT
 export function hydrate(vnode, withEl) {
-	if (vnode._el == null) {
-		if (vnode._type === VTYPE.ELEMENT) {
-			vnode._el = withEl || document.createElement(vnode._tag);
+	if (vnode.el == null) {
+		if (vnode.type === VTYPE.ELEMENT) {
+			vnode.el = withEl || document.createElement(vnode.tag);
 
-			if (vnode._attrs)
+			if (vnode.attrs)
 				patchAttrs2(vnode);
 
-			if (isArr(vnode._body)) {
-				vnode._body.forEach((vnode2, i) => {
-					if (vnode2._type == VTYPE.VMODEL) {
-						var vm = views[vnode2._vmid];
+			if (isArr(vnode.body)) {
+				vnode.body.forEach((vnode2, i) => {
+					if (vnode2.type == VTYPE.VMODEL) {
+						var vm = views[vnode2.vmid];
 						vm._redraw(vnode, i);
-						insertBefore(vnode._el, vm._node._el);
+						insertBefore(vnode.el, vm.node.el);
 					}
-					else if (vnode2._type == VTYPE.VVIEW) {
-						var vm = createView(vnode2._view, vnode2._model, vnode2._key, vnode2._opts)._redraw(vnode, i);		// todo: handle new model updates
-						insertBefore(vnode._el, vm._node._el);
+					else if (vnode2.type == VTYPE.VVIEW) {
+						var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i);		// todo: handle new model updates
+						insertBefore(vnode.el, vm.node.el);
 					}
 					else
-						insertBefore(vnode._el, hydrate(vnode2));		// vnode._el.appendChild(hydrate(vnode2))
+						insertBefore(vnode.el, hydrate(vnode2));		// vnode.el.appendChild(hydrate(vnode2))
 				});
 			}
-			else if (vnode._body != null && vnode._body !== "") {
-				if (vnode._html)
-					vnode._el.innerHTML = vnode._body;
+			else if (vnode.body != null && vnode.body !== "") {
+				if (vnode.html)
+					vnode.el.innerHTML = vnode.body;
 				else
-					vnode._el.textContent = vnode._body;
+					vnode.el.textContent = vnode.body;
 			}
 		}
-		else if (vnode._type === VTYPE.TEXT)
-			vnode._el = withEl || document.createTextNode(vnode._body);
+		else if (vnode.type === VTYPE.TEXT)
+			vnode.el = withEl || document.createTextNode(vnode.body);
 	}
 
-	vnode._el._node = vnode;
+	vnode.el._node = vnode;
 
-	return vnode._el;
+	return vnode.el;
 }

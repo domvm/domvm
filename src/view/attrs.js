@@ -1,11 +1,11 @@
 export function remAttr(node, name) {
-	node._el.removeAttribute(name);
+	node.el.removeAttribute(name);
 }
 
 // setAttr
 // diff, ".", "on*", bool vals, skip _*, value/checked/selected selectedIndex
 export function setAttr(node, name, val) {
-	var el = node._el;
+	var el = node.el;
 
 	if (val == null)
 		remAttr(node, name);		// will also removeAttr of style: null

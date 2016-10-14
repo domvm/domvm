@@ -7,11 +7,11 @@ import { views } from "./createView";
 import { didQueue, insertBefore, removeChild, fireHooks } from "./syncChildren";
 
 export function ViewModel(id, view, model, key, opts) {			// parent, idx, parentVm
-	this._id = id;
-	this._view = view;
-	this._model = model;
-	this._key = key == null ? model : key;
-	this._render = view(this, model, key);			// , opts
+	this.id = id;
+	this.view = view;
+	this.model = model;
+	this.key = key == null ? model : key;
+	this.render = view(this, model, key);			// , opts
 
 //	this.update(model, parent, idx, parentVm, false);
 
@@ -23,70 +23,67 @@ export function ViewModel(id, view, model, key, opts) {			// parent, idx, parent
 ViewModel.prototype = {
 	constructor: ViewModel,
 
-	_id: null,
+	id: null,
 
 	// view + key serve as the vm's unique identity
-	_view: null,
-	_key: null,
-	_model: null,
-	_node: null,
-	_diff: null,
-	_diffLast: null,	// prior array of diff values
-	_hooks: null,
-	_render: null,
+	view: null,
+	key: null,
+	model: null,
+	node: null,
+	diff: null,
+	diffLast: null,	// prior array of diff values
+	hooks: null,
+	render: null,
 
 //	_setRef: function() {},
 
-	// parent vm and initial vm descendents
-//	_parent: null,
-//	_body: null,
-
 	// as plugins?
-	get _parent() {
-		var p = this._node;
+	get parent() {
+		var p = this.node;
 
-		while (p = p._parent) {
-			if (p._vmid != null)
-				return views[p._vmid];
+		while (p = p.parent) {
+			if (p.vmid != null)
+				return views[p.vmid];
 		}
 
 		return null;
 	},
-	get _body() {
-		return nextSubVms(this._node, []);
+	get body() {
+		return nextSubVms(this.node, []);
 	},
 
 //	api: null,
 	refs: null,
 	update: updateAsync,
-	_update: updateSync,
 	attach: attach,
 	mount: mount,
 	unmount: unmount,
 	redraw: redrawAsync,			// should handle ancest level, raf-debounced, same with update
+
+	_update: updateSync,
 	_redraw: redrawSync,		// non-coalesced / synchronous
 	/*
 	function(ancest) {
 	//	var vm = this;
-	//	return !ancest : redraw.call(vm) vm._parent ? vm._parent.redraw(ancest - 1);
+	//	return !ancest : redraw.call(vm) vm.parent ? vm.parent.redraw(ancest - 1);
 	},
 	*/
-	diff: function(diff) {},
+//	diff: function(diff) {},
 //	hooks: function(hooks) {},
 	hook: function(hooks) {
-		this._hooks = hooks;
+		this.hooks = hooks;
 	},
 };
 
 function nextSubVms(n, accum) {
-	var body = n._body;
+	var body = n.body;
 
 	if (isArr(body)) {
 		for (var i = 0; i < body.length; i++) {
 			var n2 = body[i];
 
-			if (n2._vmid != null)
-				accum.push(views[n2._vmid]);
+			if (n2.vmid != null)
+				accum.push(views[n2.vmid]);
 			else
 				nextSubVms(n2, accum);
 		}
@@ -100,7 +97,7 @@ function attach(el) {
 
 function drainDidHooks(vm) {
 	if (didQueue.length) {
-		repaint(vm._node);
+		repaint(vm.node);
 
 		var item;
 		while (item = didQueue.shift())
@@ -112,23 +109,23 @@ function drainDidHooks(vm) {
 function mount(el, isRoot) {
 	var vm = this;
 
-	vm._hooks && fireHooks("willMount", vm);
+	vm.hooks && fireHooks("willMount", vm);
 
 	if (isRoot) {
 		while (el.firstChild)
 			el.removeChild(el.firstChild);
 
 		this._redraw(null, null, false);
-		hydrate(this._node, el);
+		hydrate(this.node, el);
 	}
 	else {
 		this._redraw();
 
 		if (el)
-			insertBefore(el, this._node._el);			// el.appendChild(this._node._el);
+			insertBefore(el, this.node.el);			// el.appendChild(this.node.el);
 	}
 
-	vm._hooks && fireHooks("didMount", vm);
+	vm.hooks && fireHooks("didMount", vm);
 
 	if (el)
 		drainDidHooks(this);
@@ -139,13 +136,13 @@ function mount(el, isRoot) {
 function unmount() {
 	var vm = this;
 
-	vm._hooks && fireHooks("willUnmount", vm);
+	vm.hooks && fireHooks("willUnmount", vm);
 
-	var node = this._node;
-	var parEl = node._el.parentNode;
-	removeChild(parEl, node._el);
+	var node = this.node;
+	var parEl = node.el.parentNode;
+	removeChild(parEl, node.el);
 
-	vm._hooks && fireHooks("didUnmount", vm);
+	vm.hooks && fireHooks("didUnmount", vm);
 
 	drainDidHooks(this);
 }
@@ -154,10 +151,10 @@ function unmount() {
 function redrawAsync(level) {
 	level = level || 0;
 
-	if (level == 0 || this._parent == null)
+	if (level == 0 || this.parent == null)
 		this._redraw();							// this should be async also
 	else
-		this._parent.redraw(level - 1);
+		this.parent.redraw(level - 1);
 
 	return this;
 }
@@ -168,36 +165,36 @@ function redrawAsync(level) {
 function redrawSync(newParent, newIdx, withDOM) {
 	const isRedrawRoot = newParent == null;
 	var vm = this;
-	var isMounted = vm._node && vm._node._el && vm._node._el.parentNode;
+	var isMounted = vm.node && vm.node.el && vm.node.el.parentNode;
 
-//	if (vm._diff && vm._diff(model))
+//	if (vm.diff && vm.diff(model))
 
-	isMounted && vm._hooks && fireHooks("willRedraw", vm);
+	isMounted && vm.hooks && fireHooks("willRedraw", vm);
 
 	// todo: test result of willRedraw hooks before clearing refs
 	// todo: also clean up any refs exposed by this view from parents, should tag with src_vm during setting
 	if (vm.refs)
 		vm.refs = null;
 
-	var vold = vm._node;
-	var vnew = vm._render(vm, vm._model, vm._key);		// vm._opts
+	var vold = vm.node;
+	var vnew = vm.render(vm, vm.model, vm.key);		// vm.opts
 
-	preProc(vnew, null, null, vm._id);	// , vm._id
+	preProc(vnew, null, null, vm.id);	// , vm.id
 
-	vm._node = vnew;
-//	vnew._vm = vm;			// this causes a perf drop 1.53ms -> 1.62ms			how important is this?
-	vnew._vmid = vm._id;
+	vm.node = vnew;
+//	vnew.vm = vm;			// this causes a perf drop 1.53ms -> 1.62ms			how important is this?
+	vnew.vmid = vm.id;
 
 	if (newParent) {
-		vnew._idx = newIdx;
-		vnew._parent = newParent;
-		newParent._body[newIdx] = vnew;
+		vnew.idx = newIdx;
+		vnew.parent = newParent;
+		newParent.body[newIdx] = vnew;
 		// todo: bubble refs, etc?
 	}
-	else if (vold && vold._parent) {
-		vnew._idx = vold._idx;
-		vnew._parent = vold._parent;
-		vold._parent._body[vold._idx] = vnew;
+	else if (vold && vold.parent) {
+		vnew.idx = vold.idx;
+		vnew.parent = vold.parent;
+		vold.parent.body[vold.idx] = vnew;
 	}
 
 	if (withDOM !== false) {
@@ -207,7 +204,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 			hydrate(vnew);
 	}
 
-	isMounted && vm._hooks && fireHooks("didRedraw", vm);
+	isMounted && vm.hooks && fireHooks("didRedraw", vm);
 
 	if (isRedrawRoot)			// isMounted
 		drainDidHooks(vm);
@@ -221,11 +218,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 	var vm = this;
 
-	if (newModel != null) {		// && vm._key !== vm._model
-		if (vm._model !== newModel) {
-			vm._hooks && fireHooks("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
-			vm._model = newModel;
-		//	vm._hooks && fireHooks("didUpdate", vm, newModel);		// should this fire at al?
+	if (newModel != null) {		// && vm.key !== vm.model
+		if (vm.model !== newModel) {
+			vm.hooks && fireHooks("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
+			vm.model = newModel;
+		//	vm.hooks && fireHooks("didUpdate", vm, newModel);		// should this fire at al?
 		}
 	}
 
@@ -234,8 +231,8 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 	return vm._redraw(newParent, newIdx, withDOM);
 /*
 	if (parentVm != null) {
-		vm._parent = parentVm;
-		parentVm._body.push(vm);
+		vm.parent = parentVm;
+		parentVm.body.push(vm);
 	}
 */
 }

@@ -6,32 +6,32 @@ const voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keyg
 
 export function html(node) {
 	// handle if node is vm
-	if (node._render) {
-		if (!node._node)
+	if (node.render) {
+		if (!node.node)
 			node.mount();
-		node = node._node;
+		node = node.node;
 	}
 
 	var buf = "";
-	switch (node._type) {
+	switch (node.type) {
 		case VTYPE.ELEMENT:
-			if (node._el != null && node._tag == null)
-				return node._el.outerHTML;		// pre-existing dom elements (does not currently account for any props applied to them)
+			if (node.el != null && node.tag == null)
+				return node.el.outerHTML;		// pre-existing dom elements (does not currently account for any props applied to them)
 
-			buf += "<" + node._tag;
+			buf += "<" + node.tag;
 
-			if (node._attrs) {
-				var style = isVal(node._attrs.style) ? node._attrs.style : "";
-				var css = isObj(node._attrs.style) ? node._attrs.style : null;
+			if (node.attrs) {
+				var style = isVal(node.attrs.style) ? node.attrs.style : "";
+				var css = isObj(node.attrs.style) ? node.attrs.style : null;
 
 				if (css)
 					style += styleStr(css);
 
-				for (var pname in node._attrs) {
+				for (var pname in node.attrs) {
 					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_")
 						continue;
 
-					var val = node._attrs[pname];
+					var val = node.attrs[pname];
 
 					if (isFunc(val))
 						val = val();
@@ -51,26 +51,26 @@ export function html(node) {
 			}
 
 			// if body-less svg node, auto-close & return
-			if (node.ns != null && node._tag !== "svg" && node._tag !== "math" && node._body == null)
+			if (node.ns != null && node.tag !== "svg" && node.tag !== "math" && node.body == null)
 				return buf + "/>";
 			else
 				buf += ">";
 			break;
 		case VTYPE.TEXT:
-			return node._body;
+			return node.body;
 			break;
 	}
 
-	if (!voidTags.test(node._tag)) {
-		if (isArr(node._body)) {
-			node._body.forEach(function(n2) {
+	if (!voidTags.test(node.tag)) {
+		if (isArr(node.body)) {
+			node.body.forEach(function(n2) {
 				buf += html(n2);
 			});
 		}
 		else
-			buf += node._body || "";
+			buf += node.body || "";
 
-		buf += "</" + node._tag + ">";
+		buf += "</" + node.tag + ">";
 	}
 
 	return buf;

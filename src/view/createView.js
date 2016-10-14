@@ -9,14 +9,14 @@ let vmid = 0;
 export const views = {};
 
 export function createView(view, model, key, opts) {
-	if (view._type == VTYPE.VVIEW) {
-		model	= view._model;
-		key		= view._key;
-		opts	= view._opts;
-		view	= view._view;
+	if (view.type == VTYPE.VVIEW) {
+		model	= view.model;
+		key		= view.key;
+		opts	= view.opts;
+		view	= view.view;
 	}
 
 	var vm = new ViewModel(vmid++, view, model, key, opts);
-	views[vm._id] = vm;
+	views[vm.id] = vm;
 	return vm;
 }

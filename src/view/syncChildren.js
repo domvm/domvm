@@ -19,7 +19,7 @@ function fireHook(did, fn, o, n, then) {
 }
 
 export function fireHooks(name, o, n, then) {
-	var hook = o._hooks[name];
+	var hook = o.hooks[name];
 
 	if (hook) {
 		var did = startsWith(name, "did");
@@ -35,11 +35,11 @@ export function fireHooks(name, o, n, then) {
 }
 
 function nextNode(node, body) {
-	return body[node._idx + 1];
+	return body[node.idx + 1];
 }
 
 function prevNode(node, body) {
-	return body[node._idx - 1];
+	return body[node.idx - 1];
 }
 
 // ? removes if !recycled
@@ -54,14 +54,14 @@ function prevSib(sib) {
 
 // todo: hooks
 export function removeChild(parEl, el) {
-	var node = el._node, hooks = node._hooks;
+	var node = el._node, hooks = node.hooks;
 
 	hooks && fireHooks("willRemove", node);
 
-	if (isArr(node._body)) {
-	//	var parEl = node._el;
-		for (var i = 0; i < node._body.length; i++)
-			removeChild(el, node._body[i]._el);
+	if (isArr(node.body)) {
+	//	var parEl = node.el;
+		for (var i = 0; i < node.body.length; i++)
+			removeChild(el, node.body[i].el);
 	}
 
 	parEl.removeChild(el);
@@ -76,14 +76,14 @@ const didReinsert = "didReinsert";
 
 // todo: hooks
 export function insertBefore(parEl, el, refEl) {
-	var node = el._node, hooks = node._hooks, inDom = el.parentNode;
+	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
 	hooks && fireHooks(inDom ? willReinsert : willInsert, node);
 	parEl.insertBefore(el, refEl);
 	hooks && fireHooks(inDom ? didReinsert : didInsert, node);
 }
 
 function insertAfter(parEl, el, refEl) {
-	var node = el._node, hooks = node._hooks, inDom = el.parentNode;
+	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
 	hooks && fireHooks(inDom ? willReinsert : willInsert, node);
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
 	hooks && fireHooks(inDom ? didReinsert : didInsert, node);
@@ -105,7 +105,7 @@ function tmpEdges(fn, parEl, lftSib, rgtSib) {
 function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
 //	DEBUG && console.log("try head/tail magic");
 
-	var areAdjacent	= rgtNode._idx === lftNode._idx + 1;
+	var areAdjacent	= rgtNode.idx === lftNode.idx + 1;
 	var headToTail = areAdjacent ? false : lftSib._node === rgtNode;
 	var tailToHead = areAdjacent ? true  : rgtSib._node === lftNode;
 
@@ -151,11 +151,11 @@ function sortDOM(parEl, lftSib, rgtSib, cmpFn) {
 }
 
 function cmpElNodeIdx(a, b) {
-	return a._node._idx - b._node._idx;
+	return a._node.idx - b._node.idx;
 }
 
 export function syncChildren(node, parEl) {
-	var body = node._body;
+	var body = node.body;
 	// breaking condition is convergance
 
 	var lftNode		= body[0],
@@ -179,8 +179,8 @@ export function syncChildren(node, parEl) {
 //		DEBUG && console.log("from_left");
 //		from_left:
 		while (1) {
-			// remove any non-recycled sibs whose el._node has the old parent
-			if (lftSib && !lftSib._node._recycled && lftSib._node._parent != parEl._node) {
+			// remove any non-recycled sibs whose el.node has the old parent
+			if (lftSib && !lftSib._node.recycled && lftSib._node.parent != parEl._node) {
 				tmpSib = nextSib(lftSib);
 				removeChild(parEl, lftSib);
 				lftSib = tmpSib;
@@ -189,11 +189,11 @@ export function syncChildren(node, parEl) {
 
 			if (lftNode == null)		// reached end
 				break converge;
-			else if (lftNode._el == null) {
+			else if (lftNode.el == null) {
 				insertBefore(parEl, hydrate(lftNode), lftSib);
 				lftNode = nextNode(lftNode, body);
 			}
-			else if (lftNode._el === lftSib) {
+			else if (lftNode.el === lftSib) {
 				lftNode = nextNode(lftNode, body);
 				lftSib = nextSib(lftSib);
 			}
@@ -204,7 +204,7 @@ export function syncChildren(node, parEl) {
 //		DEBUG && console.log("from_right");
 //		from_right:
 		while(1) {
-			if (rgtSib && !rgtSib._node._recycled && rgtSib._node._parent != parEl._node) {
+			if (rgtSib && !rgtSib._node.recycled && rgtSib._node.parent != parEl._node) {
 				tmpSib = prevSib(rgtSib);
 				removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
@@ -213,11 +213,11 @@ export function syncChildren(node, parEl) {
 
 			if (rgtNode == lftNode)		// converged
 				break converge;
-			if (rgtNode._el == null) {
+			if (rgtNode.el == null) {
 				insertAfter(parEl, hydrate(rgtNode), rgtSib);
 				rgtNode = prevNode(rgtNode, body);
 			}
-			else if (rgtNode._el === rgtSib) {
+			else if (rgtNode.el === rgtSib) {
 				rgtNode = prevNode(rgtNode, body);
 				rgtSib = prevSib(rgtSib);
 			}

@@ -21,29 +21,29 @@ export function defineElement(tag, arg1, arg2, fixed) {
 
 	if (attrs != null) {
 		if (attrs._key != null)
-			node._key = attrs._key;
+			node.key = attrs._key;
 
 		if (attrs._ref != null)
-			node._ref = attrs._ref;
+			node.ref = attrs._ref;
 
 		if (attrs._hooks != null)
-			node._hooks = attrs._hooks;
+			node.hooks = attrs._hooks;
 
 		if (attrs._html != null)
-			node._html = attrs._html;
+			node.html = attrs._html;
 
 		if (attrs._data != null)
-			node._data = attrs._data;
+			node.data = attrs._data;
 
-		node._attrs = attrs;
+		node.attrs = attrs;
 	}
 
 	var parsed = parseTag(tag);
 
-	node._tag = parsed.tag;
+	node.tag = parsed.tag;
 
 	if (parsed.id || parsed.class || parsed.attrs) {
-		var p = node._attrs || {};
+		var p = node.attrs || {};
 
 		if (parsed.id && p.id == null)
 			p.id = parsed.id;
@@ -58,12 +58,12 @@ export function defineElement(tag, arg1, arg2, fixed) {
 					p[key] = parsed.attrs[key];
 		}
 
-//		if (node._attrs != p)
-			node._attrs = p;
+//		if (node.attrs != p)
+			node.attrs = p;
 	}
 
 	if (body != null)
-		node._body = body;
+		node.body = body;
 
 	return node;
 }

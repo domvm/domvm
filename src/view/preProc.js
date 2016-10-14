@@ -21,50 +21,29 @@ function setRef(vm, name, node) {
 
 // vnew, vold
 export function preProc(vnew, parent, idx, ownVmid) {		// , parentVm
-//	console.count("x");
-
-//	this.update(model, parent, idx, parentVm, false);
-
-	// should this be opt-in?
-
-
-//	this._parent = parentVm;
-//	parentVm._body.push(this);		// if parentVm._body
-
-	// switch (vnode._type) {}
-	// TYPE_ELEM
-	// TYPE_TEXT
-	// TYPE_VIEW
-	// TYPE_COMMENT
-
-	// TYPE_EXTVIEW
-	// TYPE_EXTELEM
-	// declarative views
-
-
 	// injected views
-	if (vnew._type === VTYPE.VMODEL) {
+	if (vnew.type === VTYPE.VMODEL) {
 		// pull vm.node out & reassociate
 		// redraw?
 	}
-	else if (vnew._type === VTYPE.VVIEW) {
+	else if (vnew.type === VTYPE.VVIEW) {
 
 	}
 	// injected and declared elems/text/comments
 	else {
-		vnew._parent = parent;
-		vnew._idx = idx;
-		vnew._vmid = ownVmid;
+		vnew.parent = parent;
+		vnew.idx = idx;
+		vnew.vmid = ownVmid;
 
-		var attrs = vnew._attrs;
+		var attrs = vnew.attrs;
 		if (attrs) {
 			if (attrs._ref != null)
-				setRef(vnew._vm, attrs._ref, vnew);		// _vm getter traverses up each time, can optimize by passing parentVm through to here
+				setRef(vnew.vm, attrs._ref, vnew);		// _vm getter traverses up each time, can optimize by passing parentVm through to here
 		}
 
-		if (isArr(vnew._body)) {
+		if (isArr(vnew.body)) {
 		// declarative elems, comments, text nodes
-			var body = vnew._body;
+			var body = vnew.body;
 
 			for (var i = 0; i < body.length; i++) {
 				var node2 = body[i];
@@ -78,37 +57,34 @@ export function preProc(vnew, parent, idx, ownVmid) {		// , parentVm
 				// flatten arrays
 				else if (isArr(node2))
 					insertArr(body, node2, i--, 1);
-				else if (node2._type === VTYPE.TEXT) {
+				else if (node2.type === VTYPE.TEXT) {
 					// remove empty text nodes
-					if (node2._body == null || node2._body === "")
+					if (node2.body == null || node2.body === "")
 						body.splice(i--, 1);
 					// merge with previous text node
-					else if (i > 0 && body[i-1]._type === VTYPE.TEXT) {
-						body[i-1]._body += node2._body;
+					else if (i > 0 && body[i-1].type === VTYPE.TEXT) {
+						body[i-1].body += node2.body;
 						body.splice(i--, 1);
 					}
 					else
-						preProc(node2, vnew, i);		// , /*vnew._vm ||*/ parentVm
+						preProc(node2, vnew, i);		// , /*vnew.vm ||*/ parentVm
 				}
 				else {
-			//		if (node2._ref != null)
-			//			parentVm._setRef(node2._ref, node2);
+			//		if (node2.ref != null)
+			//			parentVm.setRef(node2.ref, node2);
 
-					preProc(node2, vnew, i);			// , /*vnew._vm ||*/ parentVm
+					preProc(node2, vnew, i);			// , /*vnew.vm ||*/ parentVm
 	/*
 					// init/populate keys in in parent
-					if (node2._key != null) {
-						if (vnew._keys == null)
-							vnew._keys = {};
+					if (node2.key != null) {
+						if (vnew.keys == null)
+							vnew.keys = {};
 
-						vnew._keys[node2._key] = i;
+						vnew.keys[node2.key] = i;
 					}
 	*/
 				}
 			}
 		}
 	}
-
-//		else if (vnew._type === TYPE_TEXT) {}
-//		else if (vnew._type === TYPE_COMMENT) {}
 }

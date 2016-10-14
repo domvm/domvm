@@ -139,17 +139,17 @@ function isStyleProp(name) {
 }
 
 function repaint(node) {
-	node && node._el && node._el.offsetHeight;
+	node && node.el && node.el.offsetHeight;
 }
 
 function remAttr(node, name) {
-	node._el.removeAttribute(name);
+	node.el.removeAttribute(name);
 }
 
 // setAttr
 // diff, ".", "on*", bool vals, skip _*, value/checked/selected selectedIndex
 function setAttr(node, name, val) {
-	var el = node._el;
+	var el = node.el;
 
 	if (val == null)
 		{ remAttr(node, name); }		// will also removeAttr of style: null
@@ -166,8 +166,16 @@ function setAttr(node, name, val) {
 		{ el.setAttribute(name, val); }
 }
 
+/*
+import { patchAttrs2 } from './patch';
+import { VNode } from './VNode';
+const fakeDonor = new VNode(VTYPE.ELEMENT);
+fakeDonor.attrs = {};
+*/
+
+// TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT
 function patchAttrs2(vnode) {
-	var nattrs = vnode._attrs;
+	var nattrs = vnode.attrs;
 
 	for (var key in nattrs) {
 		var nval = nattrs[key];
@@ -184,43 +192,45 @@ function patchAttrs2(vnode) {
 
 //  TODO: DRY this out. reusing normal patch here negatively affects V8's JIT
 function hydrate(vnode, withEl) {
-	if (vnode._el == null) {
-		if (vnode._type === VTYPE.ELEMENT) {
-			vnode._el = withEl || document.createElement(vnode._tag);
+	if (vnode.el == null) {
+		if (vnode.type === VTYPE.ELEMENT) {
+			vnode.el = withEl || document.createElement(vnode.tag);
 
-			if (vnode._attrs)
+			if (vnode.attrs)
 				{ patchAttrs2(vnode); }
 
-			if (isArr(vnode._body)) {
-				vnode._body.forEach(function (vnode2, i) {
-					if (vnode2._type == VTYPE.VMODEL) {
-						var vm = views[vnode2._vmid];
+			if (isArr(vnode.body)) {
+				vnode.body.forEach(function (vnode2, i) {
+					if (vnode2.type == VTYPE.VMODEL) {
+						var vm = views[vnode2.vmid];
 						vm._redraw(vnode, i);
-						insertBefore(vnode._el, vm._node._el);
+						insertBefore(vnode.el, vm.node.el);
 					}
-					else if (vnode2._type == VTYPE.VVIEW) {
-						var vm = createView(vnode2._view, vnode2._model, vnode2._key, vnode2._opts)._redraw(vnode, i);		// todo: handle new model updates
-						insertBefore(vnode._el, vm._node._el);
+					else if (vnode2.type == VTYPE.VVIEW) {
+						var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i);		// todo: handle new model updates
+						insertBefore(vnode.el, vm.node.el);
 					}
 					else
-						{ insertBefore(vnode._el, hydrate(vnode2)); }		// vnode._el.appendChild(hydrate(vnode2))
+						{ insertBefore(vnode.el, hydrate(vnode2)); }		// vnode.el.appendChild(hydrate(vnode2))
 				});
 			}
-			else if (vnode._body != null && vnode._body !== "") {
-				if (vnode._html)
-					{ vnode._el.innerHTML = vnode._body; }
+			else if (vnode.body != null && vnode.body !== "") {
+				if (vnode.html)
+					{ vnode.el.innerHTML = vnode.body; }
 				else
-					{ vnode._el.textContent = vnode._body; }
+					{ vnode.el.textContent = vnode.body; }
 			}
 		}
-		else if (vnode._type === VTYPE.TEXT)
-			{ vnode._el = withEl || document.createTextNode(vnode._body); }
+		else if (vnode.type === VTYPE.TEXT)
+			{ vnode.el = withEl || document.createTextNode(vnode.body); }
 	}
 
-	vnode._el._node = vnode;
+	vnode.el._node = vnode;
 
-	return vnode._el;
+	return vnode.el;
 }
+
+//import { DEBUG } from './DEBUG';
 
 var didQueue = [];
 
@@ -239,7 +249,7 @@ function fireHook(did, fn, o, n, then) {
 }
 
 function fireHooks(name, o, n, then) {
-	var hook = o._hooks[name];
+	var hook = o.hooks[name];
 
 	if (hook) {
 		var did = startsWith(name, "did");
@@ -255,11 +265,11 @@ function fireHooks(name, o, n, then) {
 }
 
 function nextNode(node, body) {
-	return body[node._idx + 1];
+	return body[node.idx + 1];
 }
 
 function prevNode(node, body) {
-	return body[node._idx - 1];
+	return body[node.idx - 1];
 }
 
 // ? removes if !recycled
@@ -274,14 +284,14 @@ function prevSib(sib) {
 
 // todo: hooks
 function removeChild(parEl, el) {
-	var node = el._node, hooks = node._hooks;
+	var node = el._node, hooks = node.hooks;
 
 	hooks && fireHooks("willRemove", node);
 
-	if (isArr(node._body)) {
-	//	var parEl = node._el;
-		for (var i = 0; i < node._body.length; i++)
-			{ removeChild(el, node._body[i]._el); }
+	if (isArr(node.body)) {
+	//	var parEl = node.el;
+		for (var i = 0; i < node.body.length; i++)
+			{ removeChild(el, node.body[i].el); }
 	}
 
 	parEl.removeChild(el);
@@ -296,14 +306,14 @@ var didReinsert = "didReinsert";
 
 // todo: hooks
 function insertBefore(parEl, el, refEl) {
-	var node = el._node, hooks = node._hooks, inDom = el.parentNode;
+	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
 	hooks && fireHooks(inDom ? willReinsert : willInsert, node);
 	parEl.insertBefore(el, refEl);
 	hooks && fireHooks(inDom ? didReinsert : didInsert, node);
 }
 
 function insertAfter(parEl, el, refEl) {
-	var node = el._node, hooks = node._hooks, inDom = el.parentNode;
+	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
 	hooks && fireHooks(inDom ? willReinsert : willInsert, node);
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
 	hooks && fireHooks(inDom ? didReinsert : didInsert, node);
@@ -325,7 +335,7 @@ function tmpEdges(fn, parEl, lftSib, rgtSib) {
 function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
 //	DEBUG && console.log("try head/tail magic");
 
-	var areAdjacent	= rgtNode._idx === lftNode._idx + 1;
+	var areAdjacent	= rgtNode.idx === lftNode.idx + 1;
 	var headToTail = areAdjacent ? false : lftSib._node === rgtNode;
 	var tailToHead = areAdjacent ? true  : rgtSib._node === lftNode;
 
@@ -371,11 +381,11 @@ function sortDOM(parEl, lftSib, rgtSib, cmpFn) {
 }
 
 function cmpElNodeIdx(a, b) {
-	return a._node._idx - b._node._idx;
+	return a._node.idx - b._node.idx;
 }
 
 function syncChildren(node, parEl) {
-	var body = node._body;
+	var body = node.body;
 	// breaking condition is convergance
 
 	var lftNode		= body[0],
@@ -399,8 +409,8 @@ function syncChildren(node, parEl) {
 //		DEBUG && console.log("from_left");
 //		from_left:
 		while (1) {
-			// remove any non-recycled sibs whose el._node has the old parent
-			if (lftSib && !lftSib._node._recycled && lftSib._node._parent != parEl._node) {
+			// remove any non-recycled sibs whose el.node has the old parent
+			if (lftSib && !lftSib._node.recycled && lftSib._node.parent != parEl._node) {
 				tmpSib = nextSib(lftSib);
 				removeChild(parEl, lftSib);
 				lftSib = tmpSib;
@@ -409,11 +419,11 @@ function syncChildren(node, parEl) {
 
 			if (lftNode == null)		// reached end
 				{ break converge; }
-			else if (lftNode._el == null) {
+			else if (lftNode.el == null) {
 				insertBefore(parEl, hydrate(lftNode), lftSib);
 				lftNode = nextNode(lftNode, body);
 			}
-			else if (lftNode._el === lftSib) {
+			else if (lftNode.el === lftSib) {
 				lftNode = nextNode(lftNode, body);
 				lftSib = nextSib(lftSib);
 			}
@@ -424,7 +434,7 @@ function syncChildren(node, parEl) {
 //		DEBUG && console.log("from_right");
 //		from_right:
 		while(1) {
-			if (rgtSib && !rgtSib._node._recycled && rgtSib._node._parent != parEl._node) {
+			if (rgtSib && !rgtSib._node.recycled && rgtSib._node.parent != parEl._node) {
 				tmpSib = prevSib(rgtSib);
 				removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
@@ -433,11 +443,11 @@ function syncChildren(node, parEl) {
 
 			if (rgtNode == lftNode)		// converged
 				{ break converge; }
-			if (rgtNode._el == null) {
+			if (rgtNode.el == null) {
 				insertAfter(parEl, hydrate(rgtNode), rgtSib);
 				rgtNode = prevNode(rgtNode, body);
 			}
-			else if (rgtNode._el === rgtSib) {
+			else if (rgtNode.el === rgtSib) {
 				rgtNode = prevNode(rgtNode, body);
 				rgtSib = prevSib(rgtSib);
 			}
@@ -458,57 +468,59 @@ function syncChildren(node, parEl) {
 }
 
 function VNode(type) {
-	this._type = type;
+	this.type = type;
 }
 
 VNode.prototype = {
 	constructor: VNode,
 
-	_type:	null,
+	type:	null,
 
-	get _vm() {
+	get vm() {
 		var n = this;
-		while (n._vmid == null)
-			{ n = n._parent; }
-		return views[n._vmid];
+		while (n.vmid == null)
+			{ n = n.parent; }
+		return views[n.vmid];
 	},
 
-	_vmid:	null,
+	vmid:	null,
 
 	// all this stuff can just live in attrs (as defined) just have getters here for it
-	_key:	null,
-	_ref:	null,
-	_data:	null,
-	_hooks:	null,
-	_html:	false,
+	key:	null,
+	ref:	null,
+	data:	null,
+	hooks:	null,
+	html:	false,
 
-	_el:	null,
+	el:	null,
 
-	_tag:	null,
-	_attrs:	null,
-	_body:	null,
-	_fixed: false,
+	tag:	null,
+	attrs:	null,
+	body:	null,
+	fixed: false,
 
 	_class:	null,
 
-	_idx:	null,
-	_parent:null,
+	idx:	null,
+	parent:	null,
 
 	// transient flags maintained for cleanup passes, delayed hooks, etc
-	_recycled:		false,		// true when findDonor/graft pass is done
-	_wasSame:		false,		// true if _diff result was false
-	_delayedRemove:	false,		// true when willRemove hook returns a promise
+//	_recycled:		false,		// true when findDonor/graft pass is done
+//	_wasSame:		false,		// true if _diff result was false
+//	_delayedRemove:	false,		// true when willRemove hook returns a promise
 
 //	_setTag: function() {},
 
+	/*
 	// break out into optional fluent module
-	key:	function(val) { this._key	= val; return this; },
-	ref:	function(val) { this._ref	= val; return this; },		// deep refs
-	data:	function(val) { this._data	= val; return this; },
-	hooks:	function(val) { this._hooks	= val; return this; },		// h("div")._hooks()
-	html:	function(val) { this._html	= true; return this.body(val); },
+	key:	function(val) { this.key	= val; return this; },
+	ref:	function(val) { this.ref	= val; return this; },		// deep refs
+	data:	function(val) { this.data	= val; return this; },
+	hooks:	function(val) { this.hooks	= val; return this; },		// h("div").hooks()
+	html:	function(val) { this.html	= true; return this.body(val); },
 
-	body:	function(val) { this._body	= val; return this; },
+	body:	function(val) { this.body	= val; return this; },
+	*/
 };
 
 function VNodeFixed(type) {
@@ -517,7 +529,7 @@ function VNodeFixed(type) {
 
 var proto = Object.create(VNode.prototype);
 proto.constructor = VNodeFixed;
-proto._fixed = true;
+proto.fixed = true;
 
 VNodeFixed.prototype = proto;
 
@@ -539,29 +551,29 @@ function defineElement(tag, arg1, arg2, fixed) {
 
 	if (attrs != null) {
 		if (attrs._key != null)
-			{ node._key = attrs._key; }
+			{ node.key = attrs._key; }
 
 		if (attrs._ref != null)
-			{ node._ref = attrs._ref; }
+			{ node.ref = attrs._ref; }
 
 		if (attrs._hooks != null)
-			{ node._hooks = attrs._hooks; }
+			{ node.hooks = attrs._hooks; }
 
 		if (attrs._html != null)
-			{ node._html = attrs._html; }
+			{ node.html = attrs._html; }
 
 		if (attrs._data != null)
-			{ node._data = attrs._data; }
+			{ node.data = attrs._data; }
 
-		node._attrs = attrs;
+		node.attrs = attrs;
 	}
 
 	var parsed = parseTag(tag);
 
-	node._tag = parsed.tag;
+	node.tag = parsed.tag;
 
 	if (parsed.id || parsed.class || parsed.attrs) {
-		var p = node._attrs || {};
+		var p = node.attrs || {};
 
 		if (parsed.id && p.id == null)
 			{ p.id = parsed.id; }
@@ -576,12 +588,12 @@ function defineElement(tag, arg1, arg2, fixed) {
 					{ p[key] = parsed.attrs[key]; } }
 		}
 
-//		if (node._attrs != p)
-			node._attrs = p;
+//		if (node.attrs != p)
+			node.attrs = p;
 	}
 
 	if (body != null)
-		{ node._body = body; }
+		{ node.body = body; }
 
 	return node;
 }
@@ -616,17 +628,22 @@ function parseTag(raw) {
 	return cached;
 }
 
+//import { DEBUG } from './DEBUG';
+
+
+// newNode can be either {class: style: } or full new VNode
+// will/didPatch?
 function patchNode(o, n) {
-	if (n._type != null) {
+	if (n.type != null) {
 		// full new node
 	}
 	else {
 		// shallow-clone target
 		var donor = Object.create(o);
 		// fixate orig attrs
-		donor._attrs = assignObj({}, o._attrs);
+		donor.attrs = assignObj({}, o.attrs);
 		// assign new attrs into live targ node
-		var oattrs = assignObj(o._attrs, donor._attrs, n);
+		var oattrs = assignObj(o.attrs, donor.attrs, n);
 		// prepend any fixed shorthand class
 		if (o._class != null) {
 			var aclass = oattrs.class;
@@ -638,34 +655,34 @@ function patchNode(o, n) {
 }
 
 function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
-	var oldBody = oPar._body;
+	var oldBody = oPar.body;
 
 	for (var i = fromIdx || 0; i < oldBody.length; i++) {
 		var o = oldBody[i];
 
-		if (n._type == VTYPE.VVIEW && o._vmid != null) {			// also ignore recycled/moved?
-			var ov = views[o._vmid];
+		if (n.type == VTYPE.VVIEW && o.vmid != null) {			// also ignore recycled/moved?
+			var ov = views[o.vmid];
 
 			// match by key & viewFn
-			if (ov._view == n._view && ov._key == n._key)
+			if (ov.view == n.view && ov.key == n.key)
 				{ return o; }
 		}
 
-		if (o._recycled || n._tag !== o._tag || n._type !== o._type)
+		if (o.recycled || n.tag !== o.tag || n.type !== o.type)
 			{ continue; }
 
-		// if n._view
+		// if n.view
 
-		if (n._key === o._key)		// accounts for matching & both null
+		if (n.key === o.key)		// accounts for matching & both null
 			{ return o; }
 		else {
 			//
-			if (o._key == null) {
+			if (o.key == null) {
 				return o;
 			}
 			// n.key && o.key, ident?
 			else {
-			//	console.log(n._key, o._key);
+			//	console.log(n.key, o.key);
 			}
 		}
 	}
@@ -685,24 +702,24 @@ function unbindEv(el, type, fn) {
 
 // assumes if styles exist both are objects or both are strings
 function patchStyle(n, o) {
-	var ns = n._attrs.style;
-	var os = o ? o._attrs.style : null;		// || emptyObj?
+	var ns = n.attrs.style;
+	var os = o ? o.attrs.style : null;		// || emptyObj?
 
 	// replace or remove in full
 	if (ns == null || isVal(ns))
-		{ n._el.style.cssText = ns; }
+		{ n.el.style.cssText = ns; }
 	else {
 		for (var nn in ns) {
 			var nv = ns[nn];
 			if (os == null || nv != null && nv !== os[nn])
-				{ n._el.style[nn] = autoPx(nn, nv); }
+				{ n.el.style[nn] = autoPx(nn, nv); }
 		}
 
 		// clean old
 		if (os) {
 			for (var on in os) {
 				if (ns[on] == null)
-					{ n._el.style[on] = null; }
+					{ n.el.style[on] = null; }
 			}
 		}
 	}
@@ -716,7 +733,7 @@ function wrapHandler(fn, args, sel) {
 		if (sel && !e.target.matches(sel))
 			{ return; }
 
-		var out = fn.apply(null, fn._args.concat(e, node, node._vm));
+		var out = fn.apply(null, fn.args.concat(e, node, node.vm));
 
 		if (out === false) {
 			e.preventDefault();
@@ -725,14 +742,14 @@ function wrapHandler(fn, args, sel) {
 	}
 
 	// for external diffing
-	fn._wrap = wrap;
-	fn._args = args || [];
+	fn.wrap = wrap;
+	fn.args = args || [];
 
 	return wrap;
 }
 
 function patchEvent(node, name, sel, nval, oval) {
-	var el = node._el;
+	var el = node.el;
 
 	// param'd eg onclick: [myFn, 1, 2, 3...]
 	if (isArr(nval)) {
@@ -747,10 +764,10 @@ function patchEvent(node, name, sel, nval, oval) {
 	if (isFunc(nval)) {
 		if (nval != oval) {
 			bindEv(el, name, wrapHandler(nval, newArgs, sel));
-			oval && unbindEv(el, name, oval._wrap);
+			oval && unbindEv(el, name, oval.wrap);
 		}
 		else
-			{ nval._args = newArgs || []; }
+			{ nval.args = newArgs || []; }
 	}
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
 	else {		// isObj
@@ -764,8 +781,8 @@ function patchEvent(node, name, sel, nval, oval) {
 }
 
 function patchAttrs(vnode, donor) {
-	var nattrs = vnode._attrs;		// || emptyObj
-	var oattrs = donor._attrs;		// || emptyObj
+	var nattrs = vnode.attrs;		// || emptyObj
+	var oattrs = donor.attrs;		// || emptyObj
 
 	// if vals identical, do nothing.
 
@@ -800,72 +817,72 @@ function patchAttrs(vnode, donor) {
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists
 function patch(vnode, donor) {
-	donor._hooks && fireHooks("willRecycle", donor, vnode);
+	donor.hooks && fireHooks("willRecycle", donor, vnode);
 
-	vnode._el = donor._el;
-	donor._recycled = true;
+	vnode.el = donor.el;
+	donor.recycled = true;
 
-	vnode._el._node = vnode;
+	vnode.el._node = vnode;
 
 	// "" => ""
-	if (vnode._type === VTYPE.TEXT && vnode._body !== donor._body) {
-		vnode._el.nodeValue = vnode._body;
+	if (vnode.type === VTYPE.TEXT && vnode.body !== donor.body) {
+		vnode.el.nodeValue = vnode.body;
 		return;
 	}
 
 	// BUG: donation would break:
 	// relies on both being present?
 	// div (with attrs) <-> div (no attrs)
-	if (vnode._attrs || donor._attrs)
+	if (vnode.attrs || donor.attrs)
 		{ patchAttrs(vnode, donor); }
 
 	// patch events
 
-	var oldIsArr = isArr(donor._body);
-	var newIsArr = isArr(vnode._body);
+	var oldIsArr = isArr(donor.body);
+	var newIsArr = isArr(vnode.body);
 
-//	var nonEqNewBody = vnode._body != null && vnode._body !== donor._body;
+//	var nonEqNewBody = vnode.body != null && vnode.body !== donor.body;
 
 	if (oldIsArr) {
 		// [] => []
 		if (newIsArr) {
-		//	console.log('[] => []', donor._body, vnode._body);
+		//	console.log('[] => []', donor.body, vnode.body);
 			// graft children
 			patchChildren(vnode, donor);
 		}
 		// [] => "" | null
-		else if (vnode._body !== donor._body) {
+		else if (vnode.body !== donor.body) {
 			// needs cleanup pass?
-		//	console.log('[] => ""', donor._body, vnode._body);
+		//	console.log('[] => ""', donor.body, vnode.body);
 
-			if (vnode._body != null)
-				{ vnode._el.textContent = vnode._body; }
+			if (vnode.body != null)
+				{ vnode.el.textContent = vnode.body; }
 			else {
-				while (vnode._el.firstChild)
-					{ vnode._el.removeChild(vnode._el.firstChild); }
+				while (vnode.el.firstChild)
+					{ vnode.el.removeChild(vnode.el.firstChild); }
 			}
 		}
 	}
 	else {
 		// "" | null => []
 		if (newIsArr) {
-		//	console.log('"" => []', donor._body, vnode._body);	// hydrate new here?
-			while (vnode._el.firstChild)
-				{ vnode._el.removeChild(vnode._el.firstChild); }
+		//	console.log('"" => []', donor.body, vnode.body);	// hydrate new here?
+			while (vnode.el.firstChild)
+				{ vnode.el.removeChild(vnode.el.firstChild); }
 			patchChildren(vnode, donor);
 		}
 		// "" | null => "" | null
-		else if (vnode._body !== donor._body) {
+		else if (vnode.body !== donor.body) {
 		//	console.log('"" => ""', donor, vnode);
 
-			if (vnode._el.firstChild)
-				{ vnode._el.firstChild.nodeValue = vnode._body; }
+			if (vnode.el.firstChild)
+				{ vnode.el.firstChild.nodeValue = vnode.body; }
 			else
-				{ vnode._el.textContent = vnode._body; }
+				{ vnode.el.textContent = vnode.body; }
 		}
 	}
 
-	donor._hooks && fireHooks("didRecycle", donor, vnode);
+	donor.hooks && fireHooks("didRecycle", donor, vnode);
 }
 
 // [] => []
@@ -875,17 +892,17 @@ function patchChildren(vnode, donor) {
 
 	var donor2;
 
-	for (var i = 0; i < vnode._body.length; i++) {
-		var node2 = vnode._body[i];
+	for (var i = 0; i < vnode.body.length; i++) {
+		var node2 = vnode.body[i];
 
-		if (node2._type == VTYPE.VVIEW) {
+		if (node2.type == VTYPE.VVIEW) {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))		// update/moveTo
-				{ views[donor2._vmid]._update(node2._model, vnode, i); }		// withDOM
+				{ views[donor2.vmid]._update(node2.model, vnode, i); }		// withDOM
 			else
-				{ createView(node2._view, node2._model, node2._key, node2._opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
+				{ createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
 		}
-		else if (node2._type == VTYPE.VMODEL)
-			{ views[node2._vmid]._update(node2._model, vnode, i); }
+		else if (node2.type == VTYPE.VMODEL)
+			{ views[node2.vmid]._update(node2.model, vnode, i); }
 		else {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))
 				{ patch(node2, donor2); }
@@ -895,15 +912,15 @@ function patchChildren(vnode, donor) {
 		// re-establish contigindex
 
 		if (donor2) {
-			if (donor2._idx == fromIdx) {							// todo: conditional contigidx (first non-null)
-			//	while (donor._body[fromIdx] && donor._body[fromIdx]._recycled)
+			if (donor2.idx == fromIdx) {							// todo: conditional contigidx (first non-null)
+			//	while (donor.body[fromIdx] && donor.body[fromIdx].recycled)
 				fromIdx++;
 			}
 		}
 	}
 
-	if (!vnode._fixed)
-		{ syncChildren(vnode, vnode._el); }
+	if (!vnode.fixed)
+		{ syncChildren(vnode, vnode.el); }
 }
 
 function setRef(vm, name, node) {
@@ -926,50 +943,29 @@ function setRef(vm, name, node) {
 
 // vnew, vold
 function preProc(vnew, parent, idx, ownVmid) {		// , parentVm
-//	console.count("x");
-
-//	this.update(model, parent, idx, parentVm, false);
-
-	// should this be opt-in?
-
-
-//	this._parent = parentVm;
-//	parentVm._body.push(this);		// if parentVm._body
-
-	// switch (vnode._type) {}
-	// TYPE_ELEM
-	// TYPE_TEXT
-	// TYPE_VIEW
-	// TYPE_COMMENT
-
-	// TYPE_EXTVIEW
-	// TYPE_EXTELEM
-	// declarative views
-
-
 	// injected views
-	if (vnew._type === VTYPE.VMODEL) {
+	if (vnew.type === VTYPE.VMODEL) {
 		// pull vm.node out & reassociate
 		// redraw?
 	}
-	else if (vnew._type === VTYPE.VVIEW) {
+	else if (vnew.type === VTYPE.VVIEW) {
 
 	}
 	// injected and declared elems/text/comments
 	else {
-		vnew._parent = parent;
-		vnew._idx = idx;
-		vnew._vmid = ownVmid;
+		vnew.parent = parent;
+		vnew.idx = idx;
+		vnew.vmid = ownVmid;
 
-		var attrs = vnew._attrs;
+		var attrs = vnew.attrs;
 		if (attrs) {
 			if (attrs._ref != null)
-				{ setRef(vnew._vm, attrs._ref, vnew); }		// _vm getter traverses up each time, can optimize by passing parentVm through to here
+				{ setRef(vnew.vm, attrs._ref, vnew); }		// _vm getter traverses up each time, can optimize by passing parentVm through to here
 		}
 
-		if (isArr(vnew._body)) {
+		if (isArr(vnew.body)) {
 		// declarative elems, comments, text nodes
-			var body = vnew._body;
+			var body = vnew.body;
 
 			for (var i = 0; i < body.length; i++) {
 				var node2 = body[i];
@@ -983,47 +979,44 @@ function preProc(vnew, parent, idx, ownVmid) {		// , parentVm
 				// flatten arrays
 				else if (isArr(node2))
 					{ insertArr(body, node2, i--, 1); }
-				else if (node2._type === VTYPE.TEXT) {
+				else if (node2.type === VTYPE.TEXT) {
 					// remove empty text nodes
-					if (node2._body == null || node2._body === "")
+					if (node2.body == null || node2.body === "")
 						{ body.splice(i--, 1); }
 					// merge with previous text node
-					else if (i > 0 && body[i-1]._type === VTYPE.TEXT) {
-						body[i-1]._body += node2._body;
+					else if (i > 0 && body[i-1].type === VTYPE.TEXT) {
+						body[i-1].body += node2.body;
 						body.splice(i--, 1);
 					}
 					else
-						{ preProc(node2, vnew, i); }		// , /*vnew._vm ||*/ parentVm
+						{ preProc(node2, vnew, i); }		// , /*vnew.vm ||*/ parentVm
 				}
 				else {
-			//		if (node2._ref != null)
-			//			parentVm._setRef(node2._ref, node2);
+			//		if (node2.ref != null)
+			//			parentVm.setRef(node2.ref, node2);
 
-					preProc(node2, vnew, i);			// , /*vnew._vm ||*/ parentVm
+					preProc(node2, vnew, i);			// , /*vnew.vm ||*/ parentVm
 	/*
 					// init/populate keys in in parent
-					if (node2._key != null) {
-						if (vnew._keys == null)
-							vnew._keys = {};
+					if (node2.key != null) {
+						if (vnew.keys == null)
+							vnew.keys = {};
 
-						vnew._keys[node2._key] = i;
+						vnew.keys[node2.key] = i;
 					}
 	*/
 				}
 			}
 		}
 	}
-
-//		else if (vnew._type === TYPE_TEXT) {}
-//		else if (vnew._type === TYPE_COMMENT) {}
 }
 
 function ViewModel(id, view, model, key, opts) {			// parent, idx, parentVm
-	this._id = id;
-	this._view = view;
-	this._model = model;
-	this._key = key == null ? model : key;
-	this._render = view(this, model, key);			// , opts
+	this.id = id;
+	this.view = view;
+	this.model = model;
+	this.key = key == null ? model : key;
+	this.render = view(this, model, key);			// , opts
 
 //	this.update(model, parent, idx, parentVm, false);
 
@@ -1035,70 +1028,67 @@ function ViewModel(id, view, model, key, opts) {			// parent, idx, parentVm
 ViewModel.prototype = {
 	constructor: ViewModel,
 
-	_id: null,
+	id: null,
 
 	// view + key serve as the vm's unique identity
-	_view: null,
-	_key: null,
-	_model: null,
-	_node: null,
-	_diff: null,
-	_diffLast: null,	// prior array of diff values
-	_hooks: null,
-	_render: null,
+	view: null,
+	key: null,
+	model: null,
+	node: null,
+	diff: null,
+	diffLast: null,	// prior array of diff values
+	hooks: null,
+	render: null,
 
 //	_setRef: function() {},
 
-	// parent vm and initial vm descendents
-//	_parent: null,
-//	_body: null,
-
 	// as plugins?
-	get _parent() {
-		var p = this._node;
+	get parent() {
+		var p = this.node;
 
-		while (p = p._parent) {
-			if (p._vmid != null)
-				{ return views[p._vmid]; }
+		while (p = p.parent) {
+			if (p.vmid != null)
+				{ return views[p.vmid]; }
 		}
 
 		return null;
 	},
-	get _body() {
-		return nextSubVms(this._node, []);
+	get body() {
+		return nextSubVms(this.node, []);
 	},
 
 //	api: null,
 	refs: null,
 	update: updateAsync,
-	_update: updateSync,
 	attach: attach,
 	mount: mount,
 	unmount: unmount,
 	redraw: redrawAsync,			// should handle ancest level, raf-debounced, same with update
+
+	_update: updateSync,
 	_redraw: redrawSync,		// non-coalesced / synchronous
 	/*
 	function(ancest) {
 	//	var vm = this;
-	//	return !ancest : redraw.call(vm) vm._parent ? vm._parent.redraw(ancest - 1);
+	//	return !ancest : redraw.call(vm) vm.parent ? vm.parent.redraw(ancest - 1);
 	},
 	*/
-	diff: function(diff) {},
+//	diff: function(diff) {},
 //	hooks: function(hooks) {},
 	hook: function(hooks) {
-		this._hooks = hooks;
+		this.hooks = hooks;
 	},
 };
 
 function nextSubVms(n, accum) {
-	var body = n._body;
+	var body = n.body;
 
 	if (isArr(body)) {
 		for (var i = 0; i < body.length; i++) {
 			var n2 = body[i];
 
-			if (n2._vmid != null)
-				{ accum.push(views[n2._vmid]); }
+			if (n2.vmid != null)
+				{ accum.push(views[n2.vmid]); }
 			else
 				{ nextSubVms(n2, accum); }
 		}
@@ -1112,7 +1102,7 @@ function attach(el) {
 
 function drainDidHooks(vm) {
 	if (didQueue.length) {
-		repaint(vm._node);
+		repaint(vm.node);
 
 		var item;
 		while (item = didQueue.shift())
@@ -1124,23 +1114,23 @@ function drainDidHooks(vm) {
 function mount(el, isRoot) {
 	var vm = this;
 
-	vm._hooks && fireHooks("willMount", vm);
+	vm.hooks && fireHooks("willMount", vm);
 
 	if (isRoot) {
 		while (el.firstChild)
 			{ el.removeChild(el.firstChild); }
 
 		this._redraw(null, null, false);
-		hydrate(this._node, el);
+		hydrate(this.node, el);
 	}
 	else {
 		this._redraw();
 
 		if (el)
-			{ insertBefore(el, this._node._el); }			// el.appendChild(this._node._el);
+			{ insertBefore(el, this.node.el); }			// el.appendChild(this.node.el);
 	}
 
-	vm._hooks && fireHooks("didMount", vm);
+	vm.hooks && fireHooks("didMount", vm);
 
 	if (el)
 		{ drainDidHooks(this); }
@@ -1151,13 +1141,13 @@ function mount(el, isRoot) {
 function unmount() {
 	var vm = this;
 
-	vm._hooks && fireHooks("willUnmount", vm);
+	vm.hooks && fireHooks("willUnmount", vm);
 
-	var node = this._node;
-	var parEl = node._el.parentNode;
-	removeChild(parEl, node._el);
+	var node = this.node;
+	var parEl = node.el.parentNode;
+	removeChild(parEl, node.el);
 
-	vm._hooks && fireHooks("didUnmount", vm);
+	vm.hooks && fireHooks("didUnmount", vm);
 
 	drainDidHooks(this);
 }
@@ -1166,10 +1156,10 @@ function unmount() {
 function redrawAsync(level) {
 	level = level || 0;
 
-	if (level == 0 || this._parent == null)
+	if (level == 0 || this.parent == null)
 		{ this._redraw(); }							// this should be async also
 	else
-		{ this._parent.redraw(level - 1); }
+		{ this.parent.redraw(level - 1); }
 
 	return this;
 }
@@ -1180,36 +1170,36 @@ function redrawAsync(level) {
 function redrawSync(newParent, newIdx, withDOM) {
 	var isRedrawRoot = newParent == null;
 	var vm = this;
-	var isMounted = vm._node && vm._node._el && vm._node._el.parentNode;
+	var isMounted = vm.node && vm.node.el && vm.node.el.parentNode;
 
-//	if (vm._diff && vm._diff(model))
+//	if (vm.diff && vm.diff(model))
 
-	isMounted && vm._hooks && fireHooks("willRedraw", vm);
+	isMounted && vm.hooks && fireHooks("willRedraw", vm);
 
 	// todo: test result of willRedraw hooks before clearing refs
 	// todo: also clean up any refs exposed by this view from parents, should tag with src_vm during setting
 	if (vm.refs)
 		{ vm.refs = null; }
 
-	var vold = vm._node;
-	var vnew = vm._render(vm, vm._model, vm._key);		// vm._opts
+	var vold = vm.node;
+	var vnew = vm.render(vm, vm.model, vm.key);		// vm.opts
 
-	preProc(vnew, null, null, vm._id);	// , vm._id
+	preProc(vnew, null, null, vm.id);	// , vm.id
 
-	vm._node = vnew;
-//	vnew._vm = vm;			// this causes a perf drop 1.53ms -> 1.62ms			how important is this?
-	vnew._vmid = vm._id;
+	vm.node = vnew;
+//	vnew.vm = vm;			// this causes a perf drop 1.53ms -> 1.62ms			how important is this?
+	vnew.vmid = vm.id;
 
 	if (newParent) {
-		vnew._idx = newIdx;
-		vnew._parent = newParent;
-		newParent._body[newIdx] = vnew;
+		vnew.idx = newIdx;
+		vnew.parent = newParent;
+		newParent.body[newIdx] = vnew;
 		// todo: bubble refs, etc?
 	}
-	else if (vold && vold._parent) {
-		vnew._idx = vold._idx;
-		vnew._parent = vold._parent;
-		vold._parent._body[vold._idx] = vnew;
+	else if (vold && vold.parent) {
+		vnew.idx = vold.idx;
+		vnew.parent = vold.parent;
+		vold.parent.body[vold.idx] = vnew;
 	}
 
 	if (withDOM !== false) {
@@ -1219,7 +1209,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 			{ hydrate(vnew); }
 	}
 
-	isMounted && vm._hooks && fireHooks("didRedraw", vm);
+	isMounted && vm.hooks && fireHooks("didRedraw", vm);
 
 	if (isRedrawRoot)			// isMounted
 		{ drainDidHooks(vm); }
@@ -1233,11 +1223,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 	var vm = this;
 
-	if (newModel != null) {		// && vm._key !== vm._model
-		if (vm._model !== newModel) {
-			vm._hooks && fireHooks("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
-			vm._model = newModel;
-		//	vm._hooks && fireHooks("didUpdate", vm, newModel);		// should this fire at al?
+	if (newModel != null) {		// && vm.key !== vm.model
+		if (vm.model !== newModel) {
+			vm.hooks && fireHooks("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
+			vm.model = newModel;
+		//	vm.hooks && fireHooks("didUpdate", vm, newModel);		// should this fire at al?
 		}
 	}
 
@@ -1246,8 +1236,8 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 	return vm._redraw(newParent, newIdx, withDOM);
 /*
 	if (parentVm != null) {
-		vm._parent = parentVm;
-		parentVm._body.push(vm);
+		vm.parent = parentVm;
+		parentVm.body.push(vm);
 	}
 */
 }
@@ -1257,6 +1247,7 @@ function updateAsync(newModel) {
 	return this._update(newModel);
 }
 
+// global id counter
 var vmid = 0;
 
 // global registry of all views
@@ -1264,70 +1255,74 @@ var vmid = 0;
 var views = {};
 
 function createView(view, model, key, opts) {
-	if (view._type == VTYPE.VVIEW) {
-		model	= view._model;
-		key		= view._key;
-		opts	= view._opts;
-		view	= view._view;
+	if (view.type == VTYPE.VVIEW) {
+		model	= view.model;
+		key		= view.key;
+		opts	= view.opts;
+		view	= view.view;
 	}
 
 	var vm = new ViewModel(vmid++, view, model, key, opts);
-	views[vm._id] = vm;
+	views[vm.id] = vm;
 	return vm;
 }
 
 function defineText(body) {
-	return new VNode(VTYPE.TEXT).body(body);
+	var n = new VNode(VTYPE.TEXT);
+	n.body = body;
+	return n;
 }
 
 function defineComment(body) {
 	return new VNode(VTYPE.COMMENT).body(body);
 }
 
+// placeholder for declared views
 function VView(view, model, key, opts) {
-	this._view = view;
-	this._model = model;
-	this._key = key == null ? model : key;	// same logic as ViewModel
-	this._opts = opts;
+	this.view = view;
+	this.model = model;
+	this.key = key == null ? model : key;	// same logic as ViewModel
+	this.opts = opts;
 }
 
 VView.prototype = {
 	constructor: VView,
 
-	_type: VTYPE.VVIEW,
-	_view: null,
-	_model: null,
-	_key: null,
-	_opts: null,
+	type: VTYPE.VVIEW,
+	view: null,
+	model: null,
+	key: null,
+	opts: null,
 };
 
 function defineView(view, model, key, opts) {
 	return new VView(view, model, key, opts);
 }
 
+// placeholder for injected ViewModels
 function VModel(vm) {
-	this._vmid = vm._id;
+	this.vmid = vm.id;
 }
 
 VModel.prototype = {
 	constructor: VModel,
 
-	_type: VTYPE.VMODEL,
-	_vmid: null,
+	type: VTYPE.VMODEL,
+	vmid: null,
 };
 
 function injectView(vm) {
-//	if (vm._node == null)
+//	if (vm.node == null)
 //		vm._redraw(null, null, false);
 
-//	return vm._node;
+//	return vm.node;
 
 	return new VModel(vm);
 }
 
 function injectElement(el) {
 	var node = new VNode(VTYPE.ELEMENT);
-	node._el = node._key = el;
+	node.el = node.key = el;
 	return node;
 }
 
@@ -1339,32 +1334,32 @@ var voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen
 
 function html(node) {
 	// handle if node is vm
-	if (node._render) {
-		if (!node._node)
+	if (node.render) {
+		if (!node.node)
 			{ node.mount(); }
-		node = node._node;
+		node = node.node;
 	}
 
 	var buf = "";
-	switch (node._type) {
+	switch (node.type) {
 		case VTYPE.ELEMENT:
-			if (node._el != null && node._tag == null)
-				{ return node._el.outerHTML; }		// pre-existing dom elements (does not currently account for any props applied to them)
+			if (node.el != null && node.tag == null)
+				{ return node.el.outerHTML; }		// pre-existing dom elements (does not currently account for any props applied to them)
 
-			buf += "<" + node._tag;
+			buf += "<" + node.tag;
 
-			if (node._attrs) {
-				var style = isVal(node._attrs.style) ? node._attrs.style : "";
-				var css = isObj(node._attrs.style) ? node._attrs.style : null;
+			if (node.attrs) {
+				var style = isVal(node.attrs.style) ? node.attrs.style : "";
+				var css = isObj(node.attrs.style) ? node.attrs.style : null;
 
 				if (css)
 					{ style += styleStr(css); }
 
-				for (var pname in node._attrs) {
+				for (var pname in node.attrs) {
 					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_")
 						{ continue; }
 
-					var val = node._attrs[pname];
+					var val = node.attrs[pname];
 
 					if (isFunc(val))
 						{ val = val(); }
@@ -1384,26 +1379,26 @@ function html(node) {
 			}
 
 			// if body-less svg node, auto-close & return
-			if (node.ns != null && node._tag !== "svg" && node._tag !== "math" && node._body == null)
+			if (node.ns != null && node.tag !== "svg" && node.tag !== "math" && node.body == null)
 				{ return buf + "/>"; }
 			else
 				{ buf += ">"; }
 			break;
 		case VTYPE.TEXT:
-			return node._body;
+			return node.body;
 			break;
 	}
 
-	if (!voidTags.test(node._tag)) {
-		if (isArr(node._body)) {
-			node._body.forEach(function(n2) {
+	if (!voidTags.test(node.tag)) {
+		if (isArr(node.body)) {
+			node.body.forEach(function(n2) {
 				buf += html(n2);
 			});
 		}
 		else
-			{ buf += node._body || ""; }
+			{ buf += node.body || ""; }
 
-		buf += "</" + node._tag + ">";
+		buf += "</" + node.tag + ">";
 	}
 
 	return buf;

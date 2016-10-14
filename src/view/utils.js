@@ -66,5 +66,5 @@ export function isStyleProp(name) {
 }
 
 export function repaint(node) {
-	node && node._el && node._el.offsetHeight;
+	node && node.el && node.el.offsetHeight;
 }
