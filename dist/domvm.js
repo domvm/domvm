@@ -166,6 +166,26 @@ function setAttr(node, name, val) {
 		{ el.setAttribute(name, val); }
 }
 
+// global id counter
+var vmid = 0;
+
+// global registry of all views
+// this helps the gc by simplifying the graph
+var views = {};
+
+function createView(view, model, key, opts) {
+	if (view.type == VTYPE.VVIEW) {
+		model	= view.model;
+		key		= view.key;
+		opts	= view.opts;
+		view	= view.view;
+	}
+
+	var vm = new ViewModel(vmid++, view, model, key, opts);
+	views[vm.id] = vm;
+	return vm;
+}
+
 /*
 import { patchAttrs2 } from './patch';
 import { VNode } from './VNode';
@@ -1239,26 +1259,6 @@ function updateAsync(newModel) {
 	return this._update(newModel);
 }
 
-// global id counter
-var vmid = 0;
-
-// global registry of all views
-// this helps the gc by simplifying the graph
-var views = {};
-
-function createView(view, model, key, opts) {
-	if (view.type == VTYPE.VVIEW) {
-		model	= view.model;
-		key		= view.key;
-		opts	= view.opts;
-		view	= view.view;
-	}
-
-	var vm = new ViewModel(vmid++, view, model, key, opts);
-	views[vm.id] = vm;
-	return vm;
-}
-
 function defineText(body) {
 	var n = new VNode(VTYPE.TEXT);
 	n.body = body;
@@ -1396,6 +1396,8 @@ function html(node) {
 	return buf;
 }
 
+exports.ViewModel = ViewModel;
+exports.VNode = VNode;
 exports.createView = createView;
 exports.defineElement = defineElement;
 exports.defineText = defineText;

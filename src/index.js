@@ -1,3 +1,6 @@
+import { ViewModel } from "./view/ViewModel";
+import { VNode } from "./view/VNode";
+
 import { createView } from "./view/createView";
 
 import { defineElement } from "./view/defineElement";
@@ -15,6 +18,9 @@ import { html } from "./view/html";
 import { patchNode } from "./view/patch";
 
 export {
+	ViewModel,
+	VNode,
+
 	createView,
 
 	defineElement,
