@@ -1,3 +1,5 @@
+import { startsWith } from '../utils';
+
 const t = true;
 
 const unitlessProps = {
@@ -52,7 +54,7 @@ export function styleStr(css) {
 }
 
 export function isEvProp(name) {
-	return name[0] == "o" && name[1] == "n";
+	return startsWith(name, "on");
 }
 
 export function isSplProp(name) {
@@ -61,4 +63,8 @@ export function isSplProp(name) {
 
 export function isStyleProp(name) {
 	return name == "style";
+}
+
+export function repaint(node) {
+	node && node._el && node._el.offsetHeight;
 }

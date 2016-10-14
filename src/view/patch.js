@@ -1,7 +1,7 @@
 import { VTYPE } from './VTYPE';
 import { isArr, isVal, isFunc, isObj, assignObj } from '../utils';
 import { autoPx, isStyleProp, isSplProp, isEvProp } from './utils';
-import { syncChildren } from './syncChildren';
+import { syncChildren, fireHooks } from './syncChildren';
 import { setAttr, remAttr } from './attrs';
 import { views, createView } from './createView';
 import { defineElement } from './defineElement';
@@ -10,6 +10,7 @@ import { defineElement } from './defineElement';
 
 
 // newNode can be either {class: style: } or full new VNode
+// will/didPatch?
 export function patchNode(o, n) {
 	if (n._type != null) {
 		// full new node
@@ -194,7 +195,7 @@ export function patchAttrs(vnode, donor) {
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists
 export function patch(vnode, donor) {
-	// graft node
+	donor._hooks && fireHooks("willRecycle", donor, vnode);
 
 	vnode._el = donor._el;
 	donor._recycled = true;
@@ -258,6 +259,8 @@ export function patch(vnode, donor) {
 				vnode._el.textContent = vnode._body;
 		}
 	}
+
+	donor._hooks && fireHooks("didRecycle", donor, vnode);
 }
 
 // [] => []

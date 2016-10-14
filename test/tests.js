@@ -1845,13 +1845,15 @@ QUnit.module("didRedraw() & refs");
 			vm.hook({
 				didRedraw: function() {
 					assert.ok(true, "Self didRedraw()");
-					assert.ok(vm.refs.mySpan3.el === document.getElementById("zzz"), "Self ref");
+					assert.ok(vm.refs.mySpan3._el === document.getElementById("zzz"), "Self ref");
 				//	console.log(vm.refs);
 					done();
 				}
 			});
 
-			return function() { return ["span#zzz", {_ref: "mySpan3"}, "foo"]; };
+			return function() {
+				return el("span#zzz", {_ref: "mySpan3"}, "foo");
+			};
 		}
 
 		var vm = domvm.view(MyView).mount(testyDiv);
@@ -1869,26 +1871,32 @@ QUnit.module("didRedraw() & refs");
 			vm.hook({
 				didRedraw: function() {
 					assert.ok(true, "Parent didRedraw()");
-					assert.ok(vm.refs.mySpan1.el === document.getElementById("xxx"), "Parent ref");
+					assert.ok(vm.refs.mySpan1._el === document.getElementById("xxx"), "Parent ref");
 				//	console.log(vm.refs);
 					done2();
 				}
 			});
 
-			return function() { return ["span#xxx", {_ref: "mySpan1"}, [MyView2]]; };
+			return function() {
+				return el("span#xxx", {_ref: "mySpan1"}, [
+					vw(MyView2)
+				]);
+			};
 		}
 
 		function MyView2(vm) {
 			vm.hook({
 				didRedraw: function() {
 					assert.ok(true, "Child after()");
-					assert.ok(vm.refs.mySpan2.el === document.getElementById("yyy"), "Child ref");
+					assert.ok(vm.refs.mySpan2._el === document.getElementById("yyy"), "Child ref");
 				//	console.log(vm.refs);
 					done1();
 				}
 			});
 
-			return function() { return ["span#yyy", {_ref: "mySpan2"}, "foo"]; };
+			return function() {
+				return el("span#yyy", {_ref: "mySpan2"}, "foo");
+			};
 		}
 
 		var vm = domvm.view(MyView).mount(testyDiv);
@@ -2802,6 +2810,8 @@ QUnit.module("Patch");
 
 QUnit.module("Lifecycle hooks");
 
+// willRecycle, willReinsert
+
 (function() {
 	var vm;
 
@@ -2850,7 +2860,7 @@ QUnit.module("Lifecycle hooks");
 					},
 				};
 
-				return ["div", {_hooks: hooks}, "abc"];
+				return el("div", {_hooks: hooks}, "abc");
 			};
 		}
 
@@ -2864,14 +2874,14 @@ QUnit.module("Lifecycle hooks");
 
 		vm.unmount();
 
-		assert.equal(willMount, 0, "willMount");
-		assert.equal(willInsert, 1, "willInsert");
-		assert.equal(didInsert, 2, "didInsert");
-		assert.equal(didMount, 3, "didMount");
-		assert.equal(willUnmount, 4, "willUnmount");
-		assert.equal(willRemove, 5, "willRemove");
-		assert.equal(didRemove, 6, "didRemove");
-		assert.equal(didUnmount, 7, "didUnmount");
+		assert.equal(willMount,		0, "willMount");
+		assert.equal(willInsert,	1, "willInsert");
+		assert.equal(didInsert,		2, "didInsert");
+		assert.equal(didMount,		3, "didMount");
+		assert.equal(willUnmount,	4, "willUnmount");
+		assert.equal(willRemove,	5, "willRemove");
+		assert.equal(didRemove,		6, "didRemove");
+		assert.equal(didUnmount,	7, "didUnmount");
 	});
 
 	QUnit.test('willUpdate (root/explicit)', function(assert) {
@@ -2883,7 +2893,7 @@ QUnit.module("Lifecycle hooks");
 			});
 
 			return function() {
-				return ["div", model.text];
+				return el("div", model.text);
 			};
 		}
 
@@ -2913,9 +2923,9 @@ QUnit.module("Lifecycle hooks");
 			});
 
 			return function() {
-				return ["div",
-					[C, model, false]
-				];
+				return el("div", [
+					vw(C, model, false)
+				]);
 			};
 		}
 
@@ -2927,7 +2937,7 @@ QUnit.module("Lifecycle hooks");
 			});
 
 			return function() {
-				return ["strong", model.text];
+				return el("strong", model.text);
 			};
 		}
 

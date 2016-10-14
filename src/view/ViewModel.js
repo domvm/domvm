@@ -2,7 +2,9 @@ import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
 import { isArr } from "../utils";
+import { repaint } from "./utils";
 import { views } from "./createView";
+import { didQueue, insertBefore, removeChild, fireHooks } from "./syncChildren";
 
 export function ViewModel(id, view, model, key, opts) {			// parent, idx, parentVm
 	this._id = id;
@@ -60,6 +62,7 @@ ViewModel.prototype = {
 	_update: updateSync,
 	attach: attach,
 	mount: mount,
+	unmount: unmount,
 	redraw: redrawAsync,			// should handle ancest level, raf-debounced, same with update
 	_redraw: redrawSync,		// non-coalesced / synchronous
 	/*
@@ -69,7 +72,10 @@ ViewModel.prototype = {
 	},
 	*/
 	diff: function(diff) {},
-	hooks: function(hooks) {},
+//	hooks: function(hooks) {},
+	hook: function(hooks) {
+		this._hooks = hooks;
+	},
 };
 
 function nextSubVms(n, accum) {
@@ -92,11 +98,23 @@ function nextSubVms(n, accum) {
 function attach(el) {
 }
 
+function drainDidHooks(vm) {
+	if (didQueue.length) {
+		repaint(vm._node);
+
+		var item;
+		while (item = didQueue.shift())
+			item[0](item[1], item[2]);
+	}
+}
+
 // TODO: mount be made async?
 function mount(el, isRoot) {
-	if (el == null)
-		this._redraw();
-	else if (isRoot) {
+	var vm = this;
+
+	vm._hooks && fireHooks("willMount", vm);
+
+	if (isRoot) {
 		while (el.firstChild)
 			el.removeChild(el.firstChild);
 
@@ -105,10 +123,31 @@ function mount(el, isRoot) {
 	}
 	else {
 		this._redraw();
-		el.insertBefore(this._node._el, null);		// el.appendChild(this._node._el);
+
+		if (el)
+			insertBefore(el, this._node._el);			// el.appendChild(this._node._el);
 	}
 
+	vm._hooks && fireHooks("didMount", vm);
+
+	if (el)
+		drainDidHooks(this);
+
 	return this;
+}
+
+function unmount() {
+	var vm = this;
+
+	vm._hooks && fireHooks("willUnmount", vm);
+
+	var node = this._node;
+	var parEl = node._el.parentNode;
+	removeChild(parEl, node._el);
+
+	vm._hooks && fireHooks("didUnmount", vm);
+
+	drainDidHooks(this);
 }
 
 // this must be per view debounced, so should be wrapped in raf per instance
@@ -127,10 +166,13 @@ function redrawAsync(level) {
 // newParent, newIdx
 // ancest by ref, by key
 function redrawSync(newParent, newIdx, withDOM) {
-//	let isRedrawRoot = newParent != null;
+	const isRedrawRoot = newParent == null;
 	var vm = this;
+	var isMounted = vm._node && vm._node._el && vm._node._el.parentNode;
 
 //	if (vm._diff && vm._diff(model))
+
+	isMounted && vm._hooks && fireHooks("willRedraw", vm);
 
 	// todo: test result of willRedraw hooks before clearing refs
 	// todo: also clean up any refs exposed by this view from parents, should tag with src_vm during setting
@@ -165,6 +207,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 			hydrate(vnew);
 	}
 
+	isMounted && vm._hooks && fireHooks("didRedraw", vm);
+
+	if (isRedrawRoot)			// isMounted
+		drainDidHooks(vm);
+
 	return vm;
 }
 
@@ -174,8 +221,15 @@ function redrawSync(newParent, newIdx, withDOM) {
 function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 	var vm = this;
 
-	if (newModel != null)				// && vm._key !== vm._model
-		vm._model = newModel;
+	if (newModel != null) {		// && vm._key !== vm._model
+		if (vm._model !== newModel) {
+			vm._hooks && fireHooks("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
+			vm._model = newModel;
+		//	vm._hooks && fireHooks("didUpdate", vm, newModel);		// should this fire at al?
+		}
+	}
+
+	// TODO: prevent redraw from firing?
 
 	return vm._redraw(newParent, newIdx, withDOM);
 /*

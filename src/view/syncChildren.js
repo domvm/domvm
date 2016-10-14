@@ -1,6 +1,38 @@
 import { hydrate } from './hydrate';
-import { isArr } from '../utils';
+import { isArr, isFunc, isProm, startsWith } from '../utils';
 //import { DEBUG } from './DEBUG';
+
+export const didQueue = [];
+
+function fireHook(did, fn, o, n, then) {
+	if (did) {	// did*
+		//	console.log(name + " should queue till repaint", o, n);
+		didQueue.push([fn, o, n]);
+	}
+	else {		// will*
+		//	console.log(name + " may delay by promise", o, n);
+		var res = fn(o, n);		// or pass  done() resolver
+
+		if (isProm(res))
+			res.then(then);
+	}
+}
+
+export function fireHooks(name, o, n, then) {
+	var hook = o._hooks[name];
+
+	if (hook) {
+		var did = startsWith(name, "did");
+
+		if (isArr(hook)) {
+			hook.forEach(function(hook2) {
+				fireHook(did, hook2, o, n, then);
+			})
+		}
+		else
+			fireHook(did, hook, o, n, then);
+	}
+}
 
 function nextNode(node, body) {
 	return body[node._idx + 1];
@@ -21,29 +53,40 @@ function prevSib(sib) {
 }
 
 // todo: hooks
-function removeChild(parEl, el) {
+export function removeChild(parEl, el) {
+	var node = el._node, hooks = node._hooks;
+
+	hooks && fireHooks("willRemove", node);
+
+	if (isArr(node._body)) {
+	//	var parEl = node._el;
+		for (var i = 0; i < node._body.length; i++)
+			removeChild(el, node._body[i]._el);
+	}
+
 	parEl.removeChild(el);
+
+	hooks && fireHooks("didRemove", node);
 }
 
+const willInsert = "willInsert";
+const didInsert = "didInsert";
+const willReinsert = "willReinsert";
+const didReinsert = "didReinsert";
+
 // todo: hooks
-function insertBefore(parEl, el, refEl) {
+export function insertBefore(parEl, el, refEl) {
+	var node = el._node, hooks = node._hooks, inDom = el.parentNode;
+	hooks && fireHooks(inDom ? willReinsert : willInsert, node);
 	parEl.insertBefore(el, refEl);
+	hooks && fireHooks(inDom ? didReinsert : didInsert, node);
 }
 
 function insertAfter(parEl, el, refEl) {
+	var node = el._node, hooks = node._hooks, inDom = el.parentNode;
+	hooks && fireHooks(inDom ? willReinsert : willInsert, node);
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
-}
-
-// dehydrate can return promise (from hook), to delay removal
-// todo: hooks
-function dehydrate(node) {
-	if (isArr(node._body)) {
-		var parEl = node._el;
-		for (var i = 0; i < node._body.length; i++)
-			removeChild(parEl, dehydrate(node._body[i]));
-	}
-
-	return node._el;
+	hooks && fireHooks(inDom ? didReinsert : didInsert, node);
 }
 
 function tmpEdges(fn, parEl, lftSib, rgtSib) {
@@ -134,12 +177,12 @@ export function syncChildren(node, parEl) {
 	converge:
 	while (1) {
 //		DEBUG && console.log("from_left");
-		from_left:
+//		from_left:
 		while (1) {
 			// remove any non-recycled sibs whose el._node has the old parent
 			if (lftSib && !lftSib._node._recycled && lftSib._node._parent != parEl._node) {
 				tmpSib = nextSib(lftSib);
-				removeChild(parEl, dehydrate(lftSib._node));
+				removeChild(parEl, lftSib);
 				lftSib = tmpSib;
 				continue;
 			}
@@ -159,11 +202,11 @@ export function syncChildren(node, parEl) {
 		}
 
 //		DEBUG && console.log("from_right");
-		from_right:
+//		from_right:
 		while(1) {
 			if (rgtSib && !rgtSib._node._recycled && rgtSib._node._parent != parEl._node) {
 				tmpSib = prevSib(rgtSib);
-				removeChild(parEl, dehydrate(rgtSib._node));
+				removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
 				continue;
 			}

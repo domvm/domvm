@@ -13,6 +13,10 @@ var VTYPE = {
 	VMODEL:		5,
 };
 
+function startsWith(haystack, needle) {
+	return haystack.lastIndexOf(needle, 0) === 0;
+}
+
 function isUndef(val) {
 	return typeof val == "undefined";
 }
@@ -38,7 +42,9 @@ function isFunc(val) {
 	return typeof val === "function";
 }
 
-
+function isProm(val) {
+	return typeof val === "object" && isFunc(val.then);
+}
 
 
 
@@ -121,7 +127,7 @@ function styleStr(css) {
 }
 
 function isEvProp(name) {
-	return name[0] == "o" && name[1] == "n";
+	return startsWith(name, "on");
 }
 
 function isSplProp(name) {
@@ -130,6 +136,10 @@ function isSplProp(name) {
 
 function isStyleProp(name) {
 	return name == "style";
+}
+
+function repaint(node) {
+	node && node._el && node._el.offsetHeight;
 }
 
 function remAttr(node, name) {
@@ -156,14 +166,6 @@ function setAttr(node, name, val) {
 		{ el.setAttribute(name, val); }
 }
 
-/*
-import { patchAttrs2 } from './patch';
-import { VNode } from './VNode';
-const fakeDonor = new VNode(VTYPE.ELEMENT);
-fakeDonor._attrs = {};
-*/
-
-// TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT
 function patchAttrs2(vnode) {
 	var nattrs = vnode._attrs;
 
@@ -194,14 +196,14 @@ function hydrate(vnode, withEl) {
 					if (vnode2._type == VTYPE.VMODEL) {
 						var vm = views[vnode2._vmid];
 						vm._redraw(vnode, i);
-						vnode._el.insertBefore(vm._node._el, null);
+						insertBefore(vnode._el, vm._node._el);
 					}
 					else if (vnode2._type == VTYPE.VVIEW) {
 						var vm = createView(vnode2._view, vnode2._model, vnode2._key, vnode2._opts)._redraw(vnode, i);		// todo: handle new model updates
-						vnode._el.insertBefore(vm._node._el, null);
+						insertBefore(vnode._el, vm._node._el);
 					}
 					else
-						{ vnode._el.insertBefore(hydrate(vnode2), null); }		// vnode._el.appendChild(hydrate(vnode2))
+						{ insertBefore(vnode._el, hydrate(vnode2)); }		// vnode._el.appendChild(hydrate(vnode2))
 				});
 			}
 			else if (vnode._body != null && vnode._body !== "") {
@@ -220,7 +222,37 @@ function hydrate(vnode, withEl) {
 	return vnode._el;
 }
 
-//import { DEBUG } from './DEBUG';
+var didQueue = [];
+
+function fireHook(did, fn, o, n, then) {
+	if (did) {	// did*
+		//	console.log(name + " should queue till repaint", o, n);
+		didQueue.push([fn, o, n]);
+	}
+	else {		// will*
+		//	console.log(name + " may delay by promise", o, n);
+		var res = fn(o, n);		// or pass  done() resolver
+
+		if (isProm(res))
+			{ res.then(then); }
+	}
+}
+
+function fireHooks(name, o, n, then) {
+	var hook = o._hooks[name];
+
+	if (hook) {
+		var did = startsWith(name, "did");
+
+		if (isArr(hook)) {
+			hook.forEach(function(hook2) {
+				fireHook(did, hook2, o, n, then);
+			});
+		}
+		else
+			{ fireHook(did, hook, o, n, then); }
+	}
+}
 
 function nextNode(node, body) {
 	return body[node._idx + 1];
@@ -242,28 +274,39 @@ function prevSib(sib) {
 
 // todo: hooks
 function removeChild(parEl, el) {
+	var node = el._node, hooks = node._hooks;
+
+	hooks && fireHooks("willRemove", node);
+
+	if (isArr(node._body)) {
+	//	var parEl = node._el;
+		for (var i = 0; i < node._body.length; i++)
+			{ removeChild(el, node._body[i]._el); }
+	}
+
 	parEl.removeChild(el);
+
+	hooks && fireHooks("didRemove", node);
 }
+
+var willInsert = "willInsert";
+var didInsert = "didInsert";
+var willReinsert = "willReinsert";
+var didReinsert = "didReinsert";
 
 // todo: hooks
 function insertBefore(parEl, el, refEl) {
+	var node = el._node, hooks = node._hooks, inDom = el.parentNode;
+	hooks && fireHooks(inDom ? willReinsert : willInsert, node);
 	parEl.insertBefore(el, refEl);
+	hooks && fireHooks(inDom ? didReinsert : didInsert, node);
 }
 
 function insertAfter(parEl, el, refEl) {
+	var node = el._node, hooks = node._hooks, inDom = el.parentNode;
+	hooks && fireHooks(inDom ? willReinsert : willInsert, node);
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
-}
-
-// dehydrate can return promise (from hook), to delay removal
-// todo: hooks
-function dehydrate(node) {
-	if (isArr(node._body)) {
-		var parEl = node._el;
-		for (var i = 0; i < node._body.length; i++)
-			{ removeChild(parEl, dehydrate(node._body[i])); }
-	}
-
-	return node._el;
+	hooks && fireHooks(inDom ? didReinsert : didInsert, node);
 }
 
 function tmpEdges(fn, parEl, lftSib, rgtSib) {
@@ -354,12 +397,12 @@ function syncChildren(node, parEl) {
 	converge:
 	while (1) {
 //		DEBUG && console.log("from_left");
-		from_left:
+//		from_left:
 		while (1) {
 			// remove any non-recycled sibs whose el._node has the old parent
 			if (lftSib && !lftSib._node._recycled && lftSib._node._parent != parEl._node) {
 				tmpSib = nextSib(lftSib);
-				removeChild(parEl, dehydrate(lftSib._node));
+				removeChild(parEl, lftSib);
 				lftSib = tmpSib;
 				continue;
 			}
@@ -379,11 +422,11 @@ function syncChildren(node, parEl) {
 		}
 
 //		DEBUG && console.log("from_right");
-		from_right:
+//		from_right:
 		while(1) {
 			if (rgtSib && !rgtSib._node._recycled && rgtSib._node._parent != parEl._node) {
 				tmpSib = prevSib(rgtSib);
-				removeChild(parEl, dehydrate(rgtSib._node));
+				removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
 				continue;
 			}
@@ -573,10 +616,6 @@ function parseTag(raw) {
 	return cached;
 }
 
-//import { DEBUG } from './DEBUG';
-
-
-// newNode can be either {class: style: } or full new VNode
 function patchNode(o, n) {
 	if (n._type != null) {
 		// full new node
@@ -761,7 +800,7 @@ function patchAttrs(vnode, donor) {
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists
 function patch(vnode, donor) {
-	// graft node
+	donor._hooks && fireHooks("willRecycle", donor, vnode);
 
 	vnode._el = donor._el;
 	donor._recycled = true;
@@ -825,6 +864,8 @@ function patch(vnode, donor) {
 				{ vnode._el.textContent = vnode._body; }
 		}
 	}
+
+	donor._hooks && fireHooks("didRecycle", donor, vnode);
 }
 
 // [] => []
@@ -1033,6 +1074,7 @@ ViewModel.prototype = {
 	_update: updateSync,
 	attach: attach,
 	mount: mount,
+	unmount: unmount,
 	redraw: redrawAsync,			// should handle ancest level, raf-debounced, same with update
 	_redraw: redrawSync,		// non-coalesced / synchronous
 	/*
@@ -1042,7 +1084,10 @@ ViewModel.prototype = {
 	},
 	*/
 	diff: function(diff) {},
-	hooks: function(hooks) {},
+//	hooks: function(hooks) {},
+	hook: function(hooks) {
+		this._hooks = hooks;
+	},
 };
 
 function nextSubVms(n, accum) {
@@ -1065,11 +1110,23 @@ function nextSubVms(n, accum) {
 function attach(el) {
 }
 
+function drainDidHooks(vm) {
+	if (didQueue.length) {
+		repaint(vm._node);
+
+		var item;
+		while (item = didQueue.shift())
+			{ item[0](item[1], item[2]); }
+	}
+}
+
 // TODO: mount be made async?
 function mount(el, isRoot) {
-	if (el == null)
-		{ this._redraw(); }
-	else if (isRoot) {
+	var vm = this;
+
+	vm._hooks && fireHooks("willMount", vm);
+
+	if (isRoot) {
 		while (el.firstChild)
 			{ el.removeChild(el.firstChild); }
 
@@ -1078,10 +1135,31 @@ function mount(el, isRoot) {
 	}
 	else {
 		this._redraw();
-		el.insertBefore(this._node._el, null);		// el.appendChild(this._node._el);
+
+		if (el)
+			{ insertBefore(el, this._node._el); }			// el.appendChild(this._node._el);
 	}
 
+	vm._hooks && fireHooks("didMount", vm);
+
+	if (el)
+		{ drainDidHooks(this); }
+
 	return this;
+}
+
+function unmount() {
+	var vm = this;
+
+	vm._hooks && fireHooks("willUnmount", vm);
+
+	var node = this._node;
+	var parEl = node._el.parentNode;
+	removeChild(parEl, node._el);
+
+	vm._hooks && fireHooks("didUnmount", vm);
+
+	drainDidHooks(this);
 }
 
 // this must be per view debounced, so should be wrapped in raf per instance
@@ -1100,10 +1178,13 @@ function redrawAsync(level) {
 // newParent, newIdx
 // ancest by ref, by key
 function redrawSync(newParent, newIdx, withDOM) {
-//	let isRedrawRoot = newParent != null;
+	var isRedrawRoot = newParent == null;
 	var vm = this;
+	var isMounted = vm._node && vm._node._el && vm._node._el.parentNode;
 
 //	if (vm._diff && vm._diff(model))
+
+	isMounted && vm._hooks && fireHooks("willRedraw", vm);
 
 	// todo: test result of willRedraw hooks before clearing refs
 	// todo: also clean up any refs exposed by this view from parents, should tag with src_vm during setting
@@ -1138,6 +1219,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 			{ hydrate(vnew); }
 	}
 
+	isMounted && vm._hooks && fireHooks("didRedraw", vm);
+
+	if (isRedrawRoot)			// isMounted
+		{ drainDidHooks(vm); }
+
 	return vm;
 }
 
@@ -1147,8 +1233,15 @@ function redrawSync(newParent, newIdx, withDOM) {
 function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 	var vm = this;
 
-	if (newModel != null)				// && vm._key !== vm._model
-		{ vm._model = newModel; }
+	if (newModel != null) {		// && vm._key !== vm._model
+		if (vm._model !== newModel) {
+			vm._hooks && fireHooks("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
+			vm._model = newModel;
+		//	vm._hooks && fireHooks("didUpdate", vm, newModel);		// should this fire at al?
+		}
+	}
+
+	// TODO: prevent redraw from firing?
 
 	return vm._redraw(newParent, newIdx, withDOM);
 /*
@@ -1164,7 +1257,6 @@ function updateAsync(newModel) {
 	return this._update(newModel);
 }
 
-// global id counter
 var vmid = 0;
 
 // global registry of all views
@@ -1192,7 +1284,6 @@ function defineComment(body) {
 	return new VNode(VTYPE.COMMENT).body(body);
 }
 
-// placeholder for declared views
 function VView(view, model, key, opts) {
 	this._view = view;
 	this._model = model;
@@ -1214,7 +1305,6 @@ function defineView(view, model, key, opts) {
 	return new VView(view, model, key, opts);
 }
 
-// placeholder for injected ViewModels
 function VModel(vm) {
 	this._vmid = vm._id;
 }

@@ -2,6 +2,10 @@ const ENV_DOM = typeof HTMLElement == "function";
 
 export const emptyObj = {};
 
+export function startsWith(haystack, needle) {
+	return haystack.lastIndexOf(needle, 0) === 0;
+}
+
 export function isUndef(val) {
 	return typeof val == "undefined";
 }

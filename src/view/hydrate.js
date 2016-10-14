@@ -4,6 +4,7 @@ import { isStyleProp, isSplProp, isEvProp } from './utils';
 import { setAttr } from './attrs';
 import { patchStyle, patchEvent } from './patch';
 import { views, createView } from './createView';
+import { insertBefore } from './syncChildren';
 
 /*
 import { patchAttrs2 } from './patch';
@@ -43,15 +44,15 @@ export function hydrate(vnode, withEl) {
 					if (vnode2._type == VTYPE.VMODEL) {
 						var vm = views[vnode2._vmid];
 						vm._redraw(vnode, i);
-						vnode._el.insertBefore(vm._node._el, null)
+						insertBefore(vnode._el, vm._node._el);
 					}
 					else if (vnode2._type == VTYPE.VVIEW) {
 						var vm = createView(vnode2._view, vnode2._model, vnode2._key, vnode2._opts)._redraw(vnode, i);		// todo: handle new model updates
-						vnode._el.insertBefore(vm._node._el, null)
+						insertBefore(vnode._el, vm._node._el);
 					}
 					else
-						vnode._el.insertBefore(hydrate(vnode2), null);		// vnode._el.appendChild(hydrate(vnode2))
-				})
+						insertBefore(vnode._el, hydrate(vnode2));		// vnode._el.appendChild(hydrate(vnode2))
+				});
 			}
 			else if (vnode._body != null && vnode._body !== "") {
 				if (vnode._html)
