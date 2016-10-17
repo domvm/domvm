@@ -1646,7 +1646,13 @@ QUnit.module("emit() & synthetic events");
 		vm.on("ac", function() { data.ac += "a"; });
 		vm.on("a", function() { data.a += "a"; });
 
-		return function() { return ["#a", ["strong", [ViewB]]]; };
+		return function() {
+			return el("#a", [
+				el("strong", [
+					vw(ViewB)
+				])
+			]);
+		};
 	}
 
 	function ViewB(vm) {
@@ -1656,7 +1662,13 @@ QUnit.module("emit() & synthetic events");
 		vm.on("bc", function() { data.bc += "b"; });
 		vm.on("b", function() { data.b += "b"; });
 
-		return function() { return ["#b", ["em", [ViewC]]]; };
+		return function() {
+			return el("#b", [
+				el("em", [
+					vw(ViewC)
+				])
+			]);
+		};
 	}
 
 	function ViewC(vm) {
@@ -1666,7 +1678,9 @@ QUnit.module("emit() & synthetic events");
 		vm.on("ac", function() { data.ac += "c"; });
 		vm.on("c", function() { data.c += "c"; });
 
-		return function() { return ["#c", "Hello"]; };
+		return function() {
+			return el("#c", "Hello");
+		};
 	}
 
 	function mkTest(assert, vm) {
@@ -1678,7 +1692,13 @@ QUnit.module("emit() & synthetic events");
 	}
 
 	QUnit.test('Create', function(assert) {
+		instr.start();
 		domvm.view(ViewA).mount();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div id="a"><strong><div id="b"><em><div id="c">Hello</div></em></div></strong></div>';
+
+		evalOut(assert, vmA.node.el, domvm.html(vmA), expcHtml, callCounts, { createElement: 5, insertBefore: 4, textContent: 1, id: 3});
 	});
 
 	QUnit.test('vmC', function(assert) {
@@ -1726,7 +1746,7 @@ QUnit.module("emit() & synthetic events");
 			vmY = vm;
 
 			return function() {
-				return ["div", "meh"];
+				return el("div", "meh");
 			};
 		}
 
@@ -1739,7 +1759,9 @@ QUnit.module("emit() & synthetic events");
 			});
 
 			return function() {
-				return ["div", [ViewY]];
+				return el("div", [
+					vw(ViewY)
+				]);
 			};
 		}
 
@@ -2670,22 +2692,26 @@ QUnit.module("Unjailed refs");
 		});
 
 		return function() {
-			return ["div",
-				data.a,
-				[MainView, data],
-				[FooterView, data, "^footer"],
-			];
+			return el("div", [
+				tx(data.a),
+				vw(MainView, data),
+				vw(FooterView, data, "^footer"),
+			]);
 		};
 	}
 
 	function MainView(vm, data) {
-		return function() { return ["strong", {_ref: "^main"}, data.b]; };
+		return function() {
+			return el("strong", {_ref: "^main"}, data.b);
+		};
 	}
 
 	function FooterView(vm, data) {
 		footVm = vm;
 
-		return function() { return ["em", data.c]; };
+		return function() {
+			return el("em", data.c);
+		};
 	}
 
 	QUnit.test('Modify', function(assert) {
@@ -2720,7 +2746,9 @@ QUnit.module("Namespaced refs");
 
 	function TestView1() {
 		return function() {
-			return el("div", vw(TestView2));
+			return el("div", [
+				vw(TestView2)
+			]);
 		}
 	}
 

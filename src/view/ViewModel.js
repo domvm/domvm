@@ -13,6 +13,8 @@ export function ViewModel(id, view, model, key, opts) {			// parent, idx, parent
 	this.key = key == null ? model : key;
 	this.render = view(this, model, key);			// , opts
 
+	views[id] = this;		// must be done here so .parent in preproc can be used bubble refs
+
 //	this.update(model, parent, idx, parentVm, false);
 
 	// proc opts, evctx, watch
@@ -41,7 +43,7 @@ ViewModel.prototype = {
 	get parent() {
 		var p = this.node;
 
-		while (p = p.parent) {
+		while (p && (p = p.parent)) {
 			if (p.vmid != null)
 				return views[p.vmid];
 		}
@@ -73,6 +75,7 @@ ViewModel.prototype = {
 	hook: function(hooks) {
 		this.hooks = hooks;
 	},
+	events: null,
 };
 
 function nextSubVms(n, accum) {
@@ -179,23 +182,25 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vold = vm.node;
 	var vnew = vm.render(vm, vm.model, vm.key);		// vm.opts
 
-	preProc(vnew, null, null, vm.id);	// , vm.id
+//	console.log(vm.key);
 
 	vm.node = vnew;
+
+//	vm.node = vnew;
 //	vnew.vm = vm;			// this causes a perf drop 1.53ms -> 1.62ms			how important is this?
-	vnew.vmid = vm.id;
+//	vnew.vmid = vm.id;
 
 	if (newParent) {
-		vnew.idx = newIdx;
-		vnew.parent = newParent;
+		preProc(vnew, newParent, newIdx, vm.id, vm.key);
 		newParent.body[newIdx] = vnew;
 		// todo: bubble refs, etc?
 	}
 	else if (vold && vold.parent) {
-		vnew.idx = vold.idx;
-		vnew.parent = vold.parent;
+		preProc(vnew, vold.parent, vold.idx, vm.id, vm.key);
 		vold.parent.body[vold.idx] = vnew;
 	}
+	else
+		preProc(vnew, null, null, vm.id, vm.key);
 
 	if (withDOM !== false) {
 		if (vold)

@@ -49,6 +49,21 @@ export function assignObj(targ) {
 	return targ;
 }
 
+export function deepSet(targ, path, val) {
+	var seg;
+
+	while (seg = path.shift()) {
+		if (path.length == 0)
+			targ[seg] = val;
+		else
+			targ[seg] = targ = targ[seg] || {};
+	}
+}
+
+export function sliceArgs(args, offs) {
+	return Array.prototype.slice.call(args, offs || 0)
+}
+
 /*
 export function cmpArr(a, b) {
 	const alen = a.length;

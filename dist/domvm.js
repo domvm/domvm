@@ -58,6 +58,21 @@ function assignObj(targ) {
 	return targ;
 }
 
+function deepSet(targ, path, val) {
+	var seg;
+
+	while (seg = path.shift()) {
+		if (path.length == 0)
+			{ targ[seg] = val; }
+		else
+			{ targ[seg] = targ = targ[seg] || {}; }
+	}
+}
+
+function sliceArgs(args, offs) {
+	return Array.prototype.slice.call(args, offs || 0)
+}
+
 /*
 export function cmpArr(a, b) {
 	const alen = a.length;
@@ -181,9 +196,7 @@ function createView(view, model, key, opts) {
 		view	= view.view;
 	}
 
-	var vm = new ViewModel(vmid++, view, model, key, opts);
-	views[vm.id] = vm;
-	return vm;
+	return new ViewModel(vmid++, view, model, key, opts);
 }
 
 /*
@@ -307,6 +320,9 @@ function removeChild(parEl, el) {
 	var node = el._node, hooks = node.hooks;
 
 	hooks && fireHooks("willRemove", node);
+
+	if (node.ref != null && node.ref[0] == "^")
+		{ console.log("clean exposed ref", node.ref); }
 
 	if (isArr(node.body)) {
 	//	var parEl = node.el;
@@ -936,25 +952,17 @@ function patchChildren(vnode, donor) {
 }
 
 function setRef(vm, name, node) {
-	if (vm.refs == null)
-		{ vm.refs = {}; }
+	var path = ["refs"].concat(name.replace("^", "").split("."));
 
-//	if (name[0] == "^")		// gotta be careful with cleanup of these
+	deepSet(vm, path, node);
 
-	var path = name.split("."), seg;
-
-	var refs = vm.refs;
-
-	while (seg = path.shift()) {
-		if (path.length == 0)
-			{ refs[seg] = node; }
-		else
-			{ refs[seg] = refs = {}; }
-	}
+	// bubble
+	if (name[0] == "^" && vm.parent)
+		{ setRef(vm.parent, name, node); }
 }
 
 // vnew, vold
-function preProc(vnew, parent, idx, ownVmid) {		// , parentVm
+function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 	// injected views
 	if (vnew.type === VTYPE.VMODEL) {
 		// pull vm.node out & reassociate
@@ -969,11 +977,12 @@ function preProc(vnew, parent, idx, ownVmid) {		// , parentVm
 		vnew.idx = idx;
 		vnew.vmid = ownVmid;
 
-		var attrs = vnew.attrs;
-		if (attrs) {
-			if (attrs._ref != null)
-				{ setRef(vnew.vm, attrs._ref, vnew); }		// _vm getter traverses up each time, can optimize by passing parentVm through to here
-		}
+		// set external ref eg vw(MyView, data, "^moo")
+		if (extKey != null && typeof extKey == "string" && extKey[0] == "^")
+			{ vnew.ref = extKey; }
+
+		if (vnew.ref != null)
+			{ setRef(vnew.vm, vnew.ref, vnew); }
 
 		if (isArr(vnew.body)) {
 		// declarative elems, comments, text nodes
@@ -1030,6 +1039,8 @@ function ViewModel(id, view, model, key, opts) {			// parent, idx, parentVm
 	this.key = key == null ? model : key;
 	this.render = view(this, model, key);			// , opts
 
+	views[id] = this;		// must be done here so .parent in preproc can be used bubble refs
+
 //	this.update(model, parent, idx, parentVm, false);
 
 	// proc opts, evctx, watch
@@ -1058,7 +1069,7 @@ ViewModel.prototype = {
 	get parent() {
 		var p = this.node;
 
-		while (p = p.parent) {
+		while (p && (p = p.parent)) {
 			if (p.vmid != null)
 				{ return views[p.vmid]; }
 		}
@@ -1090,6 +1101,7 @@ ViewModel.prototype = {
 	hook: function(hooks) {
 		this.hooks = hooks;
 	},
+	events: null,
 };
 
 function nextSubVms(n, accum) {
@@ -1196,23 +1208,25 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vold = vm.node;
 	var vnew = vm.render(vm, vm.model, vm.key);		// vm.opts
 
-	preProc(vnew, null, null, vm.id);	// , vm.id
+//	console.log(vm.key);
 
 	vm.node = vnew;
+
+//	vm.node = vnew;
 //	vnew.vm = vm;			// this causes a perf drop 1.53ms -> 1.62ms			how important is this?
-	vnew.vmid = vm.id;
+//	vnew.vmid = vm.id;
 
 	if (newParent) {
-		vnew.idx = newIdx;
-		vnew.parent = newParent;
+		preProc(vnew, newParent, newIdx, vm.id, vm.key);
 		newParent.body[newIdx] = vnew;
 		// todo: bubble refs, etc?
 	}
 	else if (vold && vold.parent) {
-		vnew.idx = vold.idx;
-		vnew.parent = vold.parent;
+		preProc(vnew, vold.parent, vold.idx, vm.id, vm.key);
 		vold.parent.body[vold.idx] = vnew;
 	}
+	else
+		{ preProc(vnew, null, null, vm.id, vm.key); }
 
 	if (withDOM !== false) {
 		if (vold)
@@ -1395,6 +1409,41 @@ function html(node) {
 
 	return buf;
 }
+
+function emit(evName) {
+	var arguments$1 = arguments;
+
+	var targ = this;
+
+	do {
+		var evs = targ.events;
+		var fn = evs ? evs[evName] : null;
+
+		if (fn) {
+			fn.apply(null, sliceArgs(arguments$1, 1));
+			break;
+		}
+
+	} while (targ = targ.parent);
+}
+
+function on(evName, fn) {
+	var t = this;
+
+	if (t.events == null)
+		{ t.events = {}; }
+
+	if (isVal(evName))
+		{ t.events[evName] = fn; }
+	else {
+		var evs = evName;
+		for (var evName in evs)
+			{ t.on(evName, evs[evName]); }
+	}
+}
+
+ViewModel.prototype.emit = emit;
+ViewModel.prototype.on = on;
 
 exports.ViewModel = ViewModel;
 exports.VNode = VNode;

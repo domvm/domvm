@@ -16,7 +16,5 @@ export function createView(view, model, key, opts) {
 		view	= view.view;
 	}
 
-	var vm = new ViewModel(vmid++, view, model, key, opts);
-	views[vm.id] = vm;
-	return vm;
+	return new ViewModel(vmid++, view, model, key, opts);
 }

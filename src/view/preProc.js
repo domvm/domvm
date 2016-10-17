@@ -1,26 +1,18 @@
 import { VTYPE } from './VTYPE';
-import { isArr, isFunc, insertArr } from '../utils';
+import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
 
 function setRef(vm, name, node) {
-	if (vm.refs == null)
-		vm.refs = {};
+	var path = ["refs"].concat(name.replace("^", "").split("."));
 
-//	if (name[0] == "^")		// gotta be careful with cleanup of these
+	deepSet(vm, path, node);
 
-	var path = name.split("."), seg;
-
-	var refs = vm.refs;
-
-	while (seg = path.shift()) {
-		if (path.length == 0)
-			refs[seg] = node;
-		else
-			refs[seg] = refs = {};
-	}
+	// bubble
+	if (name[0] == "^" && vm.parent)
+		setRef(vm.parent, name, node);
 }
 
 // vnew, vold
-export function preProc(vnew, parent, idx, ownVmid) {		// , parentVm
+export function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 	// injected views
 	if (vnew.type === VTYPE.VMODEL) {
 		// pull vm.node out & reassociate
@@ -35,11 +27,12 @@ export function preProc(vnew, parent, idx, ownVmid) {		// , parentVm
 		vnew.idx = idx;
 		vnew.vmid = ownVmid;
 
-		var attrs = vnew.attrs;
-		if (attrs) {
-			if (attrs._ref != null)
-				setRef(vnew.vm, attrs._ref, vnew);		// _vm getter traverses up each time, can optimize by passing parentVm through to here
-		}
+		// set external ref eg vw(MyView, data, "^moo")
+		if (extKey != null && typeof extKey == "string" && extKey[0] == "^")
+			vnew.ref = extKey;
+
+		if (vnew.ref != null)
+			setRef(vnew.vm, vnew.ref, vnew);
 
 		if (isArr(vnew.body)) {
 		// declarative elems, comments, text nodes

@@ -58,6 +58,9 @@ export function removeChild(parEl, el) {
 
 	hooks && fireHooks("willRemove", node);
 
+	if (node.ref != null && node.ref[0] == "^")
+		console.log("clean exposed ref", node.ref);
+
 	if (isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)

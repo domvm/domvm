@@ -17,6 +17,8 @@ import { html } from "./view/html";
 
 import { patchNode } from "./view/patch";
 
+import "./view/emit";
+
 export {
 	ViewModel,
 	VNode,
