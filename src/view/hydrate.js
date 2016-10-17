@@ -3,7 +3,8 @@ import { isArr, isFunc } from '../utils';
 import { isStyleProp, isSplProp, isEvProp } from './utils';
 import { setAttr } from './attrs';
 import { patchStyle, patchEvent } from './patch';
-import { views, createView } from './createView';
+import { createView } from './createView';
+import { views } from './ViewModel';
 import { insertBefore } from './syncChildren';
 
 /*

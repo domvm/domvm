@@ -1,4 +1,4 @@
-import { views } from './createView';
+import { views } from './ViewModel';
 
 export function VNode(type) {
 	this.type = type;

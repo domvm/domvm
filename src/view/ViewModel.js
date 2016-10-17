@@ -3,17 +3,25 @@ import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
 import { isArr } from "../utils";
 import { repaint } from "./utils";
-import { views } from "./createView";
 import { didQueue, insertBefore, removeChild, fireHooks } from "./syncChildren";
 
-export function ViewModel(id, view, model, key, opts) {			// parent, idx, parentVm
+// global id counter
+let vmid = 0;
+
+// global registry of all views
+// this helps the gc by simplifying the graph
+export const views = {};
+
+export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
+	var id = vmid++;
+
 	this.id = id;
 	this.view = view;
 	this.model = model;
 	this.key = key == null ? model : key;
 	this.render = view(this, model, key);			// , opts
 
-	views[id] = this;		// must be done here so .parent in preproc can be used bubble refs
+	views[id] = this;
 
 //	this.update(model, parent, idx, parentVm, false);
 

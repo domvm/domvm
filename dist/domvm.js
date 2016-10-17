@@ -181,13 +181,6 @@ function setAttr(node, name, val) {
 		{ el.setAttribute(name, val); }
 }
 
-// global id counter
-var vmid = 0;
-
-// global registry of all views
-// this helps the gc by simplifying the graph
-var views = {};
-
 function createView(view, model, key, opts) {
 	if (view.type == VTYPE.VVIEW) {
 		model	= view.model;
@@ -196,7 +189,7 @@ function createView(view, model, key, opts) {
 		view	= view.view;
 	}
 
-	return new ViewModel(vmid++, view, model, key, opts);
+	return new ViewModel(view, model, key, opts);
 }
 
 /*
@@ -1032,14 +1025,23 @@ function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 	}
 }
 
-function ViewModel(id, view, model, key, opts) {			// parent, idx, parentVm
+// global id counter
+var vmid = 0;
+
+// global registry of all views
+// this helps the gc by simplifying the graph
+var views = {};
+
+function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
+	var id = vmid++;
+
 	this.id = id;
 	this.view = view;
 	this.model = model;
 	this.key = key == null ? model : key;
 	this.render = view(this, model, key);			// , opts
 
-	views[id] = this;		// must be done here so .parent in preproc can be used bubble refs
+	views[id] = this;
 
 //	this.update(model, parent, idx, parentVm, false);
 

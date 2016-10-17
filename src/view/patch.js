@@ -3,7 +3,8 @@ import { isArr, isVal, isFunc, isObj, assignObj } from '../utils';
 import { autoPx, isStyleProp, isSplProp, isEvProp } from './utils';
 import { syncChildren, fireHooks } from './syncChildren';
 import { setAttr, remAttr } from './attrs';
-import { views, createView } from './createView';
+import { createView } from './createView';
+import { views } from './ViewModel';
 import { defineElement } from './defineElement';
 
 //import { DEBUG } from './DEBUG';
