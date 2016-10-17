@@ -20,7 +20,7 @@ function compile() {
 
 	rollup({
 		entry: './src/index.js',
-		cache: cache,
+	//	cache: cache,
 		plugins: [ buble() ],
 	})
 	.then(function(bundle) {
@@ -33,7 +33,7 @@ function compile() {
 
 		console.log((+new Date - start) + "ms: Rollup + Buble done");
 
-		cache = bundle;
+	//	cache = bundle;
 
 		minify(start);
 	})
