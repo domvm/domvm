@@ -68,3 +68,22 @@ export function isStyleProp(name) {
 export function repaint(node) {
 	node && node.el && node.el.offsetHeight;
 }
+
+// tests interactive props where real val should be compared
+export function isDynProp(tag, attr) {
+//	switch (tag) {
+//		case "input":
+//		case "textarea":
+//		case "select":
+//		case "option":
+			switch (attr) {
+				case "value":
+				case "checked":
+				case "selected":
+				case "selectedIndex":
+					return true;
+			}
+//	}
+
+	return false;
+}

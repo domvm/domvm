@@ -936,14 +936,16 @@ QUnit.module("Attrs/Props");
 
 	function CheckView(vm, check) {
 		check.vm = vm;
-		return function() { return el("input#" + check.id, {type: "checkbox", checked: check.checked}); };
+		return function() {
+			return el("input#" + check.id, {type: "checkbox", checked: check.checked});
+		};
 	};
 
 	var check1 = new Check("check1", false);
 	var check2 = new Check("check2", true);
 	var check3 = new Check("check3", true);
 
-	QUnit.skip("Bool attr init false", function(assert) {
+	QUnit.test("Bool attr init false", function(assert) {
 		instr.start();
 		domvm.view(CheckView, check1).mount(testyDiv);		// todo: create test container
 		var callCounts = instr.end();
@@ -951,10 +953,10 @@ QUnit.module("Attrs/Props");
 		var checkEl = document.getElementById(check1.id);
 
 		var expcHtml = '<input type="checkbox" id="check1">';
-		evalOut(assert, checkEl, domvm.html(check1.vm), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, setAttribute: 1, checked: 1 }, {checked: checkEl.checked}, {checked: false});
+		evalOut(assert, checkEl, domvm.html(check1.vm, false), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, setAttribute: 1, checked: 1 }, {checked: checkEl.checked}, {checked: false});
 	});
 
-	QUnit.skip("Bool attr toggle true", function(assert) {
+	QUnit.test("Bool attr toggle true", function(assert) {
 		check1.checked = true;
 
 		instr.start();
@@ -963,22 +965,22 @@ QUnit.module("Attrs/Props");
 
 		var checkEl = document.getElementById(check1.id);
 
-		var expcHtml = '<input type="checkbox" checked="" id="check1">';
-		evalOut(assert, checkEl, domvm.html(check1.vm), expcHtml, callCounts, { checked: 1 }, {checked: checkEl.checked}, {checked: true});
+		var expcHtml = '<input type="checkbox" id="check1">';
+		evalOut(assert, checkEl, domvm.html(check1.vm, false), expcHtml, callCounts, { checked: 1 }, {checked: checkEl.checked}, {checked: true});
 	});
 
-	QUnit.skip("Bool attr init true", function(assert) {
+	QUnit.test("Bool attr init true", function(assert) {
 		instr.start();
 		domvm.view(CheckView, check2).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var checkEl = document.getElementById(check2.id);
 
-		var expcHtml = '<input type="checkbox" checked="" id="check2">';
-		evalOut(assert, checkEl, domvm.html(check2.vm), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, setAttribute: 1, checked: 1 }, {checked: checkEl.checked}, {checked: true});
+		var expcHtml = '<input type="checkbox" id="check2">';
+		evalOut(assert, checkEl, domvm.html(check2.vm, false), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, setAttribute: 1, checked: 1 }, {checked: checkEl.checked}, {checked: true});
 	});
 
-	QUnit.skip("Bool attr toggle false", function(assert) {
+	QUnit.test("Bool attr toggle false", function(assert) {
 		check2.checked = false;
 
 		instr.start();
@@ -988,18 +990,18 @@ QUnit.module("Attrs/Props");
 		var checkEl = document.getElementById(check2.id);
 
 		var expcHtml = '<input type="checkbox" id="check2">';
-		evalOut(assert, checkEl, domvm.html(check2.vm), expcHtml, callCounts, { removeAttribute: 1 }, {checked: checkEl.checked}, {checked: false});
+		evalOut(assert, checkEl, domvm.html(check2.vm, false), expcHtml, callCounts, { checked: 1 }, {checked: checkEl.checked}, {checked: false});
 	});
 
-	QUnit.skip("Dynamic props, always sync vtree -> DOM prop", function(assert) {
+	QUnit.test("Dynamic props, always sync vtree -> DOM prop", function(assert) {
 		instr.start();
 		domvm.view(CheckView, check3).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var checkEl = document.getElementById(check3.id);
 
-		var expcHtml = '<input type="checkbox" checked id="check3">';
-		evalOut(assert, checkEl, domvm.html(check3.vm), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, setAttribute: 2 }, {checked: checkEl.checked}, {checked: true});
+		var expcHtml = '<input type="checkbox" id="check3">';
+		evalOut(assert, checkEl, domvm.html(check3.vm, false), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, setAttribute: 1, checked: 1 }, {checked: checkEl.checked}, {checked: true});
 
 		// user interaction
 		check3.vm.node.el.checked = false;
@@ -1010,8 +1012,8 @@ QUnit.module("Attrs/Props");
 		var callCounts = instr.end();
 
 		// the visual state should be reset back to the model state
-		var expcHtml = '<input type="checkbox" checked id="check3">';
-		evalOut(assert, checkEl, domvm.html(check3.vm), expcHtml, callCounts, { checked: 1 }, {checked: checkEl.checked}, {checked: true});
+		var expcHtml = '<input type="checkbox" id="check3">';
+		evalOut(assert, checkEl, domvm.html(check3.vm, false), expcHtml, callCounts, { checked: 1 }, {checked: checkEl.checked}, {checked: true});
 	});
 })();
 

@@ -157,26 +157,42 @@ function repaint(node) {
 	node && node.el && node.el.offsetHeight;
 }
 
-function remAttr(node, name) {
+// tests interactive props where real val should be compared
+function isDynProp(tag, attr) {
+//	switch (tag) {
+//		case "input":
+//		case "textarea":
+//		case "select":
+//		case "option":
+			switch (attr) {
+				case "value":
+				case "checked":
+				case "selected":
+				case "selectedIndex":
+					return true;
+			}
+//	}
+
+	return false;
+}
+
+function remAttr(node, name) {		// , asProp
 	node.el.removeAttribute(name);
 }
 
 // setAttr
 // diff, ".", "on*", bool vals, skip _*, value/checked/selected selectedIndex
-function setAttr(node, name, val) {
+function setAttr(node, name, val, asProp) {
 	var el = node.el;
 
 	if (val == null)
-		{ remAttr(node, name); }		// will also removeAttr of style: null
+		{ remAttr(node, name); }		//, asProp?  // will also removeAttr of style: null
 	else if (name == "class")
 		{ el.className = val; }
-	else if (name == "id")
-		{ el.id = val; }
+	else if (name == "id" || typeof val == "boolean" || asProp)
+		{ el[name] = val; }
 	else if (name[0] == ".")
 		{ el[name.substr(1)] = val; }
-	// todo: diff style? bench individual prop style setting, vs cssText
-	else if (typeof val == "boolean")		// name === "type" ||
-		{ el[name] = val; }
 	else
 		{ el.setAttribute(name, val); }
 }
@@ -192,19 +208,13 @@ function createView(view, model, key, opts) {
 	return new ViewModel(view, model, key, opts);
 }
 
-/*
-import { patchAttrs2 } from './patch';
-import { VNode } from './VNode';
-const fakeDonor = new VNode(VTYPE.ELEMENT);
-fakeDonor.attrs = {};
-*/
-
 // TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT
 function patchAttrs2(vnode) {
 	var nattrs = vnode.attrs;
 
 	for (var key in nattrs) {
 		var nval = nattrs[key];
+		var isDyn = isDynProp(vnode.tag, key);
 
 		if (isStyleProp(key))
 			{ patchStyle(vnode); }
@@ -212,7 +222,7 @@ function patchAttrs2(vnode) {
 		else if (isEvProp(key))
 			{ patchEvent(vnode, key.substr(2), null, nval); }
 		else if (nval != null)
-			{ setAttr(vnode, key, nval); }
+			{ setAttr(vnode, key, nval, isDyn); }
 	}
 }
 
@@ -805,14 +815,10 @@ function patchAttrs(vnode, donor) {
 	var nattrs = vnode.attrs;		// || emptyObj
 	var oattrs = donor.attrs;		// || emptyObj
 
-	// if vals identical, do nothing.
-
-	// TODO: do real prop diff
-
-	// TODO: cmp spl props
 	for (var key in nattrs) {
 		var nval = nattrs[key];
-		var oval = oattrs[key];
+		var isDyn = isDynProp(vnode.tag, key);
+		var oval = isDyn ? vnode.el[key] : oattrs[key];
 
 		if (nval === oval) {}
 		else if (isStyleProp(key))
@@ -821,7 +827,7 @@ function patchAttrs(vnode, donor) {
 		else if (isEvProp(key))
 			{ patchEvent(vnode, key.substr(2), null, nval, oval); }
 		else
-			{ setAttr(vnode, key, nattrs[key]); }
+			{ setAttr(vnode, key, nval, isDyn); }
 	}
 
 	for (var key in oattrs) {
@@ -1340,7 +1346,7 @@ function defineElementFixed(tag, arg1, arg2) {
 
 var voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
 
-function html(node) {
+function html(node, dynProps) {
 	// handle if node is vm
 	if (node.render) {
 		if (!node.node)
@@ -1364,13 +1370,13 @@ function html(node) {
 					{ style += styleStr(css); }
 
 				for (var pname in node.attrs) {
-					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_")
+					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_" || dynProps === false && isDynProp(node.tag, pname))
 						{ continue; }
 
 					var val = node.attrs[pname];
 
-					if (isFunc(val))
-						{ val = val(); }
+				//	if (isFunc(val))
+				//		val = val();
 
 					if (isObj(val))	// ?
 						{ continue; }

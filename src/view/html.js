@@ -1,10 +1,10 @@
 import { VTYPE } from './VTYPE';
 import { isArr, isObj, isVal, isFunc } from '../utils';
-import { isEvProp, styleStr } from './utils';
+import { isEvProp, styleStr, isDynProp } from './utils';
 
 const voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
 
-export function html(node) {
+export function html(node, dynProps) {
 	// handle if node is vm
 	if (node.render) {
 		if (!node.node)
@@ -28,13 +28,13 @@ export function html(node) {
 					style += styleStr(css);
 
 				for (var pname in node.attrs) {
-					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_")
+					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_" || dynProps === false && isDynProp(node.tag, pname))
 						continue;
 
 					var val = node.attrs[pname];
 
-					if (isFunc(val))
-						val = val();
+				//	if (isFunc(val))
+				//		val = val();
 
 					if (isObj(val))	// ?
 						continue;

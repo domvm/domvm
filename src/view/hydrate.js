@@ -1,18 +1,12 @@
 import { VTYPE } from './VTYPE';
 import { isArr, isFunc } from '../utils';
-import { isStyleProp, isSplProp, isEvProp } from './utils';
+import { isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
 import { setAttr } from './attrs';
 import { patchStyle, patchEvent } from './patch';
 import { createView } from './createView';
 import { views } from './ViewModel';
 import { insertBefore } from './syncChildren';
 
-/*
-import { patchAttrs2 } from './patch';
-import { VNode } from './VNode';
-const fakeDonor = new VNode(VTYPE.ELEMENT);
-fakeDonor.attrs = {};
-*/
 
 // TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT
 function patchAttrs2(vnode) {
@@ -20,6 +14,7 @@ function patchAttrs2(vnode) {
 
 	for (var key in nattrs) {
 		var nval = nattrs[key];
+		var isDyn = isDynProp(vnode.tag, key);
 
 		if (isStyleProp(key))
 			patchStyle(vnode);
@@ -27,7 +22,7 @@ function patchAttrs2(vnode) {
 		else if (isEvProp(key))
 			patchEvent(vnode, key.substr(2), null, nval);
 		else if (nval != null)
-			setAttr(vnode, key, nval);
+			setAttr(vnode, key, nval, isDyn);
 	}
 }
 

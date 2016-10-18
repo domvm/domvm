@@ -1,6 +1,6 @@
 import { VTYPE } from './VTYPE';
 import { isArr, isVal, isFunc, isObj, assignObj } from '../utils';
-import { autoPx, isStyleProp, isSplProp, isEvProp } from './utils';
+import { autoPx, isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
 import { syncChildren, fireHooks } from './syncChildren';
 import { setAttr, remAttr } from './attrs';
 import { createView } from './createView';
@@ -163,14 +163,10 @@ export function patchAttrs(vnode, donor) {
 	const nattrs = vnode.attrs;		// || emptyObj
 	const oattrs = donor.attrs;		// || emptyObj
 
-	// if vals identical, do nothing.
-
-	// TODO: do real prop diff
-
-	// TODO: cmp spl props
 	for (var key in nattrs) {
 		var nval = nattrs[key];
-		var oval = oattrs[key];
+		var isDyn = isDynProp(vnode.tag, key);
+		var oval = isDyn ? vnode.el[key] : oattrs[key];
 
 		if (nval === oval) {}
 		else if (isStyleProp(key))
@@ -179,7 +175,7 @@ export function patchAttrs(vnode, donor) {
 		else if (isEvProp(key))
 			patchEvent(vnode, key.substr(2), null, nval, oval);
 		else
-			setAttr(vnode, key, nattrs[key]);
+			setAttr(vnode, key, nval, isDyn);
 	}
 
 	for (var key in oattrs) {
