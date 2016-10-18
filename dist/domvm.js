@@ -1237,8 +1237,16 @@ function redrawSync(newParent, newIdx, withDOM) {
 		{ preProc(vnew, null, null, vm.id, vm.key); }
 
 	if (withDOM !== false) {
-		if (vold)
-			{ patch(vnew, vold); }
+		if (vold) {
+			// root node replacement
+			if (vold.tag !== vnew.tag) {
+				var parEl = vold.el.parentNode;
+				removeChild(parEl, vold.el);
+				insertBefore(parEl, hydrate(vnew));
+			}
+			else
+				{ patch(vnew, vold); }
+		}
 		else
 			{ hydrate(vnew); }
 	}
