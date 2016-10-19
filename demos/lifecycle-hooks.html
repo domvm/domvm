@@ -115,7 +115,8 @@
 					return new Promise(function(resolve, reject) {
 						patch(node, {class: "removing"});
 						repaint(node);
-						patch(node, {class: "removed", ontransitionend: resolve});
+						patch(node, {class: "removed"});
+						node.el.addEventListener("transitionend", resolve);
 					});
 				},
 				didRemove: function(node) {
@@ -182,7 +183,8 @@
 				return new Promise(function(resolve, reject) {
 					patch(vm.node, {class: "unmounting"});
 					repaint(vm.node);
-					patch(vm.node, {class: "unmounted", ontransitionend: resolve});
+					patch(vm.node, {class: "unmounted"});
+					node.el.addEventListener("transitionend", resolve);
 				});
 			},
 			didUnmount: function(vm) {

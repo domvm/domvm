@@ -1,5 +1,5 @@
 import { VTYPE } from './VTYPE';
-import { isArr, isVal, isFunc, isObj, assignObj } from '../utils';
+import { isArr, isVal, isFunc, isObj, assignObj, cmpArr } from '../utils';
 import { autoPx, isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
 import { syncChildren, fireHooks } from './syncChildren';
 import { setAttr, remAttr } from './attrs';
@@ -71,12 +71,7 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 
 function bindEv(el, type, fn) {
 //	DEBUG && console.log("addEventListener");
-	el.addEventListener(type, fn);
-}
-
-function unbindEv(el, type, fn) {
-//	DEBUG && console.log("removeEventListener");
-	el.removeEventListener(type, fn);
+	el[type] = fn;
 }
 
 // assumes if styles exist both are objects or both are strings
@@ -105,49 +100,33 @@ export function patchStyle(n, o) {
 }
 
 export function wrapHandler(fn, args, sel) {
-	function wrap(e) {
+	return function wrap(e) {
 		var el = e.target;
 		var node = el._node;
 
 		if (sel && !e.target.matches(sel))
 			return;
 
-		var out = fn.apply(null, fn.args.concat(e, node, node.vm));
+		var out = fn.apply(null, args.concat(e, node, node.vm));
 
 		if (out === false) {
 			e.preventDefault();
 			e.stopPropagation();
 		}
 	}
-
-	// for external diffing
-	fn.wrap = wrap;
-	fn.args = args || [];
-
-	return wrap;
 }
+
+// could merge with on*
 
 export function patchEvent(node, name, sel, nval, oval) {
 	var el = node.el;
 
 	// param'd eg onclick: [myFn, 1, 2, 3...]
-	if (isArr(nval)) {
-		var newArgs = nval.slice(1);
-		nval = nval[0];
-	}
-
-	if (isArr(oval))
-		oval = oval[0];
-
+	if (isArr(nval) && (oval == null || isArr(oval) && !cmpArr(nval, oval)))
+		bindEv(el, name, wrapHandler(nval[0], nval.slice(1), sel));
 	// basic onclick: myFn (or extracted)
-	if (isFunc(nval)) {
-		if (nval != oval) {
-			bindEv(el, name, wrapHandler(nval, newArgs, sel));
-			oval && unbindEv(el, name, oval.wrap);
-		}
-		else
-			nval.args = newArgs || [];
-	}
+	else if (isFunc(nval) && nval != oval)
+		bindEv(el, name, wrapHandler(nval, [], sel));
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
 	else {		// isObj
 		for (var sel2 in nval) {
@@ -173,7 +152,7 @@ export function patchAttrs(vnode, donor) {
 			patchStyle(vnode, donor);
 		else if (isSplProp(key)) {}
 		else if (isEvProp(key))
-			patchEvent(vnode, key.substr(2), null, nval, oval);
+			patchEvent(vnode, key, null, nval, oval);
 		else
 			setAttr(vnode, key, nval, isDyn);
 	}

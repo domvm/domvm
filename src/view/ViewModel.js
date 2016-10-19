@@ -23,6 +23,13 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 	views[id] = this;
 
+	if (opts) {
+		if (opts.hooks)
+			this.hook(opts.hooks);
+	//	if (opts.diff)
+	//		this.diff(opts.diff);
+	}
+
 //	this.update(model, parent, idx, parentVm, false);
 
 	// proc opts, evctx, watch
@@ -72,7 +79,7 @@ ViewModel.prototype = {
 		return views[p.vmid];
 	},
 
-//	api: null,
+	api: {},
 	refs: null,
 	update: updateAsync,
 	attach: attach,
