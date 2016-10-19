@@ -9,7 +9,7 @@ var el = domvm.defineElement,
 // var el = domvm.defineElementFixed;
 
 /*
-// naive implementation
+// naive implementation, no optims
 function DBMonView() {
 	return (vm, dbs) =>
 		el("div", [
@@ -36,7 +36,7 @@ function DBMonView() {
 }
 */
 
-// avoids with array flattening
+// avoids array flattening, uses concat()
 function DBMonView() {
 	return (vm, dbs) =>
 		el("div", [
@@ -85,9 +85,6 @@ function DB(vm) {
 			el("td.query-count", [
 				el("span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries)
 			]),
-		//	db.lastSample.topFiveQueries.map(query =>
-		//		vw(Query, query, false)
-		//	)
 		].concat(db.lastSample.topFiveQueries.map(query =>
 			vw(Query, query, false)
 		)));

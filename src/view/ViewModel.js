@@ -1,7 +1,7 @@
 import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
-import { isArr } from "../utils";
+import { isArr, cmpArr } from "../utils";
 import { repaint } from "./utils";
 import { didQueue, insertBefore, removeChild, fireHooks } from "./syncChildren";
 
@@ -40,7 +40,7 @@ ViewModel.prototype = {
 	key: null,
 	model: null,
 	node: null,
-	diff: null,
+//	diff: null,
 	diffLast: null,	// prior array of diff values
 	hooks: null,
 	render: null,
@@ -82,13 +82,27 @@ ViewModel.prototype = {
 
 	_update: updateSync,
 	_redraw: redrawSync,		// non-coalesced / synchronous
+
+	_diff: null,
+	_diffArr: [],
 	/*
 	function(ancest) {
 	//	var vm = this;
 	//	return !ancest : redraw.call(vm) vm.parent ? vm.parent.redraw(ancest - 1);
 	},
 	*/
-//	diff: function(diff) {},
+	diff: function(diff) {
+		var vm = this;
+		this._diff = function(model) {
+			var diffArr = diff(model);
+
+			if (!cmpArr(diffArr, vm._diffArr)) {
+				vm._diffArr = diffArr;
+				return false;
+			}
+			return true;
+		};
+	},
 //	hooks: function(hooks) {},
 	hook: function(hooks) {
 		this.hooks = hooks;
@@ -181,7 +195,17 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vm = this;
 	var isMounted = vm.node && vm.node.el && vm.node.el.parentNode;
 
-//	if (vm.diff && vm.diff(model))
+	var vold = vm.node;
+
+	// no diff, just re-parent old
+	if (vm._diff != null && vm._diff(vm.model)) {
+		// will doing this outside of preproc cause de-opt, add shallow opt to preproc?
+		if (vold) {
+			newParent.body[newIdx] = vold;
+			vold.parent = newParent;
+		}
+		return vm;
+	}
 
 	isMounted && vm.hooks && fireHooks("willRedraw", vm);
 
@@ -190,7 +214,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	if (vm.refs)
 		vm.refs = null;
 
-	var vold = vm.node;
+
 	var vnew = vm.render(vm, vm.model, vm.key);		// vm.opts
 
 //	console.log(vm.key);
