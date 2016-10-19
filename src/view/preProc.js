@@ -7,8 +7,9 @@ function setRef(vm, name, node) {
 	deepSet(vm, path, node);
 
 	// bubble
-	if (name[0] == "^" && vm.parent)
-		setRef(vm.parent, name, node);
+	var par;
+	if (name[0] == "^" && (par = vm.parent()))
+		setRef(par, name, node);
 }
 
 // vnew, vold

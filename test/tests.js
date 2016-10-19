@@ -1475,6 +1475,41 @@ QUnit.module("Various Others");
 
 		evalOut(assert, vm.node.el, domvm.html(vm), expcHtml, callCounts, { removeChild: 1, nodeValue: 1 });
 	});
+
+	QUnit.test('vm.root()', function(assert) {
+		var vmA, vmB, vmC;
+
+		function ViewA(vm) {
+			vmA = vm;
+			return function() {
+				return el("#a", [
+					vw(ViewB)
+				]);
+			}
+		}
+
+		function ViewB(vm) {
+			vmB = vm;
+			return function() {
+				return el("#b", [
+					vw(ViewC)
+				]);
+			};
+		}
+
+		function ViewC(vm) {
+			vmC = vm;
+			return function() {
+				return el("#c", "Hi!");
+			};
+		}
+
+		domvm.view(ViewA).mount(testyDiv);
+
+		assert.equal(vmC.root(), vmA);
+		assert.equal(vmB.root(), vmA);
+		assert.equal(vmA.root(), vmA);
+	});
 })();
 
 QUnit.module("emit() & synthetic events");
@@ -1620,6 +1655,7 @@ QUnit.module("emit() & synthetic events");
 	});
 })();
 
+/*
 QUnit.module("redraw() ancestors");
 
 (function() {
@@ -1659,10 +1695,10 @@ QUnit.module("redraw() ancestors");
 	}
 
 	function mkTest(assert, vm) {
-		return function test(targ, exp) {
+		return function test(level, exp) {
 			data = { a: 0, b: 0, c: 0 };
-			vm.redraw(targ);			// , impCtx
-			assert.propEqual(data, exp, targ);
+			vm.parent().redraw();
+			assert.propEqual(data, exp, level);
 		}
 	}
 
@@ -1703,6 +1739,7 @@ QUnit.module("redraw() ancestors");
 
 	// todo: w/args
 })();
+*/
 
 QUnit.module("didRedraw() & refs");
 

@@ -13,7 +13,7 @@ function emit(evName) {
 			break;
 		}
 
-	} while (targ = targ.parent);
+	} while (targ = targ.parent());
 }
 
 function on(evName, fn) {

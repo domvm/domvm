@@ -969,8 +969,9 @@ function setRef(vm, name, node) {
 	deepSet(vm, path, node);
 
 	// bubble
-	if (name[0] == "^" && vm.parent)
-		{ setRef(vm.parent, name, node); }
+	var par;
+	if (name[0] == "^" && (par = vm.parent()))
+		{ setRef(par, name, node); }
 }
 
 // vnew, vold
@@ -1087,18 +1088,28 @@ ViewModel.prototype = {
 //	_setRef: function() {},
 
 	// as plugins?
-	get parent() {
+	parent: function() {
 		var p = this.node;
 
-		while (p && (p = p.parent)) {
+		while (p = p.parent) {
 			if (p.vmid != null)
 				{ return views[p.vmid]; }
 		}
 
 		return null;
 	},
-	get body() {
+
+	body: function() {
 		return nextSubVms(this.node, []);
+	},
+
+	root: function() {
+		var p = this.node;
+
+		while (p.parent)
+			{ p = p.parent; }
+
+		return views[p.vmid];
 	},
 
 //	api: null,
@@ -1107,7 +1118,7 @@ ViewModel.prototype = {
 	attach: attach,
 	mount: mount,
 	unmount: unmount,
-	redraw: redrawAsync,			// should handle ancest level, raf-debounced, same with update
+	redraw: redrawAsync,		// should handle raf-debounced, same with update
 
 	_update: updateSync,
 	_redraw: redrawSync,		// non-coalesced / synchronous
@@ -1198,15 +1209,8 @@ function unmount() {
 }
 
 // this must be per view debounced, so should be wrapped in raf per instance
-function redrawAsync(level) {
-	level = level || 0;
-
-	if (level == 0 || this.parent == null)
-		{ this._redraw(); }							// this should be async also
-	else
-		{ this.parent.redraw(level - 1); }
-
-	return this;
+function redrawAsync() {
+	return this._redraw();
 }
 
 // level, isRoot?
@@ -1453,7 +1457,7 @@ function emit(evName) {
 			break;
 		}
 
-	} while (targ = targ.parent);
+	} while (targ = targ.parent());
 }
 
 function on(evName, fn) {
