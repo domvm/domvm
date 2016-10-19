@@ -26,7 +26,7 @@ export function patchNode(o, n) {
 		// prepend any fixed shorthand class
 		if (o._class != null) {
 			var aclass = oattrs.class;
-			oattrs.class = aclass != null ? o._class + " " + aclass : o._class;
+			oattrs.class = aclass != null && aclass != "" ? o._class + " " + aclass : o._class;
 		}
 
 		patchAttrs(o, donor);

@@ -1,0 +1,234 @@
+<!doctype html>
+<html>
+<head>
+	<title>domvm lifecycle hooks</title>
+	<style>
+		.view1,
+		.view1 li {
+			background: transparent;
+			transition: 1000ms;
+			opacity: 1;
+		}
+
+		.view1.mounted {
+			background: #20B2AA;
+			transition: none;
+		}
+
+		.view1.redrawn {
+			background: lightblue;
+			transition: none;
+		}
+
+		.view1.unmounting {
+			background: pink;
+			transition: none;
+		}
+
+		.view1.unmounted {
+			opacity: 0;
+		}
+
+		.view1 .inserted {
+			background: lime;
+			transition: none;
+		}
+
+		.view1 .removing {
+			background: red;
+			transition: none;
+		}
+
+		.view1 .removed {
+			opacity: 0;
+		}
+
+		.view1 .reused.same {
+			background: silver;
+			transition: none;
+		}
+
+		.view1 .reused.changed {
+			background: orange;
+			transition: none;
+		}
+
+		.view1 .moved {
+			background: magenta;
+			transition: none;
+		}
+	</style>
+
+	<script src="../dist/domvm.js"></script>
+</head>
+<body>
+	<script>
+		var el = domvm.defineElement,
+			tx = domvm.defineText,
+			cm = domvm.defineComment,
+			vw = domvm.defineView,
+			iv = domvm.injectView,
+			ie = domvm.injectElement;
+
+		var patch = domvm.patchNode;
+
+		function repaint(node) {
+			node && node.el && node.el.offsetHeight;
+		}
+
+		domvm.view = domvm.createView;
+
+		function View1(vm, data) {
+			// DOM node/template level hooks
+			var hooks = {
+				willInsert: function(node) {
+				//	console.log("willInsert", node);
+					patch(node, {class: "inserted"});
+				},
+				didInsert: function(node) {
+				//	console.log("didInsert", node);
+					patch(node, {class: ""});
+				},
+				willRecycle: function(oldNode, newNode) {
+				//	console.log("willRecycle", oldNode, newNode);
+					// DIY diff to detect changes
+					if (oldNode.body !== newNode.body) {
+						patch(oldNode, {class: "reused changed"});
+						repaint(oldNode);
+					}
+				},
+				didRecycle: function(oldNode, newNode) {
+				//	console.log("didRecycle", oldNode, newNode);
+					if (oldNode.body !== newNode.body)
+						patch(newNode, {class: ""});
+				},
+				willReinsert: function(node) {
+				//	console.log("willReinsert", node);
+					patch(node, {class: "moved"});
+				},
+				didReinsert: function(node) {
+				//	console.log("didReinsert", node);
+					patch(node, {class: ""});
+				},
+				willRemove: function(node) {
+				//	console.log("willRemove", node);
+					patch(node, {class: "removing"});
+					repaint(node);
+					patch(node, {class: "removed"});
+
+					return new Promise(function(resolve, reject) {
+						node.el.addEventListener("transitionend", resolve);
+					});
+				},
+				didRemove: function(node) {
+				//	console.log("didRemove", node);
+				},
+			};
+
+			return function() {
+				return (
+					el(".view1", [
+						el("ul", data.map(function(word) {
+							return el("li", {_hooks: hooks, _key: word.substr(0,1)}, word);
+						})),
+						vw(View2),
+					])
+				);
+			};
+		}
+
+		function View2(vm) {
+			vm.hook({
+				willRedraw:	function() { /*console.log("willRedraw", vm);		*/},
+				didRedraw:	function() { /*console.log("didRedraw", vm);		*/},
+				willMount:	function() { /*console.log("willMount", vm);		*/},
+				didMount:	function() { /*console.log("didMount", vm);			*/},
+				willUnmount:function() { /*console.log("willUnmount", vm);		*/},
+				didUnmount:	function() { /*console.log("didUnmount", vm);		*/},
+			});
+
+			return function() {
+				return el("p.view2", "Hello World");
+			};
+		}
+
+		var data = [
+			"0.cat",
+			"1.dog",
+		];
+
+		var vm = domvm.view(View1, data);
+
+		// view-level hooks
+		vm.hook({
+			willRedraw: function(vm) {
+			//	console.log("willRedraw", vm);
+			},
+			didRedraw: function(vm) {
+			//	console.log("didRedraw", vm);
+				patch(vm.node, {class: "redrawn"});
+				repaint(vm.node);
+				patch(vm.node, {class: ""});
+			},
+			willMount: function(vm) {
+			//	console.log("willMount", vm);
+			},
+			didMount: function(vm) {
+			//	console.log("didMount", vm);
+				patch(vm.node, {class: "mounted"});
+				repaint(vm.node);
+				patch(vm.node, {class: ""});
+			},
+			willUnmount: function(vm) {
+			//	console.log("willUnmount", vm);
+				patch(vm.node, {class: "unmounting"});
+				repaint(vm.node);
+				patch(vm.node, {class: "unmounted"});
+
+				return new Promise(function(resolve, reject) {
+					vm.node.el.addEventListener("transitionend", resolve);
+				});
+			},
+			didUnmount: function(vm) {
+			//	console.log("didUnmount", vm);
+			},
+		});
+
+		vm.mount(document.body);
+
+		var factor = 1.03;		// todo: investigate why exact transitionend
+
+		setTimeout(function() {
+			data.pop();
+			vm.redraw();
+		}, factor * 1000);
+
+		setTimeout(function() {
+			data.push("2.foo","3.bar");
+			vm.redraw();
+		}, factor * 2000);
+
+		setTimeout(function() {
+			data.unshift(data.pop());
+			vm.redraw();
+		}, factor * 3000);
+
+		setTimeout(function() {
+			data.splice(2, 0, "4.cookie");
+			data.splice(0, 1, "5.butter");
+			vm.redraw();
+		}, factor * 4000);
+
+		setTimeout(function() {
+			data[0] += "-mod";
+			data[2] += "-mod";
+			vm.redraw();
+		}, factor * 5000);
+/*
+		setTimeout(function() {
+			vm.unmount();
+		}, 6000);
+*/
+	</script>
+</body>
+</html>

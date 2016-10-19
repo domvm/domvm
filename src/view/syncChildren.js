@@ -1,36 +1,42 @@
 import { hydrate } from './hydrate';
 import { isArr, isFunc, isProm, startsWith } from '../utils';
+import { repaint } from './utils';
+
 //import { DEBUG } from './DEBUG';
 
 export const didQueue = [];
 
-function fireHook(did, fn, o, n, then) {
+function curry(fn, args, ctx) {
+	return function() {
+		return fn.apply(ctx, args);
+	};
+}
+
+function fireHook(did, fn, o, n, immediate) {
 	if (did) {	// did*
 		//	console.log(name + " should queue till repaint", o, n);
-		didQueue.push([fn, o, n]);
+		immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
 	}
 	else {		// will*
 		//	console.log(name + " may delay by promise", o, n);
-		var res = fn(o, n);		// or pass  done() resolver
-
-		if (isProm(res))
-			res.then(then);
+		return fn(o, n);		// or pass  done() resolver
 	}
 }
 
-export function fireHooks(name, o, n, then) {
+export function fireHooks(name, o, n, immediate) {
 	var hook = o.hooks[name];
 
 	if (hook) {
 		var did = startsWith(name, "did");
 
 		if (isArr(hook)) {
-			hook.forEach(function(hook2) {
-				fireHook(did, hook2, o, n, then);
-			})
+			// TODO: promise.all() this?
+			return hook.map(function(hook2) {
+				return fireHook(did, hook2, o, n);
+			});
 		}
 		else
-			fireHook(did, hook, o, n, then);
+			return fireHook(did, hook, o, n, immediate);
 	}
 }
 
@@ -56,7 +62,16 @@ function prevSib(sib) {
 export function removeChild(parEl, el) {
 	var node = el._node, hooks = node.hooks;
 
-	hooks && fireHooks("willRemove", node);
+	var res = hooks && fireHooks("willRemove", node);
+
+	if (res != null && isProm(res))
+		res.then(curry(_removeChild, [parEl, el, true]));
+	else
+		_removeChild(parEl, el);
+}
+
+function _removeChild(parEl, el, immediate) {
+	var node = el._node, hooks = node.hooks;
 
 	if (node.ref != null && node.ref[0] == "^")
 		console.log("clean exposed ref", node.ref);
@@ -69,7 +84,7 @@ export function removeChild(parEl, el) {
 
 	parEl.removeChild(el);
 
-	hooks && fireHooks("didRemove", node);
+	hooks && fireHooks("didRemove", node, null, immediate);
 }
 
 // todo: hooks
