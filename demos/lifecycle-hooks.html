@@ -112,12 +112,10 @@
 				},
 				willRemove: function(node) {
 				//	console.log("willRemove", node);
-					patch(node, {class: "removing"});
-					repaint(node);
-					patch(node, {class: "removed"});
-
 					return new Promise(function(resolve, reject) {
-						node.el.addEventListener("transitionend", resolve);
+						patch(node, {class: "removing"});
+						repaint(node);
+						patch(node, {class: "removed", ontransitionend: resolve});
 					});
 				},
 				didRemove: function(node) {
@@ -181,12 +179,10 @@
 			},
 			willUnmount: function(vm) {
 			//	console.log("willUnmount", vm);
-				patch(vm.node, {class: "unmounting"});
-				repaint(vm.node);
-				patch(vm.node, {class: "unmounted"});
-
 				return new Promise(function(resolve, reject) {
-					vm.node.el.addEventListener("transitionend", resolve);
+					patch(vm.node, {class: "unmounting"});
+					repaint(vm.node);
+					patch(vm.node, {class: "unmounted", ontransitionend: resolve});
 				});
 			},
 			didUnmount: function(vm) {
@@ -196,7 +192,7 @@
 
 		vm.mount(document.body);
 
-		var factor = 1.03;		// todo: investigate why exact transitionend
+		var factor = 1.04;		// todo: investigate why exact transitionend
 
 		setTimeout(function() {
 			data.pop();

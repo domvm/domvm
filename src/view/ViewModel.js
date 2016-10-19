@@ -230,7 +230,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	isMounted && vm.hooks && fireHooks("didRedraw", vm);
 
-	if (isRedrawRoot)			// isMounted
+	if (isRedrawRoot && isMounted)
 		drainDidHooks(vm);
 
 	return vm;
