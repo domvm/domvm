@@ -1887,12 +1887,12 @@ QUnit.module("Non-persistent model replacement");
 		evalOut(assert, vmB.node.el, domvm.html(vmB), expcHtml, callCounts, { nodeValue: 2 });
 	});
 
-	QUnit.skip('vm.diff(getArgs) should reuse view if [arg1, arg2...] is same between redraws', function(assert) {
+	QUnit.test('vm.diff(getArgs) should reuse view if [arg1, arg2...] is same between redraws', function(assert) {
 		var redraws = 0;
 
 		function ViewA(vm, model) {
 			vm.diff(function(model) {
-				return el(model.class, model.text);
+				return [model.class, model.text];
 			});
 
 			return function() {
