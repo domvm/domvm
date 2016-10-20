@@ -1487,6 +1487,8 @@ function isAttrs(val) {
 	return isObj(val) && !isVm(val) && !isElem(val);
 }
 
+// tpl must be an array representing a single domvm 1.x jsonML node
+// todo: also handle getter fns in attrs & css props
 function jsonml(node) {
 	// nulls
 	if (node == null) {}
@@ -1554,47 +1556,6 @@ function jsonml(node) {
 
 	return node;
 }
-
-/*
-// tpl must be an array representing a single domvm 1.x jsonML node
-export function jsonml(tpl) {
-	const a0 = tpl[0],
-		  a1 = tpl[1],
-		  a2 = tpl[0],
-}
-// todo: change preproc to handle:
-// attrs and css props as fns, direct getters
-*/
-
-/*
-function isStr(val) {
-	return typeof val == "string";
-}
-
-function isNum(val) {
-	return typeof val == "number";
-}
-
-function isVal(val) {
-	return isStr(val) || isNum(val);
-}
-
-function isFunc(val) {
-	return typeof val == "function";
-}
-
-function isElem(val) {
-	return val instanceof HTMLElement;
-}
-
-function isObj(val) {
-	return val != null && typeof val == "object";
-}
-
-function isArr(val) {
-	return Array.isArray(val);
-}
-*/
 
 function emit(evName) {
 	var arguments$1 = arguments;
