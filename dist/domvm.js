@@ -13,6 +13,10 @@ var VTYPE = {
 	VMODEL:		5,
 };
 
+var ENV_DOM = typeof HTMLElement == "function";
+
+
+
 function startsWith(haystack, needle) {
 	return haystack.lastIndexOf(needle, 0) === 0;
 }
@@ -46,7 +50,9 @@ function isProm(val) {
 	return typeof val === "object" && isFunc(val.then);
 }
 
-
+function isElem(val) {
+	return ENV_DOM && val instanceof HTMLElement;
+}
 
 function assignObj(targ) {
 	var args = arguments;
@@ -577,6 +583,34 @@ proto.fixed = true;
 
 VNodeFixed.prototype = proto;
 
+var tagCache = {};
+
+var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
+
+//	function VTag() {}
+function parseTag(raw) {
+	var cached = tagCache[raw];
+
+	if (cached == null) {
+		var tag, id, cls, attr;
+
+		tagCache[raw] = cached = {
+			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
+			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
+			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
+			attrs:	null,
+		};
+
+		while (attr = RE_ATTRS.exec(raw)) {
+			if (cached.attrs == null)
+				{ cached.attrs = {}; }
+			cached.attrs[attr[1]] = attr[2] || "";
+		}
+	}
+
+	return cached;
+}
+
 function defineElement(tag, arg1, arg2, fixed) {
 	var node = fixed ? new VNodeFixed(VTYPE.ELEMENT) : new VNode(VTYPE.ELEMENT);
 
@@ -640,36 +674,6 @@ function defineElement(tag, arg1, arg2, fixed) {
 		{ node.body = body; }
 
 	return node;
-}
-
-
-//	function VTag() {}
-
-var tagCache = {};
-
-var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
-
-function parseTag(raw) {
-	var cached = tagCache[raw];
-
-	if (cached == null) {
-		var tag, id, cls, attr;
-
-		tagCache[raw] = cached = {
-			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
-			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
-			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
-			attrs:	null,
-		};
-
-		while (attr = RE_ATTRS.exec(raw)) {
-			if (cached.attrs == null)
-				{ cached.attrs = {}; }
-			cached.attrs[attr[1]] = attr[2] || "";
-		}
-	}
-
-	return cached;
 }
 
 //import { DEBUG } from './DEBUG';
@@ -1471,6 +1475,127 @@ function html(node, dynProps) {
 	return buf;
 }
 
+function isStr(val) {
+	return typeof val == "string";
+}
+
+function isVm(obj) {
+	return isFunc(obj.redraw);
+}
+
+function isAttrs(val) {
+	return isObj(val) && !isVm(val) && !isElem(val);
+}
+
+function jsonml(node) {
+	// nulls
+	if (node == null) {}
+	// view defs, elem defs, sub-arrays, comments?
+	else if (isArr(node)) {
+		var len = node.length;
+
+		// empty arrays
+		if (len == 0)
+			{ node = null; }
+		// elem defs: ["div"], ["div", {attrs}], ["div", [children]], ["div", ...children], ["div", {attrs}, [children]], ["div", {attrs}, ...children]
+		else if (isStr(node[0])) {
+			var tag = node[0];
+			var body = null;
+			var attrs = null;
+
+			if (len > 1) {
+				var bodyIdx = 1;
+
+				if (isAttrs(node[1])) {
+					attrs = node[1];
+					bodyIdx = 2;
+				}
+
+				if (len == bodyIdx + 1) {
+					var last = node[bodyIdx];
+					// explit child array or plain val
+					if (isVal(last) || isArr(last) && !isStr(last[0]) && !isFunc(last[0]))
+						{ body = last; }
+					else
+						{ body = [last]; }
+				}
+				else
+					{ body = node.slice(bodyIdx); }
+			}
+
+			if (isArr(body))
+				{ body = body.map(jsonml); }
+
+			node = defineElement(tag, attrs, body, false);
+		}
+		// view defs: [MyView, model, key, opts]
+		else if (isFunc(node[0]))
+			{ node = defineView.apply(null, node); }
+		// sub-array to flatten
+		else
+			{ node = node.map(jsonml); }
+	}
+	// text nodes
+	else if (isVal(node))
+		{ node = defineText(node); }
+	// getters
+	else if (isFunc(node))
+		{ node = jsonml(node()); }
+	// injected elements
+	else if (isElem(node))
+		{ node = injectElement(node); }
+	else if (isObj(node)) {
+		// injected vms
+		if (isVm(node))
+			{ node = injectView(node); }
+		// ready vnodes (meh, weak guarantee)
+		else if (node.type != null) {}
+	}
+
+	return node;
+}
+
+/*
+// tpl must be an array representing a single domvm 1.x jsonML node
+export function jsonml(tpl) {
+	const a0 = tpl[0],
+		  a1 = tpl[1],
+		  a2 = tpl[0],
+}
+// todo: change preproc to handle:
+// attrs and css props as fns, direct getters
+*/
+
+/*
+function isStr(val) {
+	return typeof val == "string";
+}
+
+function isNum(val) {
+	return typeof val == "number";
+}
+
+function isVal(val) {
+	return isStr(val) || isNum(val);
+}
+
+function isFunc(val) {
+	return typeof val == "function";
+}
+
+function isElem(val) {
+	return val instanceof HTMLElement;
+}
+
+function isObj(val) {
+	return val != null && typeof val == "object";
+}
+
+function isArr(val) {
+	return Array.isArray(val);
+}
+*/
+
 function emit(evName) {
 	var arguments$1 = arguments;
 
@@ -1518,6 +1643,7 @@ exports.injectElement = injectElement;
 exports.defineElementFixed = defineElementFixed;
 exports.patchNode = patchNode;
 exports.html = html;
+exports.jsonml = jsonml;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

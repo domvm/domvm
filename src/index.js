@@ -15,6 +15,8 @@ import { defineElementFixed } from './view/defineElementFixed';
 
 import { html } from "./view/html";
 
+import { jsonml } from "./view/jsonml";
+
 import { patchNode } from "./view/patch";
 
 import "./view/emit";
@@ -38,4 +40,6 @@ export {
 	patchNode,
 
 	html,
+
+	jsonml,
 };
