@@ -48,7 +48,7 @@ ViewModel.prototype = {
 	model: null,
 	node: null,
 //	diff: null,
-	diffLast: null,	// prior array of diff values
+//	diffLast: null,	// prior array of diff values
 	hooks: null,
 	render: null,
 

@@ -218,7 +218,7 @@ function patchAttrs2(vnode) {
 			{ patchStyle(vnode); }
 		else if (isSplProp(key)) {}
 		else if (isEvProp(key))
-			{ patchEvent(vnode, key, null, nval); }
+			{ patchEvent(vnode, key, nval); }
 		else if (nval != null)
 			{ setAttr(vnode, key, nval, isDyn); }
 	}
@@ -520,9 +520,11 @@ VNode.prototype = {
 
 	get vm() {
 		var n = this;
-		while (n.vmid == null)
-			{ n = n.parent; }
-		return views[n.vmid];
+
+		do {
+			if (n.vmid != null)
+				{ return views[n.vmid]; }
+		} while (n.parent && (n = n.parent));
 	},
 
 	vmid:	null,
@@ -534,12 +536,12 @@ VNode.prototype = {
 	hooks:	null,
 	html:	false,
 
-	el:	null,
+	el:		null,
 
 	tag:	null,
 	attrs:	null,
 	body:	null,
-	fixed: false,
+	fixed:	false,
 
 	_class:	null,
 
@@ -762,43 +764,61 @@ function patchStyle(n, o) {
 	}
 }
 
-function wrapHandler(fn, args, sel) {
+function handle(e, fn, args) {
+	var node = e.target._node;
+	var out = fn.apply(null, args.concat(e, node, node.vm));
+
+	if (out === false) {
+		e.preventDefault();
+		e.stopPropagation();
+	}
+}
+
+function wrapHandler(fn, args) {
+//	console.log("wrapHandler");
+
 	return function wrap(e) {
-		var el = e.target;
-		var node = el._node;
+		handle(e, fn, args);
+	}
+}
 
-		if (sel && !e.target.matches(sel))
-			{ return; }
+// delagated handlers {".moo": [fn, a, b]}, {".moo": fn}
+function wrapHandlers(hash) {
+//	console.log("wrapHandlers");
 
-		var out = fn.apply(null, args.concat(e, node, node.vm));
+	return function wrap(e) {
+		for (var sel in hash) {
+			if (e.target.matches(sel)) {
+				var hnd = hash[sel];
+				var isarr = isArr(hnd);
+				var fn = isarr ? hnd[0] : hnd;
+				var args = isarr ? hnd.slice(1) : [];
 
-		if (out === false) {
-			e.preventDefault();
-			e.stopPropagation();
+				handle(e, fn, args);
+			}
 		}
 	}
 }
 
 // could merge with on*
 
-function patchEvent(node, name, sel, nval, oval) {
+function patchEvent(node, name, nval, oval) {
+	if (nval === oval)
+		{ return; }
+
 	var el = node.el;
 
 	// param'd eg onclick: [myFn, 1, 2, 3...]
-	if (isArr(nval) && (oval == null || isArr(oval) && !cmpArr(nval, oval)))
-		{ bindEv(el, name, wrapHandler(nval[0], nval.slice(1), sel)); }
+	if (isArr(nval)) {
+		var diff = oval == null || !cmpArr(nval, oval);
+		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
+	}
 	// basic onclick: myFn (or extracted)
 	else if (isFunc(nval) && nval != oval)
-		{ bindEv(el, name, wrapHandler(nval, [], sel)); }
+		{ bindEv(el, name, wrapHandler(nval, [])); }
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
-	else {		// isObj
-		for (var sel2 in nval) {
-			var nval2 = nval[sel2];
-			var oval2 = oval ? oval[sel2] : null;
-
-			patchEvent(node, name, sel2, nval2, oval2);
-		}
-	}
+	else		// isObj, TODO:, diff with old/clean
+		{ bindEv(el, name, wrapHandlers(nval)); }
 }
 
 function patchAttrs(vnode, donor) {
@@ -815,7 +835,7 @@ function patchAttrs(vnode, donor) {
 			{ patchStyle(vnode, donor); }
 		else if (isSplProp(key)) {}
 		else if (isEvProp(key))
-			{ patchEvent(vnode, key, null, nval, oval); }
+			{ patchEvent(vnode, key, nval, oval); }
 		else
 			{ setAttr(vnode, key, nval, isDyn); }
 	}
@@ -1065,7 +1085,7 @@ ViewModel.prototype = {
 	model: null,
 	node: null,
 //	diff: null,
-	diffLast: null,	// prior array of diff values
+//	diffLast: null,	// prior array of diff values
 	hooks: null,
 	render: null,
 

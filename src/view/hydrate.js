@@ -20,7 +20,7 @@ function patchAttrs2(vnode) {
 			patchStyle(vnode);
 		else if (isSplProp(key)) {}
 		else if (isEvProp(key))
-			patchEvent(vnode, key, null, nval);
+			patchEvent(vnode, key, nval);
 		else if (nval != null)
 			setAttr(vnode, key, nval, isDyn);
 	}

@@ -11,9 +11,11 @@ VNode.prototype = {
 
 	get vm() {
 		var n = this;
-		while (n.vmid == null)
-			n = n.parent;
-		return views[n.vmid];
+
+		do {
+			if (n.vmid != null)
+				return views[n.vmid];
+		} while (n.parent && (n = n.parent));
 	},
 
 	vmid:	null,
@@ -25,12 +27,12 @@ VNode.prototype = {
 	hooks:	null,
 	html:	false,
 
-	el:	null,
+	el:		null,
 
 	tag:	null,
 	attrs:	null,
 	body:	null,
-	fixed: false,
+	fixed:	false,
 
 	_class:	null,
 
