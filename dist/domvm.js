@@ -1428,6 +1428,9 @@ function patch$1(o, n) {
 	}
 }
 
+ViewModel.prototype.emit = emit;
+ViewModel.prototype.on = on;
+
 function emit(evName) {
 	var arguments$1 = arguments;
 
@@ -1459,9 +1462,6 @@ function on(evName, fn) {
 			{ t.on(evName, evs[evName]); }
 	}
 }
-
-ViewModel.prototype.emit = emit;
-ViewModel.prototype.on = on;
 
 view.html = html;
 

@@ -1,6 +1,9 @@
 import { ViewModel } from '../ViewModel';
 import { isVal, sliceArgs } from '../../utils';
 
+ViewModel.prototype.emit = emit;
+ViewModel.prototype.on = on;
+
 function emit(evName) {
 	var targ = this;
 
@@ -32,6 +35,3 @@ function on(evName, fn) {
 }
 
 function off() {}
-
-ViewModel.prototype.emit = emit;
-ViewModel.prototype.on = on;
