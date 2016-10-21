@@ -52,7 +52,7 @@ export function hydrate(vnode, withEl) {
 				});
 			}
 			else if (vnode.body != null && vnode.body !== "") {
-				if (vnode.html)
+				if (vnode.raw)
 					vnode.el.innerHTML = vnode.body;
 				else
 					vnode.el.textContent = vnode.body;

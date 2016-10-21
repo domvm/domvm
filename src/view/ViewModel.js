@@ -37,7 +37,7 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 //	this.update = function(model, withRedraw, parent, idx, parentVm) {};
 }
 
-ViewModel.prototype = {
+export const ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
 
 	id: null,

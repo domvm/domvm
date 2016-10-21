@@ -1,8 +1,8 @@
-import { ViewModel } from '../ViewModel';
+import { ViewModelProto } from '../ViewModel';
 import { isVal, sliceArgs } from '../../utils';
 
-ViewModel.prototype.emit = emit;
-ViewModel.prototype.on = on;
+ViewModelProto.emit = emit;
+ViewModelProto.on = on;
 
 function emit(evName) {
 	var targ = this;

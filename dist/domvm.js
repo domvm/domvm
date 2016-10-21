@@ -381,7 +381,7 @@ function hydrate(vnode, withEl) {
 				});
 			}
 			else if (vnode.body != null && vnode.body !== "") {
-				if (vnode.html)
+				if (vnode.raw)
 					{ vnode.el.innerHTML = vnode.body; }
 				else
 					{ vnode.el.textContent = vnode.body; }
@@ -902,7 +902,7 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 //	this.update = function(model, withRedraw, parent, idx, parentVm) {};
 }
 
-ViewModel.prototype = {
+var ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
 
 	id: null,
@@ -1166,7 +1166,7 @@ function VNode(type) {
 	this.type = type;
 }
 
-VNode.prototype = {
+var VNodeProto = VNode.prototype = {
 	constructor: VNode,
 
 	type:	null,
@@ -1187,7 +1187,7 @@ VNode.prototype = {
 	ref:	null,
 	data:	null,
 	hooks:	null,
-	html:	false,
+	raw:	false,
 
 	el:		null,
 
@@ -1284,8 +1284,8 @@ function defineElement(tag, arg1, arg2, fixed) {
 		if (attrs._hooks != null)
 			{ node.hooks = attrs._hooks; }
 
-		if (attrs._html != null)
-			{ node.html = attrs._html; }
+		if (attrs._raw != null)
+			{ node.raw = attrs._raw; }
 
 		if (attrs._data != null)
 			{ node.data = attrs._data; }
@@ -1403,7 +1403,9 @@ var view = {
 	defineElementFixed: defineElementFixed,
 };
 
-view.patch = patch$1;
+VNodeProto.patch = function(n) {
+	return patch$1(this, n);
+};
 
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch?
@@ -1428,8 +1430,8 @@ function patch$1(o, n) {
 	}
 }
 
-ViewModel.prototype.emit = emit;
-ViewModel.prototype.on = on;
+ViewModelProto.emit = emit;
+ViewModelProto.on = on;
 
 function emit(evName) {
 	var arguments$1 = arguments;
@@ -1463,18 +1465,22 @@ function on(evName, fn) {
 	}
 }
 
-view.html = html;
+ViewModelProto.html = function(dynProps) {
+	var vm = this;
+
+	if (vm.node == null)
+		{ vm.mount(); }
+
+	return html(vm.node, dynProps);
+};
+
+VNodeProto.html = function(dynProps) {
+	return html(this, dynProps);
+};
 
 var voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
 
 function html(node, dynProps) {
-	// handle if node is vm
-	if (node.render) {
-		if (!node.node)
-			{ node.mount(); }
-		node = node.node;
-	}
-
 	var buf = "";
 	switch (node.type) {
 		case VTYPE.ELEMENT:

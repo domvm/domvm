@@ -1,9 +1,11 @@
 import { assignObj } from '../../utils';
 import { patchAttrs } from '../patchAttrs';
 
-import view from '../../view';
+import { VNodeProto } from '../VNode';
 
-view.patch = patch;
+VNodeProto.patch = function(n) {
+	return patch(this, n);
+};
 
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch?

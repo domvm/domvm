@@ -4,7 +4,7 @@ export function VNode(type) {
 	this.type = type;
 }
 
-VNode.prototype = {
+export const VNodeProto = VNode.prototype = {
 	constructor: VNode,
 
 	type:	null,
@@ -25,7 +25,7 @@ VNode.prototype = {
 	ref:	null,
 	data:	null,
 	hooks:	null,
-	html:	false,
+	raw:	false,
 
 	el:		null,
 

@@ -30,8 +30,8 @@ export function defineElement(tag, arg1, arg2, fixed) {
 		if (attrs._hooks != null)
 			node.hooks = attrs._hooks;
 
-		if (attrs._html != null)
-			node.html = attrs._html;
+		if (attrs._raw != null)
+			node.raw = attrs._raw;
 
 		if (attrs._data != null)
 			node.data = attrs._data;

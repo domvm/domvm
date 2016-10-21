@@ -2,20 +2,25 @@ import { VTYPE } from '../VTYPE';
 import { isArr, isObj, isVal, isFunc } from '../../utils';
 import { isEvProp, styleStr, isDynProp } from '../utils';
 
-import view from '../../view';
+import { ViewModelProto } from '../ViewModel';
+import { VNodeProto } from '../VNode';
 
-view.html = html;
+ViewModelProto.html = function(dynProps) {
+	var vm = this;
+
+	if (vm.node == null)
+		vm.mount();
+
+	return html(vm.node, dynProps);
+};
+
+VNodeProto.html = function(dynProps) {
+	return html(this, dynProps);
+};
 
 const voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
 
 export function html(node, dynProps) {
-	// handle if node is vm
-	if (node.render) {
-		if (!node.node)
-			node.mount();
-		node = node.node;
-	}
-
 	var buf = "";
 	switch (node.type) {
 		case VTYPE.ELEMENT:
