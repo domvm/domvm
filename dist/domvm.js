@@ -1594,6 +1594,7 @@ ViewModelProto.attach = function(el) {
 // very similar to hydrate, TODO: dry
 function attach(vnode, withEl) {
 	vnode.el = withEl;
+	withEl._node = vnode;
 
 	var nattrs = vnode.attrs;
 
