@@ -1,13 +1,16 @@
-import { isVal, isArr, isObj, isFunc, isElem } from '../utils';
+import { isVal, isArr, isObj, isFunc, isElem } from '../../utils';
 
-import { defineElement } from "./defineElement";
-import { defineText } from "./defineText";
-import { defineComment } from "./defineComment";
-import { defineView } from "./defineView";
+import { defineElement } from "../defineElement";
+import { defineText } from "../defineText";
+import { defineComment } from "../defineComment";
+import { defineView } from "../defineView";
 
-import { injectView } from "./injectView";
-import { injectElement } from "./injectElement";
+import { injectView } from "../injectView";
+import { injectElement } from "../injectElement";
 
+import view from '../../view';
+
+view.jsonml = jsonml;
 
 function isStr(val) {
 	return typeof val == "string";

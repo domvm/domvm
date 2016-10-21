@@ -53,9 +53,15 @@
 </head>
 <body>
 	<script>
-		var el = domvm.defineElement;
-		var tx = domvm.defineText;
-		var patch = domvm.patchNode;
+		var view = domvm.view;
+
+		var el = view.defineElement,
+			tx = view.defineText,
+			cm = view.defineComment,
+			vw = view.defineView,
+			iv = view.injectView,
+			ie = view.injectElement,
+			patch = view.patch;
 
 		function Scoreboard(vm, players) {
 			var sorted = sortedByScoreDesc(players),
@@ -171,7 +177,7 @@
 			},
 		];
 
-		domvm.createView(Scoreboard, players).mount(document.body);
+		domvm.view.createView(Scoreboard, players).mount(document.body);
 	</script>
 </body>
 </html>

@@ -1,45 +1,10 @@
-import { ViewModel } from "./view/ViewModel";
-import { VNode } from "./view/VNode";
+import view from './view';
 
-import { createView } from "./view/createView";
-
-import { defineElement } from "./view/defineElement";
-import { defineText } from "./view/defineText";
-import { defineComment } from "./view/defineComment";
-import { defineView } from "./view/defineView";
-
-import { injectView } from "./view/injectView";
-import { injectElement } from "./view/injectElement";
-
-import { defineElementFixed } from './view/defineElementFixed';
-
-import { html } from "./view/html";
-
-import { jsonml } from "./view/jsonml";
-
-import { patchNode } from "./view/patch";
-
-import "./view/emit";
+import "./view/addons/patch";
+import "./view/addons/emit";
+import "./view/addons/html";
+import "./view/addons/jsonml";
 
 export {
-	ViewModel,
-	VNode,
-
-	createView,
-
-	defineElement,
-	defineText,
-	defineComment,
-	defineView,
-
-	injectView,
-	injectElement,
-
-	defineElementFixed,
-
-	patchNode,
-
-	html,
-
-	jsonml,
+	view
 };

@@ -1,37 +1,11 @@
 import { VTYPE } from './VTYPE';
-import { isArr, isVal, isFunc, isObj, assignObj, cmpArr } from '../utils';
-import { autoPx, isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
-import { syncChildren, fireHooks } from './syncChildren';
-import { setAttr, remAttr } from './attrs';
-import { createView } from './createView';
+import { isArr } from '../utils';
 import { views } from './ViewModel';
-import { defineElement } from './defineElement';
+import { syncChildren, fireHooks } from './syncChildren';
+import { patchAttrs } from './patchAttrs';
+import { createView } from './createView';
 
 //import { DEBUG } from './DEBUG';
-
-
-// newNode can be either {class: style: } or full new VNode
-// will/didPatch?
-export function patchNode(o, n) {
-	if (n.type != null) {
-		// full new node
-	}
-	else {
-		// shallow-clone target
-		var donor = Object.create(o);
-		// fixate orig attrs
-		donor.attrs = assignObj({}, o.attrs);
-		// assign new attrs into live targ node
-		var oattrs = assignObj(o.attrs, donor.attrs, n);
-		// prepend any fixed shorthand class
-		if (o._class != null) {
-			var aclass = oattrs.class;
-			oattrs.class = aclass != null && aclass != "" ? o._class + " " + aclass : o._class;
-		}
-
-		patchAttrs(o, donor);
-	}
-}
 
 function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 	var oldBody = oPar.body;
@@ -67,123 +41,6 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 	}
 
 	return null;
-}
-
-function bindEv(el, type, fn) {
-//	DEBUG && console.log("addEventListener");
-	el[type] = fn;
-}
-
-// assumes if styles exist both are objects or both are strings
-export function patchStyle(n, o) {
-	var ns = n.attrs.style;
-	var os = o ? o.attrs.style : null;		// || emptyObj?
-
-	// replace or remove in full
-	if (ns == null || isVal(ns))
-		n.el.style.cssText = ns;
-	else {
-		for (var nn in ns) {
-			var nv = ns[nn];
-			if (os == null || nv != null && nv !== os[nn])
-				n.el.style[nn] = autoPx(nn, nv);
-		}
-
-		// clean old
-		if (os) {
-			for (var on in os) {
-				if (ns[on] == null)
-					n.el.style[on] = null;
-			}
-		}
-	}
-}
-
-function handle(e, fn, args) {
-	var node = e.target._node;
-	var out = fn.apply(null, args.concat(e, node, node.vm));
-
-	if (out === false) {
-		e.preventDefault();
-		e.stopPropagation();
-	}
-}
-
-function wrapHandler(fn, args) {
-//	console.log("wrapHandler");
-
-	return function wrap(e) {
-		handle(e, fn, args);
-	}
-}
-
-// delagated handlers {".moo": [fn, a, b]}, {".moo": fn}
-function wrapHandlers(hash) {
-//	console.log("wrapHandlers");
-
-	return function wrap(e) {
-		for (var sel in hash) {
-			if (e.target.matches(sel)) {
-				var hnd = hash[sel];
-				var isarr = isArr(hnd);
-				var fn = isarr ? hnd[0] : hnd;
-				var args = isarr ? hnd.slice(1) : [];
-
-				handle(e, fn, args);
-			}
-		}
-	}
-}
-
-// could merge with on*
-
-export function patchEvent(node, name, nval, oval) {
-	if (nval === oval)
-		return;
-
-	var el = node.el;
-
-	// param'd eg onclick: [myFn, 1, 2, 3...]
-	if (isArr(nval)) {
-		var diff = oval == null || !cmpArr(nval, oval);
-		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
-	}
-	// basic onclick: myFn (or extracted)
-	else if (isFunc(nval) && nval != oval)
-		bindEv(el, name, wrapHandler(nval, []));
-	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
-	else		// isObj, TODO:, diff with old/clean
-		bindEv(el, name, wrapHandlers(nval));
-}
-
-export function patchAttrs(vnode, donor) {
-	const nattrs = vnode.attrs;		// || emptyObj
-	const oattrs = donor.attrs;		// || emptyObj
-
-	for (var key in nattrs) {
-		var nval = nattrs[key];
-		var isDyn = isDynProp(vnode.tag, key);
-		var oval = isDyn ? vnode.el[key] : oattrs[key];
-
-		if (nval === oval) {}
-		else if (isStyleProp(key))
-			patchStyle(vnode, donor);
-		else if (isSplProp(key)) {}
-		else if (isEvProp(key))
-			patchEvent(vnode, key, nval, oval);
-		else
-			setAttr(vnode, key, nval, isDyn);
-	}
-
-	for (var key in oattrs) {
-	//	if (nattrs[key] == null &&
-		if (!(key in nattrs) &&
-			!isStyleProp(key) &&
-			!isSplProp(key) &&
-			!isEvProp(key)
-		)
-			remAttr(vnode, key);
-	}
 }
 
 // have it handle initial hydrate? !donor?

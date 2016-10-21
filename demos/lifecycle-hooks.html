@@ -63,20 +63,20 @@
 </head>
 <body>
 	<script>
-		var el = domvm.defineElement,
-			tx = domvm.defineText,
-			cm = domvm.defineComment,
-			vw = domvm.defineView,
-			iv = domvm.injectView,
-			ie = domvm.injectElement;
+		var view = domvm.view;
 
-		var patch = domvm.patchNode;
+		var el = view.defineElement,
+			tx = view.defineText,
+			cm = view.defineComment,
+			vw = view.defineView,
+			iv = view.injectView,
+			ie = view.injectElement;
+
+		var patch = view.patch;
 
 		function repaint(node) {
 			node && node.el && node.el.offsetHeight;
 		}
-
-		domvm.view = domvm.createView;
 
 		function View1(vm, data) {
 			// DOM node/template level hooks
@@ -156,7 +156,7 @@
 			"1.dog",
 		];
 
-		var vm = domvm.view(View1, data);
+		var vm = domvm.view.createView(View1, data);
 
 		// view-level hooks
 		vm.hook({

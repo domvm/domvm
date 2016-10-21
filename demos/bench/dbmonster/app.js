@@ -1,12 +1,14 @@
-var el = domvm.defineElement,
-	tx = domvm.defineText,
-	cm = domvm.defineComment,
-	vw = domvm.defineView,
-	iv = domvm.injectView,
-	ie = domvm.injectElement;
+var view = domvm.view;
 
-// uncomment to optimized for fixed-layout nodes (no removal/insertion/reordering)
-// var el = domvm.defineElementFixed;
+var el = view.defineElement,
+	tx = view.defineText,
+	cm = view.defineComment,
+	vw = view.defineView,
+	iv = view.injectView,
+	ie = view.injectElement;
+
+// uncomment to optimize for fixed-layout nodes (no removal/insertion/reordering)
+// var el = view.defineElementFixed;
 
 /*
 // naive implementation, no optims
@@ -108,7 +110,7 @@ function Query(vm) {
 
 let dbs		= null,
 	raf		= null,
-	vm		= domvm.createView(DBMonView),
+	vm		= view.createView(DBMonView),
 	init	= true,
 	avg		= [],
 	len		= 5,

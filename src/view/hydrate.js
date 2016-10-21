@@ -1,10 +1,11 @@
 import { VTYPE } from './VTYPE';
-import { isArr, isFunc } from '../utils';
-import { isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
-import { setAttr } from './attrs';
-import { patchStyle, patchEvent } from './patch';
-import { createView } from './createView';
+import { isArr } from '../utils';
 import { views } from './ViewModel';
+import { isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
+import { setAttr } from './patchAttrs';
+import { patchStyle } from './patchStyle';
+import { patchEvent } from './patchEvent';
+import { createView } from './createView';
 import { insertBefore } from './syncChildren';
 
 

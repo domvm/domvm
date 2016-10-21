@@ -6,8 +6,14 @@
 	<script src="../dist/domvm.js"></script>
 
 	<script>
-		var el = domvm.defineElement;
-		var view = domvm.createView;
+		var view = domvm.view;
+
+		var el = view.defineElement,
+			tx = view.defineText,
+			cm = view.defineComment,
+			vw = view.defineView,
+			iv = view.injectView,
+			ie = view.injectElement;
 
 		const itemsToLoad = 20;
 
@@ -61,7 +67,7 @@
 		// load initial items
 		model.loadMoar();
 
-		domvm.createView(ItemListView, model).mount(document.body);
+		domvm.view.createView(ItemListView, model).mount(document.body);
 	</script>
 </body>
 </html>

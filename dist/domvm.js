@@ -189,6 +189,93 @@ function isDynProp(tag, attr) {
 	return false;
 }
 
+// assumes if styles exist both are objects or both are strings
+function patchStyle(n, o) {
+	var ns = n.attrs.style;
+	var os = o ? o.attrs.style : null;		// || emptyObj?
+
+	// replace or remove in full
+	if (ns == null || isVal(ns))
+		{ n.el.style.cssText = ns; }
+	else {
+		for (var nn in ns) {
+			var nv = ns[nn];
+			if (os == null || nv != null && nv !== os[nn])
+				{ n.el.style[nn] = autoPx(nn, nv); }
+		}
+
+		// clean old
+		if (os) {
+			for (var on in os) {
+				if (ns[on] == null)
+					{ n.el.style[on] = null; }
+			}
+		}
+	}
+}
+
+function bindEv(el, type, fn) {
+//	DEBUG && console.log("addEventListener");
+	el[type] = fn;
+}
+
+function handle(e, fn, args) {
+	var node = e.target._node;
+	var out = fn.apply(null, args.concat(e, node, node.vm));
+
+	if (out === false) {
+		e.preventDefault();
+		e.stopPropagation();
+	}
+}
+
+function wrapHandler(fn, args) {
+//	console.log("wrapHandler");
+
+	return function wrap(e) {
+		handle(e, fn, args);
+	}
+}
+
+// delagated handlers {".moo": [fn, a, b]}, {".moo": fn}
+function wrapHandlers(hash) {
+//	console.log("wrapHandlers");
+
+	return function wrap(e) {
+		for (var sel in hash) {
+			if (e.target.matches(sel)) {
+				var hnd = hash[sel];
+				var isarr = isArr(hnd);
+				var fn = isarr ? hnd[0] : hnd;
+				var args = isarr ? hnd.slice(1) : [];
+
+				handle(e, fn, args);
+			}
+		}
+	}
+}
+
+// could merge with on*
+
+function patchEvent(node, name, nval, oval) {
+	if (nval === oval)
+		{ return; }
+
+	var el = node.el;
+
+	// param'd eg onclick: [myFn, 1, 2, 3...]
+	if (isArr(nval)) {
+		var diff = oval == null || !cmpArr(nval, oval);
+		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
+	}
+	// basic onclick: myFn (or extracted)
+	else if (isFunc(nval) && nval != oval)
+		{ bindEv(el, name, wrapHandler(nval, [])); }
+	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
+	else		// isObj, TODO:, diff with old/clean
+		{ bindEv(el, name, wrapHandlers(nval)); }
+}
+
 function remAttr(node, name) {		// , asProp
 	node.el.removeAttribute(name);
 }
@@ -208,6 +295,36 @@ function setAttr(node, name, val, asProp) {
 		{ el[name.substr(1)] = val; }
 	else
 		{ el.setAttribute(name, val); }
+}
+
+function patchAttrs(vnode, donor) {
+	var nattrs = vnode.attrs;		// || emptyObj
+	var oattrs = donor.attrs;		// || emptyObj
+
+	for (var key in nattrs) {
+		var nval = nattrs[key];
+		var isDyn = isDynProp(vnode.tag, key);
+		var oval = isDyn ? vnode.el[key] : oattrs[key];
+
+		if (nval === oval) {}
+		else if (isStyleProp(key))
+			{ patchStyle(vnode, donor); }
+		else if (isSplProp(key)) {}
+		else if (isEvProp(key))
+			{ patchEvent(vnode, key, nval, oval); }
+		else
+			{ setAttr(vnode, key, nval, isDyn); }
+	}
+
+	for (var key in oattrs) {
+	//	if (nattrs[key] == null &&
+		if (!(key in nattrs) &&
+			!isStyleProp(key) &&
+			!isSplProp(key) &&
+			!isEvProp(key)
+		)
+			{ remAttr(vnode, key); }
+	}
 }
 
 function createView(view, model, key, opts) {
@@ -524,192 +641,7 @@ function syncChildren(node, parEl) {
 	}
 }
 
-function VNode(type) {
-	this.type = type;
-}
-
-VNode.prototype = {
-	constructor: VNode,
-
-	type:	null,
-
-	get vm() {
-		var n = this;
-
-		do {
-			if (n.vmid != null)
-				{ return views[n.vmid]; }
-		} while (n.parent && (n = n.parent));
-	},
-
-	vmid:	null,
-
-	// all this stuff can just live in attrs (as defined) just have getters here for it
-	key:	null,
-	ref:	null,
-	data:	null,
-	hooks:	null,
-	html:	false,
-
-	el:		null,
-
-	tag:	null,
-	attrs:	null,
-	body:	null,
-	fixed:	false,
-
-	_class:	null,
-
-	idx:	null,
-	parent:	null,
-
-	// transient flags maintained for cleanup passes, delayed hooks, etc
-//	_recycled:		false,		// true when findDonor/graft pass is done
-//	_wasSame:		false,		// true if _diff result was false
-//	_delayedRemove:	false,		// true when willRemove hook returns a promise
-
-//	_setTag: function() {},
-
-	/*
-	// break out into optional fluent module
-	key:	function(val) { this.key	= val; return this; },
-	ref:	function(val) { this.ref	= val; return this; },		// deep refs
-	data:	function(val) { this.data	= val; return this; },
-	hooks:	function(val) { this.hooks	= val; return this; },		// h("div").hooks()
-	html:	function(val) { this.html	= true; return this.body(val); },
-
-	body:	function(val) { this.body	= val; return this; },
-	*/
-};
-
-function VNodeFixed(type) {
-	VNode.call(this, type);
-}
-
-var proto = Object.create(VNode.prototype);
-proto.constructor = VNodeFixed;
-proto.fixed = true;
-
-VNodeFixed.prototype = proto;
-
-var tagCache = {};
-
-var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
-
-//	function VTag() {}
-function parseTag(raw) {
-	var cached = tagCache[raw];
-
-	if (cached == null) {
-		var tag, id, cls, attr;
-
-		tagCache[raw] = cached = {
-			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
-			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
-			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
-			attrs:	null,
-		};
-
-		while (attr = RE_ATTRS.exec(raw)) {
-			if (cached.attrs == null)
-				{ cached.attrs = {}; }
-			cached.attrs[attr[1]] = attr[2] || "";
-		}
-	}
-
-	return cached;
-}
-
-function defineElement(tag, arg1, arg2, fixed) {
-	var node = fixed ? new VNodeFixed(VTYPE.ELEMENT) : new VNode(VTYPE.ELEMENT);
-
-	var attrs, body;
-
-	if (isUndef(arg2)) {
-		if (isObj(arg1))
-			{ attrs = arg1; }
-		else
-			{ body = arg1; }
-	}
-	else {
-		attrs = arg1;
-		body = arg2;
-	}
-
-	if (attrs != null) {
-		if (attrs._key != null)
-			{ node.key = attrs._key; }
-
-		if (attrs._ref != null)
-			{ node.ref = attrs._ref; }
-
-		if (attrs._hooks != null)
-			{ node.hooks = attrs._hooks; }
-
-		if (attrs._html != null)
-			{ node.html = attrs._html; }
-
-		if (attrs._data != null)
-			{ node.data = attrs._data; }
-
-		node.attrs = attrs;
-	}
-
-	var parsed = parseTag(tag);
-
-	node.tag = parsed.tag;
-
-	if (parsed.id || parsed.class || parsed.attrs) {
-		var p = node.attrs || {};
-
-		if (parsed.id && p.id == null)
-			{ p.id = parsed.id; }
-
-		if (parsed.class) {
-			node._class = parsed.class;		// static class
-			p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
-		}
-		if (parsed.attrs) {
-			for (var key in parsed.attrs)
-				{ if (p[key] == null)
-					{ p[key] = parsed.attrs[key]; } }
-		}
-
-//		if (node.attrs != p)
-			node.attrs = p;
-	}
-
-	if (body != null)
-		{ node.body = body; }
-
-	return node;
-}
-
 //import { DEBUG } from './DEBUG';
-
-
-// newNode can be either {class: style: } or full new VNode
-// will/didPatch?
-function patchNode(o, n) {
-	if (n.type != null) {
-		// full new node
-	}
-	else {
-		// shallow-clone target
-		var donor = Object.create(o);
-		// fixate orig attrs
-		donor.attrs = assignObj({}, o.attrs);
-		// assign new attrs into live targ node
-		var oattrs = assignObj(o.attrs, donor.attrs, n);
-		// prepend any fixed shorthand class
-		if (o._class != null) {
-			var aclass = oattrs.class;
-			oattrs.class = aclass != null && aclass != "" ? o._class + " " + aclass : o._class;
-		}
-
-		patchAttrs(o, donor);
-	}
-}
 
 function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 	var oldBody = oPar.body;
@@ -745,123 +677,6 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 	}
 
 	return null;
-}
-
-function bindEv(el, type, fn) {
-//	DEBUG && console.log("addEventListener");
-	el[type] = fn;
-}
-
-// assumes if styles exist both are objects or both are strings
-function patchStyle(n, o) {
-	var ns = n.attrs.style;
-	var os = o ? o.attrs.style : null;		// || emptyObj?
-
-	// replace or remove in full
-	if (ns == null || isVal(ns))
-		{ n.el.style.cssText = ns; }
-	else {
-		for (var nn in ns) {
-			var nv = ns[nn];
-			if (os == null || nv != null && nv !== os[nn])
-				{ n.el.style[nn] = autoPx(nn, nv); }
-		}
-
-		// clean old
-		if (os) {
-			for (var on in os) {
-				if (ns[on] == null)
-					{ n.el.style[on] = null; }
-			}
-		}
-	}
-}
-
-function handle(e, fn, args) {
-	var node = e.target._node;
-	var out = fn.apply(null, args.concat(e, node, node.vm));
-
-	if (out === false) {
-		e.preventDefault();
-		e.stopPropagation();
-	}
-}
-
-function wrapHandler(fn, args) {
-//	console.log("wrapHandler");
-
-	return function wrap(e) {
-		handle(e, fn, args);
-	}
-}
-
-// delagated handlers {".moo": [fn, a, b]}, {".moo": fn}
-function wrapHandlers(hash) {
-//	console.log("wrapHandlers");
-
-	return function wrap(e) {
-		for (var sel in hash) {
-			if (e.target.matches(sel)) {
-				var hnd = hash[sel];
-				var isarr = isArr(hnd);
-				var fn = isarr ? hnd[0] : hnd;
-				var args = isarr ? hnd.slice(1) : [];
-
-				handle(e, fn, args);
-			}
-		}
-	}
-}
-
-// could merge with on*
-
-function patchEvent(node, name, nval, oval) {
-	if (nval === oval)
-		{ return; }
-
-	var el = node.el;
-
-	// param'd eg onclick: [myFn, 1, 2, 3...]
-	if (isArr(nval)) {
-		var diff = oval == null || !cmpArr(nval, oval);
-		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
-	}
-	// basic onclick: myFn (or extracted)
-	else if (isFunc(nval) && nval != oval)
-		{ bindEv(el, name, wrapHandler(nval, [])); }
-	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
-	else		// isObj, TODO:, diff with old/clean
-		{ bindEv(el, name, wrapHandlers(nval)); }
-}
-
-function patchAttrs(vnode, donor) {
-	var nattrs = vnode.attrs;		// || emptyObj
-	var oattrs = donor.attrs;		// || emptyObj
-
-	for (var key in nattrs) {
-		var nval = nattrs[key];
-		var isDyn = isDynProp(vnode.tag, key);
-		var oval = isDyn ? vnode.el[key] : oattrs[key];
-
-		if (nval === oval) {}
-		else if (isStyleProp(key))
-			{ patchStyle(vnode, donor); }
-		else if (isSplProp(key)) {}
-		else if (isEvProp(key))
-			{ patchEvent(vnode, key, nval, oval); }
-		else
-			{ setAttr(vnode, key, nval, isDyn); }
-	}
-
-	for (var key in oattrs) {
-	//	if (nattrs[key] == null &&
-		if (!(key in nattrs) &&
-			!isStyleProp(key) &&
-			!isSplProp(key) &&
-			!isEvProp(key)
-		)
-			{ remAttr(vnode, key); }
-	}
 }
 
 // have it handle initial hydrate? !donor?
@@ -1347,6 +1162,167 @@ function updateAsync(newModel) {
 	return this._update(newModel);
 }
 
+function VNode(type) {
+	this.type = type;
+}
+
+VNode.prototype = {
+	constructor: VNode,
+
+	type:	null,
+
+	get vm() {
+		var n = this;
+
+		do {
+			if (n.vmid != null)
+				{ return views[n.vmid]; }
+		} while (n.parent && (n = n.parent));
+	},
+
+	vmid:	null,
+
+	// all this stuff can just live in attrs (as defined) just have getters here for it
+	key:	null,
+	ref:	null,
+	data:	null,
+	hooks:	null,
+	html:	false,
+
+	el:		null,
+
+	tag:	null,
+	attrs:	null,
+	body:	null,
+	fixed:	false,
+
+	_class:	null,
+
+	idx:	null,
+	parent:	null,
+
+	// transient flags maintained for cleanup passes, delayed hooks, etc
+//	_recycled:		false,		// true when findDonor/graft pass is done
+//	_wasSame:		false,		// true if _diff result was false
+//	_delayedRemove:	false,		// true when willRemove hook returns a promise
+
+//	_setTag: function() {},
+
+	/*
+	// break out into optional fluent module
+	key:	function(val) { this.key	= val; return this; },
+	ref:	function(val) { this.ref	= val; return this; },		// deep refs
+	data:	function(val) { this.data	= val; return this; },
+	hooks:	function(val) { this.hooks	= val; return this; },		// h("div").hooks()
+	html:	function(val) { this.html	= true; return this.body(val); },
+
+	body:	function(val) { this.body	= val; return this; },
+	*/
+};
+
+function VNodeFixed(type) {
+	VNode.call(this, type);
+}
+
+var proto = Object.create(VNode.prototype);
+proto.constructor = VNodeFixed;
+proto.fixed = true;
+
+VNodeFixed.prototype = proto;
+
+var tagCache = {};
+
+var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
+
+//	function VTag() {}
+function parseTag(raw) {
+	var cached = tagCache[raw];
+
+	if (cached == null) {
+		var tag, id, cls, attr;
+
+		tagCache[raw] = cached = {
+			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
+			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
+			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
+			attrs:	null,
+		};
+
+		while (attr = RE_ATTRS.exec(raw)) {
+			if (cached.attrs == null)
+				{ cached.attrs = {}; }
+			cached.attrs[attr[1]] = attr[2] || "";
+		}
+	}
+
+	return cached;
+}
+
+function defineElement(tag, arg1, arg2, fixed) {
+	var node = fixed ? new VNodeFixed(VTYPE.ELEMENT) : new VNode(VTYPE.ELEMENT);
+
+	var attrs, body;
+
+	if (isUndef(arg2)) {
+		if (isObj(arg1))
+			{ attrs = arg1; }
+		else
+			{ body = arg1; }
+	}
+	else {
+		attrs = arg1;
+		body = arg2;
+	}
+
+	if (attrs != null) {
+		if (attrs._key != null)
+			{ node.key = attrs._key; }
+
+		if (attrs._ref != null)
+			{ node.ref = attrs._ref; }
+
+		if (attrs._hooks != null)
+			{ node.hooks = attrs._hooks; }
+
+		if (attrs._html != null)
+			{ node.html = attrs._html; }
+
+		if (attrs._data != null)
+			{ node.data = attrs._data; }
+
+		node.attrs = attrs;
+	}
+
+	var parsed = parseTag(tag);
+
+	node.tag = parsed.tag;
+
+	if (parsed.id || parsed.class || parsed.attrs) {
+		var p = node.attrs || {};
+
+		if (parsed.id && p.id == null)
+			{ p.id = parsed.id; }
+
+		if (parsed.class) {
+			node._class = parsed.class;		// static class
+			p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
+		}
+		if (parsed.attrs) {
+			for (var key in parsed.attrs)
+				{ if (p[key] == null)
+					{ p[key] = parsed.attrs[key]; } }
+		}
+
+//		if (node.attrs != p)
+			node.attrs = p;
+	}
+
+	if (body != null)
+		{ node.body = body; }
+
+	return node;
+}
+
 function defineText(body) {
 	var n = new VNode(VTYPE.TEXT);
 	n.body = body;
@@ -1409,6 +1385,85 @@ function injectElement(el) {
 function defineElementFixed(tag, arg1, arg2) {
 	return defineElement(tag, arg1, arg2, true);
 }
+
+var view = {
+	ViewModel: ViewModel,
+	VNode: VNode,
+
+	createView: createView,
+
+	defineElement: defineElement,
+	defineText: defineText,
+	defineComment: defineComment,
+	defineView: defineView,
+
+	injectView: injectView,
+	injectElement: injectElement,
+
+	defineElementFixed: defineElementFixed,
+};
+
+view.patch = patch$1;
+
+// newNode can be either {class: style: } or full new VNode
+// will/didPatch?
+function patch$1(o, n) {
+	if (n.type != null) {
+		// full new node
+	}
+	else {
+		// shallow-clone target
+		var donor = Object.create(o);
+		// fixate orig attrs
+		donor.attrs = assignObj({}, o.attrs);
+		// assign new attrs into live targ node
+		var oattrs = assignObj(o.attrs, donor.attrs, n);
+		// prepend any fixed shorthand class
+		if (o._class != null) {
+			var aclass = oattrs.class;
+			oattrs.class = aclass != null && aclass != "" ? o._class + " " + aclass : o._class;
+		}
+
+		patchAttrs(o, donor);
+	}
+}
+
+function emit(evName) {
+	var arguments$1 = arguments;
+
+	var targ = this;
+
+	do {
+		var evs = targ.events;
+		var fn = evs ? evs[evName] : null;
+
+		if (fn) {
+			fn.apply(null, sliceArgs(arguments$1, 1));
+			break;
+		}
+
+	} while (targ = targ.parent());
+}
+
+function on(evName, fn) {
+	var t = this;
+
+	if (t.events == null)
+		{ t.events = {}; }
+
+	if (isVal(evName))
+		{ t.events[evName] = fn; }
+	else {
+		var evs = evName;
+		for (var evName in evs)
+			{ t.on(evName, evs[evName]); }
+	}
+}
+
+ViewModel.prototype.emit = emit;
+ViewModel.prototype.on = on;
+
+view.html = html;
 
 var voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
 
@@ -1483,6 +1538,8 @@ function html(node, dynProps) {
 
 	return buf;
 }
+
+view.jsonml = jsonml;
 
 function isStr(val) {
 	return typeof val == "string";
@@ -1566,54 +1623,7 @@ function jsonml(node) {
 	return node;
 }
 
-function emit(evName) {
-	var arguments$1 = arguments;
-
-	var targ = this;
-
-	do {
-		var evs = targ.events;
-		var fn = evs ? evs[evName] : null;
-
-		if (fn) {
-			fn.apply(null, sliceArgs(arguments$1, 1));
-			break;
-		}
-
-	} while (targ = targ.parent());
-}
-
-function on(evName, fn) {
-	var t = this;
-
-	if (t.events == null)
-		{ t.events = {}; }
-
-	if (isVal(evName))
-		{ t.events[evName] = fn; }
-	else {
-		var evs = evName;
-		for (var evName in evs)
-			{ t.on(evName, evs[evName]); }
-	}
-}
-
-ViewModel.prototype.emit = emit;
-ViewModel.prototype.on = on;
-
-exports.ViewModel = ViewModel;
-exports.VNode = VNode;
-exports.createView = createView;
-exports.defineElement = defineElement;
-exports.defineText = defineText;
-exports.defineComment = defineComment;
-exports.defineView = defineView;
-exports.injectView = injectView;
-exports.injectElement = injectElement;
-exports.defineElementFixed = defineElementFixed;
-exports.patchNode = patchNode;
-exports.html = html;
-exports.jsonml = jsonml;
+exports.view = view;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

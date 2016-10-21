@@ -7,16 +7,16 @@
 	<script src="../dist/domvm.js"></script>
 
 	<script>
-		var el = domvm.defineElement,
-			tx = domvm.defineText,
-			cm = domvm.defineComment,
-			vw = domvm.defineView,
-			iv = domvm.injectView,
-			ie = domvm.injectElement;
+		var view = domvm.view;
 
-//		el = domvm.defineElementFixed;
+		var el = view.defineElement,
+			tx = view.defineText,
+			cm = view.defineComment,
+			vw = view.defineView,
+			iv = view.injectView,
+			ie = view.injectElement;
 
-		domvm.view = domvm.createView;
+		//	el = domvm.view.defineElementFixed;
 	</script>
 
 	<style>
@@ -170,7 +170,7 @@
 			};
 		}
 
-		var calView = domvm.view(CalendarView).mount(document.body);
+		var calView = domvm.view.createView(CalendarView).mount(document.body);
 /*
 		function randInt(min,max) {
 			return Math.floor(Math.random()*(max-min+1)+min);

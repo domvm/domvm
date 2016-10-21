@@ -8,9 +8,14 @@
 </head>
 <body>
 	<script>
-		var el = domvm.defineElement;
-		var tx = domvm.defineText;
-		var vw = domvm.defineView;
+		var view = domvm.view;
+
+		var el = view.defineElement,
+			tx = view.defineText,
+			cm = view.defineComment,
+			vw = view.defineView,
+			iv = view.injectView,
+			ie = view.injectElement;
 
 		function FilterableProductTable(allProducts, filterText, inStockOnly) {
 			this.allProducts = allProducts;
@@ -132,7 +137,7 @@
 
 		var myTable = new FilterableProductTable(products, filterText, inStockOnly);
 
-		domvm.createView(FilterableProductTableView, myTable).mount(document.body);
+		domvm.view.createView(FilterableProductTableView, myTable).mount(document.body);
 	</script>
 </body>
 </html>

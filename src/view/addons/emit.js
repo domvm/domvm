@@ -1,5 +1,5 @@
-import { ViewModel } from './ViewModel';
-import { isVal, sliceArgs } from '../utils';
+import { ViewModel } from '../ViewModel';
+import { isVal, sliceArgs } from '../../utils';
 
 function emit(evName) {
 	var targ = this;

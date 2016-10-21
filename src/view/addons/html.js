@@ -1,6 +1,10 @@
-import { VTYPE } from './VTYPE';
-import { isArr, isObj, isVal, isFunc } from '../utils';
-import { isEvProp, styleStr, isDynProp } from './utils';
+import { VTYPE } from '../VTYPE';
+import { isArr, isObj, isVal, isFunc } from '../../utils';
+import { isEvProp, styleStr, isDynProp } from '../utils';
+
+import view from '../../view';
+
+view.html = html;
 
 const voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
 

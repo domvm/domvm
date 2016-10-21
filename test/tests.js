@@ -2,14 +2,18 @@
 
 QUnit.config.reorder = false;
 
-domvm.view = domvm.createView;
+var viewMod = domvm.view;
 
-var	el = domvm.defineElement,
-	tx = domvm.defineText,
-	cm = domvm.defineComment,
-	vw = domvm.defineView,
-	iv = domvm.injectView,
-	ie = domvm.injectElement;
+var	el = viewMod.defineElement,
+	tx = viewMod.defineText,
+	cm = viewMod.defineComment,
+	vw = viewMod.defineView,
+	iv = viewMod.injectView,
+	ie = viewMod.injectElement;
+
+domvm.patch = domvm.view.patch;
+domvm.html = domvm.view.html;
+domvm.view = viewMod.createView;
 
 var instr = new DOMInstr();
 
@@ -2599,7 +2603,7 @@ QUnit.module("Patch");
 
 	QUnit.test('Child class/style', function(assert) {
 		instr.start();
-		domvm.patchNode(vm.node.el.firstChild._node, {class: "xxx", style: {margin: 5, color: "red"}});
+		domvm.patch(vm.node.el.firstChild._node, {class: "xxx", style: {margin: 5, color: "red"}});
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><p class="moo xxx" style="margin: 5px; color: red;">hey</p></div>';
