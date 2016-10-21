@@ -904,11 +904,13 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 	var vm = this;
 
+	vm.api = {};
+
 	vm.id = id;
 	vm.view = view;
 	vm.model = model;
 	vm.key = key == null ? model : key;
-	vm.render = view(vm, model, key);			// , opts
+	vm.render = view.call(vm.api, vm, model, key);			// , opts
 
 	views[id] = vm;
 
@@ -972,7 +974,7 @@ var ViewModelProto = ViewModel.prototype = {
 		return views[p.vmid];
 	},
 
-	api: {},
+	api: null,
 	refs: null,
 	attach: attach,
 	mount: mount,
@@ -1120,7 +1122,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		{ vm.refs = null; }
 
 
-	var vnew = vm.render(vm, vm.model, vm.key);		// vm.opts
+	var vnew = vm.render.call(vm.api, vm, vm.model, vm.key);		// vm.opts
 
 //	console.log(vm.key);
 
