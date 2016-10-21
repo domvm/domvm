@@ -2605,7 +2605,7 @@ QUnit.module("Patch");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { className: 1 });
 	});
 
-	QUnit.skip('Full child tpl', function(assert) {
+	QUnit.test('Full child tpl', function(assert) {
 		instr.start();
 		vm.node.el.firstChild._node.patch(getTpl(20, "baz", "yo"));
 		var callCounts = instr.end();

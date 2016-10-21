@@ -153,7 +153,7 @@ function nextSubVms(n, accum) {
 function attach(el) {
 }
 
-function drainDidHooks(vm) {
+export function drainDidHooks(vm) {
 	if (didQueue.length) {
 		repaint(vm.node);
 
