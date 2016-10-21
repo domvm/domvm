@@ -113,6 +113,8 @@ let dbs		= null,
 
 var instr = new DOMInstr(true);
 
+var syncRedraw = true;
+
 function update(doRun) {
 //	perfMonitor.startProfile('data update');
 	dbs = ENV.generateData().toArray();
@@ -122,7 +124,8 @@ function update(doRun) {
 	perfMonitor.startProfile('vm.update()');
 //	start = performance.now();
 
-	vm.update(dbs);
+	vm.update(dbs, syncRedraw);
+
 	if (init) {
 		vm.mount(document.getElementById("app"));
 		init = false;

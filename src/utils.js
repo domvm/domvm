@@ -1,4 +1,6 @@
 const ENV_DOM = typeof HTMLElement == "function";
+const win = ENV_DOM ? window : {};
+const rAF = win.requestAnimationFrame;
 
 export const emptyObj = {};
 
@@ -75,4 +77,24 @@ export function cmpArr(a, b) {
 			return false;
 
 	return true;
+}
+
+// https://github.com/darsain/raft
+// rAF throttler, aggregates multiple repeated redraw calls within single animframe
+export function raft(fn) {
+	if (!rAF)
+		return fn;
+
+	var id, ctx, args;
+
+	function call() {
+		id = 0;
+		fn.apply(ctx, args);
+	}
+
+	return function() {
+		ctx = this;
+		args = arguments;
+		if (!id) id = rAF(call);
+	};
 }

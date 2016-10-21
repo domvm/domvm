@@ -1,7 +1,7 @@
 import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
-import { isArr, cmpArr } from "../utils";
+import { isArr, cmpArr, raft } from "../utils";
 import { repaint } from "./utils";
 import { didQueue, insertBefore, removeChild, fireHooks } from "./syncChildren";
 
@@ -15,20 +15,26 @@ export const views = {};
 export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	var id = vmid++;
 
-	this.id = id;
-	this.view = view;
-	this.model = model;
-	this.key = key == null ? model : key;
-	this.render = view(this, model, key);			// , opts
+	var vm = this;
 
-	views[id] = this;
+	vm.id = id;
+	vm.view = view;
+	vm.model = model;
+	vm.key = key == null ? model : key;
+	vm.render = view(vm, model, key);			// , opts
+
+	views[id] = vm;
 
 	if (opts) {
 		if (opts.hooks)
-			this.hook(opts.hooks);
+			vm.hook(opts.hooks);
 	//	if (opts.diff)
 	//		this.diff(opts.diff);
 	}
+
+	// these must be created here since debounced per view
+	vm._redrawAsync = raft(_ => vm._redraw());
+	vm._updateAsync = raft(newModel => vm._update(newModel));
 
 //	this.update(model, parent, idx, parentVm, false);
 
@@ -81,14 +87,24 @@ export const ViewModelProto = ViewModel.prototype = {
 
 	api: {},
 	refs: null,
-	update: updateAsync,
 	attach: attach,
 	mount: mount,
 	unmount: unmount,
-	redraw: redrawAsync,		// should handle raf-debounced, same with update
+	redraw: function(sync) {
+		var vm = this;
+		sync ? vm._redraw() : vm._redrawAsync();
+		return vm;
+	},
+	update: function(newModel, sync) {
+		var vm = this;
+		sync ? vm._update(newModel) : vm._updateAsync(newModel);
+		return vm;
+	},
 
 	_update: updateSync,
-	_redraw: redrawSync,		// non-coalesced / synchronous
+	_redraw: redrawSync,	// non-coalesced / synchronous
+	_redrawAsync: null,		// this is set in constructor per view
+	_updateAsync: null,
 
 	_diff: null,
 	_diffArr: [],
@@ -189,11 +205,6 @@ function unmount() {
 	drainDidHooks(this);
 }
 
-// this must be per view debounced, so should be wrapped in raf per instance
-function redrawAsync() {
-	return this._redraw();
-}
-
 // level, isRoot?
 // newParent, newIdx
 // ancest by ref, by key
@@ -290,9 +301,4 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 		parentVm.body.push(vm);
 	}
 */
-}
-
-// withRedraw?
-function updateAsync(newModel) {
-	return this._update(newModel);
 }
