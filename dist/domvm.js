@@ -1,3 +1,12 @@
+/**
+* Copyright (c) 2016, Leon Sorokin
+* All rights reserved. (MIT Licensed)
+*
+* domvm.js - DOM ViewModel
+* A thin, fast, dependency-free vdom view layer
+* @preserve https://github.com/leeoniya/domvm (2.x-dev)
+*/
+
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :

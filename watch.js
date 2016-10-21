@@ -25,6 +25,17 @@ function compile() {
 	})
 	.then(function(bundle) {
 		bundle.write({
+			banner: [
+				"/**",
+				"* Copyright (c) 2016, Leon Sorokin",
+				"* All rights reserved. (MIT Licensed)",
+				"*",
+				"* domvm.js - DOM ViewModel",
+				"* A thin, fast, dependency-free vdom view layer",
+				"* @preserve https://github.com/leeoniya/domvm (2.x-dev)",
+				"*/",
+				"",
+			].join("\n"),
 			moduleName: "domvm",
 			format: 'umd',		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
 			sourceMap: true,
