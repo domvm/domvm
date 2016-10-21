@@ -976,7 +976,6 @@ var ViewModelProto = ViewModel.prototype = {
 
 	api: null,
 	refs: null,
-	attach: attach,
 	mount: mount,
 	unmount: unmount,
 	redraw: function(sync) {
@@ -1037,9 +1036,6 @@ function nextSubVms(n, accum) {
 	}
 
 	return accum;
-}
-
-function attach(el) {
 }
 
 function drainDidHooks(vm) {
@@ -1583,6 +1579,43 @@ function html(node, dynProps) {
 	}
 
 	return buf;
+}
+
+ViewModelProto.attach = function(el) {
+	var vm = this;
+	if (vm.node == null)
+		{ vm._redraw(null, null, false); }
+
+	attach(vm.node, el);
+
+	return vm;
+};
+
+// very similar to hydrate, TODO: dry
+function attach(vnode, withEl) {
+	vnode.el = withEl;
+
+	var nattrs = vnode.attrs;
+
+	for (var key in nattrs) {
+		var nval = nattrs[key];
+		var isDyn = isDynProp(vnode.tag, key);
+
+		if (isStyleProp(key) || isSplProp(key)) {}
+		else if (isEvProp(key))
+			{ patchEvent(vnode, key, nval); }
+		else if (nval != null && isDyn)
+			{ setAttr(vnode, key, nval, isDyn); }
+	}
+
+	if (isArr(vnode.body)) {
+		var c = withEl.firstChild;
+		var i = 0;
+		var v = vnode.body[i++];
+		do {
+			attach(v, c);
+		} while ((c = c.nextSibling) && (v = vnode.body[i++]))
+	}
 }
 
 view.jsonml = jsonml;

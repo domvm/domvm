@@ -108,13 +108,28 @@ function Query(vm) {
 }
 */
 
+
 let dbs		= null,
 	raf		= null,
-	vm		= view.createView(DBMonView),
+	vm		= null,
 	init	= true,
 	avg		= [],
 	len		= 5,
 	start;
+
+function mount(appEl, dbs) {
+	vm = view.createView(DBMonView, dbs, false);
+	vm.mount(appEl);
+}
+
+function attach(appEl, dbs) {
+	// isomorphic test
+	var vw0 = view.createView(DBMonView, dbs, false);
+	appEl.innerHTML = vw0.html();
+
+	vm = view.createView(DBMonView, dbs, false);
+	vm.attach(appEl.firstChild);
+}
 
 var instr = new DOMInstr(true);
 
@@ -129,12 +144,14 @@ function update(doRun) {
 	perfMonitor.startProfile('vm.update()');
 //	start = performance.now();
 
-	vm.update(dbs, syncRedraw);
-
 	if (init) {
-		vm.mount(document.getElementById("app"));
+		var appEl = document.getElementById("app");
+		mount(appEl, dbs);
+	//	attach(appEl, dbs);
 		init = false;
 	}
+	else
+		vm.update(dbs, syncRedraw);
 
 //	avg.push(performance.now() - start);
 //	if (avg.length > len)

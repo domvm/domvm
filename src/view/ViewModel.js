@@ -89,7 +89,6 @@ export const ViewModelProto = ViewModel.prototype = {
 
 	api: null,
 	refs: null,
-	attach: attach,
 	mount: mount,
 	unmount: unmount,
 	redraw: function(sync) {
@@ -150,9 +149,6 @@ function nextSubVms(n, accum) {
 	}
 
 	return accum;
-}
-
-function attach(el) {
 }
 
 export function drainDidHooks(vm) {
