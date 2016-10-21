@@ -6,7 +6,7 @@
   "homepage": "https://github.com/leeoniya/domvm",
   "author": "Leon Sorokin <leeoniya@gmail.com>",
   "version": "2.0.0-dev",
-  "main": "index.js",
+  "main": "dist/domvm.js",
   "scripts": {
     "watch": "node watch.js"
   },
@@ -15,8 +15,9 @@
     "url": "https://github.com/leeoniya/domvm.git"
   },
   "devDependencies": {
-	"node-watch": "*",
+    "node-watch": "*",
     "rollup": "*",
+    "buble": "*",
     "rollup-plugin-buble": "*"
   },
   "bugs": {

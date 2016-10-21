@@ -19,7 +19,7 @@ function compile() {
 	var start = +new Date;
 
 	rollup({
-		entry: './src/index.js',
+		entry: './src/domvm.js',
 	//	cache: cache,
 		plugins: [ buble() ],
 	})
