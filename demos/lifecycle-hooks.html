@@ -72,8 +72,6 @@
 			iv = view.injectView,
 			ie = view.injectElement;
 
-		var patch = view.patch;
-
 		function repaint(node) {
 			node && node.el && node.el.offsetHeight;
 		}
@@ -83,39 +81,39 @@
 			var hooks = {
 				willInsert: function(node) {
 				//	console.log("willInsert", node);
-					patch(node, {class: "inserted"});
+					node.patch({class: "inserted"});
 				},
 				didInsert: function(node) {
 				//	console.log("didInsert", node);
-					patch(node, {class: ""});
+					node.patch({class: ""});
 				},
 				willRecycle: function(oldNode, newNode) {
 				//	console.log("willRecycle", oldNode, newNode);
 					// DIY diff to detect changes
 					if (oldNode.body !== newNode.body) {
-						patch(oldNode, {class: "reused changed"});
+						oldNode.patch({class: "reused changed"});
 						repaint(oldNode);
 					}
 				},
 				didRecycle: function(oldNode, newNode) {
 				//	console.log("didRecycle", oldNode, newNode);
 					if (oldNode.body !== newNode.body)
-						patch(newNode, {class: ""});
+						newNode.patch({class: ""});
 				},
 				willReinsert: function(node) {
 				//	console.log("willReinsert", node);
-					patch(node, {class: "moved"});
+					node.patch({class: "moved"});
 				},
 				didReinsert: function(node) {
 				//	console.log("didReinsert", node);
-					patch(node, {class: ""});
+					node.patch({class: ""});
 				},
 				willRemove: function(node) {
 				//	console.log("willRemove", node);
 					return new Promise(function(resolve, reject) {
-						patch(node, {class: "removing"});
+						node.patch({class: "removing"});
 						repaint(node);
-						patch(node, {class: "removed"});
+						node.patch({class: "removed"});
 						node.el.addEventListener("transitionend", resolve);
 					});
 				},
@@ -165,25 +163,25 @@
 			},
 			didRedraw: function(vm) {
 			//	console.log("didRedraw", vm);
-				patch(vm.node, {class: "redrawn"});
+				vm.node.patch({class: "redrawn"});
 				repaint(vm.node);
-				patch(vm.node, {class: ""});
+				vm.node.patch({class: ""});
 			},
 			willMount: function(vm) {
 			//	console.log("willMount", vm);
 			},
 			didMount: function(vm) {
 			//	console.log("didMount", vm);
-				patch(vm.node, {class: "mounted"});
+				vm.node.patch({class: "mounted"});
 				repaint(vm.node);
-				patch(vm.node, {class: ""});
+				vm.node.patch({class: ""});
 			},
 			willUnmount: function(vm) {
 			//	console.log("willUnmount", vm);
 				return new Promise(function(resolve, reject) {
-					patch(vm.node, {class: "unmounting"});
+					vm.node.patch({class: "unmounting"});
 					repaint(vm.node);
-					patch(vm.node, {class: "unmounted"});
+					vm.node.patch({class: "unmounted"});
 					node.el.addEventListener("transitionend", resolve);
 				});
 			},
