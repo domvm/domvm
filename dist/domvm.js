@@ -85,6 +85,18 @@ function deepSet(targ, path, val) {
 			{ targ[seg] = targ = targ[seg] || {}; }
 	}
 }
+/*
+export function deepUnset(targ, path) {
+	var seg;
+
+	while (seg = path.shift()) {
+		if (path.length == 0)
+			targ[seg] = val;
+		else
+			targ[seg] = targ = targ[seg] || {};
+	}
+}
+*/
 
 function sliceArgs(args, offs) {
 	return Array.prototype.slice.call(args, offs || 0)
@@ -120,6 +132,12 @@ function raft(fn) {
 		ctx = this;
 		args = arguments;
 		if (!id) { id = rAF(call); }
+	};
+}
+
+function curry(fn, args, ctx) {
+	return function() {
+		return fn.apply(ctx, args);
 	};
 }
 
@@ -422,12 +440,6 @@ function hydrate(vnode, withEl) {
 
 var didQueue = [];
 
-function curry(fn, args, ctx) {
-	return function() {
-		return fn.apply(ctx, args);
-	};
-}
-
 function fireHook(did, fn, o, n, immediate) {
 	if (did) {	// did*
 		//	console.log(name + " should queue till repaint", o, n);
@@ -489,8 +501,8 @@ function removeChild(parEl, el) {
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks;
 
-	if (node.ref != null && node.ref[0] == "^")
-		{ console.log("clean exposed ref", node.ref); }
+//	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
+//		console.log("clean exposed ref", node.ref);
 
 	if (isArr(node.body)) {
 	//	var parEl = node.el;
@@ -605,10 +617,13 @@ function syncChildren(node, parEl) {
 //		DEBUG && console.log("from_left");
 //		from_left:
 		while (1) {
+			if (lftSib)
+				{ var lsNode = lftSib._node; }
+
 			// remove any non-recycled sibs whose el.node has the old parent
-			if (lftSib && !lftSib._node.recycled && lftSib._node.parent != parEl._node) {
+			if (lftSib && !lsNode.recycled && lsNode.parent != parEl._node) {
 				tmpSib = nextSib(lftSib);
-				removeChild(parEl, lftSib);
+				lsNode.vmid != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
 				lftSib = tmpSib;
 				continue;
 			}
@@ -616,7 +631,7 @@ function syncChildren(node, parEl) {
 			if (lftNode == null)		// reached end
 				{ break converge; }
 			else if (lftNode.el == null) {
-				insertBefore(parEl, hydrate(lftNode), lftSib);
+				insertBefore(parEl, hydrate(lftNode), lftSib);		// or vmid mount?
 				lftNode = nextNode(lftNode, body);
 			}
 			else if (lftNode.el === lftSib) {
@@ -630,9 +645,12 @@ function syncChildren(node, parEl) {
 //		DEBUG && console.log("from_right");
 //		from_right:
 		while(1) {
-			if (rgtSib && !rgtSib._node.recycled && rgtSib._node.parent != parEl._node) {
+			if (rgtSib)
+				{ var rsNode = rgtSib._node; }
+
+			if (rgtSib && !rsNode.recycled && rsNode.parent != parEl._node) {
 				tmpSib = prevSib(rgtSib);
-				removeChild(parEl, rgtSib);
+				rsNode.vmid != null ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
 				continue;
 			}
@@ -640,7 +658,7 @@ function syncChildren(node, parEl) {
 			if (rgtNode == lftNode)		// converged
 				{ break converge; }
 			if (rgtNode.el == null) {
-				insertAfter(parEl, hydrate(rgtNode), rgtSib);
+				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// or vmid mount?
 				rgtNode = prevNode(rgtNode, body);
 			}
 			else if (rgtNode.el === rgtSib) {
@@ -977,7 +995,16 @@ var ViewModelProto = ViewModel.prototype = {
 	api: null,
 	refs: null,
 	mount: mount,
-	unmount: unmount,
+	unmount: function(asSub) {
+		var vm = this;
+
+		var res = vm.hooks && fireHooks("willUnmount", vm);
+
+		if (res != null && isProm(res))
+			{ res.then(curry(_unmount, [vm, asSub, true])); }
+		else
+			{ _unmount(vm, asSub); }
+	},
 	redraw: function(sync) {
 		var vm = this;
 		sync ? vm._redraw() : vm._redrawAsync();
@@ -1048,6 +1075,8 @@ function drainDidHooks(vm) {
 	}
 }
 
+
+
 // TODO: mount be made async?
 function mount(el, isRoot) {
 	var vm = this;
@@ -1076,18 +1105,21 @@ function mount(el, isRoot) {
 	return this;
 }
 
-function unmount() {
-	var vm = this;
-
-	vm.hooks && fireHooks("willUnmount", vm);
-
-	var node = this.node;
+// asSub = true means this was called from a sub-routine, so don't drain did* hook queue
+// immediate = true means did* hook will not be queued (usually cause this is a promise resolution)
+function _unmount(vm, asSub, immediate) {
+	var node = vm.node;
 	var parEl = node.el.parentNode;
+
+	// edge bug: this could also be willRemove promise-delayed; should .then() or something to make sure hooks fire in order
 	removeChild(parEl, node.el);
 
-	vm.hooks && fireHooks("didUnmount", vm);
+	delete views[vm.id];
 
-	drainDidHooks(this);
+	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
+
+	if (!asSub)
+		{ drainDidHooks(vm); }
 }
 
 // level, isRoot?
@@ -1114,8 +1146,10 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	// todo: test result of willRedraw hooks before clearing refs
 	// todo: also clean up any refs exposed by this view from parents, should tag with src_vm during setting
-	if (vm.refs)
-		{ vm.refs = null; }
+	if (vm.refs) {
+	//	var orefs = vm.refs;
+		vm.refs = null;
+	}
 
 
 	var vnew = vm.render.call(vm.api, vm, vm.model, vm.key);		// vm.opts
@@ -1139,6 +1173,12 @@ function redrawSync(newParent, newIdx, withDOM) {
 	}
 	else
 		{ preProc(vnew, null, null, vm.id, vm.key); }
+
+	// after preproc re-populates new refs find any exposed refs in old
+	// that are not also in new and unset from all parents
+	// only do for redraw roots since refs are reset at all redraw levels
+//	if (isRedrawRoot && orefs)
+//		cleanExposedRefs(orefs, vnew.refs);
 
 	if (withDOM !== false) {
 		if (vold) {

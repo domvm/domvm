@@ -1,16 +1,10 @@
 import { hydrate } from './hydrate';
-import { isArr, isFunc, isProm, startsWith } from '../utils';
+import { isArr, isFunc, isProm, startsWith, curry } from '../utils';
 import { repaint } from './utils';
 
 //import { DEBUG } from './DEBUG';
 
 export const didQueue = [];
-
-function curry(fn, args, ctx) {
-	return function() {
-		return fn.apply(ctx, args);
-	};
-}
 
 function fireHook(did, fn, o, n, immediate) {
 	if (did) {	// did*
@@ -73,8 +67,8 @@ export function removeChild(parEl, el) {
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks;
 
-	if (node.ref != null && node.ref[0] == "^")
-		console.log("clean exposed ref", node.ref);
+//	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
+//		console.log("clean exposed ref", node.ref);
 
 	if (isArr(node.body)) {
 	//	var parEl = node.el;
@@ -189,10 +183,13 @@ export function syncChildren(node, parEl) {
 //		DEBUG && console.log("from_left");
 //		from_left:
 		while (1) {
+			if (lftSib)
+				var lsNode = lftSib._node;
+
 			// remove any non-recycled sibs whose el.node has the old parent
-			if (lftSib && !lftSib._node.recycled && lftSib._node.parent != parEl._node) {
+			if (lftSib && !lsNode.recycled && lsNode.parent != parEl._node) {
 				tmpSib = nextSib(lftSib);
-				removeChild(parEl, lftSib);
+				lsNode.vmid != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
 				lftSib = tmpSib;
 				continue;
 			}
@@ -200,7 +197,7 @@ export function syncChildren(node, parEl) {
 			if (lftNode == null)		// reached end
 				break converge;
 			else if (lftNode.el == null) {
-				insertBefore(parEl, hydrate(lftNode), lftSib);
+				insertBefore(parEl, hydrate(lftNode), lftSib);		// or vmid mount?
 				lftNode = nextNode(lftNode, body);
 			}
 			else if (lftNode.el === lftSib) {
@@ -214,9 +211,12 @@ export function syncChildren(node, parEl) {
 //		DEBUG && console.log("from_right");
 //		from_right:
 		while(1) {
-			if (rgtSib && !rgtSib._node.recycled && rgtSib._node.parent != parEl._node) {
+			if (rgtSib)
+				var rsNode = rgtSib._node;
+
+			if (rgtSib && !rsNode.recycled && rsNode.parent != parEl._node) {
 				tmpSib = prevSib(rgtSib);
-				removeChild(parEl, rgtSib);
+				rsNode.vmid != null ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
 				continue;
 			}
@@ -224,7 +224,7 @@ export function syncChildren(node, parEl) {
 			if (rgtNode == lftNode)		// converged
 				break converge;
 			if (rgtNode.el == null) {
-				insertAfter(parEl, hydrate(rgtNode), rgtSib);
+				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// or vmid mount?
 				rgtNode = prevNode(rgtNode, body);
 			}
 			else if (rgtNode.el === rgtSib) {

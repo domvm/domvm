@@ -61,6 +61,18 @@ export function deepSet(targ, path, val) {
 			targ[seg] = targ = targ[seg] || {};
 	}
 }
+/*
+export function deepUnset(targ, path) {
+	var seg;
+
+	while (seg = path.shift()) {
+		if (path.length == 0)
+			targ[seg] = val;
+		else
+			targ[seg] = targ = targ[seg] || {};
+	}
+}
+*/
 
 export function sliceArgs(args, offs) {
 	return Array.prototype.slice.call(args, offs || 0)
@@ -96,5 +108,11 @@ export function raft(fn) {
 		ctx = this;
 		args = arguments;
 		if (!id) id = rAF(call);
+	};
+}
+
+export function curry(fn, args, ctx) {
+	return function() {
+		return fn.apply(ctx, args);
 	};
 }

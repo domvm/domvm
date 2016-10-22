@@ -1,7 +1,7 @@
 import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
-import { isArr, cmpArr, raft } from "../utils";
+import { isArr, isObj, isProm, cmpArr, curry, raft } from "../utils";
 import { repaint } from "./utils";
 import { didQueue, insertBefore, removeChild, fireHooks } from "./syncChildren";
 
@@ -90,7 +90,16 @@ export const ViewModelProto = ViewModel.prototype = {
 	api: null,
 	refs: null,
 	mount: mount,
-	unmount: unmount,
+	unmount: function(asSub) {
+		var vm = this;
+
+		var res = vm.hooks && fireHooks("willUnmount", vm);
+
+		if (res != null && isProm(res))
+			res.then(curry(_unmount, [vm, asSub, true]));
+		else
+			_unmount(vm, asSub);
+	},
 	redraw: function(sync) {
 		var vm = this;
 		sync ? vm._redraw() : vm._redrawAsync();
@@ -161,6 +170,44 @@ export function drainDidHooks(vm) {
 	}
 }
 
+function isEmptyObj(o) {
+	for (var k in o)
+		return false;
+	return true;
+}
+
+export function cleanExposedRefs(orefs, nrefs) {
+	for (var key in orefs) {
+		// ref not present in new refs
+		if (nrefs == null || !(key in nrefs)) {
+			var val = orefs[key];
+
+			/*
+			var path = [];
+			// dig nown if val i a namespace
+			while (isObj(val) && val.type == null) {
+				path.push(val);
+				val =
+			}
+			*/
+
+			if (isObj(val)) {
+				// is a vnode
+				if (val.type) {
+					// is an exposed ref
+					if (val.ref[0] == "^") {
+						console.log("clean parents of absent exposed ref");
+					}
+				}
+				// is namespace, dig down
+				else {
+
+				}
+			}
+		}
+	}
+}
+
 // TODO: mount be made async?
 function mount(el, isRoot) {
 	var vm = this;
@@ -189,18 +236,21 @@ function mount(el, isRoot) {
 	return this;
 }
 
-function unmount() {
-	var vm = this;
-
-	vm.hooks && fireHooks("willUnmount", vm);
-
-	var node = this.node;
+// asSub = true means this was called from a sub-routine, so don't drain did* hook queue
+// immediate = true means did* hook will not be queued (usually cause this is a promise resolution)
+function _unmount(vm, asSub, immediate) {
+	var node = vm.node;
 	var parEl = node.el.parentNode;
+
+	// edge bug: this could also be willRemove promise-delayed; should .then() or something to make sure hooks fire in order
 	removeChild(parEl, node.el);
 
-	vm.hooks && fireHooks("didUnmount", vm);
+	delete views[vm.id];
 
-	drainDidHooks(this);
+	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
+
+	if (!asSub)
+		drainDidHooks(vm);
 }
 
 // level, isRoot?
@@ -227,8 +277,10 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	// todo: test result of willRedraw hooks before clearing refs
 	// todo: also clean up any refs exposed by this view from parents, should tag with src_vm during setting
-	if (vm.refs)
+	if (vm.refs) {
+	//	var orefs = vm.refs;
 		vm.refs = null;
+	}
 
 
 	var vnew = vm.render.call(vm.api, vm, vm.model, vm.key);		// vm.opts
@@ -252,6 +304,12 @@ function redrawSync(newParent, newIdx, withDOM) {
 	}
 	else
 		preProc(vnew, null, null, vm.id, vm.key);
+
+	// after preproc re-populates new refs find any exposed refs in old
+	// that are not also in new and unset from all parents
+	// only do for redraw roots since refs are reset at all redraw levels
+//	if (isRedrawRoot && orefs)
+//		cleanExposedRefs(orefs, vnew.refs);
 
 	if (withDOM !== false) {
 		if (vold) {
