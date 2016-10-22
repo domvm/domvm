@@ -90,16 +90,7 @@ export const ViewModelProto = ViewModel.prototype = {
 	api: null,
 	refs: null,
 	mount: mount,
-	unmount: function(asSub) {
-		var vm = this;
-
-		var res = vm.hooks && fireHooks("willUnmount", vm);
-
-		if (res != null && isProm(res))
-			res.then(curry(_unmount, [vm, asSub, true]));
-		else
-			_unmount(vm, asSub);
-	},
+	unmount: unmount,
 	redraw: function(sync) {
 		var vm = this;
 		sync ? vm._redraw() : vm._redrawAsync();
@@ -208,11 +199,8 @@ export function cleanExposedRefs(orefs, nrefs) {
 	}
 }
 
-// TODO: mount be made async?
-function mount(el, isRoot) {
+function mount(el, isRoot) {		// , asSub, refEl
 	var vm = this;
-
-	vm.hooks && fireHooks("willMount", vm);
 
 	if (isRoot) {
 		while (el.firstChild)
@@ -228,8 +216,6 @@ function mount(el, isRoot) {
 			insertBefore(el, this.node.el);			// el.appendChild(this.node.el);
 	}
 
-	vm.hooks && fireHooks("didMount", vm);
-
 	if (el)
 		drainDidHooks(this);
 
@@ -238,7 +224,9 @@ function mount(el, isRoot) {
 
 // asSub = true means this was called from a sub-routine, so don't drain did* hook queue
 // immediate = true means did* hook will not be queued (usually cause this is a promise resolution)
-function _unmount(vm, asSub, immediate) {
+function unmount(asSub) {
+	var vm = this;
+
 	var node = vm.node;
 	var parEl = node.el.parentNode;
 
@@ -247,7 +235,7 @@ function _unmount(vm, asSub, immediate) {
 
 	delete views[vm.id];
 
-	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
+//	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
 
 	if (!asSub)
 		drainDidHooks(vm);

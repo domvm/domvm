@@ -56,6 +56,10 @@ function prevSib(sib) {
 export function removeChild(parEl, el) {
 	var node = el._node, hooks = node.hooks;
 
+	var vm = node.vmid != null ? node.vm : null;
+
+	vm && vm.hooks && fireHooks("willUnmount", vm);
+
 	var res = hooks && fireHooks("willRemove", node);
 
 	if (res != null && isProm(res))
@@ -66,6 +70,8 @@ export function removeChild(parEl, el) {
 
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks;
+
+	var vm = node.vmid != null ? node.vm : null;
 
 //	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
 //		console.log("clean exposed ref", node.ref);
@@ -79,14 +85,23 @@ function _removeChild(parEl, el, immediate) {
 	parEl.removeChild(el);
 
 	hooks && fireHooks("didRemove", node, null, immediate);
+
+	vm && vm.hooks && fireHooks("didUnmount", vm, null, immediate);
 }
 
 // todo: hooks
 export function insertBefore(parEl, el, refEl) {
 	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
+
+	var vm = !inDom && node.vmid != null ? node.vm : null;
+
+	vm && vm.hooks && fireHooks("willMount", vm);
+
 	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
 	parEl.insertBefore(el, refEl);
 	hooks && fireHooks(inDom ? "didReinsert" : "didInsert", node);
+
+	vm && vm.hooks && fireHooks("didMount", vm);
 }
 
 function insertAfter(parEl, el, refEl) {
@@ -197,7 +212,7 @@ export function syncChildren(node, parEl) {
 			if (lftNode == null)		// reached end
 				break converge;
 			else if (lftNode.el == null) {
-				insertBefore(parEl, hydrate(lftNode), lftSib);		// or vmid mount?
+				insertBefore(parEl, hydrate(lftNode), lftSib);		// lftNode.vmid != null ? lftNode.vm.mount(parEl, false, true, lftSib) :
 				lftNode = nextNode(lftNode, body);
 			}
 			else if (lftNode.el === lftSib) {
@@ -224,7 +239,7 @@ export function syncChildren(node, parEl) {
 			if (rgtNode == lftNode)		// converged
 				break converge;
 			if (rgtNode.el == null) {
-				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// or vmid mount?
+				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vmid != null ? rgtNode.vm.mount(parEl, false, true, nextSib(rgtSib) :
 				rgtNode = prevNode(rgtNode, body);
 			}
 			else if (rgtNode.el === rgtSib) {

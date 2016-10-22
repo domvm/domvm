@@ -490,6 +490,10 @@ function prevSib(sib) {
 function removeChild(parEl, el) {
 	var node = el._node, hooks = node.hooks;
 
+	var vm = node.vmid != null ? node.vm : null;
+
+	vm && vm.hooks && fireHooks("willUnmount", vm);
+
 	var res = hooks && fireHooks("willRemove", node);
 
 	if (res != null && isProm(res))
@@ -500,6 +504,8 @@ function removeChild(parEl, el) {
 
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks;
+
+	var vm = node.vmid != null ? node.vm : null;
 
 //	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
 //		console.log("clean exposed ref", node.ref);
@@ -513,14 +519,23 @@ function _removeChild(parEl, el, immediate) {
 	parEl.removeChild(el);
 
 	hooks && fireHooks("didRemove", node, null, immediate);
+
+	vm && vm.hooks && fireHooks("didUnmount", vm, null, immediate);
 }
 
 // todo: hooks
 function insertBefore(parEl, el, refEl) {
 	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
+
+	var vm = !inDom && node.vmid != null ? node.vm : null;
+
+	vm && vm.hooks && fireHooks("willMount", vm);
+
 	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
 	parEl.insertBefore(el, refEl);
 	hooks && fireHooks(inDom ? "didReinsert" : "didInsert", node);
+
+	vm && vm.hooks && fireHooks("didMount", vm);
 }
 
 function insertAfter(parEl, el, refEl) {
@@ -631,7 +646,7 @@ function syncChildren(node, parEl) {
 			if (lftNode == null)		// reached end
 				{ break converge; }
 			else if (lftNode.el == null) {
-				insertBefore(parEl, hydrate(lftNode), lftSib);		// or vmid mount?
+				insertBefore(parEl, hydrate(lftNode), lftSib);		// lftNode.vmid != null ? lftNode.vm.mount(parEl, false, true, lftSib) :
 				lftNode = nextNode(lftNode, body);
 			}
 			else if (lftNode.el === lftSib) {
@@ -658,7 +673,7 @@ function syncChildren(node, parEl) {
 			if (rgtNode == lftNode)		// converged
 				{ break converge; }
 			if (rgtNode.el == null) {
-				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// or vmid mount?
+				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vmid != null ? rgtNode.vm.mount(parEl, false, true, nextSib(rgtSib) :
 				rgtNode = prevNode(rgtNode, body);
 			}
 			else if (rgtNode.el === rgtSib) {
@@ -995,16 +1010,7 @@ var ViewModelProto = ViewModel.prototype = {
 	api: null,
 	refs: null,
 	mount: mount,
-	unmount: function(asSub) {
-		var vm = this;
-
-		var res = vm.hooks && fireHooks("willUnmount", vm);
-
-		if (res != null && isProm(res))
-			{ res.then(curry(_unmount, [vm, asSub, true])); }
-		else
-			{ _unmount(vm, asSub); }
-	},
+	unmount: unmount,
 	redraw: function(sync) {
 		var vm = this;
 		sync ? vm._redraw() : vm._redrawAsync();
@@ -1077,11 +1083,8 @@ function drainDidHooks(vm) {
 
 
 
-// TODO: mount be made async?
-function mount(el, isRoot) {
+function mount(el, isRoot) {		// , asSub, refEl
 	var vm = this;
-
-	vm.hooks && fireHooks("willMount", vm);
 
 	if (isRoot) {
 		while (el.firstChild)
@@ -1097,8 +1100,6 @@ function mount(el, isRoot) {
 			{ insertBefore(el, this.node.el); }			// el.appendChild(this.node.el);
 	}
 
-	vm.hooks && fireHooks("didMount", vm);
-
 	if (el)
 		{ drainDidHooks(this); }
 
@@ -1107,7 +1108,9 @@ function mount(el, isRoot) {
 
 // asSub = true means this was called from a sub-routine, so don't drain did* hook queue
 // immediate = true means did* hook will not be queued (usually cause this is a promise resolution)
-function _unmount(vm, asSub, immediate) {
+function unmount(asSub) {
+	var vm = this;
+
 	var node = vm.node;
 	var parEl = node.el.parentNode;
 
@@ -1116,7 +1119,7 @@ function _unmount(vm, asSub, immediate) {
 
 	delete views[vm.id];
 
-	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
+//	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
 
 	if (!asSub)
 		{ drainDidHooks(vm); }
