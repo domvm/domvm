@@ -1,7 +1,7 @@
 import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
-import { isArr, isObj, isProm, cmpArr, curry, raft } from "../utils";
+import { isArr, isObj, isFunc, isProm, cmpArr, assignObj, curry, raft } from "../utils";
 import { repaint } from "./utils";
 import { didQueue, insertBefore, removeChild, fireHooks } from "./syncChildren";
 
@@ -23,10 +23,28 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.view = view;
 	vm.model = model;
 	vm.key = key == null ? model : key;
-	vm.render = view.call(vm.api, vm, model, key);			// , opts
+
+	var out = view.call(vm.api, vm, model, key);			// , opts
+
+	if (isFunc(out))
+		vm.render = out;
+	else {
+		if (out.on) {
+			vm.events = out.on;
+			delete out.on;
+		}
+
+		if (out.diff) {
+			vm.diff(out.diff);
+			delete out.diff;
+		}
+
+		assignObj(vm, out);
+	}
 
 	views[id] = vm;
 
+	// remove this?
 	if (opts) {
 		if (opts.hooks)
 			vm.hook(opts.hooks);

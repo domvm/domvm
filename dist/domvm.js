@@ -947,10 +947,28 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.view = view;
 	vm.model = model;
 	vm.key = key == null ? model : key;
-	vm.render = view.call(vm.api, vm, model, key);			// , opts
+
+	var out = view.call(vm.api, vm, model, key);			// , opts
+
+	if (isFunc(out))
+		{ vm.render = out; }
+	else {
+		if (out.on) {
+			vm.events = out.on;
+			delete out.on;
+		}
+
+		if (out.diff) {
+			vm.diff(out.diff);
+			delete out.diff;
+		}
+
+		assignObj(vm, out);
+	}
 
 	views[id] = vm;
 
+	// remove this?
 	if (opts) {
 		if (opts.hooks)
 			{ vm.hook(opts.hooks); }
