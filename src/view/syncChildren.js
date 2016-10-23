@@ -1,6 +1,7 @@
 import { hydrate } from './hydrate';
 import { isArr, isFunc, isProm, startsWith, curry } from '../utils';
 import { repaint } from './utils';
+import { views } from './ViewModel';
 
 //import { DEBUG } from './DEBUG';
 
@@ -96,6 +97,10 @@ export function insertBefore(parEl, el, refEl) {
 	var vm = !inDom && node.vmid != null ? node.vm : null;
 
 	vm && vm.hooks && fireHooks("willMount", vm);
+
+	// this first happens during view creation, but if view is
+	// ever unmounted & remounted later, need to re-register
+	vm && (views[vm.id] = vm);
 
 	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
 	parEl.insertBefore(el, refEl);

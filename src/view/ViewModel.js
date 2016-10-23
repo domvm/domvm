@@ -234,6 +234,7 @@ function unmount(asSub) {
 	removeChild(parEl, node.el);
 
 	delete views[vm.id];
+	vm.node = node.parent = null;	// unhook to help gc?
 
 //	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
 

@@ -531,6 +531,10 @@ function insertBefore(parEl, el, refEl) {
 
 	vm && vm.hooks && fireHooks("willMount", vm);
 
+	// this first happens during view creation, but if view is
+	// ever unmounted & remounted later, need to re-register
+	vm && (views[vm.id] = vm);
+
 	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
 	parEl.insertBefore(el, refEl);
 	hooks && fireHooks(inDom ? "didReinsert" : "didInsert", node);
@@ -1118,6 +1122,7 @@ function unmount(asSub) {
 	removeChild(parEl, node.el);
 
 	delete views[vm.id];
+	vm.node = node.parent = null;	// unhook to help gc?
 
 //	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
 
