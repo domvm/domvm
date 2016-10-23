@@ -36,6 +36,15 @@ export function defineElement(tag, arg1, arg2, fixed) {
 		if (attrs._data != null)
 			node.data = attrs._data;
 
+		if (node.key == null) {
+			if (node.ref != null)
+				node.key = node.ref;
+			else if (attrs.id != null)
+				node.key = attrs.id;
+			else if (attrs.name != null)
+				node.key = attrs.name;
+		}
+
 		node.attrs = attrs;
 	}
 
