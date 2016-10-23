@@ -22,7 +22,7 @@ export function patch(o, n) {
 		o.parent.body[o.idx] = n;
 //		o.parent = o.el = o.body = null;		// helps gc?
 		fullPatch(n, o);
-		drainDidHooks(n.vm);
+		drainDidHooks(n.vm());
 	}
 	else {
 		// TODO: re-establish refs

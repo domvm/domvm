@@ -33,7 +33,7 @@ export function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 			vnew.ref = extKey;
 
 		if (vnew.ref != null)
-			setRef(vnew.vm, vnew.ref, vnew);
+			setRef(vnew.vm(), vnew.ref, vnew);
 
 		if (isArr(vnew.body)) {
 		// declarative elems, comments, text nodes

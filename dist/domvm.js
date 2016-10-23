@@ -261,7 +261,7 @@ function bindEv(el, type, fn) {
 
 function handle(e, fn, args) {
 	var node = e.target._node;
-	var out = fn.apply(null, args.concat(e, node, node.vm));
+	var out = fn.apply(null, args.concat(e, node, node.vm()));
 
 	if (out === false) {
 		e.preventDefault();
@@ -490,7 +490,7 @@ function prevSib(sib) {
 function removeChild(parEl, el) {
 	var node = el._node, hooks = node.hooks;
 
-	var vm = node.vmid != null ? node.vm : null;
+	var vm = node.vmid != null ? node.vm() : null;
 
 	vm && vm.hooks && fireHooks("willUnmount", vm);
 
@@ -505,7 +505,7 @@ function removeChild(parEl, el) {
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks;
 
-	var vm = node.vmid != null ? node.vm : null;
+	var vm = node.vmid != null ? node.vm() : null;
 
 //	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
 //		console.log("clean exposed ref", node.ref);
@@ -527,7 +527,7 @@ function _removeChild(parEl, el, immediate) {
 function insertBefore(parEl, el, refEl) {
 	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
 
-	var vm = !inDom && node.vmid != null ? node.vm : null;
+	var vm = !inDom && node.vmid != null ? node.vm() : null;
 
 	vm && vm.hooks && fireHooks("willMount", vm);
 
@@ -642,7 +642,7 @@ function syncChildren(node, parEl) {
 			// remove any non-recycled sibs whose el.node has the old parent
 			if (lftSib && !lsNode.recycled && lsNode.parent != parEl._node) {
 				tmpSib = nextSib(lftSib);
-				lsNode.vmid != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
+				lsNode.vmid != null ? lsNode.vm().unmount(true) : removeChild(parEl, lftSib);
 				lftSib = tmpSib;
 				continue;
 			}
@@ -650,7 +650,7 @@ function syncChildren(node, parEl) {
 			if (lftNode == null)		// reached end
 				{ break converge; }
 			else if (lftNode.el == null) {
-				insertBefore(parEl, hydrate(lftNode), lftSib);		// lftNode.vmid != null ? lftNode.vm.mount(parEl, false, true, lftSib) :
+				insertBefore(parEl, hydrate(lftNode), lftSib);		// lftNode.vmid != null ? lftNode.vm().mount(parEl, false, true, lftSib) :
 				lftNode = nextNode(lftNode, body);
 			}
 			else if (lftNode.el === lftSib) {
@@ -669,7 +669,7 @@ function syncChildren(node, parEl) {
 
 			if (rgtSib && !rsNode.recycled && rsNode.parent != parEl._node) {
 				tmpSib = prevSib(rgtSib);
-				rsNode.vmid != null ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
+				rsNode.vmid != null ? rsNode.vm().unmount(true) : removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
 				continue;
 			}
@@ -677,7 +677,7 @@ function syncChildren(node, parEl) {
 			if (rgtNode == lftNode)		// converged
 				{ break converge; }
 			if (rgtNode.el == null) {
-				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vmid != null ? rgtNode.vm.mount(parEl, false, true, nextSib(rgtSib) :
+				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vmid != null ? rgtNode.vm().mount(parEl, false, true, nextSib(rgtSib) :
 				rgtNode = prevNode(rgtNode, body);
 			}
 			else if (rgtNode.el === rgtSib) {
@@ -879,7 +879,7 @@ function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 			{ vnew.ref = extKey; }
 
 		if (vnew.ref != null)
-			{ setRef(vnew.vm, vnew.ref, vnew); }
+			{ setRef(vnew.vm(), vnew.ref, vnew); }
 
 		if (isArr(vnew.body)) {
 		// declarative elems, comments, text nodes
@@ -1245,7 +1245,7 @@ var VNodeProto = VNode.prototype = {
 
 	type:	null,
 
-	get vm() {
+	vm: function() {
 		var n = this;
 
 		do {
@@ -1493,7 +1493,7 @@ function patch$1(o, n) {
 		o.parent.body[o.idx] = n;
 //		o.parent = o.el = o.body = null;		// helps gc?
 		patch(n, o);
-		drainDidHooks(n.vm);
+		drainDidHooks(n.vm());
 	}
 	else {
 		// TODO: re-establish refs

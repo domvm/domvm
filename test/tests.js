@@ -2469,8 +2469,8 @@ QUnit.module("Unjailed refs");
 
 	function AppView(vm, data) {
 		vm.on("redrawMainAndFooter", function() {
-			vm.refs.main.vm.redraw(true);
-			vm.refs.footer.vm.redraw(true);
+			vm.refs.main.vm().redraw(true);
+			vm.refs.footer.vm().redraw(true);
 		});
 
 		return function() {

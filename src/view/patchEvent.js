@@ -7,7 +7,7 @@ function bindEv(el, type, fn) {
 
 function handle(e, fn, args) {
 	var node = e.target._node;
-	var out = fn.apply(null, args.concat(e, node, node.vm));
+	var out = fn.apply(null, args.concat(e, node, node.vm()));
 
 	if (out === false) {
 		e.preventDefault();

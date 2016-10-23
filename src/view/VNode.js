@@ -9,7 +9,7 @@ export const VNodeProto = VNode.prototype = {
 
 	type:	null,
 
-	get vm() {
+	vm: function() {
 		var n = this;
 
 		do {
