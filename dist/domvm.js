@@ -13,14 +13,12 @@
 	(factory((global.domvm = global.domvm || {})));
 }(this, (function (exports) { 'use strict';
 
-var VTYPE = {
-	ELEMENT:	1,
-	TEXT:		2,
-	COMMENT:	3,
-	// placeholder nodes
-	VVIEW:		4,
-	VMODEL:		5,
-};
+var ELEMENT	= 1;
+var TEXT		= 2;
+var COMMENT	= 3;
+// placeholder nodes
+var VVIEW		= 4;
+var VMODEL		= 5;
 
 var ENV_DOM = typeof HTMLElement == "function";
 var win = ENV_DOM ? window : {};
@@ -368,7 +366,7 @@ function patchAttrs(vnode, donor) {
 }
 
 function createView(view, model, key, opts) {
-	if (view.type == VTYPE.VVIEW) {
+	if (view.type == VVIEW) {
 		model	= view.model;
 		key		= view.key;
 		opts	= view.opts;
@@ -399,7 +397,7 @@ function patchAttrs2(vnode) {
 //  TODO: DRY this out. reusing normal patch here negatively affects V8's JIT
 function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
-		if (vnode.type === VTYPE.ELEMENT) {
+		if (vnode.type === ELEMENT) {
 			vnode.el = withEl || document.createElement(vnode.tag);
 
 			if (vnode.attrs)
@@ -407,12 +405,12 @@ function hydrate(vnode, withEl) {
 
 			if (isArr(vnode.body)) {
 				vnode.body.forEach(function (vnode2, i) {
-					if (vnode2.type == VTYPE.VMODEL) {
+					if (vnode2.type == VMODEL) {
 						var vm = views[vnode2.vmid];
 						vm._redraw(vnode, i);
 						insertBefore(vnode.el, vm.node.el);
 					}
-					else if (vnode2.type == VTYPE.VVIEW) {
+					else if (vnode2.type == VVIEW) {
 						var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i);		// todo: handle new model updates
 						insertBefore(vnode.el, vm.node.el);
 					}
@@ -427,7 +425,7 @@ function hydrate(vnode, withEl) {
 					{ vnode.el.textContent = vnode.body; }
 			}
 		}
-		else if (vnode.type === VTYPE.TEXT)
+		else if (vnode.type === TEXT)
 			{ vnode.el = withEl || document.createTextNode(vnode.body); }
 	}
 
@@ -708,7 +706,7 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 	for (var i = fromIdx || 0; i < oldBody.length; i++) {
 		var o = oldBody[i];
 
-		if (n.type == VTYPE.VVIEW && o.vmid != null) {			// also ignore recycled/moved?
+		if (n.type == VVIEW && o.vmid != null) {			// also ignore recycled/moved?
 			var ov = views[o.vmid];
 
 			// match by key & viewFn
@@ -749,7 +747,7 @@ function patch(vnode, donor) {
 	vnode.el._node = vnode;
 
 	// "" => ""
-	if (vnode.type === VTYPE.TEXT && vnode.body !== donor.body) {
+	if (vnode.type === TEXT && vnode.body !== donor.body) {
 		vnode.el.nodeValue = vnode.body;
 		return;
 	}
@@ -819,13 +817,13 @@ function patchChildren(vnode, donor) {
 	for (var i = 0; i < vnode.body.length; i++) {
 		var node2 = vnode.body[i];
 
-		if (node2.type == VTYPE.VVIEW) {
+		if (node2.type == VVIEW) {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))		// update/moveTo
 				{ views[donor2.vmid]._update(node2.model, vnode, i); }		// withDOM
 			else
 				{ createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
 		}
-		else if (node2.type == VTYPE.VMODEL)
+		else if (node2.type == VMODEL)
 			{ views[node2.vmid]._update(node2.model, vnode, i); }
 		else {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))
@@ -861,11 +859,11 @@ function setRef(vm, name, node) {
 // vnew, vold
 function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 	// injected views
-	if (vnew.type === VTYPE.VMODEL) {
+	if (vnew.type === VMODEL) {
 		// pull vm.node out & reassociate
 		// redraw?
 	}
-	else if (vnew.type === VTYPE.VVIEW) {
+	else if (vnew.type === VVIEW) {
 
 	}
 	// injected and declared elems/text/comments
@@ -897,12 +895,12 @@ function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 				// flatten arrays
 				else if (isArr(node2))
 					{ insertArr(body, node2, i--, 1); }
-				else if (node2.type === VTYPE.TEXT) {
+				else if (node2.type === TEXT) {
 					// remove empty text nodes
 					if (node2.body == null || node2.body === "")
 						{ body.splice(i--, 1); }
 					// merge with previous text node
-					else if (i > 0 && body[i-1].type === VTYPE.TEXT) {
+					else if (i > 0 && body[i-1].type === TEXT) {
 						body[i-1].body += node2.body;
 						body.splice(i--, 1);
 					}
@@ -1351,7 +1349,7 @@ function parseTag(raw) {
 }
 
 function defineElement(tag, arg1, arg2, fixed) {
-	var node = fixed ? new VNodeFixed(VTYPE.ELEMENT) : new VNode(VTYPE.ELEMENT);
+	var node = fixed ? new VNodeFixed(ELEMENT) : new VNode(ELEMENT);
 
 	var attrs, body;
 
@@ -1425,13 +1423,13 @@ function defineElement(tag, arg1, arg2, fixed) {
 }
 
 function defineText(body) {
-	var n = new VNode(VTYPE.TEXT);
+	var n = new VNode(TEXT);
 	n.body = body;
 	return n;
 }
 
 function defineComment(body) {
-	return new VNode(VTYPE.COMMENT).body(body);
+	return new VNode(COMMENT).body(body);
 }
 
 // placeholder for declared views
@@ -1445,7 +1443,7 @@ function VView(view, model, key, opts) {
 VView.prototype = {
 	constructor: VView,
 
-	type: VTYPE.VVIEW,
+	type: VVIEW,
 	view: null,
 	model: null,
 	key: null,
@@ -1464,7 +1462,7 @@ function VModel(vm) {
 VModel.prototype = {
 	constructor: VModel,
 
-	type: VTYPE.VMODEL,
+	type: VMODEL,
 	vmid: null,
 };
 
@@ -1478,7 +1476,7 @@ function injectView(vm) {
 }
 
 function injectElement(el) {
-	var node = new VNode(VTYPE.ELEMENT);
+	var node = new VNode(ELEMENT);
 	node.el = node.key = el;
 	return node;
 }
@@ -1594,7 +1592,7 @@ var voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen
 function html(node, dynProps) {
 	var buf = "";
 	switch (node.type) {
-		case VTYPE.ELEMENT:
+		case ELEMENT:
 			if (node.el != null && node.tag == null)
 				{ return node.el.outerHTML; }		// pre-existing dom elements (does not currently account for any props applied to them)
 
@@ -1636,7 +1634,7 @@ function html(node, dynProps) {
 			else
 				{ buf += ">"; }
 			break;
-		case VTYPE.TEXT:
+		case TEXT:
 			return node.body;
 			break;
 	}

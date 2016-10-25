@@ -1,4 +1,4 @@
-import { VTYPE } from './VTYPE';
+import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 
 // placeholder for declared views
 export function VView(view, model, key, opts) {
@@ -11,7 +11,7 @@ export function VView(view, model, key, opts) {
 VView.prototype = {
 	constructor: VView,
 
-	type: VTYPE.VVIEW,
+	type: VVIEW,
 	view: null,
 	model: null,
 	key: null,

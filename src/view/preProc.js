@@ -1,4 +1,4 @@
-import { VTYPE } from './VTYPE';
+import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
 
 function setRef(vm, name, node) {
@@ -15,11 +15,11 @@ function setRef(vm, name, node) {
 // vnew, vold
 export function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 	// injected views
-	if (vnew.type === VTYPE.VMODEL) {
+	if (vnew.type === VMODEL) {
 		// pull vm.node out & reassociate
 		// redraw?
 	}
-	else if (vnew.type === VTYPE.VVIEW) {
+	else if (vnew.type === VVIEW) {
 
 	}
 	// injected and declared elems/text/comments
@@ -51,12 +51,12 @@ export function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 				// flatten arrays
 				else if (isArr(node2))
 					insertArr(body, node2, i--, 1);
-				else if (node2.type === VTYPE.TEXT) {
+				else if (node2.type === TEXT) {
 					// remove empty text nodes
 					if (node2.body == null || node2.body === "")
 						body.splice(i--, 1);
 					// merge with previous text node
-					else if (i > 0 && body[i-1].type === VTYPE.TEXT) {
+					else if (i > 0 && body[i-1].type === TEXT) {
 						body[i-1].body += node2.body;
 						body.splice(i--, 1);
 					}

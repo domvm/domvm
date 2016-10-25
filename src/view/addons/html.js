@@ -1,4 +1,4 @@
-import { VTYPE } from '../VTYPE';
+import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
 import { isArr, isObj, isVal, isFunc } from '../../utils';
 import { isEvProp, styleStr, isDynProp } from '../utils';
 
@@ -23,7 +23,7 @@ const voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keyg
 export function html(node, dynProps) {
 	var buf = "";
 	switch (node.type) {
-		case VTYPE.ELEMENT:
+		case ELEMENT:
 			if (node.el != null && node.tag == null)
 				return node.el.outerHTML;		// pre-existing dom elements (does not currently account for any props applied to them)
 
@@ -65,7 +65,7 @@ export function html(node, dynProps) {
 			else
 				buf += ">";
 			break;
-		case VTYPE.TEXT:
+		case TEXT:
 			return node.body;
 			break;
 	}

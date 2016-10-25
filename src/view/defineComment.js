@@ -1,6 +1,6 @@
-import { VTYPE } from './VTYPE';
+import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { VNode } from './VNode';
 
 export function defineComment(body) {
-	return new VNode(VTYPE.COMMENT).body(body);
+	return new VNode(COMMENT).body(body);
 }

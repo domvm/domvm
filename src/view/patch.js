@@ -1,4 +1,4 @@
-import { VTYPE } from './VTYPE';
+import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr } from '../utils';
 import { views } from './ViewModel';
 import { syncChildren, fireHooks } from './syncChildren';
@@ -13,7 +13,7 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 	for (var i = fromIdx || 0; i < oldBody.length; i++) {
 		var o = oldBody[i];
 
-		if (n.type == VTYPE.VVIEW && o.vmid != null) {			// also ignore recycled/moved?
+		if (n.type == VVIEW && o.vmid != null) {			// also ignore recycled/moved?
 			var ov = views[o.vmid];
 
 			// match by key & viewFn
@@ -54,7 +54,7 @@ export function patch(vnode, donor) {
 	vnode.el._node = vnode;
 
 	// "" => ""
-	if (vnode.type === VTYPE.TEXT && vnode.body !== donor.body) {
+	if (vnode.type === TEXT && vnode.body !== donor.body) {
 		vnode.el.nodeValue = vnode.body;
 		return;
 	}
@@ -124,13 +124,13 @@ function patchChildren(vnode, donor) {
 	for (var i = 0; i < vnode.body.length; i++) {
 		var node2 = vnode.body[i];
 
-		if (node2.type == VTYPE.VVIEW) {
+		if (node2.type == VVIEW) {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))		// update/moveTo
 				views[donor2.vmid]._update(node2.model, vnode, i);		// withDOM
 			else
 				createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
 		}
-		else if (node2.type == VTYPE.VMODEL)
+		else if (node2.type == VMODEL)
 			views[node2.vmid]._update(node2.model, vnode, i);
 		else {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))

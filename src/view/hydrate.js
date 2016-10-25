@@ -1,4 +1,4 @@
-import { VTYPE } from './VTYPE';
+import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr } from '../utils';
 import { views } from './ViewModel';
 import { isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
@@ -30,7 +30,7 @@ function patchAttrs2(vnode) {
 //  TODO: DRY this out. reusing normal patch here negatively affects V8's JIT
 export function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
-		if (vnode.type === VTYPE.ELEMENT) {
+		if (vnode.type === ELEMENT) {
 			vnode.el = withEl || document.createElement(vnode.tag);
 
 			if (vnode.attrs)
@@ -38,12 +38,12 @@ export function hydrate(vnode, withEl) {
 
 			if (isArr(vnode.body)) {
 				vnode.body.forEach((vnode2, i) => {
-					if (vnode2.type == VTYPE.VMODEL) {
+					if (vnode2.type == VMODEL) {
 						var vm = views[vnode2.vmid];
 						vm._redraw(vnode, i);
 						insertBefore(vnode.el, vm.node.el);
 					}
-					else if (vnode2.type == VTYPE.VVIEW) {
+					else if (vnode2.type == VVIEW) {
 						var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i);		// todo: handle new model updates
 						insertBefore(vnode.el, vm.node.el);
 					}
@@ -58,7 +58,7 @@ export function hydrate(vnode, withEl) {
 					vnode.el.textContent = vnode.body;
 			}
 		}
-		else if (vnode.type === VTYPE.TEXT)
+		else if (vnode.type === TEXT)
 			vnode.el = withEl || document.createTextNode(vnode.body);
 	}
 

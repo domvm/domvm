@@ -1,4 +1,4 @@
-import { VTYPE } from './VTYPE';
+import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 
 // placeholder for injected ViewModels
 export function VModel(vm) {
@@ -8,6 +8,6 @@ export function VModel(vm) {
 VModel.prototype = {
 	constructor: VModel,
 
-	type: VTYPE.VMODEL,
+	type: VMODEL,
 	vmid: null,
 };
