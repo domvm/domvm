@@ -9,7 +9,7 @@ ViewModelProto.html = function(dynProps) {
 	var vm = this;
 
 	if (vm.node == null)
-		vm.mount();
+		vm.mount(null, false, false);
 
 	return html(vm.node, dynProps);
 };

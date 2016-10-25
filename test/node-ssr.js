@@ -1,11 +1,11 @@
-var domvm = require("../index.js");
+var domvm = require("../dist/domvm.js");
+
+var el = domvm.view.defineElement;
 
 function View() {
-	return () => [".foo", {class: 'baz'}, "bar"];
+	return () => el(".foo", {class: 'baz'}, "bar");
 }
 
-var vm = domvm.view(View);
+var vm = domvm.view.createView(View);
 
-var html = domvm.html(vm);
-
-console.log(html);
+console.log(vm.html());

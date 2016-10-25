@@ -1103,7 +1103,7 @@ function drainDidHooks(vm) {
 
 
 
-function mount(el, isRoot) {		// , asSub, refEl
+function mount(el, isRoot, withDOM) {		// , asSub, refEl
 	var vm = this;
 
 	if (isRoot) {
@@ -1114,7 +1114,7 @@ function mount(el, isRoot) {		// , asSub, refEl
 		hydrate(this.node, el);
 	}
 	else {
-		this._redraw();
+		this._redraw(null, null, withDOM);
 
 		if (el)
 			{ insertBefore(el, this.node.el); }			// el.appendChild(this.node.el);
@@ -1578,7 +1578,7 @@ ViewModelProto.html = function(dynProps) {
 	var vm = this;
 
 	if (vm.node == null)
-		{ vm.mount(); }
+		{ vm.mount(null, false, false); }
 
 	return html(vm.node, dynProps);
 };
