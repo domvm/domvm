@@ -236,12 +236,12 @@ function isStream(val) {
 // creates a one-shot self-ending stream that redraws target vm
 // TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
 function hookStream(s, vm) {
-	var s2 = flyd.combine(function(val) {
-		if (s2) {
+	var end = flyd.on(function (val) {
+		if (end) {
 			vm.redraw();
-			s2.end(true);
+			end(true);
 		}
-	}, [s]);
+	}, s);
 }
 
 // assumes if styles exist both are objects or both are strings
