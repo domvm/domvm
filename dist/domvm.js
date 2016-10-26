@@ -976,11 +976,6 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	if (isFunc(out))
 		{ vm.render = out; }
 	else {
-		if (out.on) {
-			vm.events = out.on;
-			delete out.on;
-		}
-
 		if (out.diff) {
 			vm.diff(out.diff);
 			delete out.diff;
