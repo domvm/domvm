@@ -227,6 +227,23 @@ function isDynProp(tag, attr) {
 	return false;
 }
 
+var FLYD = typeof flyd != "undefined";
+
+function isStream(val) {
+	return FLYD && flyd.isStream(val);
+}
+
+// creates a one-shot self-ending stream that redraws target vm
+// TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
+function hookStream(s, vm) {
+	var s2 = flyd.combine(function(val) {
+		if (s2) {
+			vm.redraw();
+			s2.end(true);
+		}
+	}, [s]);
+}
+
 // assumes if styles exist both are objects or both are strings
 function patchStyle(n, o) {
 	var ns = n.attrs.style;
@@ -928,6 +945,10 @@ function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 				}
 			}
 		}
+		else if (isStream(vnew.body)) {
+			hookStream(vnew.body, vnew.vm());
+			vnew.body = vnew.body();
+		}
 	}
 }
 
@@ -1578,6 +1599,90 @@ function on(evName, fn) {
 	}
 }
 
+view.jsonml = jsonml;
+
+function isStr(val) {
+	return typeof val == "string";
+}
+
+function isVm(obj) {
+	return isFunc(obj.redraw);
+}
+
+function isAttrs(val) {
+	return isObj(val) && !isVm(val) && !isElem(val);
+}
+
+// tpl must be an array representing a single domvm 1.x jsonML node
+// todo: also handle getter fns in attrs & css props
+function jsonml(node) {
+	// nulls
+	if (node == null) {}
+	// view defs, elem defs, sub-arrays, comments?
+	else if (isArr(node)) {
+		var len = node.length;
+
+		// empty arrays
+		if (len == 0)
+			{ node = null; }
+		// elem defs: ["div"], ["div", {attrs}], ["div", [children]], ["div", ...children], ["div", {attrs}, [children]], ["div", {attrs}, ...children]
+		else if (isStr(node[0])) {
+			var tag = node[0];
+			var body = null;
+			var attrs = null;
+
+			if (len > 1) {
+				var bodyIdx = 1;
+
+				if (isAttrs(node[1])) {
+					attrs = node[1];
+					bodyIdx = 2;
+				}
+
+				if (len == bodyIdx + 1) {
+					var last = node[bodyIdx];
+					// explit child array or plain val
+					if (isVal(last) || isArr(last) && !isStr(last[0]) && !isFunc(last[0]))
+						{ body = last; }
+					else
+						{ body = [last]; }
+				}
+				else
+					{ body = node.slice(bodyIdx); }
+			}
+
+			if (isArr(body))
+				{ body = body.map(jsonml); }
+
+			node = defineElement(tag, attrs, body, false);
+		}
+		// view defs: [MyView, model, key, opts]
+		else if (isFunc(node[0]))
+			{ node = defineView.apply(null, node); }
+		// sub-array to flatten
+		else
+			{ node = node.map(jsonml); }
+	}
+	// text nodes
+	else if (isVal(node))
+		{ node = defineText(node); }
+	// getters
+	else if (isFunc(node))
+		{ node = jsonml(node()); }
+	// injected elements
+	else if (isElem(node))
+		{ node = injectElement(node); }
+	else if (isObj(node)) {
+		// injected vms
+		if (isVm(node))
+			{ node = injectView(node); }
+		// ready vnodes (meh, weak guarantee)
+		else if (node.type != null) {}
+	}
+
+	return node;
+}
+
 ViewModelProto.html = function(dynProps) {
 	var vm = this;
 
@@ -1694,90 +1799,6 @@ function attach(vnode, withEl) {
 			attach(v, c);
 		} while ((c = c.nextSibling) && (v = vnode.body[i++]))
 	}
-}
-
-view.jsonml = jsonml;
-
-function isStr(val) {
-	return typeof val == "string";
-}
-
-function isVm(obj) {
-	return isFunc(obj.redraw);
-}
-
-function isAttrs(val) {
-	return isObj(val) && !isVm(val) && !isElem(val);
-}
-
-// tpl must be an array representing a single domvm 1.x jsonML node
-// todo: also handle getter fns in attrs & css props
-function jsonml(node) {
-	// nulls
-	if (node == null) {}
-	// view defs, elem defs, sub-arrays, comments?
-	else if (isArr(node)) {
-		var len = node.length;
-
-		// empty arrays
-		if (len == 0)
-			{ node = null; }
-		// elem defs: ["div"], ["div", {attrs}], ["div", [children]], ["div", ...children], ["div", {attrs}, [children]], ["div", {attrs}, ...children]
-		else if (isStr(node[0])) {
-			var tag = node[0];
-			var body = null;
-			var attrs = null;
-
-			if (len > 1) {
-				var bodyIdx = 1;
-
-				if (isAttrs(node[1])) {
-					attrs = node[1];
-					bodyIdx = 2;
-				}
-
-				if (len == bodyIdx + 1) {
-					var last = node[bodyIdx];
-					// explit child array or plain val
-					if (isVal(last) || isArr(last) && !isStr(last[0]) && !isFunc(last[0]))
-						{ body = last; }
-					else
-						{ body = [last]; }
-				}
-				else
-					{ body = node.slice(bodyIdx); }
-			}
-
-			if (isArr(body))
-				{ body = body.map(jsonml); }
-
-			node = defineElement(tag, attrs, body, false);
-		}
-		// view defs: [MyView, model, key, opts]
-		else if (isFunc(node[0]))
-			{ node = defineView.apply(null, node); }
-		// sub-array to flatten
-		else
-			{ node = node.map(jsonml); }
-	}
-	// text nodes
-	else if (isVal(node))
-		{ node = defineText(node); }
-	// getters
-	else if (isFunc(node))
-		{ node = jsonml(node()); }
-	// injected elements
-	else if (isElem(node))
-		{ node = injectElement(node); }
-	else if (isObj(node)) {
-		// injected vms
-		if (isVm(node))
-			{ node = injectView(node); }
-		// ready vnodes (meh, weak guarantee)
-		else if (node.type != null) {}
-	}
-
-	return node;
 }
 
 exports.view = view;

@@ -1,4 +1,4 @@
-import { startsWith } from '../utils';
+import { startsWith, isUndef } from '../utils';
 
 const t = true;
 
@@ -86,4 +86,21 @@ export function isDynProp(tag, attr) {
 //	}
 
 	return false;
+}
+
+const FLYD = typeof flyd != "undefined";
+
+export function isStream(val) {
+	return FLYD && flyd.isStream(val);
+}
+
+// creates a one-shot self-ending stream that redraws target vm
+// TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
+export function hookStream(s, vm) {
+	var s2 = flyd.combine(function(val) {
+		if (s2) {
+			vm.redraw();
+			s2.end(true);
+		}
+	}, [s]);
 }
