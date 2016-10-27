@@ -139,10 +139,10 @@ function curry(fn, args, ctx) {
 	};
 }
 
-var sub = null;
-var val = null;
-var is = null;
-var unsub = null;
+var subStream = null;
+var streamVal = null;
+var isStream = null;
+var unsubStream = null;
 
 /* example flyd adapter:
 {
@@ -153,10 +153,10 @@ var unsub = null;
 }
 */
 function streamCfg(cfg) {
-	sub		= cfg.sub;
-	val		= cfg.val;
-	is		= cfg.is;
-	unsub	= cfg.unsub;
+	subStream	= cfg.sub;
+	streamVal	= cfg.val;
+	isStream	= cfg.is;
+	unsubStream	= cfg.unsub;
 }
 
 var t = true;
@@ -193,12 +193,12 @@ var unitlessProps = {
 	zoom: t,
 };
 
-function autoPx(name, val$$1) {
-	return !isNaN(val$$1) && !unitlessProps[name] ? (val$$1 + "px") : val$$1;
+function autoPx(name, val) {
+	return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
 }
 
-function camelDash(val$$1) {
-	return val$$1.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+function camelDash(val) {
+	return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
 function styleStr(css) {
@@ -250,12 +250,17 @@ function isDynProp(tag, attr) {
 // creates a one-shot self-ending stream that redraws target vm
 // TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
 function hookStream(s, vm) {
-	var endStream = sub(s, function (val$$1) {
-		if (endStream) {
-			vm.redraw();
-			unsub(endStream);
+	var redrawStream = subStream(s, function (val) {
+		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
+		if (redrawStream) {
+			// if vm fully is formed (or mounted vm.node.el?)
+			if (vm.node != null)
+				{ vm.redraw(); }
+			unsubStream(redrawStream);
 		}
 	});
+
+	return streamVal(s);
 }
 
 // assumes if styles exist both are objects or both are strings
@@ -269,6 +274,10 @@ function patchStyle(n, o) {
 	else {
 		for (var nn in ns) {
 			var nv = ns[nn];
+
+			if (isStream != null && isStream(nv))
+				{ nv = hookStream(nv, n.vm()); }
+
 			if (os == null || nv != null && nv !== os[nn])
 				{ n.el.style[nn] = autoPx(nn, nv); }
 		}
@@ -379,6 +388,9 @@ function patchAttrs(vnode, donor) {
 		var isDyn = isDynProp(vnode.tag, key);
 		var oval = isDyn ? vnode.el[key] : oattrs[key];
 
+		if (isStream != null && isStream(nval))
+			{ nattrs[key] = nval = hookStream(nval, vnode.vm()); }
+
 		if (nval === oval) {}
 		else if (isStyleProp(key))
 			{ patchStyle(vnode, donor); }
@@ -418,6 +430,9 @@ function patchAttrs2(vnode) {
 	for (var key in nattrs) {
 		var nval = nattrs[key];
 		var isDyn = isDynProp(vnode.tag, key);
+
+		if (isStream != null && isStream(nval))
+			{ nattrs[key] = nval = hookStream(nval, vnode.vm()); }
 
 		if (isStyleProp(key))
 			{ patchStyle(vnode); }
@@ -959,10 +974,8 @@ function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 				}
 			}
 		}
-		else if (is != null && is(vnew.body)) {
-			hookStream(vnew.body, vnew.vm());
-			vnew.body = val(vnew.body);
-		}
+		else if (isStream != null && isStream(vnew.body))
+			{ vnew.body = hookStream(vnew.body, vnew.vm()); }
 	}
 }
 

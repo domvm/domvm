@@ -1,7 +1,7 @@
-export let sub = null;
-export let val = null;
-export let is = null;
-export let unsub = null;
+export let subStream = null;
+export let streamVal = null;
+export let isStream = null;
+export let unsubStream = null;
 
 /* example flyd adapter:
 {
@@ -12,8 +12,8 @@ export let unsub = null;
 }
 */
 export function streamCfg(cfg) {
-	sub		= cfg.sub;
-	val		= cfg.val;
-	is		= cfg.is;
-	unsub	= cfg.unsub;
+	subStream	= cfg.sub;
+	streamVal	= cfg.val;
+	isStream	= cfg.is;
+	unsubStream	= cfg.unsub;
 }

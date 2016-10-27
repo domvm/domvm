@@ -1,7 +1,8 @@
-import { isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
+import { isStyleProp, isSplProp, isEvProp, isDynProp, hookStream } from './utils';
 import { isFunc } from '../utils';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
+import { isStream } from '../streamCfg';
 
 export function remAttr(node, name) {		// , asProp
 	node.el.removeAttribute(name);
@@ -36,6 +37,9 @@ export function patchAttrs(vnode, donor) {
 		var nval = nattrs[key];
 		var isDyn = isDynProp(vnode.tag, key);
 		var oval = isDyn ? vnode.el[key] : oattrs[key];
+
+		if (isStream != null && isStream(nval))
+			nattrs[key] = nval = hookStream(nval, vnode.vm());
 
 		if (nval === oval) {}
 		else if (isStyleProp(key))

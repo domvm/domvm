@@ -1,7 +1,8 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr } from '../utils';
 import { views } from './ViewModel';
-import { isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
+import { isStyleProp, isSplProp, isEvProp, isDynProp, hookStream } from './utils';
+import { isStream } from '../streamCfg';
 import { setAttr } from './patchAttrs';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
@@ -16,6 +17,9 @@ function patchAttrs2(vnode) {
 	for (var key in nattrs) {
 		var nval = nattrs[key];
 		var isDyn = isDynProp(vnode.tag, key);
+
+		if (isStream != null && isStream(nval))
+			nattrs[key] = nval = hookStream(nval, vnode.vm());
 
 		if (isStyleProp(key))
 			patchStyle(vnode);
