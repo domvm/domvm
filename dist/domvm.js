@@ -139,6 +139,26 @@ function curry(fn, args, ctx) {
 	};
 }
 
+var sub = null;
+var val = null;
+var is = null;
+var unsub = null;
+
+/* example flyd adapter:
+{
+	sub:	(s,fn) => flyd.on(fn, s),
+	val:	s => s(),
+	is:		s => flyd.isStream(s),
+	unsub:	s => s.end(),
+}
+*/
+function streamCfg(cfg) {
+	sub		= cfg.sub;
+	val		= cfg.val;
+	is		= cfg.is;
+	unsub	= cfg.unsub;
+}
+
 var t = true;
 
 var unitlessProps = {
@@ -173,12 +193,12 @@ var unitlessProps = {
 	zoom: t,
 };
 
-function autoPx(name, val) {
-	return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
+function autoPx(name, val$$1) {
+	return !isNaN(val$$1) && !unitlessProps[name] ? (val$$1 + "px") : val$$1;
 }
 
-function camelDash(val) {
-	return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+function camelDash(val$$1) {
+	return val$$1.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
 function styleStr(css) {
@@ -227,21 +247,15 @@ function isDynProp(tag, attr) {
 	return false;
 }
 
-var FLYD = typeof flyd != "undefined";
-
-function isStream(val) {
-	return FLYD && flyd.isStream(val);
-}
-
 // creates a one-shot self-ending stream that redraws target vm
 // TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
 function hookStream(s, vm) {
-	var end = flyd.on(function (val) {
-		if (end) {
+	var endStream = sub(s, function (val$$1) {
+		if (endStream) {
 			vm.redraw();
-			end(true);
+			unsub(endStream);
 		}
-	}, s);
+	});
 }
 
 // assumes if styles exist both are objects or both are strings
@@ -945,9 +959,9 @@ function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 				}
 			}
 		}
-		else if (isStream(vnew.body)) {
+		else if (is != null && is(vnew.body)) {
 			hookStream(vnew.body, vnew.vm());
-			vnew.body = vnew.body();
+			vnew.body = val(vnew.body);
 		}
 	}
 }
@@ -1796,7 +1810,17 @@ function attach(vnode, withEl) {
 	}
 }
 
+if (typeof flyd != "undefined") {
+	streamCfg({
+		is:		function (s) { return flyd.isStream(s); },
+		val:	function (s) { return s(); },
+		sub:	function (s, fn) { return flyd.on(fn, s); },
+		unsub:	function (s) { return s.end(true); },
+	});
+}
+
 exports.view = view;
+exports.streamCfg = streamCfg;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

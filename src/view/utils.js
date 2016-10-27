@@ -1,4 +1,5 @@
 import { startsWith, isUndef } from '../utils';
+import { sub as subStream, unsub as unsubStream } from '../streamCfg';
 
 const t = true;
 
@@ -88,19 +89,13 @@ export function isDynProp(tag, attr) {
 	return false;
 }
 
-const FLYD = typeof flyd != "undefined";
-
-export function isStream(val) {
-	return FLYD && flyd.isStream(val);
-}
-
 // creates a one-shot self-ending stream that redraws target vm
 // TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
 export function hookStream(s, vm) {
-	var end = flyd.on(val => {
-		if (end) {
+	var endStream = subStream(s, val => {
+		if (endStream) {
 			vm.redraw();
-			end(true);
+			unsubStream(endStream);
 		}
-	}, s);
+	});
 }

@@ -1,6 +1,7 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
-import { isStream, hookStream } from './utils';
+import { is as isStream, val as streamVal } from '../streamCfg';
+import { hookStream } from './utils';
 
 function setRef(vm, name, node) {
 	var path = ["refs"].concat(name.replace("^", "").split("."));
@@ -81,9 +82,9 @@ export function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 				}
 			}
 		}
-		else if (isStream(vnew.body)) {
+		else if (isStream != null && isStream(vnew.body)) {
 			hookStream(vnew.body, vnew.vm());
-			vnew.body = vnew.body();
+			vnew.body = streamVal(vnew.body);
 		}
 	}
 }
