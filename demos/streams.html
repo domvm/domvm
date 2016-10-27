@@ -5,6 +5,13 @@
 
 	<script src="lib/flyd.min.js"></script>
 	<script src="../dist/domvm.js"></script>
+
+	<style>
+		button,
+		input {
+			display: block;
+		}
+	</style>
 </head>
 <body>
 	<script>
@@ -45,6 +52,22 @@
 			}
 		}
 
+		function View6(vm, pers) {
+			function incrAge(e) {
+				pers.age(pers.age() + 1)
+			}
+
+			return function() {
+				return el("button", {onclick: incrAge}, "Age += 1");
+			}
+		}
+
+		function View7(vm, pers) {
+			return function() {
+				return el("button", {onclick: [pers.age, 100]}, "Age = 100");
+			}
+		}
+
 		function genStyle(p) {
 			return {
 				background: p.background(),
@@ -66,6 +89,8 @@
 		view.createView(View3, pers).mount(document.body);
 		view.createView(View5, pers).mount(document.body);
 		view.createView(View4, pers).mount(document.body);
+		view.createView(View6, pers).mount(document.body);
+		view.createView(View7, pers).mount(document.body);
 
 		var factor = 1;
 
