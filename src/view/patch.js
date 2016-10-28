@@ -1,7 +1,8 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr } from '../utils';
 import { views } from './ViewModel';
-import { syncChildren, fireHooks } from './syncChildren';
+import { syncChildren } from './syncChildren';
+import { fireHooks } from './hooks';
 import { patchAttrs } from './patchAttrs';
 import { createView } from './createView';
 

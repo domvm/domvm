@@ -3,7 +3,8 @@ import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
 import { isArr, isObj, isFunc, isProm, cmpArr, assignObj, curry, raft } from "../utils";
 import { repaint } from "./utils";
-import { didQueue, insertBefore, removeChild, fireHooks } from "./syncChildren";
+import { insertBefore, removeChild } from "./dom";
+import { didQueue, fireHooks } from "./hooks";
 
 // global id counter
 let vmid = 0;

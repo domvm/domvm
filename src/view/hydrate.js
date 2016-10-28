@@ -7,7 +7,7 @@ import { setAttr } from './patchAttrs';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
 import { createView } from './createView';
-import { insertBefore } from './syncChildren';
+import { insertBefore } from './dom';
 
 
 // TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT

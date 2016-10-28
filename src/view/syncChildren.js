@@ -1,39 +1,7 @@
 import { hydrate } from './hydrate';
-import { isArr, isFunc, isProm, startsWith, curry } from '../utils';
-import { repaint } from './utils';
-import { views } from './ViewModel';
+import { prevSib, nextSib, insertBefore, insertAfter, removeChild } from './dom';
 
 //import { DEBUG } from './DEBUG';
-
-export const didQueue = [];
-
-function fireHook(did, fn, o, n, immediate) {
-	if (did) {	// did*
-		//	console.log(name + " should queue till repaint", o, n);
-		immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
-	}
-	else {		// will*
-		//	console.log(name + " may delay by promise", o, n);
-		return fn(o, n);		// or pass  done() resolver
-	}
-}
-
-export function fireHooks(name, o, n, immediate) {
-	var hook = o.hooks[name];
-
-	if (hook) {
-		var did = startsWith(name, "did");
-
-		if (isArr(hook)) {
-			// TODO: promise.all() this?
-			return hook.map(function(hook2) {
-				return fireHook(did, hook2, o, n);
-			});
-		}
-		else
-			return fireHook(did, hook, o, n, immediate);
-	}
-}
 
 function nextNode(node, body) {
 	return body[node.idx + 1];
@@ -41,76 +9,6 @@ function nextNode(node, body) {
 
 function prevNode(node, body) {
 	return body[node.idx - 1];
-}
-
-// ? removes if !recycled
-function nextSib(sib) {
-	return sib.nextSibling;
-}
-
-// ? removes if !recycled
-function prevSib(sib) {
-	return sib.previousSibling;
-}
-
-// todo: hooks
-export function removeChild(parEl, el) {
-	var node = el._node, hooks = node.hooks;
-
-	var vm = node.vmid != null ? node.vm() : null;
-
-	vm && vm.hooks && fireHooks("willUnmount", vm);
-
-	var res = hooks && fireHooks("willRemove", node);
-
-	if (res != null && isProm(res))
-		res.then(curry(_removeChild, [parEl, el, true]));
-	else
-		_removeChild(parEl, el);
-}
-
-function _removeChild(parEl, el, immediate) {
-	var node = el._node, hooks = node.hooks;
-
-	var vm = node.vmid != null ? node.vm() : null;
-
-//	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
-//		console.log("clean exposed ref", node.ref);
-
-	if (isArr(node.body)) {
-	//	var parEl = node.el;
-		for (var i = 0; i < node.body.length; i++)
-			removeChild(el, node.body[i].el);
-	}
-
-	parEl.removeChild(el);
-
-	hooks && fireHooks("didRemove", node, null, immediate);
-
-	vm && vm.hooks && fireHooks("didUnmount", vm, null, immediate);
-}
-
-// todo: hooks
-export function insertBefore(parEl, el, refEl) {
-	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
-
-	var vm = !inDom && node.vmid != null ? node.vm() : null;
-
-	vm && vm.hooks && fireHooks("willMount", vm);
-
-	// this first happens during view creation, but if view is
-	// ever unmounted & remounted later, need to re-register
-	vm && (views[vm.id] = vm);
-
-	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
-	parEl.insertBefore(el, refEl);
-	hooks && fireHooks(inDom ? "didReinsert" : "didInsert", node);
-
-	vm && vm.hooks && fireHooks("didMount", vm);
-}
-
-function insertAfter(parEl, el, refEl) {
-	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
 }
 
 function tmpEdges(fn, parEl, lftSib, rgtSib) {

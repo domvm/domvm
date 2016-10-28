@@ -11,12 +11,10 @@ import "./view/addons/attach";
 import { streamCfg } from "./streamCfg";
 import "./streamFlyd.js";
 
-//import { route } from './route';
-//import { watch } from './watch';
+//import { router } from './router';
 
 export {
 	view,
 	streamCfg,
-//	route
-//	watch
+//	router
 }
