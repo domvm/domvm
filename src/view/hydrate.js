@@ -37,23 +37,26 @@ export function hydrate(vnode, withEl) {
 		if (vnode.type === ELEMENT) {
 			vnode.el = withEl || document.createElement(vnode.tag);
 
-			if (vnode.attrs)
+			if (vnode.attrs != null)
 				patchAttrs2(vnode);
 
 			if (isArr(vnode.body)) {
-				vnode.body.forEach((vnode2, i) => {
-					if (vnode2.type == VMODEL) {
+				for (var i = 0; i < vnode.body.length; i++) {
+					var vnode2 = vnode.body[i];
+					var type2 = vnode2.type;
+
+					if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT)
+						insertBefore(vnode.el, hydrate(vnode2));		// vnode.el.appendChild(hydrate(vnode2))
+					else if (type2 == VVIEW) {
+						var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i);		// todo: handle new model updates
+						insertBefore(vnode.el, vm.node.el);
+					}
+					else if (type2 == VMODEL) {
 						var vm = views[vnode2.vmid];
 						vm._redraw(vnode, i);
 						insertBefore(vnode.el, vm.node.el);
 					}
-					else if (vnode2.type == VVIEW) {
-						var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i);		// todo: handle new model updates
-						insertBefore(vnode.el, vm.node.el);
-					}
-					else
-						insertBefore(vnode.el, hydrate(vnode2));		// vnode.el.appendChild(hydrate(vnode2))
-				});
+				}
 			}
 			else if (vnode.body != null && vnode.body !== "") {
 				if (vnode.raw)

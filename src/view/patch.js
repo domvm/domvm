@@ -54,7 +54,7 @@ export function patch(vnode, donor) {
 	vnode.el._node = vnode;
 
 	// "" => ""
-	if (vnode.type === TEXT && vnode.body !== donor.body) {
+	if (vnode.type == TEXT && vnode.body !== donor.body) {
 		vnode.el.nodeValue = vnode.body;
 		return;
 	}
@@ -62,7 +62,7 @@ export function patch(vnode, donor) {
 	// BUG: donation would break:
 	// relies on both being present?
 	// div (with attrs) <-> div (no attrs)
-	if (vnode.attrs || donor.attrs)
+	if (vnode.attrs != null || donor.attrs != null)
 		patchAttrs(vnode, donor);
 
 	// patch events
@@ -123,19 +123,20 @@ function patchChildren(vnode, donor) {
 
 	for (var i = 0; i < vnode.body.length; i++) {
 		var node2 = vnode.body[i];
+		var type2 = node2.type;
 
-		if (node2.type == VVIEW) {
+		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT) {
+			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))
+				patch(node2, donor2);
+		}
+		else if (type2 == VVIEW) {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))		// update/moveTo
 				views[donor2.vmid]._update(node2.model, vnode, i);		// withDOM
 			else
 				createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
 		}
-		else if (node2.type == VMODEL)
+		else if (type2 == VMODEL)
 			views[node2.vmid]._update(node2.model, vnode, i);
-		else {
-			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))
-				patch(node2, donor2);
-		}
 
 		// to keep search space small, if donation is non-contig, move node fwd?
 		// re-establish contigindex

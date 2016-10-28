@@ -450,23 +450,26 @@ function hydrate(vnode, withEl) {
 		if (vnode.type === ELEMENT) {
 			vnode.el = withEl || document.createElement(vnode.tag);
 
-			if (vnode.attrs)
+			if (vnode.attrs != null)
 				{ patchAttrs2(vnode); }
 
 			if (isArr(vnode.body)) {
-				vnode.body.forEach(function (vnode2, i) {
-					if (vnode2.type == VMODEL) {
+				for (var i = 0; i < vnode.body.length; i++) {
+					var vnode2 = vnode.body[i];
+					var type2 = vnode2.type;
+
+					if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT)
+						{ insertBefore(vnode.el, hydrate(vnode2)); }		// vnode.el.appendChild(hydrate(vnode2))
+					else if (type2 == VVIEW) {
+						var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i);		// todo: handle new model updates
+						insertBefore(vnode.el, vm.node.el);
+					}
+					else if (type2 == VMODEL) {
 						var vm = views[vnode2.vmid];
 						vm._redraw(vnode, i);
 						insertBefore(vnode.el, vm.node.el);
 					}
-					else if (vnode2.type == VVIEW) {
-						var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i);		// todo: handle new model updates
-						insertBefore(vnode.el, vm.node.el);
-					}
-					else
-						{ insertBefore(vnode.el, hydrate(vnode2)); }		// vnode.el.appendChild(hydrate(vnode2))
-				});
+				}
 			}
 			else if (vnode.body != null && vnode.body !== "") {
 				if (vnode.raw)
@@ -797,7 +800,7 @@ function patch(vnode, donor) {
 	vnode.el._node = vnode;
 
 	// "" => ""
-	if (vnode.type === TEXT && vnode.body !== donor.body) {
+	if (vnode.type == TEXT && vnode.body !== donor.body) {
 		vnode.el.nodeValue = vnode.body;
 		return;
 	}
@@ -805,7 +808,7 @@ function patch(vnode, donor) {
 	// BUG: donation would break:
 	// relies on both being present?
 	// div (with attrs) <-> div (no attrs)
-	if (vnode.attrs || donor.attrs)
+	if (vnode.attrs != null || donor.attrs != null)
 		{ patchAttrs(vnode, donor); }
 
 	// patch events
@@ -866,19 +869,20 @@ function patchChildren(vnode, donor) {
 
 	for (var i = 0; i < vnode.body.length; i++) {
 		var node2 = vnode.body[i];
+		var type2 = node2.type;
 
-		if (node2.type == VVIEW) {
+		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT) {
+			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))
+				{ patch(node2, donor2); }
+		}
+		else if (type2 == VVIEW) {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))		// update/moveTo
 				{ views[donor2.vmid]._update(node2.model, vnode, i); }		// withDOM
 			else
 				{ createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
 		}
-		else if (node2.type == VMODEL)
+		else if (type2 == VMODEL)
 			{ views[node2.vmid]._update(node2.model, vnode, i); }
-		else {
-			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))
-				{ patch(node2, donor2); }
-		}
 
 		// to keep search space small, if donation is non-contig, move node fwd?
 		// re-establish contigindex
