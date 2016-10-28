@@ -85,8 +85,12 @@ export function patch(vnode, donor) {
 			// needs cleanup pass?
 		//	console.log('[] => ""', donor.body, vnode.body);
 
-			if (vnode.body != null)
-				vnode.el.textContent = vnode.body;
+			if (vnode.body != null) {
+				if (vnode.raw)
+					vnode.el.innerHTML = vnode.body;
+				else
+					vnode.el.textContent = vnode.body;
+			}
 			else {
 				while (vnode.el.firstChild)
 					vnode.el.removeChild(vnode.el.firstChild);
@@ -105,7 +109,9 @@ export function patch(vnode, donor) {
 		else if (vnode.body !== donor.body) {
 		//	console.log('"" => ""', donor, vnode);
 
-			if (vnode.el.firstChild)
+			if (vnode.raw)
+				vnode.el.innerHTML = vnode.body;
+			else if (vnode.el.firstChild)
 				vnode.el.firstChild.nodeValue = vnode.body;
 			else
 				vnode.el.textContent = vnode.body;
