@@ -139,23 +139,23 @@ function curry(fn, args, ctx) {
 	};
 }
 
-var subStream = null;
-var streamVal = null;
 var isStream = null;
+var streamVal = null;
+var subStream = null;
 var unsubStream = null;
 
 /* example flyd adapter:
 {
-	sub:	(s,fn) => flyd.on(fn, s),
-	val:	s => s(),
 	is:		s => flyd.isStream(s),
+	val:	s => s(),
+	sub:	(s,fn) => flyd.on(fn, s),
 	unsub:	s => s.end(),
 }
 */
 function streamCfg(cfg) {
-	subStream	= cfg.sub;
-	streamVal	= cfg.val;
 	isStream	= cfg.is;
+	streamVal	= cfg.val;
+	subStream	= cfg.sub;
 	unsubStream	= cfg.unsub;
 }
 
