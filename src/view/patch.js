@@ -49,14 +49,17 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 export function patch(vnode, donor) {
 	donor.hooks && fireHooks("willRecycle", donor, vnode);
 
-	vnode.el = donor.el;
+	var el = vnode.el = donor.el;
 	donor.recycled = true;
 
-	vnode.el._node = vnode;
+	var obody = donor.body;
+	var nbody = vnode.body;
+
+	el._node = vnode;
 
 	// "" => ""
-	if (vnode.type == TEXT && vnode.body !== donor.body) {
-		vnode.el.nodeValue = vnode.body;
+	if (vnode.type == TEXT && nbody !== obody) {
+		el.nodeValue = nbody;
 		return;
 	}
 
@@ -68,53 +71,53 @@ export function patch(vnode, donor) {
 
 	// patch events
 
-	var oldIsArr = isArr(donor.body);
-	var newIsArr = isArr(vnode.body);
+	var oldIsArr = isArr(obody);
+	var newIsArr = isArr(nbody);
 
-//	var nonEqNewBody = vnode.body != null && vnode.body !== donor.body;
+//	var nonEqNewBody = nbody != null && nbody !== obody;
 
 	if (oldIsArr) {
 		// [] => []
 		if (newIsArr) {
-		//	console.log('[] => []', donor.body, vnode.body);
+		//	console.log('[] => []', obody, nbody);
 			// graft children
 			patchChildren(vnode, donor);
 		}
 		// [] => "" | null
-		else if (vnode.body !== donor.body) {
+		else if (nbody !== obody) {
 			// needs cleanup pass?
-		//	console.log('[] => ""', donor.body, vnode.body);
+		//	console.log('[] => ""', obody, nbody);
 
-			if (vnode.body != null) {
+			if (nbody != null) {
 				if (vnode.raw)
-					vnode.el.innerHTML = vnode.body;
+					el.innerHTML = nbody;
 				else
-					vnode.el.textContent = vnode.body;
+					el.textContent = nbody;
 			}
 			else {
-				while (vnode.el.firstChild)
-					vnode.el.removeChild(vnode.el.firstChild);
+				while (el.firstChild)
+					el.removeChild(el.firstChild);
 			}
 		}
 	}
 	else {
 		// "" | null => []
 		if (newIsArr) {
-		//	console.log('"" => []', donor.body, vnode.body);	// hydrate new here?
-			while (vnode.el.firstChild)
-				vnode.el.removeChild(vnode.el.firstChild);
+		//	console.log('"" => []', obody, nbody);	// hydrate new here?
+			while (el.firstChild)
+				el.removeChild(el.firstChild);
 			patchChildren(vnode, donor);
 		}
 		// "" | null => "" | null
-		else if (vnode.body !== donor.body) {
+		else if (nbody !== obody) {
 		//	console.log('"" => ""', donor, vnode);
 
 			if (vnode.raw)
-				vnode.el.innerHTML = vnode.body;
-			else if (vnode.el.firstChild)
-				vnode.el.firstChild.nodeValue = vnode.body;
+				el.innerHTML = nbody;
+			else if (el.firstChild)
+				el.firstChild.nodeValue = nbody;
 			else
-				vnode.el.textContent = vnode.body;
+				el.textContent = nbody;
 		}
 	}
 
@@ -126,10 +129,10 @@ function patchChildren(vnode, donor) {
 	// first unrecycled node (search head)
 	var fromIdx = 0;
 
-	var donor2;
+	var donor2, nbody = vnode.body;
 
-	for (var i = 0; i < vnode.body.length; i++) {
-		var node2 = vnode.body[i];
+	for (var i = 0; i < nbody.length; i++) {
+		var node2 = nbody[i];
 		var type2 = node2.type;
 
 		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT) {
@@ -150,7 +153,7 @@ function patchChildren(vnode, donor) {
 
 		if (donor2) {
 			if (donor2.idx == fromIdx) {							// todo: conditional contigidx (first non-null)
-			//	while (donor.body[fromIdx] && donor.body[fromIdx].recycled)
+			//	while (obody[fromIdx] && obody[fromIdx].recycled)
 				fromIdx++;
 			}
 		}
