@@ -2,6 +2,14 @@ import { isArr, isProm, curry } from '../utils';
 import { fireHooks } from './hooks';
 import { views } from './ViewModel';
 
+export function createElement(tag) {
+	return document.createElement(tag);
+}
+
+export function createTextNode(body) {
+	return document.createTextNode(body);
+}
+
 // ? removes if !recycled
 export function nextSib(sib) {
 	return sib.nextSibling;

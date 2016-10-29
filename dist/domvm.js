@@ -453,6 +453,14 @@ function fireHooks(name, o, n, immediate) {
 	}
 }
 
+function createElement(tag) {
+	return document.createElement(tag);
+}
+
+function createTextNode(body) {
+	return document.createTextNode(body);
+}
+
 // ? removes if !recycled
 function nextSib(sib) {
 	return sib.nextSibling;
@@ -548,7 +556,7 @@ function patchAttrs2(vnode) {
 function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
 		if (vnode.type === ELEMENT) {
-			vnode.el = withEl || document.createElement(vnode.tag);
+			vnode.el = withEl || createElement(vnode.tag);
 
 			if (vnode.attrs != null)
 				{ patchAttrs2(vnode); }
@@ -579,7 +587,7 @@ function hydrate(vnode, withEl) {
 			}
 		}
 		else if (vnode.type === TEXT)
-			{ vnode.el = withEl || document.createTextNode(vnode.body); }
+			{ vnode.el = withEl || createTextNode(vnode.body); }
 	}
 
 	vnode.el._node = vnode;

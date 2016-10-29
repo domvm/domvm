@@ -7,7 +7,7 @@ import { setAttr } from './patchAttrs';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
 import { createView } from './createView';
-import { insertBefore } from './dom';
+import { createElement, createTextNode, insertBefore } from './dom';
 
 
 // TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT
@@ -35,7 +35,7 @@ function patchAttrs2(vnode) {
 export function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
 		if (vnode.type === ELEMENT) {
-			vnode.el = withEl || document.createElement(vnode.tag);
+			vnode.el = withEl || createElement(vnode.tag);
 
 			if (vnode.attrs != null)
 				patchAttrs2(vnode);
@@ -66,7 +66,7 @@ export function hydrate(vnode, withEl) {
 			}
 		}
 		else if (vnode.type === TEXT)
-			vnode.el = withEl || document.createTextNode(vnode.body);
+			vnode.el = withEl || createTextNode(vnode.body);
 	}
 
 	vnode.el._node = vnode;
