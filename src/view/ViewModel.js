@@ -213,8 +213,14 @@ export function cleanExposedRefs(orefs, nrefs) {
 	}
 }
 
-function mount(el, isRoot, withDOM) {		// , asSub, refEl
+function mount(el, isRoot, withDOM, asSub, refEl) {
 	var vm = this;
+
+	vm.hooks && fireHooks("willMount", vm);
+
+	// this first happens during view creation, but if view is
+	// ever unmounted & remounted later, need to re-register
+	views[vm.id] = vm;
 
 	if (isRoot) {
 		while (el.firstChild)
@@ -224,13 +230,15 @@ function mount(el, isRoot, withDOM) {		// , asSub, refEl
 		hydrate(this.node, el);
 	}
 	else {
-		this._redraw(null, null, withDOM);
+		asSub ? hydrate(vm.node) : this._redraw(null, null, withDOM);
 
 		if (el)
-			insertBefore(el, this.node.el);			// el.appendChild(this.node.el);
+			insertBefore(el, this.node.el, refEl);			// el.appendChild(this.node.el);
 	}
 
-	if (el)
+	vm.hooks && fireHooks("didMount", vm);
+
+	if (el && !asSub)
 		drainDidHooks(this);
 
 	return this;
@@ -244,6 +252,8 @@ function unmount(asSub) {
 	var node = vm.node;
 	var parEl = node.el.parentNode;
 
+	vm.hooks && fireHooks("willUnmount", vm);
+
 	// edge bug: this could also be willRemove promise-delayed; should .then() or something to make sure hooks fire in order
 	removeChild(parEl, node.el);
 
@@ -251,6 +261,8 @@ function unmount(asSub) {
 	vm.node = node.parent = null;	// unhook to help gc?
 
 //	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
+
+	vm.hooks && fireHooks("didUnmount", vm, null);		// , immediate
 
 	if (!asSub)
 		drainDidHooks(vm);

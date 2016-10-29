@@ -474,8 +474,6 @@ function prevSib(sib) {
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks;
 
-	var vm = node.vmid != null ? node.vm() : null;
-
 //	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
 //		console.log("clean exposed ref", node.ref);
 
@@ -488,17 +486,11 @@ function _removeChild(parEl, el, immediate) {
 	parEl.removeChild(el);
 
 	hooks && fireHooks("didRemove", node, null, immediate);
-
-	vm && vm.hooks && fireHooks("didUnmount", vm, null, immediate);
 }
 
 // todo: hooks
 function removeChild(parEl, el) {
 	var node = el._node, hooks = node.hooks;
-
-	var vm = node.vmid != null ? node.vm() : null;
-
-	vm && vm.hooks && fireHooks("willUnmount", vm);
 
 	var res = hooks && fireHooks("willRemove", node);
 
@@ -512,19 +504,9 @@ function removeChild(parEl, el) {
 function insertBefore(parEl, el, refEl) {
 	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
 
-	var vm = !inDom && node.vmid != null ? node.vm() : null;
-
-	vm && vm.hooks && fireHooks("willMount", vm);
-
-	// this first happens during view creation, but if view is
-	// ever unmounted & remounted later, need to re-register
-	vm && (views[vm.id] = vm);
-
 	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
 	parEl.insertBefore(el, refEl);
 	hooks && fireHooks(inDom ? "didReinsert" : "didInsert", node);
-
-	vm && vm.hooks && fireHooks("didMount", vm);
 }
 
 function insertAfter(parEl, el, refEl) {
@@ -709,7 +691,7 @@ function syncChildren(node, parEl) {
 			if (lftNode == null)		// reached end
 				{ break converge; }
 			else if (lftNode.el == null) {
-				insertBefore(parEl, hydrate(lftNode), lftSib);		// lftNode.vmid != null ? lftNode.vm().mount(parEl, false, true, lftSib) :
+				lftNode.vmid != null ? lftNode.vm().mount(parEl, false, true, true, lftSib) : insertBefore(parEl, hydrate(lftNode), lftSib);
 				lftNode = nextNode(lftNode, body);
 			}
 			else if (lftNode.el === lftSib) {
@@ -736,7 +718,7 @@ function syncChildren(node, parEl) {
 			if (rgtNode == lftNode)		// converged
 				{ break converge; }
 			if (rgtNode.el == null) {
-				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vmid != null ? rgtNode.vm().mount(parEl, false, true, nextSib(rgtSib) :
+				rgtNode.vmid != null ? rgtNode.vm().mount(parEl, false, true, true, nextSib(rgtSib)) : insertAfter(parEl, hydrate(rgtNode), rgtSib);
 				rgtNode = prevNode(rgtNode, body);
 			}
 			else if (rgtNode.el === rgtSib) {
@@ -1171,8 +1153,14 @@ function drainDidHooks(vm) {
 
 
 
-function mount(el, isRoot, withDOM) {		// , asSub, refEl
+function mount(el, isRoot, withDOM, asSub, refEl) {
 	var vm = this;
+
+	vm.hooks && fireHooks("willMount", vm);
+
+	// this first happens during view creation, but if view is
+	// ever unmounted & remounted later, need to re-register
+	views[vm.id] = vm;
 
 	if (isRoot) {
 		while (el.firstChild)
@@ -1182,13 +1170,15 @@ function mount(el, isRoot, withDOM) {		// , asSub, refEl
 		hydrate(this.node, el);
 	}
 	else {
-		this._redraw(null, null, withDOM);
+		asSub ? hydrate(vm.node) : this._redraw(null, null, withDOM);
 
 		if (el)
-			{ insertBefore(el, this.node.el); }			// el.appendChild(this.node.el);
+			{ insertBefore(el, this.node.el, refEl); }			// el.appendChild(this.node.el);
 	}
 
-	if (el)
+	vm.hooks && fireHooks("didMount", vm);
+
+	if (el && !asSub)
 		{ drainDidHooks(this); }
 
 	return this;
@@ -1202,6 +1192,8 @@ function unmount(asSub) {
 	var node = vm.node;
 	var parEl = node.el.parentNode;
 
+	vm.hooks && fireHooks("willUnmount", vm);
+
 	// edge bug: this could also be willRemove promise-delayed; should .then() or something to make sure hooks fire in order
 	removeChild(parEl, node.el);
 
@@ -1209,6 +1201,8 @@ function unmount(asSub) {
 	vm.node = node.parent = null;	// unhook to help gc?
 
 //	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
+
+	vm.hooks && fireHooks("didUnmount", vm, null);		// , immediate
 
 	if (!asSub)
 		{ drainDidHooks(vm); }
