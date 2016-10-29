@@ -1733,6 +1733,26 @@ VNodeProto.html = function(dynProps) {
 
 var voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
 
+var htmlEnts = {
+	'&': '&amp;',
+	'<': '&lt;',
+	'>': '&gt;',
+	'"': '&quot;',
+	"'": '&#x27;',
+	'/': '&#x2F;'
+};
+
+var htmlEntsRx = /[&<>"'\/]/g;
+
+function escHtml(string) {
+	if (string == null)
+		{ return ''; }
+
+	return ('' + string).replace(htmlEntsRx, function(match) {
+		return htmlEnts[match];
+	});
+}
+
 function html(node, dynProps) {
 	var buf = "";
 	switch (node.type) {
@@ -1740,7 +1760,7 @@ function html(node, dynProps) {
 			if (node.el != null && node.tag == null)
 				{ return node.el.outerHTML; }		// pre-existing dom elements (does not currently account for any props applied to them)
 
-			buf += "<" + node.tag;
+			buf += "<" + escHtml(node.tag);
 
 			if (node.attrs) {
 				var style = isVal(node.attrs.style) ? node.attrs.style : "";
@@ -1762,14 +1782,14 @@ function html(node, dynProps) {
 						{ continue; }
 
 					if (val === true)
-						{ buf += " " + pname + '=""'; }
+						{ buf += " " + escHtml(pname) + '=""'; }
 					else if (val === false) {}
 					else if (val !== null && pname[0] !== ".")
-						{ buf += " " + pname + '="' + val + '"'; }
+						{ buf += " " + escHtml(pname) + '="' + escHtml(val) + '"'; }
 				}
 
 				if (style.length)
-					{ buf += ' style="' + style.trim() + '"'; }
+					{ buf += ' style="' + escHtml(style.trim()) + '"'; }
 			}
 
 			// if body-less svg node, auto-close & return
@@ -1779,7 +1799,7 @@ function html(node, dynProps) {
 				{ buf += ">"; }
 			break;
 		case TEXT:
-			return node.body;
+			return escHtml(node.body);
 			break;
 	}
 
@@ -1790,9 +1810,9 @@ function html(node, dynProps) {
 			});
 		}
 		else
-			{ buf += node.body || ""; }
+			{ buf += node.raw ? node.body : escHtml(node.body) || ""; }
 
-		buf += "</" + node.tag + ">";
+		buf += "</" + escHtml(node.tag) + ">";
 	}
 
 	return buf;
