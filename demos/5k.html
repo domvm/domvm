@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+	<head>
+		<title>domvm.full.js - 5k components</title>
+
+		<script src="../dist/domvm.micro.js"></script>
+
+		<style>
+			div {
+				line-height: 0;
+				font-size: 0;
+				margin: 0 auto;
+			}
+			span {
+				display: inline-block;
+				width: 4px;
+				height: 4px;
+				margin: 0;
+				padding: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="app"></div>
+		<script>
+			var el = domvm.defineElementFixed;
+
+			function PixelShow(vm, props) {
+				// pick a random color from an array of colors
+				function colorPicker() {
+					return "#"+((1<<24)*Math.random()|0).toString(16);
+				}
+
+				var length;
+
+				function drawGrid(width, height) {
+					// define y axis and width and height of squares
+					var yAxis = 0,
+						wh = 4,
+						i = 0,
+						children = length ? new Array(length) : [];
+
+					// while the y axis is less than the section height
+					while (yAxis <= height) {
+						// draw squares along the x axis
+					    for (var xAxis = 0; xAxis <= width; xAxis += wh) {
+				       		children[i] = el("span", {style: {background: colorPicker()}});
+					       	i += 1;
+					    }
+
+					    // move the y axis down to the next row
+					    yAxis += wh;
+					}
+
+					if (length === void 0) {
+						length = children.length;
+					}
+
+					return children;
+				}
+
+				return function() {
+					return el("div",
+						{
+							style: {
+								width: props.width,
+								height: props.height,
+								position: 'relative',
+							}
+						},
+						drawGrid(props.width, props.height)
+					)
+				}
+			}
+
+			var vm = domvm.createView(PixelShow, {width: 320, height: 320}).mount(document.getElementsByClassName("app")[0]);
+
+			function update() {
+				vm.redraw();
+				requestAnimationFrame(update);
+			}
+
+			update();
+
+		//	setInterval(vm.redraw.bind(vm), 1000/60);
+		</script>
+	</body>
+</html>
