@@ -115,7 +115,7 @@ export function syncChildren(node, parEl) {
 			if (lftNode == null)		// reached end
 				break converge;
 			else if (lftNode.el == null) {
-				lftNode.vmid != null ? lftNode.vm().mount(parEl, false, true, true, lftSib) : insertBefore(parEl, hydrate(lftNode), lftSib);
+				insertBefore(parEl, hydrate(lftNode), lftSib);		// lftNode.vmid != null ? lftNode.vm().mount(parEl, false, true, lftSib) :
 				lftNode = nextNode(lftNode, body);
 			}
 			else if (lftNode.el === lftSib) {
@@ -142,7 +142,7 @@ export function syncChildren(node, parEl) {
 			if (rgtNode == lftNode)		// converged
 				break converge;
 			if (rgtNode.el == null) {
-				rgtNode.vmid != null ? rgtNode.vm().mount(parEl, false, true, true, nextSib(rgtSib)) : insertAfter(parEl, hydrate(rgtNode), rgtSib);
+				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vmid != null ? rgtNode.vm().mount(parEl, false, true, nextSib(rgtSib) :
 				rgtNode = prevNode(rgtNode, body);
 			}
 			else if (rgtNode.el === rgtSib) {
