@@ -20,6 +20,21 @@ export function prevSib(sib) {
 	return sib.previousSibling;
 }
 
+// TODO: this should collect all deep proms from all hooks and return Promise.all()
+function deepNotifyRemove(node) {
+	var hooks = node.hooks;
+	var vm = node.vmid != null ? node.vm() : null;
+
+	vm && vm.hooks && fireHooks("willUnmount", vm);
+
+	var res = hooks && fireHooks("willRemove", node);
+
+	if (isArr(node.body))
+		node.body.forEach(deepNotifyRemove);
+
+	return res;
+}
+
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks;
 
@@ -31,7 +46,7 @@ function _removeChild(parEl, el, immediate) {
 	if (isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)
-			removeChild(el, node.body[i].el);
+			_removeChild(el, node.body[i].el);
 	}
 
 	parEl.removeChild(el);
@@ -41,15 +56,11 @@ function _removeChild(parEl, el, immediate) {
 	vm && vm.hooks && fireHooks("didUnmount", vm, null, immediate);
 }
 
-// todo: hooks
+// todo: should delay parent unmount() by returning res prom?
 export function removeChild(parEl, el) {
 	var node = el._node, hooks = node.hooks;
 
-	var vm = node.vmid != null ? node.vm() : null;
-
-	vm && vm.hooks && fireHooks("willUnmount", vm);
-
-	var res = hooks && fireHooks("willRemove", node);
+	var res = deepNotifyRemove(node);
 
 	if (res != null && isProm(res))
 		res.then(curry(_removeChild, [parEl, el, true]));
