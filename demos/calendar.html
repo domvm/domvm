@@ -3,19 +3,17 @@
 <head>
 	<title>domvm Calendar Demo</title>
 
-	<script src="../dist/domvm.js"></script>
+	<script src="../dist/domvm.micro.js"></script>
 
 	<script>
-		var view = domvm.view;
+		var el = domvm.defineElement,
+			tx = domvm.defineText,
+			cm = domvm.defineComment,
+			vw = domvm.defineView,
+			iv = domvm.injectView,
+			ie = domvm.injectElement;
 
-		var el = view.defineElement,
-			tx = view.defineText,
-			cm = view.defineComment,
-			vw = view.defineView,
-			iv = view.injectView,
-			ie = view.injectElement;
-
-//		el = domvm.view.defineElementFixed;
+//		el = domvm.defineElementFixed;
 	</script>
 
 	<script src="../test/dominstr.js"></script>
@@ -84,7 +82,7 @@
 		} };
 
 		// init view-model
-		var calVm = domvm.view.createView(CalendarView, {year: new Date().getFullYear()}, null, opts).mount(document.body);
+		var calVm = domvm.createView(CalendarView, {year: new Date().getFullYear()}, null, opts).mount(document.body);
 
 		function CalendarView(vm, args) {
 			var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],

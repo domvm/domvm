@@ -1,4 +1,4 @@
-var j = domvm.view.jsonml;
+var j = domvm.jsonml;
 
 /*
 // naive implementation, no optims
@@ -105,7 +105,7 @@ function Query(vm) {
 
 let dbs		= null,
 	raf		= null,
-	vm		= domvm.view.createView(DBMonView),
+	vm		= domvm.createView(DBMonView),
 	init	= true,
 	avg		= [],
 	len		= 5,

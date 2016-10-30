@@ -1,5 +1,5 @@
-var el = domvm.view.defineElement,
-	tx = domvm.view.defineText;
+var el = domvm.defineElement,
+	tx = domvm.defineText;
 
 function ModalStack(ctnr, opts) {
 	this.opts = opts || {};
@@ -10,7 +10,7 @@ function ModalStack(ctnr, opts) {
 		this.stack.push(modal);
 
 		if (this.stack.length == 1)
-			this.vm = domvm.view.createView(ModalStackView, this).mount(ctnr);
+			this.vm = domvm.createView(ModalStackView, this).mount(ctnr);
 		else
 			this.vm.redraw();
 	};

@@ -8,10 +8,6 @@ import { defineView } from "../defineView";
 import { injectView } from "../injectView";
 import { injectElement } from "../injectElement";
 
-import view from '../../view';
-
-view.jsonml = jsonml;
-
 function isStr(val) {
 	return typeof val == "string";
 }

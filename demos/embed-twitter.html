@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+</head>
+<body>
+	<script src="../dist/domvm.micro.js"></script>
+	<script src="https://platform.twitter.com/widgets.js"></script>
+
+	<script>
+		function randStr(len) {
+			return Math.random().toString(36).substr(2,len);
+		}
+
+		var el = domvm.defineElement,
+			tx = domvm.defineText;
+
+		function FeedView(vm, tweets) {
+			var hooks = {
+				didInsert: function(n) {
+					twttr.widgets.createTweet(n.data, n.el);	// { theme: 'dark' }
+				}
+			};
+
+			return {
+				render: function() {
+					return el("#feed", [tx(randStr(10))].concat(tweets.map(tweetId =>
+						el(".tweet", {_data: tweetId, _hooks: hooks})
+					)))
+				}
+			};
+		}
+
+		var tweets = [
+			'790139408573992961',
+			'789311000163946497',
+			'789024368575729664',
+		];
+
+		var vm = domvm.createView(FeedView, tweets).mount(document.body);
+
+		setInterval(vm.redraw.bind(vm), 100);
+	</script>
+</body>
+</html>

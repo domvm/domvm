@@ -1,11 +1,9 @@
-var view = domvm.view;
-
-var el = view.defineElement,
-	tx = view.defineText,
-	cm = view.defineComment,
-	vw = view.defineView,
-	iv = view.injectView,
-	ie = view.injectElement;
+var el = domvm.defineElement,
+	tx = domvm.defineText,
+	cm = domvm.defineComment,
+	vw = domvm.defineView,
+	iv = domvm.injectView,
+	ie = domvm.injectElement;
 
 // uncomment to optimize for fixed-layout nodes (no removal/insertion/reordering)
 // var el = view.defineElementFixed;
@@ -118,16 +116,16 @@ let dbs		= null,
 	start;
 
 function mount(appEl, dbs) {
-	vm = view.createView(DBMonView, dbs, false);
+	vm = domvm.createView(DBMonView, dbs, false);
 	vm.mount(appEl);
 }
 
 function attach(appEl, dbs) {
 	// isomorphic test
-	var vw0 = view.createView(DBMonView, dbs, false);
+	var vw0 = domvm.createView(DBMonView, dbs, false);
 	appEl.innerHTML = vw0.html();
 
-	vm = view.createView(DBMonView, dbs, false);
+	vm = domvm.createView(DBMonView, dbs, false);
 	vm.attach(appEl.firstChild);
 }
 

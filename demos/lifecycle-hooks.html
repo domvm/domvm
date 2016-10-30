@@ -59,18 +59,16 @@
 		}
 	</style>
 
-	<script src="../dist/domvm.js"></script>
+	<script src="../dist/domvm.micro.js"></script>
 </head>
 <body>
 	<script>
-		var view = domvm.view;
-
-		var el = view.defineElement,
-			tx = view.defineText,
-			cm = view.defineComment,
-			vw = view.defineView,
-			iv = view.injectView,
-			ie = view.injectElement;
+		var el = domvm.defineElement,
+			tx = domvm.defineText,
+			cm = domvm.defineComment,
+			vw = domvm.defineView,
+			iv = domvm.injectView,
+			ie = domvm.injectElement;
 
 		function repaint(node) {
 			node && node.el && node.el.offsetHeight;
@@ -154,7 +152,7 @@
 			"1.dog",
 		];
 
-		var vm = domvm.view.createView(View1, data);
+		var vm = domvm.createView(View1, data);
 
 		// view-level hooks
 		vm.hook({

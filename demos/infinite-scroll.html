@@ -3,17 +3,15 @@
 <head>
 </head>
 <body>
-	<script src="../dist/domvm.js"></script>
+	<script src="../dist/domvm.micro.js"></script>
 
 	<script>
-		var view = domvm.view;
-
-		var el = view.defineElement,
-			tx = view.defineText,
-			cm = view.defineComment,
-			vw = view.defineView,
-			iv = view.injectView,
-			ie = view.injectElement;
+		var el = domvm.defineElement,
+			tx = domvm.defineText,
+			cm = domvm.defineComment,
+			vw = domvm.defineView,
+			iv = domvm.injectView,
+			ie = domvm.injectElement;
 
 		const itemsToLoad = 20;
 
@@ -67,7 +65,7 @@
 		// load initial items
 		model.loadMoar();
 
-		domvm.view.createView(ItemListView, model).mount(document.body);
+		domvm.createView(ItemListView, model).mount(document.body);
 	</script>
 </body>
 </html>

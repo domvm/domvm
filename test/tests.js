@@ -1,13 +1,13 @@
-// domvm.view.createView.config({ debounce: false });
+// domvm.createView.config({ debounce: false });
 
 QUnit.config.reorder = false;
 
-var	el = domvm.view.defineElement,
-	tx = domvm.view.defineText,
-	cm = domvm.view.defineComment,
-	vw = domvm.view.defineView,
-	iv = domvm.view.injectView,
-	ie = domvm.view.injectElement;
+var	el = domvm.defineElement,
+	tx = domvm.defineText,
+	cm = domvm.defineComment,
+	vw = domvm.defineView,
+	iv = domvm.injectView,
+	ie = domvm.injectElement;
 
 var instr = new DOMInstr();
 
@@ -49,7 +49,7 @@ QUnit.module("Prop/attr mutation");
 		tpl = el("input#foo.bar.baz", {type: "text", style: {fontFamily: "Arial", fontSize: 12}, disabled: true, custom: "abc", custom2: null, custom3: "", custom4: "foo", onclick: onclick});
 
 		instr.start();
-		vm = domvm.view.createView(View).mount(testyDiv);		// todo: create test container
+		vm = domvm.createView(View).mount(testyDiv);		// todo: create test container
 		var callCounts = instr.end();
 
 		var expcHtml = '<input type="text" disabled="" custom="abc" custom3="" custom4="foo" id="foo" class="bar baz" style="font-family: Arial; font-size: 12px;">';
@@ -92,7 +92,7 @@ QUnit.module("Unrenderable values");
 		var expcHtml = '<div>025NaN19blahInfinity[object Object]trueyofalse</div>';
 
 		instr.start();
-		vm = domvm.view.createView(ViewAny).mount(testyDiv);
+		vm = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 2, createTextNode: 1 });
@@ -124,7 +124,7 @@ QUnit.module("Unrenderable values");
 		var expcHtml = '<div><span>moo</span><span>cow</span>abc</div>';
 
 		instr.start();
-		var vm2 = domvm.view.createView(ViewAny).mount(testyDiv);
+		var vm2 = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm2.node.el, vm2.html(), expcHtml, callCounts, { createElement: 3, createTextNode: 1, insertBefore: 4, textContent: 2 });
@@ -144,7 +144,7 @@ QUnit.module("Unrenderable values");
 		var expcHtml = '<table class="display-panel"><tbody><tr><td class="A20">X</td></tr></tbody></table>';
 
 		instr.start();
-		var vm2 = domvm.view.createView(ViewAny).mount(testyDiv);
+		var vm2 = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm2.node.el, vm2.html(), expcHtml, callCounts, { createElement: 4, className: 2, insertBefore: 4, textContent: 1 });
@@ -160,7 +160,7 @@ QUnit.module("Unrenderable values");
 
 		var expcHtml = '<div>abcde</div>';
 		instr.start();
-		var vm2 = domvm.view.createView(ViewAny).mount(testyDiv);
+		var vm2 = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm2.node.el, vm2.html(), expcHtml, callCounts, { createElement: 1, createTextNode: 1, insertBefore: 2 });
@@ -180,7 +180,7 @@ QUnit.module("Flat List");
 
 	QUnit.test("Create", function(assert) {
 		instr.start();
-		vm = domvm.view.createView(ListView).mount(testyDiv);		// todo: create test container
+		vm = domvm.createView(ListView).mount(testyDiv);		// todo: create test container
 		var callCounts = instr.end();
 
 		listEl = document.getElementById("list0");
@@ -339,7 +339,7 @@ QUnit.module("Flat List w/keys");
 
 	QUnit.test("Create", function(assert) {
 		instr.start();
-		vm = domvm.view.createView(ListViewKeyed).mount(testyDiv);		// todo: create test container
+		vm = domvm.createView(ListViewKeyed).mount(testyDiv);		// todo: create test container
 		var callCounts = instr.end();
 
 		listEl = document.getElementById("list1");
@@ -603,7 +603,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<div><div>a</div><div>b</div><div>c</div><br></div>';
 
 		instr.start();
-		var vm = domvm.view.createView(View).mount(testyDiv);
+		var vm = domvm.createView(View).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 5, insertBefore: 5, textContent: 3 });
@@ -614,7 +614,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<span>foo</span>';
 
 		instr.start();
-		var vm = domvm.view.createView(View).mount(testyDiv);
+		var vm = domvm.createView(View).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
@@ -634,7 +634,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<div><span>foo</span></div>';
 
 		instr.start();
-		var vm = domvm.view.createView(View).mount(testyDiv);
+		var vm = domvm.createView(View).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
@@ -658,7 +658,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<span><em>moo</em> <em>cow</em></span>';
 
 		instr.start();
-		var vm = domvm.view.createView(View).mount(testyDiv);
+		var vm = domvm.createView(View).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 3, createTextNode: 1, insertBefore: 4, textContent: 2 });
@@ -678,7 +678,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<span>moo cow</span>';
 
 		instr.start();
-		var vm = domvm.view.createView(View).mount(testyDiv);
+		var vm = domvm.createView(View).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, textContent: 1, insertBefore: 1 });
@@ -706,7 +706,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<span><em>foo</em> bar <strong>baz</strong></span>';
 
 		instr.start();
-		var vm = domvm.view.createView(View).mount(testyDiv);
+		var vm = domvm.createView(View).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 3, createTextNode: 1, insertBefore: 4, textContent: 2 });
@@ -735,7 +735,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<span><em>foo</em><br><strong>baz</strong></span>';
 
 		instr.start();
-		var vm = domvm.view.createView(View).mount(testyDiv);
+		var vm = domvm.createView(View).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 4, textContent: 2, insertBefore: 4 });
@@ -767,7 +767,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<div><p>a</p></div>';
 
 		instr.start();
-		var vm = domvm.view.createView(View).mount(testyDiv);
+		var vm = domvm.createView(View).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, textContent: 1, insertBefore: 2 });
@@ -793,7 +793,7 @@ QUnit.module("Elems & id/class");
 		var tpl = el("div");
 
 		instr.start();
-		var vm = domvm.view.createView(anonView(tpl)).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div></div>';
@@ -804,7 +804,7 @@ QUnit.module("Elems & id/class");
 		var tpl = el("div", "moo");
 
 		instr.start();
-		var vm = domvm.view.createView(anonView(tpl)).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div>moo</div>';
@@ -815,7 +815,7 @@ QUnit.module("Elems & id/class");
 		var tpl = el("input");
 
 		instr.start();
-		var vm = domvm.view.createView(anonView(tpl)).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<input>';
@@ -826,7 +826,7 @@ QUnit.module("Elems & id/class");
 		var tpl = el("svg");
 
 		instr.start();
-		var vm = domvm.view.createView(anonView(tpl)).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<svg></svg>';		// should include xlink & xmlns?
@@ -837,7 +837,7 @@ QUnit.module("Elems & id/class");
 		var tpl = el("div#foo.class1.class2");
 
 		instr.start();
-		var vm = domvm.view.createView(anonView(tpl)).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div id="foo" class="class1 class2"></div>';
@@ -848,7 +848,7 @@ QUnit.module("Elems & id/class");
 		var tpl = el("strong.class1.class2#foo");
 
 		instr.start();
-		var vm = domvm.view.createView(anonView(tpl)).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<strong id="foo" class="class1 class2"></strong>';
@@ -859,7 +859,7 @@ QUnit.module("Elems & id/class");
 		var tpl = el("#foo.class1.class2");
 
 		instr.start();
-		var vm = domvm.view.createView(anonView(tpl)).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div id="foo" class="class1 class2"></div>';
@@ -870,7 +870,7 @@ QUnit.module("Elems & id/class");
 		var tpl = el(".class1.class2#foo");
 
 		instr.start();
-		var vm = domvm.view.createView(anonView(tpl)).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div id="foo" class="class1 class2"></div>';
@@ -882,7 +882,7 @@ QUnit.module("Elems & id/class");
 		var tpl = el("#abc.class1", {id: "qwerty", class: "class2 class3"});
 
 		instr.start();
-		var vm = domvm.view.createView(anonView(tpl)).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div id="qwerty" class="class1 class2 class3"></div>';
@@ -893,7 +893,7 @@ QUnit.module("Elems & id/class");
 		var tpl = el("div", {style: { backgroundColor: "red" }});
 
 		instr.start();
-		var vm = domvm.view.createView(anonView(tpl)).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div style="background-color: red;"></div>';
@@ -904,7 +904,7 @@ QUnit.module("Elems & id/class");
 		var tpl = el("input[type=number][readonly]");
 
 		instr.start();
-		var vm = domvm.view.createView(anonView(tpl)).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<input type="number" readonly="">';
@@ -913,7 +913,7 @@ QUnit.module("Elems & id/class");
 		var tpl = el("button[type=submit][disabled]", "Submit");
 
 		instr.start();
-		var vm = domvm.view.createView(anonView(tpl)).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<button type="submit" disabled="">Submit</button>';
@@ -946,7 +946,7 @@ QUnit.module("Attrs/Props");
 
 	QUnit.test("Bool attr init false", function(assert) {
 		instr.start();
-		domvm.view.createView(CheckView, check1).mount(testyDiv);		// todo: create test container
+		domvm.createView(CheckView, check1).mount(testyDiv);		// todo: create test container
 		var callCounts = instr.end();
 
 		var checkEl = document.getElementById(check1.id);
@@ -970,7 +970,7 @@ QUnit.module("Attrs/Props");
 
 	QUnit.test("Bool attr init true", function(assert) {
 		instr.start();
-		domvm.view.createView(CheckView, check2).mount(testyDiv);
+		domvm.createView(CheckView, check2).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var checkEl = document.getElementById(check2.id);
@@ -994,7 +994,7 @@ QUnit.module("Attrs/Props");
 
 	QUnit.test("Dynamic props, always sync vtree -> DOM prop", function(assert) {
 		instr.start();
-		domvm.view.createView(CheckView, check3).mount(testyDiv);
+		domvm.createView(CheckView, check3).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var checkEl = document.getElementById(check3.id);
@@ -1043,7 +1043,7 @@ QUnit.module("Subview List w/keys");
 
 	QUnit.test("Create", function(assert) {
 		instr.start();
-		vm = domvm.view.createView(ListViewKeyed, list).mount(testyDiv);		// todo: create test container
+		vm = domvm.createView(ListViewKeyed, list).mount(testyDiv);		// todo: create test container
 		var callCounts = instr.end();
 
 		listEl = document.getElementById("list2");
@@ -1239,7 +1239,7 @@ QUnit.module("Subview redraw(true) Branch Consistency");
 		var expcHtml = '<ul><li>Billy</li></ul>';
 
 		instr.start();
-		vm = domvm.view.createView(mom.view).mount(testyDiv);
+		vm = domvm.createView(mom.view).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
@@ -1311,7 +1311,7 @@ QUnit.module("Various Others");
 		var expcHtml = '<div><div><strong><em>yay!</em></strong></div></div>';
 
 		instr.start();
-		vm = domvm.view.createView(SomeView).mount(testyDiv);
+		vm = domvm.createView(SomeView).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 4, insertBefore: 4, textContent: 1 });
@@ -1342,7 +1342,7 @@ QUnit.module("Various Others");
 		var expcHtml = '<div><br>hello kitteh<em>foo</em><em>bar</em><em>yay!</em>woohoo!<em>yay!</em><i>another thing</i>the end</div>';
 
 		instr.start();
-		vm = domvm.view.createView(FlattenView).mount(testyDiv);
+		vm = domvm.createView(FlattenView).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 7, createTextNode: 3, insertBefore: 10, textContent: 5 });
@@ -1358,7 +1358,7 @@ QUnit.module("Various Others");
 		var expcHtml = '<em style="width: 30px; z-index: 5;">test</em>';
 
 		instr.start();
-		vm = domvm.view.createView(SomeView3).mount(testyDiv);
+		vm = domvm.createView(SomeView3).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, textContent: 1, insertBefore: 1 });
@@ -1372,7 +1372,7 @@ QUnit.module("Various Others");
 		var expcHtml = '<em style="width: 30px; z-index: 5;">test</em>';
 
 		instr.start();
-		vm = domvm.view.createView(SomeView3).mount(em, true);
+		vm = domvm.createView(SomeView3).mount(em, true);
 		var callCounts = instr.end();
 
 		evalOut(assert, em, vm.html(), expcHtml, callCounts, { textContent: 1, removeChild: 1 });
@@ -1388,7 +1388,7 @@ QUnit.module("Various Others");
 		var expcHtml = '<div><p class="foo">bar</p>&nbsp;baz</div>';
 
 		instr.start();
-		vm = domvm.view.createView(View5).mount(testyDiv);
+		vm = domvm.createView(View5).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, innerHTML: 1, insertBefore: 1 });
@@ -1412,7 +1412,7 @@ QUnit.module("Various Others");
 		var expcHtml = '<div><strong>cow</strong>abc</div>';
 
 		instr.start();
-		vm = domvm.view.createView(View6).mount(testyDiv);
+		vm = domvm.createView(View6).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, createTextNode: 1, insertBefore: 3 });
@@ -1456,7 +1456,7 @@ QUnit.module("Various Others");
 		}
 
 		instr.start();
-		vm = domvm.view.createView(View6).mount(testyDiv);
+		vm = domvm.createView(View6).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><p>a</p><ul><li>b</li><li>c</li></ul></div>';
@@ -1502,7 +1502,7 @@ QUnit.module("Various Others");
 			};
 		}
 
-		domvm.view.createView(ViewA).mount(testyDiv);
+		domvm.createView(ViewA).mount(testyDiv);
 
 		assert.equal(vmC.root(), vmA);
 		assert.equal(vmB.root(), vmA);
@@ -1575,7 +1575,7 @@ QUnit.module("emit() & synthetic events");
 
 	QUnit.test('Create', function(assert) {
 		instr.start();
-		domvm.view.createView(ViewA).mount();
+		domvm.createView(ViewA).mount();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div id="a"><strong><div id="b"><em><div id="c">Hello</div></em></div></strong></div>';
@@ -1647,7 +1647,7 @@ QUnit.module("emit() & synthetic events");
 			};
 		}
 
-		domvm.view.createView(ViewX).mount();
+		domvm.createView(ViewX).mount();
 
 		vmY.emit("testEv", "arg1", "arg2");
 	});
@@ -1704,7 +1704,7 @@ QUnit.module("redraw(true) ancestors");
 		var expcHtml = '<div id="a"><strong><div id="b"><em><div id="c">Hello</div></em></div></strong></div>';
 
 		instr.start();
-		domvm.view.createView(ViewA).mount();
+		domvm.createView(ViewA).mount();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { createElement: 5, insertBefore: 4, textContent: 1, id: 3});
@@ -1762,7 +1762,7 @@ QUnit.module("didredraw(true) & refs");
 			};
 		}
 
-		var vm = domvm.view.createView(MyView).mount(testyDiv);
+		var vm = domvm.createView(MyView).mount(testyDiv);
 
 		vm.redraw(true);
 	});
@@ -1805,7 +1805,7 @@ QUnit.module("didredraw(true) & refs");
 			};
 		}
 
-		var vm = domvm.view.createView(MyView).mount(testyDiv);
+		var vm = domvm.createView(MyView).mount(testyDiv);
 
 		vm.redraw(true);
 
@@ -1849,7 +1849,7 @@ QUnit.module("Non-persistent model replacement");
 		var expcHtml = '<div id="viewA">foo<br>bar</div>';
 
 		instr.start();
-		vmA = domvm.view.createView(ViewA, dataA, false).mount(testyDiv);
+		vmA = domvm.createView(ViewA, dataA, false).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { id: 1, createElement: 2, insertBefore: 4, createTextNode: 2 });
@@ -1869,7 +1869,7 @@ QUnit.module("Non-persistent model replacement");
 		var expcHtml = '<div id="viewB"><div id="viewA">foo<br>bar</div></div>';
 
 		instr.start();
-		vmB = domvm.view.createView(ViewB, dataA, false).mount(testyDiv);
+		vmB = domvm.createView(ViewB, dataA, false).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmB.node.el, vmB.html(), expcHtml, callCounts, { id: 2, createElement: 3, insertBefore: 5, createTextNode: 2 });
@@ -1907,7 +1907,7 @@ QUnit.module("Non-persistent model replacement");
 		var expcHtml = '<strong class="classy">texture</strong>';
 
 		instr.start();
-		var vmA = domvm.view.createView(ViewA, model).mount(testyDiv);
+		var vmA = domvm.createView(ViewA, model).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1, className: 1 });
@@ -1960,7 +1960,7 @@ QUnit.module("Non-persistent model replacement");
 		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>bar</strong></div></div>';
 
 		instr.start();
-		vmC = domvm.view.createView(ViewC, model).mount(testyDiv);
+		vmC = domvm.createView(ViewC, model).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { id: 2, createElement: 4, insertBefore: 4, textContent: 2 });
@@ -2008,7 +2008,7 @@ QUnit.module("Non-persistent model replacement");
 		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>bar</strong></div></div>';
 
 		instr.start();
-		vmC = domvm.view.createView(ViewC, model).mount(testyDiv);
+		vmC = domvm.createView(ViewC, model).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { id: 2, createElement: 4, insertBefore: 4, textContent: 2 });
@@ -2056,7 +2056,7 @@ QUnit.module("Non-persistent model replacement");
 		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>bar</strong></div></div>';
 
 		instr.start();
-		vmC = domvm.view.createView(ViewC, model).mount(testyDiv);
+		vmC = domvm.createView(ViewC, model).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { id: 2, createElement: 4, insertBefore: 4, textContent: 2 });
@@ -2129,7 +2129,7 @@ QUnit.module("Model persistence keys, vm init, DOM reuse");
 		var expcHtml = '<div><span>foo</span><br><strong>bar</strong></div>';
 
 		instr.start();
-		vmA = domvm.view.createView(ViewA, dataA).mount(testyDiv);
+		vmA = domvm.createView(ViewA, dataA).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { createElement: 4, insertBefore: 4, textContent: 2 });
@@ -2176,7 +2176,7 @@ QUnit.module("Model persistence keys, vm init, DOM reuse");
 		var expcHtml = '<div><em>foo</em><strong>bar</strong></div>';
 
 		instr.start();
-		var vm = domvm.view.createView(ViewX, model).mount(testyDiv);
+		var vm = domvm.createView(ViewX, model).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 3, insertBefore: 3, textContent: 2 });
@@ -2202,7 +2202,7 @@ QUnit.module("Imperative VMs");
 
 	function ViewA(vm, model) {
 		vmA = vm;
-		vmB = domvm.view.createView(ViewB, modelB);
+		vmB = domvm.createView(ViewB, modelB);
 
 		return function() {
 			return el("div", [
@@ -2223,7 +2223,7 @@ QUnit.module("Imperative VMs");
 
 	function ViewC(vm, model) {
 		vmC = vm;
-		vmD = domvm.view.createView(ViewD, modelD);
+		vmD = domvm.createView(ViewD, modelD);
 
 		return function() {
 			return el("em", [
@@ -2257,7 +2257,7 @@ QUnit.module("Imperative VMs");
 		var expcHtml = '<div>A<strong>B</strong><em>C<span>D</span></em></div>';
 
 		instr.start();
-		domvm.view.createView(ViewA, modelA).mount(testyDiv);
+		domvm.createView(ViewA, modelA).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { createElement: 4, createTextNode: 2, insertBefore: 6, textContent: 2 });
@@ -2346,12 +2346,12 @@ QUnit.module("Imperative VMs");
 	});
 
 	QUnit.skip('First-child VM should not be confused with props object', function(assert) {
-		vmE = domvm.view.createView(ViewE);
+		vmE = domvm.createView(ViewE);
 
 		var expcHtml = '<div><span>moo</span></div>';
 
 		instr.start();
-		vmF = domvm.view.createView(ViewF).mount(testyDiv);
+		vmF = domvm.createView(ViewF).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmF.node.el, vmF.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
@@ -2374,13 +2374,13 @@ QUnit.module("Imperative VMs");
 		}
 
 		instr.start();
-		var vm = domvm.view.createView(View).mount(testyDiv);
+		var vm = domvm.createView(View).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div></div>';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });
 
-		a = domvm.view.createView(A);
+		a = domvm.createView(A);
 
 		instr.start();
 		vm.redraw(true);
@@ -2395,8 +2395,8 @@ QUnit.module("Imperative VMs");
 			this.a = null;
 			this.b = null;
 
-			this.vm2 = domvm.view.createView(View2, this);
-			this.vm  = domvm.view.createView(View, this);
+			this.vm2 = domvm.createView(View2, this);
+			this.vm  = domvm.createView(View, this);
 		}
 
 		function View(vm, app) {
@@ -2498,7 +2498,7 @@ QUnit.module("Unjailed refs");
 
 	QUnit.test('Modify', function(assert) {
 		instr.start();
-		var vm = domvm.view.createView(AppView, data).mount(testyDiv);
+		var vm = domvm.createView(AppView, data).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div>foo<strong>bar</strong><em>baz</em></div>';
@@ -2544,7 +2544,7 @@ QUnit.module("Namespaced refs");
 
 	QUnit.test('Normal a.b.c', function(assert) {
 		instr.start();
-		var vm = domvm.view.createView(TestView).mount(testyDiv);
+		var vm = domvm.createView(TestView).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div></div>';
@@ -2556,7 +2556,7 @@ QUnit.module("Namespaced refs");
 
 	QUnit.test('Unjailed ^a.b.c', function(assert) {
 		instr.start();
-		var vm = domvm.view.createView(TestView1).mount(testyDiv);
+		var vm = domvm.createView(TestView1).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><div></div></div>';
@@ -2587,7 +2587,7 @@ QUnit.module("Patch");
 	var vm;
 	QUnit.test('Create', function(assert) {
 		instr.start();
-		vm = domvm.view.createView(TestView).mount(testyDiv);
+		vm = domvm.createView(TestView).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><p class="moo cow" style="margin: 10px;">hey</p></div>';
@@ -2675,7 +2675,7 @@ QUnit.module("Lifecycle hooks");
 		}
 
 		instr.start();
-		vm = domvm.view.createView(A).mount(testyDiv);
+		vm = domvm.createView(A).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div>abc</div>';
@@ -2708,7 +2708,7 @@ QUnit.module("Lifecycle hooks");
 		}
 
 		instr.start();
-		vm = domvm.view.createView(A, {text: "abc"}, false).mount(testyDiv);
+		vm = domvm.createView(A, {text: "abc"}, false).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div>abc</div>';
@@ -2752,7 +2752,7 @@ QUnit.module("Lifecycle hooks");
 		}
 
 		instr.start();
-		vm = domvm.view.createView(B, {text: "abc"}, false).mount(testyDiv);
+		vm = domvm.createView(B, {text: "abc"}, false).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><strong>abc</strong></div>';
@@ -2792,7 +2792,7 @@ QUnit.module("Function node types & values");
 		var expcHtml = '<p>some text</p>';
 
 		instr.start();
-		vm = domvm.view.createView(ViewAny).mount(testyDiv);
+		vm = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
@@ -2804,7 +2804,7 @@ QUnit.module("Function node types & values");
 		var expcHtml = '<p>some text</p>';
 
 		instr.start();
-		vm = domvm.view.createView(ViewAny).mount(testyDiv);
+		vm = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
@@ -2816,7 +2816,7 @@ QUnit.module("Function node types & values");
 		var expcHtml = '<p><strong>some text</strong></p>';
 
 		instr.start();
-		vm = domvm.view.createView(ViewAny).mount(testyDiv);
+		vm = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
@@ -2828,7 +2828,7 @@ QUnit.module("Function node types & values");
 		var expcHtml = '<p>something <em>foo</em></p>';
 
 		instr.start();
-		vm = domvm.view.createView(ViewAny).mount(testyDiv);
+		vm = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 //		console.log(vm.node.el.outerHTML);
@@ -2843,7 +2843,7 @@ QUnit.module("Function node types & values");
 		var expcHtml = '<p>something some text</p>';
 
 		instr.start();
-		vm = domvm.view.createView(ViewAny).mount(testyDiv);
+		vm = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 //		console.log(vm.node.el.outerHTML);
@@ -2858,7 +2858,7 @@ QUnit.module("Function node types & values");
 		var expcHtml = '<p><strong>some text</strong></p>';
 
 		instr.start();
-		vm = domvm.view.createView(ViewAny).mount(testyDiv);
+		vm = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
@@ -2874,7 +2874,7 @@ QUnit.module("Function node types & values");
 		var expcHtml = '<p>some text</p>';
 
 		instr.start();
-		vm = domvm.view.createView(ViewAny).mount(testyDiv);
+		vm = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
@@ -2886,7 +2886,7 @@ QUnit.module("Function node types & values");
 		var expcHtml = '<p>some text</p>';
 
 		instr.start();
-		vm = domvm.view.createView(ViewAny).mount(testyDiv);
+		vm = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
@@ -2899,7 +2899,7 @@ QUnit.module("Function node types & values");
 		var expcHtml = '<input value="moo">';
 
 		instr.start();
-		vm = domvm.view.createView(ViewAny).mount(testyDiv);
+		vm = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, setAttribute: 1 }, {value: vm.node.el.value}, {value: "moo"});
@@ -2911,7 +2911,7 @@ QUnit.module("Function node types & values");
 		var expcHtml = '<input style="width: 20px;">';
 
 		instr.start();
-		vm = domvm.view.createView(ViewAny).mount(testyDiv);
+		vm = domvm.createView(ViewAny).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });

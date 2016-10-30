@@ -4,18 +4,16 @@
 	<meta charset="utf-8">
 	<title>Filterable Product Table</title>
 
-	<script src="../dist/domvm.js"></script>
+	<script src="../dist/domvm.micro.js"></script>
 </head>
 <body>
 	<script>
-		var view = domvm.view;
-
-		var el = view.defineElement,
-			tx = view.defineText,
-			cm = view.defineComment,
-			vw = view.defineView,
-			iv = view.injectView,
-			ie = view.injectElement;
+		var el = domvm.defineElement,
+			tx = domvm.defineText,
+			cm = domvm.defineComment,
+			vw = domvm.defineView,
+			iv = domvm.injectView,
+			ie = domvm.injectElement;
 
 		function FilterableProductTable(allProducts, filterText, inStockOnly) {
 			this.allProducts = allProducts;
@@ -137,7 +135,7 @@
 
 		var myTable = new FilterableProductTable(products, filterText, inStockOnly);
 
-		domvm.view.createView(FilterableProductTableView, myTable).mount(document.body);
+		domvm.createView(FilterableProductTableView, myTable).mount(document.body);
 	</script>
 </body>
 </html>

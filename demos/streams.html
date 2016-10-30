@@ -4,7 +4,7 @@
 	<title>domvm reactive views</title>
 
 	<script src="lib/flyd.min.js"></script>
-	<script src="../dist/domvm.js"></script>
+	<script src="../dist/domvm.mini.js"></script>
 
 	<style>
 		button,
@@ -15,8 +15,7 @@
 </head>
 <body>
 	<script>
-		var view = domvm.view;
-		var el = view.defineElement;
+		var el = domvm.defineElement;
 
 		function randColor() {
 			return '#'+Math.floor(Math.random()*16777215).toString(16);
@@ -84,13 +83,13 @@
 
 		pers.style(genStyle(pers));
 
-		view.createView(View1, pers).mount(document.body);
-		view.createView(View2, pers).mount(document.body);
-		view.createView(View3, pers).mount(document.body);
-		view.createView(View5, pers).mount(document.body);
-		view.createView(View4, pers).mount(document.body);
-		view.createView(View6, pers).mount(document.body);
-		view.createView(View7, pers).mount(document.body);
+		domvm.createView(View1, pers).mount(document.body);
+		domvm.createView(View2, pers).mount(document.body);
+		domvm.createView(View3, pers).mount(document.body);
+		domvm.createView(View5, pers).mount(document.body);
+		domvm.createView(View4, pers).mount(document.body);
+		domvm.createView(View6, pers).mount(document.body);
+		domvm.createView(View7, pers).mount(document.body);
 
 		var factor = 1;
 
