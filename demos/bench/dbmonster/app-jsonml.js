@@ -34,7 +34,7 @@ function DBMonView() {
 	return (vm, dbs) => j(
 		["div",
 			["table.table.table-striped.latest-data",
-				["tbody", dbs.map((db, i) =>
+				["tbody", dbs.map(db =>
 					["tr",
 						["td.dbname", db.dbname],
 						["td.query-count",
