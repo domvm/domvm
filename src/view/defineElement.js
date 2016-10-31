@@ -3,11 +3,18 @@ import { VNode } from './VNode';
 import { parseTag } from './parseTag';
 import { isObj, isUndef } from '../utils';
 
-export function defineElement(tag, arg1, arg2, fixed) {
+// optimization flags
+
+// prevents inserting/removing/reordering of children
+export const FIXED_BODY = 1;
+// doesnt fire eager deep willRemove hooks, doesnt do bottom-up removeChild
+export const FAST_REMOVE = 2;
+
+export function defineElement(tag, arg1, arg2, flags) {
 	var node = new VNode(ELEMENT);
 
-	if (!isUndef(fixed))
-		node.fixed = fixed;
+	if (flags != null)
+		node.flags = flags;
 
 	var attrs, body;
 
@@ -78,12 +85,4 @@ export function defineElement(tag, arg1, arg2, fixed) {
 		node.body = body;
 
 	return node;
-}
-
-export function defineElementFixed1(tag, arg1, arg2) {
-	return defineElement(tag, arg1, arg2, 1);
-}
-
-export function defineElementFixed2(tag, arg1, arg2) {
-	return defineElement(tag, arg1, arg2, 2);
 }

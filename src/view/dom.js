@@ -1,6 +1,7 @@
 import { isArr, isProm, curry } from '../utils';
 import { fireHooks } from './hooks';
 import { views } from './ViewModel';
+import { FIXED_BODY, FAST_REMOVE } from './defineElement';
 
 export function createElement(tag) {
 	return document.createElement(tag);
@@ -29,7 +30,7 @@ function deepNotifyRemove(node) {
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if (node.fixed < 2 && isArr(node.body))
+	if (!(node.flags & FAST_REMOVE) && isArr(node.body))
 		node.body.forEach(deepNotifyRemove);
 
 	return res;
@@ -43,7 +44,7 @@ function _removeChild(parEl, el, immediate) {
 //	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
 //		console.log("clean exposed ref", node.ref);
 
-	if (node.fixed < 2 && isArr(node.body)) {
+	if (!(node.flags & FAST_REMOVE) && isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)
 			_removeChild(el, node.body[i].el);

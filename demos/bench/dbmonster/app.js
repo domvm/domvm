@@ -6,7 +6,7 @@ var el = domvm.defineElement,
 	ie = domvm.injectElement;
 
 // uncomment to optimize for fixed-layout nodes (no removal/insertion/reordering)
-// var el = domvm.defineElementFixed2;
+// var el = (tag, arg1, arg2) => domvm.defineElement(tag, arg1, arg2, domvm.FIXED_BODY);
 
 /*
 // naive implementation, no optims

@@ -5,6 +5,7 @@ import { syncChildren } from './syncChildren';
 import { fireHooks } from './hooks';
 import { patchAttrs } from './patchAttrs';
 import { createView } from './createView';
+import { FIXED_BODY, FAST_REMOVE } from './defineElement';
 
 //import { DEBUG } from './DEBUG';
 
@@ -159,6 +160,6 @@ function patchChildren(vnode, donor) {
 		}
 	}
 
-	if (vnode.fixed == 0)
+	if (!(vnode.flags & FIXED_BODY))
 		syncChildren(vnode, vnode.el);
 }

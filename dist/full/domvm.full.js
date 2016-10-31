@@ -453,6 +453,176 @@ function fireHooks(name, o, n, immediate) {
 	}
 }
 
+function VNode(type) {
+	this.type = type;
+}
+
+var VNodeProto = VNode.prototype = {
+	constructor: VNode,
+
+	type:	null,
+
+	vm: function() {
+		var n = this;
+
+		do {
+			if (n.vmid != null)
+				{ return views[n.vmid]; }
+		} while (n.parent && (n = n.parent));
+	},
+
+	vmid:	null,
+
+	// all this stuff can just live in attrs (as defined) just have getters here for it
+	key:	null,
+	ref:	null,
+	data:	null,
+	hooks:	null,
+	raw:	false,
+
+	el:		null,
+
+	tag:	null,
+	attrs:	null,
+	body:	null,
+	flags:	0,
+
+	_class:	null,
+
+	idx:	null,
+	parent:	null,
+
+	// transient flags maintained for cleanup passes, delayed hooks, etc
+//	_recycled:		false,		// true when findDonor/graft pass is done
+//	_wasSame:		false,		// true if _diff result was false
+//	_delayedRemove:	false,		// true when willRemove hook returns a promise
+
+//	_setTag: function() {},
+
+	/*
+	// break out into optional fluent module
+	key:	function(val) { this.key	= val; return this; },
+	ref:	function(val) { this.ref	= val; return this; },		// deep refs
+	data:	function(val) { this.data	= val; return this; },
+	hooks:	function(val) { this.hooks	= val; return this; },		// h("div").hooks()
+	html:	function(val) { this.html	= true; return this.body(val); },
+
+	body:	function(val) { this.body	= val; return this; },
+	*/
+};
+
+var tagCache = {};
+
+var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
+
+//	function VTag() {}
+function parseTag(raw) {
+	var cached = tagCache[raw];
+
+	if (cached == null) {
+		var tag, id, cls, attr;
+
+		tagCache[raw] = cached = {
+			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
+			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
+			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
+			attrs:	null,
+		};
+
+		while (attr = RE_ATTRS.exec(raw)) {
+			if (cached.attrs == null)
+				{ cached.attrs = {}; }
+			cached.attrs[attr[1]] = attr[2] || "";
+		}
+	}
+
+	return cached;
+}
+
+// optimization flags
+
+// prevents inserting/removing/reordering of children
+var FIXED_BODY = 1;
+// doesnt fire eager deep willRemove hooks, doesnt do bottom-up removeChild
+var FAST_REMOVE = 2;
+
+function defineElement(tag, arg1, arg2, flags) {
+	var node = new VNode(ELEMENT);
+
+	if (flags != null)
+		{ node.flags = flags; }
+
+	var attrs, body;
+
+	if (isUndef(arg2)) {
+		if (isObj(arg1))
+			{ attrs = arg1; }
+		else
+			{ body = arg1; }
+	}
+	else {
+		attrs = arg1;
+		body = arg2;
+	}
+
+	if (attrs != null) {
+		if (attrs._key != null)
+			{ node.key = attrs._key; }
+
+		if (attrs._ref != null)
+			{ node.ref = attrs._ref; }
+
+		if (attrs._hooks != null)
+			{ node.hooks = attrs._hooks; }
+
+		if (attrs._raw != null)
+			{ node.raw = attrs._raw; }
+
+		if (attrs._data != null)
+			{ node.data = attrs._data; }
+
+		if (node.key == null) {
+			if (node.ref != null)
+				{ node.key = node.ref; }
+			else if (attrs.id != null)
+				{ node.key = attrs.id; }
+			else if (attrs.name != null)
+				{ node.key = attrs.name; }
+		}
+
+		node.attrs = attrs;
+	}
+
+	var parsed = parseTag(tag);
+
+	node.tag = parsed.tag;
+
+	if (parsed.id || parsed.class || parsed.attrs) {
+		var p = node.attrs || {};
+
+		if (parsed.id && p.id == null)
+			{ p.id = parsed.id; }
+
+		if (parsed.class) {
+			node._class = parsed.class;		// static class
+			p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
+		}
+		if (parsed.attrs) {
+			for (var key in parsed.attrs)
+				{ if (p[key] == null)
+					{ p[key] = parsed.attrs[key]; } }
+		}
+
+//		if (node.attrs != p)
+			node.attrs = p;
+	}
+
+	if (body != null)
+		{ node.body = body; }
+
+	return node;
+}
+
 function createElement(tag) {
 	return document.createElement(tag);
 }
@@ -480,7 +650,7 @@ function deepNotifyRemove(node) {
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if (node.fixed < 2 && isArr(node.body))
+	if (!(node.flags & FAST_REMOVE) && isArr(node.body))
 		{ node.body.forEach(deepNotifyRemove); }
 
 	return res;
@@ -494,7 +664,7 @@ function _removeChild(parEl, el, immediate) {
 //	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
 //		console.log("clean exposed ref", node.ref);
 
-	if (node.fixed < 2 && isArr(node.body)) {
+	if (!(node.flags & FAST_REMOVE) && isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)
 			{ _removeChild(el, node.body[i].el); }
@@ -923,7 +1093,7 @@ function patchChildren(vnode, donor) {
 		}
 	}
 
-	if (vnode.fixed == 0)
+	if (!(vnode.flags & FIXED_BODY))
 		{ syncChildren(vnode, vnode.el); }
 }
 
@@ -1331,177 +1501,6 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 */
 }
 
-function VNode(type) {
-	this.type = type;
-}
-
-var VNodeProto = VNode.prototype = {
-	constructor: VNode,
-
-	type:	null,
-
-	vm: function() {
-		var n = this;
-
-		do {
-			if (n.vmid != null)
-				{ return views[n.vmid]; }
-		} while (n.parent && (n = n.parent));
-	},
-
-	vmid:	null,
-
-	// all this stuff can just live in attrs (as defined) just have getters here for it
-	key:	null,
-	ref:	null,
-	data:	null,
-	hooks:	null,
-	raw:	false,
-
-	el:		null,
-
-	tag:	null,
-	attrs:	null,
-	body:	null,
-	fixed:	0,
-
-	_class:	null,
-
-	idx:	null,
-	parent:	null,
-
-	// transient flags maintained for cleanup passes, delayed hooks, etc
-//	_recycled:		false,		// true when findDonor/graft pass is done
-//	_wasSame:		false,		// true if _diff result was false
-//	_delayedRemove:	false,		// true when willRemove hook returns a promise
-
-//	_setTag: function() {},
-
-	/*
-	// break out into optional fluent module
-	key:	function(val) { this.key	= val; return this; },
-	ref:	function(val) { this.ref	= val; return this; },		// deep refs
-	data:	function(val) { this.data	= val; return this; },
-	hooks:	function(val) { this.hooks	= val; return this; },		// h("div").hooks()
-	html:	function(val) { this.html	= true; return this.body(val); },
-
-	body:	function(val) { this.body	= val; return this; },
-	*/
-};
-
-var tagCache = {};
-
-var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
-
-//	function VTag() {}
-function parseTag(raw) {
-	var cached = tagCache[raw];
-
-	if (cached == null) {
-		var tag, id, cls, attr;
-
-		tagCache[raw] = cached = {
-			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
-			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
-			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
-			attrs:	null,
-		};
-
-		while (attr = RE_ATTRS.exec(raw)) {
-			if (cached.attrs == null)
-				{ cached.attrs = {}; }
-			cached.attrs[attr[1]] = attr[2] || "";
-		}
-	}
-
-	return cached;
-}
-
-function defineElement(tag, arg1, arg2, fixed) {
-	var node = new VNode(ELEMENT);
-
-	if (!isUndef(fixed))
-		{ node.fixed = fixed; }
-
-	var attrs, body;
-
-	if (isUndef(arg2)) {
-		if (isObj(arg1))
-			{ attrs = arg1; }
-		else
-			{ body = arg1; }
-	}
-	else {
-		attrs = arg1;
-		body = arg2;
-	}
-
-	if (attrs != null) {
-		if (attrs._key != null)
-			{ node.key = attrs._key; }
-
-		if (attrs._ref != null)
-			{ node.ref = attrs._ref; }
-
-		if (attrs._hooks != null)
-			{ node.hooks = attrs._hooks; }
-
-		if (attrs._raw != null)
-			{ node.raw = attrs._raw; }
-
-		if (attrs._data != null)
-			{ node.data = attrs._data; }
-
-		if (node.key == null) {
-			if (node.ref != null)
-				{ node.key = node.ref; }
-			else if (attrs.id != null)
-				{ node.key = attrs.id; }
-			else if (attrs.name != null)
-				{ node.key = attrs.name; }
-		}
-
-		node.attrs = attrs;
-	}
-
-	var parsed = parseTag(tag);
-
-	node.tag = parsed.tag;
-
-	if (parsed.id || parsed.class || parsed.attrs) {
-		var p = node.attrs || {};
-
-		if (parsed.id && p.id == null)
-			{ p.id = parsed.id; }
-
-		if (parsed.class) {
-			node._class = parsed.class;		// static class
-			p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
-		}
-		if (parsed.attrs) {
-			for (var key in parsed.attrs)
-				{ if (p[key] == null)
-					{ p[key] = parsed.attrs[key]; } }
-		}
-
-//		if (node.attrs != p)
-			node.attrs = p;
-	}
-
-	if (body != null)
-		{ node.body = body; }
-
-	return node;
-}
-
-function defineElementFixed1(tag, arg1, arg2) {
-	return defineElement(tag, arg1, arg2, 1);
-}
-
-function defineElementFixed2(tag, arg1, arg2) {
-	return defineElement(tag, arg1, arg2, 2);
-}
-
 function defineText(body) {
 	var n = new VNode(TEXT);
 	n.body = body;
@@ -1575,8 +1574,8 @@ var micro = {
 	injectView: injectView,
 	injectElement: injectElement,
 
-	defineElementFixed1: defineElementFixed1,
-	defineElementFixed2: defineElementFixed2,
+	FIXED_BODY: FIXED_BODY,
+	FAST_REMOVE: FAST_REMOVE,
 };
 
 VNodeProto.patch = function(n) {

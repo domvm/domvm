@@ -23,7 +23,7 @@
 	<body>
 		<div class="app"></div>
 		<script>
-			var el = domvm.defineElementFixed2;
+			var el = (tag, arg1, arg2) => domvm.defineElement(tag, arg1, arg2, domvm.FIXED_BODY | domvm.FAST_REMOVE);
 
 			function PixelShow(vm, props) {
 				// pick a random color from an array of colors

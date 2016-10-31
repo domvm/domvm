@@ -3,7 +3,7 @@ import { VNode } from "../../src/view/VNode";
 
 import { createView } from "../../src/view/createView";
 
-import { defineElement, defineElementFixed1, defineElementFixed2 } from "../../src/view/defineElement";
+import { defineElement, FIXED_BODY, FAST_REMOVE } from "../../src/view/defineElement";
 import { defineText } from "../../src/view/defineText";
 import { defineComment } from "../../src/view/defineComment";
 import { defineView } from "../../src/view/defineView";
@@ -25,6 +25,6 @@ export default {
 	injectView,
 	injectElement,
 
-	defineElementFixed1,
-	defineElementFixed2,
+	FIXED_BODY,
+	FAST_REMOVE,
 }
