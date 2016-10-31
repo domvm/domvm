@@ -463,7 +463,7 @@ function deepNotifyRemove(node) {
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if (isArr(node.body))
+	if (node.fixed < 2 && isArr(node.body))
 		{ node.body.forEach(deepNotifyRemove); }
 
 	return res;
@@ -477,7 +477,7 @@ function _removeChild(parEl, el, immediate) {
 //	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
 //		console.log("clean exposed ref", node.ref);
 
-	if (isArr(node.body)) {
+	if (node.fixed < 2 && isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)
 			{ _removeChild(el, node.body[i].el); }
@@ -906,7 +906,7 @@ function patchChildren(vnode, donor) {
 		}
 	}
 
-	if (!vnode.fixed)
+	if (vnode.fixed == 0)
 		{ syncChildren(vnode, vnode.el); }
 }
 
@@ -1346,7 +1346,7 @@ var VNodeProto = VNode.prototype = {
 	tag:	null,
 	attrs:	null,
 	body:	null,
-	fixed:	false,
+	fixed:	0,
 
 	_class:	null,
 
@@ -1371,16 +1371,6 @@ var VNodeProto = VNode.prototype = {
 	body:	function(val) { this.body	= val; return this; },
 	*/
 };
-
-function VNodeFixed(type) {
-	VNode.call(this, type);
-}
-
-var proto = Object.create(VNode.prototype);
-proto.constructor = VNodeFixed;
-proto.fixed = true;
-
-VNodeFixed.prototype = proto;
 
 var tagCache = {};
 
@@ -1411,7 +1401,10 @@ function parseTag(raw) {
 }
 
 function defineElement(tag, arg1, arg2, fixed) {
-	var node = fixed ? new VNodeFixed(ELEMENT) : new VNode(ELEMENT);
+	var node = new VNode(ELEMENT);
+
+	if (!isUndef(fixed))
+		{ node.fixed = fixed; }
 
 	var attrs, body;
 
@@ -1484,6 +1477,14 @@ function defineElement(tag, arg1, arg2, fixed) {
 	return node;
 }
 
+function defineElementFixed1(tag, arg1, arg2) {
+	return defineElement(tag, arg1, arg2, 1);
+}
+
+function defineElementFixed2(tag, arg1, arg2) {
+	return defineElement(tag, arg1, arg2, 2);
+}
+
 function defineText(body) {
 	var n = new VNode(TEXT);
 	n.body = body;
@@ -1543,10 +1544,6 @@ function injectElement(el) {
 	return node;
 }
 
-function defineElementFixed(tag, arg1, arg2) {
-	return defineElement(tag, arg1, arg2, true);
-}
-
 var nano = {
 	ViewModel: ViewModel,
 	VNode: VNode,
@@ -1561,7 +1558,8 @@ var nano = {
 	injectView: injectView,
 	injectElement: injectElement,
 
-	defineElementFixed: defineElementFixed,
+	defineElementFixed1: defineElementFixed1,
+	defineElementFixed2: defineElementFixed2,
 };
 
 VNodeProto.patch = function(n) {

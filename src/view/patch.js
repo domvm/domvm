@@ -159,6 +159,6 @@ function patchChildren(vnode, donor) {
 		}
 	}
 
-	if (!vnode.fixed)
+	if (vnode.fixed == 0)
 		syncChildren(vnode, vnode.el);
 }

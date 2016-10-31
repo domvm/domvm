@@ -1,11 +1,13 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { VNode } from './VNode';
-import { VNodeFixed } from './VNodeFixed';
 import { parseTag } from './parseTag';
 import { isObj, isUndef } from '../utils';
 
 export function defineElement(tag, arg1, arg2, fixed) {
-	var node = fixed ? new VNodeFixed(ELEMENT) : new VNode(ELEMENT);
+	var node = new VNode(ELEMENT);
+
+	if (!isUndef(fixed))
+		node.fixed = fixed;
 
 	var attrs, body;
 
@@ -76,4 +78,12 @@ export function defineElement(tag, arg1, arg2, fixed) {
 		node.body = body;
 
 	return node;
+}
+
+export function defineElementFixed1(tag, arg1, arg2) {
+	return defineElement(tag, arg1, arg2, 1);
+}
+
+export function defineElementFixed2(tag, arg1, arg2) {
+	return defineElement(tag, arg1, arg2, 2);
 }

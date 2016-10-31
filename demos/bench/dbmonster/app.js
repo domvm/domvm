@@ -6,7 +6,7 @@ var el = domvm.defineElement,
 	ie = domvm.injectElement;
 
 // uncomment to optimize for fixed-layout nodes (no removal/insertion/reordering)
-// var el = view.defineElementFixed;
+// var el = domvm.defineElementFixed2;
 
 /*
 // naive implementation, no optims
@@ -14,7 +14,7 @@ function DBMonView() {
 	return (vm, dbs) =>
 		el("div", [
 			el("table.table.table-striped.latest-data", [
-				el("tbody", dbs.map((db, i) =>
+				el("tbody", dbs.map(db =>
 					el("tr", [
 						el("td.dbname", db.dbname),
 						el("td.query-count", [
@@ -41,7 +41,7 @@ function DBMonView() {
 	return (vm, dbs) =>
 		el("div", [
 			el("table.table.table-striped.latest-data", [
-				el("tbody", dbs.map((db, i) =>
+				el("tbody", dbs.map(db =>
 					el("tr", [
 						el("td.dbname", db.dbname),
 						el("td.query-count", [
