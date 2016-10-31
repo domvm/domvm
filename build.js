@@ -14,7 +14,7 @@ function compile(buildName) {
 	var start = +new Date;
 
 	rollup({
-		entry: './src/builds/' + buildName + '.js',
+		entry: './dist/builds/' + buildName + '.js',
 		plugins: [ buble() ],
 	})
 	.then(function(bundle) {
@@ -31,9 +31,9 @@ function compile(buildName) {
 				"",
 			].join("\n"),
 			moduleName: "domvm",
-			format: 'umd',		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
+			format: "umd",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
 			sourceMap: true,
-			dest: './dist/domvm.' + buildName + '.js'
+			dest: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		});
 
 		console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
@@ -45,7 +45,11 @@ function compile(buildName) {
 function minify(buildName, start) {
 	// --souce_map_input dist/domvm.full.js.map	// --create_source_map dist/domvm.full.min.js.map
 
-	let cmd = "java -jar compiler.jar --language_in=ECMASCRIPT6_STRICT --js dist/domvm." + buildName + ".js --js_output_file dist/domvm." + buildName + ".min.js";
+	let cmd = [
+		"java -jar compiler.jar --language_in=ECMASCRIPT6_STRICT",
+		"--js             dist/" + buildName + "/domvm." + buildName + ".js",
+		"--js_output_file dist/" + buildName + "/domvm." + buildName + ".min.js",
+	].join(" ");
 
 	exec(cmd, function(error, stdout, stderr) {
 		console.log((+new Date - start) + "ms: Closure done (build: " + buildName + ")");
