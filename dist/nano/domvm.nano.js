@@ -267,7 +267,7 @@ function patchStyle(n, o) {
 		if (os) {
 			for (var on in os) {
 				if (ns[on] == null)
-					{ n.el.style[on] = null; }
+					{ n.el.style[on] = ""; }
 			}
 		}
 	}

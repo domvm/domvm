@@ -22,7 +22,7 @@
 //	var innerText = Object.getOwnPropertyDescriptor(htmlProto, "innerText");
 
 	var elemProto	= Element.prototype;
-	var innerHTML	= Object.getOwnPropertyDescriptor(!isMS ? elemProto : htmlProto, "innerHTML");
+	var innerHTML	= Object.getOwnPropertyDescriptor(!isIE ? elemProto : htmlProto, "innerHTML");
 	var className	= Object.getOwnPropertyDescriptor(!isIE ? elemProto : htmlProto, "className");
 	var id			= Object.getOwnPropertyDescriptor(!isIE ? elemProto : htmlProto, "id");
 
@@ -125,7 +125,7 @@
 			});
 */
 			counts.innerHTML = 0;
-			Object.defineProperty(!isMS ? elemProto : htmlProto, "innerHTML", {
+			Object.defineProperty(!isIE ? elemProto : htmlProto, "innerHTML", {
 				set: function(s) {
 					counts.innerHTML++;
 					innerHTML.set.call(this, s);
@@ -225,7 +225,7 @@
 			Object.defineProperty(nodeProto, "textContent", textContent);
 			Object.defineProperty(nodeProto, "nodeValue", nodeValue);
 //			Object.defineProperty(htmlProto, "innerText", innerText);
-			Object.defineProperty(!isMS ? elemProto : htmlProto, "innerHTML", innerHTML);
+			Object.defineProperty(!isIE ? elemProto : htmlProto, "innerHTML", innerHTML);
 			Object.defineProperty(!isIE ? elemProto : htmlProto, "className", className);
 			Object.defineProperty(!isIE ? elemProto : htmlProto, "id", id);
 			Object.defineProperty(inpProto,  "checked", inpChecked);
