@@ -1,5 +1,5 @@
 import { isStyleProp, isSplProp, isEvProp, isDynProp, hookStream } from './utils';
-import { isFunc } from '../utils';
+import { isFunc, emptyObj } from '../utils';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
 import { isStream } from '../streamCfg';
@@ -30,8 +30,8 @@ export function setAttr(node, name, val, asProp) {
 }
 
 export function patchAttrs(vnode, donor) {
-	const nattrs = vnode.attrs;		// || emptyObj
-	const oattrs = donor.attrs;		// || emptyObj
+	const nattrs = vnode.attrs || emptyObj;
+	const oattrs = donor.attrs || emptyObj;
 
 	for (var key in nattrs) {
 		var nval = nattrs[key];

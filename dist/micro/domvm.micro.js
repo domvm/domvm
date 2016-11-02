@@ -24,7 +24,7 @@ var ENV_DOM = typeof HTMLElement == "function";
 var win = ENV_DOM ? window : {};
 var rAF = win.requestAnimationFrame;
 
-
+var emptyObj = {};
 
 function startsWith(haystack, needle) {
 	return haystack.lastIndexOf(needle, 0) === 0;
@@ -363,8 +363,8 @@ function setAttr(node, name, val, asProp) {
 }
 
 function patchAttrs(vnode, donor) {
-	var nattrs = vnode.attrs;		// || emptyObj
-	var oattrs = donor.attrs;		// || emptyObj
+	var nattrs = vnode.attrs || emptyObj;
+	var oattrs = donor.attrs || emptyObj;
 
 	for (var key in nattrs) {
 		var nval = nattrs[key];
