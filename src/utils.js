@@ -116,3 +116,14 @@ export function curry(fn, args, ctx) {
 		return fn.apply(ctx, args);
 	};
 }
+
+export function prop(val, cb, ctx, args) {
+	return function(newVal, execCb) {
+		if (!isUndef(newVal) && newVal !== val) {
+			val = newVal;
+			execCb !== false && isFunc(cb) && cb.apply(ctx, args);
+		}
+
+		return val;
+	};
+}

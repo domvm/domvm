@@ -137,6 +137,17 @@ function curry(fn, args, ctx) {
 	};
 }
 
+function prop(val, cb, ctx, args) {
+	return function(newVal, execCb) {
+		if (!isUndef(newVal) && newVal !== val) {
+			val = newVal;
+			execCb !== false && isFunc(cb) && cb.apply(ctx, args);
+		}
+
+		return val;
+	};
+}
+
 var isStream = null;
 var streamVal = null;
 var subStream = null;
@@ -1649,6 +1660,8 @@ if (typeof flyd != "undefined") {
 }
 
 micro$1.streamCfg = streamCfg;
+
+micro$1.prop = prop;
 
 return micro$1;
 
