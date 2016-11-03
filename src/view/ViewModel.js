@@ -3,7 +3,7 @@ import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
 import { isArr, isObj, isFunc, isProm, cmpArr, assignObj, curry, raft } from "../utils";
 import { repaint } from "./utils";
-import { insertBefore, removeChild } from "./dom";
+import { insertBefore, removeChild, nextSib } from "./dom";
 import { didQueue, fireHooks } from "./hooks";
 
 // global id counter
@@ -319,8 +319,9 @@ function redrawSync(newParent, newIdx, withDOM) {
 			// root node replacement
 			if (vold.tag !== vnew.tag) {
 				var parEl = vold.el.parentNode;
+				var refEl = nextSib(vold.el);
 				removeChild(parEl, vold.el);
-				insertBefore(parEl, hydrate(vnew));
+				insertBefore(parEl, hydrate(vnew), refEl);
 			}
 			else
 				patch(vnew, vold);

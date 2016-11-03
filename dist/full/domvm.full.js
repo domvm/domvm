@@ -1469,8 +1469,9 @@ function redrawSync(newParent, newIdx, withDOM) {
 			// root node replacement
 			if (vold.tag !== vnew.tag) {
 				var parEl = vold.el.parentNode;
+				var refEl = nextSib(vold.el);
 				removeChild(parEl, vold.el);
-				insertBefore(parEl, hydrate(vnew));
+				insertBefore(parEl, hydrate(vnew), refEl);
 			}
 			else
 				{ patch(vnew, vold); }
