@@ -17,18 +17,13 @@
 		}
 
 		var api = {
+//			addRoute: function() {},
+//			delRoute: function() {},
+//			oninit: function() {},
+//			onEnter, onLeave
 			href: function(name, segs, query, hash, repl) {
 				var route = buildRoute(routes, root, name, segs, query, hash);
-
-				var fn = function(e) {
-					api.goto(route, segs, query, hash, repl);
-					e.preventDefault();
-					// stop prop?
-				};
-
-				fn.href = (useHist ? "" : "#") + route.href;
-
-				return fn;
+				return (useHist ? "" : "#") + route.href;
 			},
 			config: function(opts) {
 				useHist = opts.useHist;

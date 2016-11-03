@@ -12,14 +12,6 @@ function isStr(val) {
 	return typeof val == "string";
 }
 
-function isVm(obj) {
-	return isFunc(obj.redraw);
-}
-
-function isAttrs(val) {
-	return isObj(val) && !isVm(val) && !isElem(val);
-}
-
 // tpl must be an array representing a single domvm 1.x jsonML node
 // todo: also handle getter fns in attrs & css props
 export function jsonml(node) {
@@ -41,7 +33,7 @@ export function jsonml(node) {
 			if (len > 1) {
 				var bodyIdx = 1;
 
-				if (isAttrs(node[1])) {
+				if (isObj(node[1])) {
 					attrs = node[1];
 					bodyIdx = 2;
 				}
@@ -81,7 +73,7 @@ export function jsonml(node) {
 		node = injectElement(node);
 	else if (isObj(node)) {
 		// injected vms
-		if (isVm(node))
+		if (isFunc(node.redraw))
 			node = injectView(node);
 		// ready vnodes (meh, weak guarantee)
 		else if (node.type != null) {}

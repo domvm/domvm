@@ -12,12 +12,10 @@ export function isUndef(val) {
 	return typeof val == "undefined";
 }
 
-export function isArr(val) {
-	return Array.isArray(val);
-}
+export const isArr = Array.isArray;
 
 export function isObj(val) {
-	return val != null && typeof val == "object" && !isArr(val);
+	return val != null && typeof val == "object" && val.constructor == Object;
 }
 
 export function insertArr(targ, arr, pos, rem) {

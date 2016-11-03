@@ -19,10 +19,6 @@ export function setAttr(node, name, val, asProp) {
 		el.className = val;
 	else if (name == "id" || typeof val == "boolean" || asProp)
 		el[name] = val;
-	else if (name == "href" && isFunc(val)) {
-		patchEvent(node, "onclick", val);
-		val = val.href;
-	}
 	else if (name[0] == ".")
 		el[name.substr(1)] = val;
 	else

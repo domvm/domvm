@@ -34,12 +34,10 @@ function isUndef(val) {
 	return typeof val == "undefined";
 }
 
-function isArr(val) {
-	return Array.isArray(val);
-}
+var isArr = Array.isArray;
 
 function isObj(val) {
-	return val != null && typeof val == "object" && !isArr(val);
+	return val != null && typeof val == "object" && val.constructor == Object;
 }
 
 function insertArr(targ, arr, pos, rem) {
@@ -380,10 +378,6 @@ function setAttr(node, name, val, asProp) {
 		{ el.className = val; }
 	else if (name == "id" || typeof val == "boolean" || asProp)
 		{ el[name] = val; }
-	else if (name == "href" && isFunc(val)) {
-		patchEvent(node, "onclick", val);
-		val = val.href;
-	}
 	else if (name[0] == ".")
 		{ el[name.substr(1)] = val; }
 	else
@@ -1695,18 +1689,13 @@ var stack = [];
 		}
 
 		var api = {
+//			addRoute: function() {},
+//			delRoute: function() {},
+//			oninit: function() {},
+//			onEnter, onLeave
 			href: function(name, segs, query, hash, repl) {
 				var route = buildRoute(routes, root, name, segs, query, hash);
-
-				var fn = function(e) {
-					api.goto(route, segs, query, hash, repl);
-					e.preventDefault();
-					// stop prop?
-				};
-
-				fn.href = (useHist ? "" : "#") + route.href;
-
-				return fn;
+				return (useHist ? "" : "#") + route.href;
 			},
 			config: function(opts) {
 				useHist = opts.useHist;
@@ -2111,14 +2100,6 @@ function isStr(val) {
 	return typeof val == "string";
 }
 
-function isVm(obj) {
-	return isFunc(obj.redraw);
-}
-
-function isAttrs(val) {
-	return isObj(val) && !isVm(val) && !isElem(val);
-}
-
 // tpl must be an array representing a single domvm 1.x jsonML node
 // todo: also handle getter fns in attrs & css props
 function jsonml(node) {
@@ -2140,7 +2121,7 @@ function jsonml(node) {
 			if (len > 1) {
 				var bodyIdx = 1;
 
-				if (isAttrs(node[1])) {
+				if (isObj(node[1])) {
 					attrs = node[1];
 					bodyIdx = 2;
 				}
@@ -2180,7 +2161,7 @@ function jsonml(node) {
 		{ node = injectElement(node); }
 	else if (isObj(node)) {
 		// injected vms
-		if (isVm(node))
+		if (isFunc(node.redraw))
 			{ node = injectView(node); }
 		// ready vnodes (meh, weak guarantee)
 		else if (node.type != null) {}

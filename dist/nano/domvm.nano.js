@@ -34,12 +34,10 @@ function isUndef(val) {
 	return typeof val == "undefined";
 }
 
-function isArr(val) {
-	return Array.isArray(val);
-}
+var isArr = Array.isArray;
 
 function isObj(val) {
-	return val != null && typeof val == "object" && !isArr(val);
+	return val != null && typeof val == "object" && val.constructor == Object;
 }
 
 function insertArr(targ, arr, pos, rem) {
@@ -350,10 +348,6 @@ function setAttr(node, name, val, asProp) {
 		{ el.className = val; }
 	else if (name == "id" || typeof val == "boolean" || asProp)
 		{ el[name] = val; }
-	else if (name == "href" && isFunc(val)) {
-		patchEvent(node, "onclick", val);
-		val = val.href;
-	}
 	else if (name[0] == ".")
 		{ el[name.substr(1)] = val; }
 	else
