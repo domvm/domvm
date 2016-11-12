@@ -31,6 +31,25 @@ function patchAttrs2(vnode) {
 	}
 }
 
+export function hydrateBody(vnode) {
+	for (var i = 0; i < vnode.body.length; i++) {
+		var vnode2 = vnode.body[i];
+		var type2 = vnode2.type;
+
+		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT)
+			insertBefore(vnode.el, hydrate(vnode2));		// vnode.el.appendChild(hydrate(vnode2))
+		else if (type2 == VVIEW) {
+			var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new model updates
+			insertBefore(vnode.el, hydrate(vm.node));
+		}
+		else if (type2 == VMODEL) {
+			var vm = views[vnode2.vmid];
+			vm._redraw(vnode, i);					// , false
+			insertBefore(vnode.el, vm.node.el);		// , hydrate(vm.node)
+		}
+	}
+}
+
 //  TODO: DRY this out. reusing normal patch here negatively affects V8's JIT
 export function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
@@ -40,24 +59,8 @@ export function hydrate(vnode, withEl) {
 			if (vnode.attrs != null)
 				patchAttrs2(vnode);
 
-			if (isArr(vnode.body)) {
-				for (var i = 0; i < vnode.body.length; i++) {
-					var vnode2 = vnode.body[i];
-					var type2 = vnode2.type;
-
-					if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT)
-						insertBefore(vnode.el, hydrate(vnode2));		// vnode.el.appendChild(hydrate(vnode2))
-					else if (type2 == VVIEW) {
-						var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new model updates
-						insertBefore(vnode.el, hydrate(vm.node));
-					}
-					else if (type2 == VMODEL) {
-						var vm = views[vnode2.vmid];
-						vm._redraw(vnode, i);					// , false
-						insertBefore(vnode.el, vm.node.el);		// , hydrate(vm.node)
-					}
-				}
-			}
+			if (isArr(vnode.body))
+				hydrateBody(vnode);
 			else if (vnode.body != null && vnode.body !== "") {
 				if (vnode.raw)
 					vnode.el.innerHTML = vnode.body;

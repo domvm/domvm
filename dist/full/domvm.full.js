@@ -497,13 +497,6 @@ var VNodeProto = VNode.prototype = {
 	idx:	null,
 	parent:	null,
 
-	// transient flags maintained for cleanup passes, delayed hooks, etc
-	_recycled:		false,		// true when findDonor/graft pass is done
-//	_wasSame:		false,		// true if _diff result was false
-//	_delayedRemove:	false,		// true when willRemove hook returns a promise
-
-//	_setTag: function() {},
-
 	/*
 	// break out into optional fluent module
 	key:	function(val) { this.key	= val; return this; },
@@ -740,6 +733,25 @@ function patchAttrs2(vnode) {
 	}
 }
 
+function hydrateBody(vnode) {
+	for (var i = 0; i < vnode.body.length; i++) {
+		var vnode2 = vnode.body[i];
+		var type2 = vnode2.type;
+
+		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT)
+			{ insertBefore(vnode.el, hydrate(vnode2)); }		// vnode.el.appendChild(hydrate(vnode2))
+		else if (type2 == VVIEW) {
+			var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new model updates
+			insertBefore(vnode.el, hydrate(vm.node));
+		}
+		else if (type2 == VMODEL) {
+			var vm = views[vnode2.vmid];
+			vm._redraw(vnode, i);					// , false
+			insertBefore(vnode.el, vm.node.el);		// , hydrate(vm.node)
+		}
+	}
+}
+
 //  TODO: DRY this out. reusing normal patch here negatively affects V8's JIT
 function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
@@ -749,24 +761,8 @@ function hydrate(vnode, withEl) {
 			if (vnode.attrs != null)
 				{ patchAttrs2(vnode); }
 
-			if (isArr(vnode.body)) {
-				for (var i = 0; i < vnode.body.length; i++) {
-					var vnode2 = vnode.body[i];
-					var type2 = vnode2.type;
-
-					if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT)
-						{ insertBefore(vnode.el, hydrate(vnode2)); }		// vnode.el.appendChild(hydrate(vnode2))
-					else if (type2 == VVIEW) {
-						var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new model updates
-						insertBefore(vnode.el, hydrate(vm.node));
-					}
-					else if (type2 == VMODEL) {
-						var vm = views[vnode2.vmid];
-						vm._redraw(vnode, i);					// , false
-						insertBefore(vnode.el, vm.node.el);		// , hydrate(vm.node)
-					}
-				}
-			}
+			if (isArr(vnode.body))
+				{ hydrateBody(vnode); }
 			else if (vnode.body != null && vnode.body !== "") {
 				if (vnode.raw)
 					{ vnode.el.innerHTML = vnode.body; }
@@ -964,7 +960,7 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 				{ return o; }
 		}
 
-		if (o._recycled || n.tag !== o.tag || n.type !== o.type)
+		if (n == o.el._node || n.tag !== o.tag || n.type !== o.type)
 			{ continue; }
 
 		// if n.view
@@ -992,7 +988,6 @@ function patch(vnode, donor) {
 	donor.hooks && fireHooks("willRecycle", donor, vnode);
 
 	var el = vnode.el = donor.el;
-	donor._recycled = true;
 
 	var obody = donor.body;
 	var nbody = vnode.body;
@@ -1038,7 +1033,7 @@ function patch(vnode, donor) {
 			}
 			else {
 				while (el.firstChild)
-					{ el.removeChild(el.firstChild); }
+					{ removeChild(el, el.firstChild); }
 			}
 		}
 	}
@@ -1046,9 +1041,8 @@ function patch(vnode, donor) {
 		// "" | null => []
 		if (newIsArr) {
 		//	console.log('"" => []', obody, nbody);	// hydrate new here?
-			while (el.firstChild)
-				{ el.removeChild(el.firstChild); }
-			patchChildren(vnode, donor);
+			el.firstChild && el.removeChild(el.firstChild);
+			hydrateBody(vnode);
 		}
 		// "" | null => "" | null
 		else if (nbody !== obody) {

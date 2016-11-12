@@ -1,6 +1,8 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr } from '../utils';
 import { views } from './ViewModel';
+import { hydrateBody } from './hydrate';
+import { removeChild } from './dom';
 import { syncChildren } from './syncChildren';
 import { fireHooks } from './hooks';
 import { patchAttrs } from './patchAttrs';
@@ -23,7 +25,7 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 				return o;
 		}
 
-		if (o._recycled || n.tag !== o.tag || n.type !== o.type)
+		if (n == o.el._node || n.tag !== o.tag || n.type !== o.type)
 			continue;
 
 		// if n.view
@@ -51,7 +53,6 @@ export function patch(vnode, donor) {
 	donor.hooks && fireHooks("willRecycle", donor, vnode);
 
 	var el = vnode.el = donor.el;
-	donor._recycled = true;
 
 	var obody = donor.body;
 	var nbody = vnode.body;
@@ -97,7 +98,7 @@ export function patch(vnode, donor) {
 			}
 			else {
 				while (el.firstChild)
-					el.removeChild(el.firstChild);
+					removeChild(el, el.firstChild);
 			}
 		}
 	}
@@ -105,9 +106,8 @@ export function patch(vnode, donor) {
 		// "" | null => []
 		if (newIsArr) {
 		//	console.log('"" => []', obody, nbody);	// hydrate new here?
-			while (el.firstChild)
-				el.removeChild(el.firstChild);
-			patchChildren(vnode, donor);
+			el.firstChild && el.removeChild(el.firstChild);
+			hydrateBody(vnode);
 		}
 		// "" | null => "" | null
 		else if (nbody !== obody) {
