@@ -487,7 +487,7 @@ var VNodeProto = VNode.prototype = {
 	parent:	null,
 
 	// transient flags maintained for cleanup passes, delayed hooks, etc
-//	_recycled:		false,		// true when findDonor/graft pass is done
+	_recycled:		false,		// true when findDonor/graft pass is done
 //	_wasSame:		false,		// true if _diff result was false
 //	_delayedRemove:	false,		// true when willRemove hook returns a promise
 
@@ -617,12 +617,14 @@ function defineElement(tag, arg1, arg2, flags) {
 	return node;
 }
 
+var doc = document;
+
 function createElement(tag) {
-	return document.createElement(tag);
+	return doc.createElement(tag);
 }
 
 function createTextNode(body) {
-	return document.createTextNode(body);
+	return doc.createTextNode(body);
 }
 
 // ? removes if !recycled
@@ -845,7 +847,8 @@ function cmpElNodeIdx(a, b) {
 	return a._node.idx - b._node.idx;
 }
 
-function syncChildren(node, parEl) {
+function syncChildren(node) {
+	var parEl = node.el;
 	var body = node.body;
 	// breaking condition is convergance
 
@@ -874,7 +877,7 @@ function syncChildren(node, parEl) {
 				{ var lsNode = lftSib._node; }
 
 			// remove any non-recycled sibs whose el.node has the old parent
-			if (lftSib && !lsNode.recycled && lsNode.parent != parEl._node) {
+			if (lftSib && lsNode.parent != node) {
 				tmpSib = nextSib(lftSib);
 				lsNode.vmid != null ? lsNode.vm().unmount(true) : removeChild(parEl, lftSib);
 				lftSib = tmpSib;
@@ -901,7 +904,7 @@ function syncChildren(node, parEl) {
 			if (rgtSib)
 				{ var rsNode = rgtSib._node; }
 
-			if (rgtSib && !rsNode.recycled && rsNode.parent != parEl._node) {
+			if (rgtSib && rsNode.parent != node) {
 				tmpSib = prevSib(rgtSib);
 				rsNode.vmid != null ? rsNode.vm().unmount(true) : removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
@@ -950,7 +953,7 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 				{ return o; }
 		}
 
-		if (o.recycled || n.tag !== o.tag || n.type !== o.type)
+		if (o._recycled || n.tag !== o.tag || n.type !== o.type)
 			{ continue; }
 
 		// if n.view
@@ -978,7 +981,7 @@ function patch(vnode, donor) {
 	donor.hooks && fireHooks("willRecycle", donor, vnode);
 
 	var el = vnode.el = donor.el;
-	donor.recycled = true;
+	donor._recycled = true;
 
 	var obody = donor.body;
 	var nbody = vnode.body;
@@ -1088,7 +1091,7 @@ function patchChildren(vnode, donor) {
 	}
 
 	if (!(vnode.flags & FIXED_BODY))
-		{ syncChildren(vnode, vnode.el); }
+		{ syncChildren(vnode); }
 }
 
 function setRef(vm, name, node) {

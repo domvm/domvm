@@ -40,7 +40,7 @@ export const VNodeProto = VNode.prototype = {
 	parent:	null,
 
 	// transient flags maintained for cleanup passes, delayed hooks, etc
-//	_recycled:		false,		// true when findDonor/graft pass is done
+	_recycled:		false,		// true when findDonor/graft pass is done
 //	_wasSame:		false,		// true if _diff result was false
 //	_delayedRemove:	false,		// true when willRemove hook returns a promise
 

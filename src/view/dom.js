@@ -3,12 +3,14 @@ import { fireHooks } from './hooks';
 import { views } from './ViewModel';
 import { FIXED_BODY, FAST_REMOVE } from './defineElement';
 
+const doc = document;
+
 export function createElement(tag) {
-	return document.createElement(tag);
+	return doc.createElement(tag);
 }
 
 export function createTextNode(body) {
-	return document.createTextNode(body);
+	return doc.createTextNode(body);
 }
 
 // ? removes if !recycled

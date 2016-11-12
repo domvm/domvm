@@ -76,7 +76,8 @@ function cmpElNodeIdx(a, b) {
 	return a._node.idx - b._node.idx;
 }
 
-export function syncChildren(node, parEl) {
+export function syncChildren(node) {
+	var parEl = node.el;
 	var body = node.body;
 	// breaking condition is convergance
 
@@ -105,7 +106,7 @@ export function syncChildren(node, parEl) {
 				var lsNode = lftSib._node;
 
 			// remove any non-recycled sibs whose el.node has the old parent
-			if (lftSib && !lsNode.recycled && lsNode.parent != parEl._node) {
+			if (lftSib && lsNode.parent != node) {
 				tmpSib = nextSib(lftSib);
 				lsNode.vmid != null ? lsNode.vm().unmount(true) : removeChild(parEl, lftSib);
 				lftSib = tmpSib;
@@ -132,7 +133,7 @@ export function syncChildren(node, parEl) {
 			if (rgtSib)
 				var rsNode = rgtSib._node;
 
-			if (rgtSib && !rsNode.recycled && rsNode.parent != parEl._node) {
+			if (rgtSib && rsNode.parent != node) {
 				tmpSib = prevSib(rgtSib);
 				rsNode.vmid != null ? rsNode.vm().unmount(true) : removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;

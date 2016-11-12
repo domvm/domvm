@@ -23,7 +23,7 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 				return o;
 		}
 
-		if (o.recycled || n.tag !== o.tag || n.type !== o.type)
+		if (o._recycled || n.tag !== o.tag || n.type !== o.type)
 			continue;
 
 		// if n.view
@@ -51,7 +51,7 @@ export function patch(vnode, donor) {
 	donor.hooks && fireHooks("willRecycle", donor, vnode);
 
 	var el = vnode.el = donor.el;
-	donor.recycled = true;
+	donor._recycled = true;
 
 	var obody = donor.body;
 	var nbody = vnode.body;
@@ -161,5 +161,5 @@ function patchChildren(vnode, donor) {
 	}
 
 	if (!(vnode.flags & FIXED_BODY))
-		syncChildren(vnode, vnode.el);
+		syncChildren(vnode);
 }
