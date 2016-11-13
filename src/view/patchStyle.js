@@ -1,5 +1,5 @@
-import { autoPx } from './utils';
 import { isVal } from '../utils';
+import { autoPx } from './addons/autoPx';
 import { isStream, hookStream } from './addons/streamCfg';
 
 // assumes if styles exist both are objects or both are strings

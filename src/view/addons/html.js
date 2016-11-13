@@ -1,6 +1,7 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
 import { isArr, isObj, isVal, isFunc } from '../../utils';
-import { isEvProp, styleStr, isDynProp } from '../utils';
+import { isEvProp, isDynProp } from '../utils';
+import { autoPx } from './autoPx';
 
 import { ViewModelProto } from '../ViewModel';
 import { VNodeProto } from '../VNode';
@@ -17,6 +18,22 @@ ViewModelProto.html = function(dynProps) {
 VNodeProto.html = function(dynProps) {
 	return html(this, dynProps);
 };
+
+
+function camelDash(val) {
+	return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
+function styleStr(css) {
+	var style = "";
+
+	for (var pname in css) {
+		if (css[pname] !== null)
+			style += camelDash(pname) + ": " + autoPx(pname, css[pname]) + '; ';
+	}
+
+	return style;
+}
 
 const voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
 

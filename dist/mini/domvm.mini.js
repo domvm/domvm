@@ -146,50 +146,6 @@ function prop(val, cb, ctx, args) {
 	};
 }
 
-var t = true;
-
-var unitlessProps = {
-	animationIterationCount: t,
-	boxFlex: t,
-	boxFlexGroup: t,
-	columnCount: t,
-	counterIncrement: t,
-	fillOpacity: t,
-	flex: t,
-	flexGrow: t,
-	flexOrder: t,
-	flexPositive: t,
-	flexShrink: t,
-	float: t,
-	fontWeight: t,
-	gridColumn: t,
-	lineHeight: t,
-	lineClamp: t,
-	opacity: t,
-	order: t,
-	orphans: t,
-	stopOpacity: t,
-	strokeDashoffset: t,
-	strokeOpacity: t,
-	strokeWidth: t,
-	tabSize: t,
-	transform: t,
-	transformOrigin: t,
-	widows: t,
-	zIndex: t,
-	zoom: t,
-};
-
-function autoPx(name, val) {
-	return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
-}
-
-function camelDash(val) {
-	return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-}
-
-
-
 function isEvProp(name) {
 	return startsWith(name, "on");
 }
@@ -260,6 +216,44 @@ function hookStream(s, vm) {
 	});
 
 	return streamVal(s);
+}
+
+var t = true;
+
+var unitlessProps = {
+	animationIterationCount: t,
+	boxFlex: t,
+	boxFlexGroup: t,
+	columnCount: t,
+	counterIncrement: t,
+	fillOpacity: t,
+	flex: t,
+	flexGrow: t,
+	flexOrder: t,
+	flexPositive: t,
+	flexShrink: t,
+	float: t,
+	fontWeight: t,
+	gridColumn: t,
+	lineHeight: t,
+	lineClamp: t,
+	opacity: t,
+	order: t,
+	orphans: t,
+	stopOpacity: t,
+	strokeDashoffset: t,
+	strokeOpacity: t,
+	strokeWidth: t,
+	tabSize: t,
+	transform: t,
+	transformOrigin: t,
+	widows: t,
+	zIndex: t,
+	zoom: t,
+};
+
+function autoPx(name, val) {
+	return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
 }
 
 // assumes if styles exist both are objects or both are strings
