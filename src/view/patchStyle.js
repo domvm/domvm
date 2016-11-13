@@ -1,6 +1,6 @@
-import { autoPx, hookStream } from './utils';
+import { autoPx } from './utils';
 import { isVal } from '../utils';
-import { isStream } from '../streamCfg';
+import { isStream, hookStream } from './addons/streamCfg';
 
 // assumes if styles exist both are objects or both are strings
 export function patchStyle(n, o) {
@@ -14,7 +14,7 @@ export function patchStyle(n, o) {
 		for (var nn in ns) {
 			var nv = ns[nn];
 
-			if (isStream != null && isStream(nv))
+			if (isStream(nv))
 				nv = hookStream(nv, n.vm());
 
 			if (os == null || nv != null && nv !== os[nn])

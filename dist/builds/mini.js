@@ -1,7 +1,7 @@
 import micro from './micro';
 
-import { streamCfg } from "../../src/streamCfg";
-import "../../src/streamFlyd.js";
+import { streamCfg } from "../../src/view/addons/streamCfg";
+import "../../src/view/addons/streamFlyd.js";
 
 micro.streamCfg = streamCfg;
 

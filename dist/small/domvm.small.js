@@ -146,26 +146,6 @@ function prop(val, cb, ctx, args) {
 	};
 }
 
-var isStream = null;
-var streamVal = null;
-var subStream = null;
-var unsubStream = null;
-
-/* example flyd adapter:
-{
-	is:		s => flyd.isStream(s),
-	val:	s => s(),
-	sub:	(s,fn) => flyd.on(fn, s),
-	unsub:	s => s.end(),
-}
-*/
-function streamCfg(cfg) {
-	isStream	= cfg.is;
-	streamVal	= cfg.val;
-	subStream	= cfg.sub;
-	unsubStream	= cfg.unsub;
-}
-
 var t = true;
 
 var unitlessProps = {
@@ -245,6 +225,27 @@ function isDynProp(tag, attr) {
 	return false;
 }
 
+var isStream = function() { return false };
+
+var streamVal = null;
+var subStream = null;
+var unsubStream = null;
+
+/* example flyd adapter:
+{
+	is:		s => flyd.isStream(s),
+	val:	s => s(),
+	sub:	(s,fn) => flyd.on(fn, s),
+	unsub:	s => s.end(),
+}
+*/
+function streamCfg(cfg) {
+	isStream	= cfg.is;
+	streamVal	= cfg.val;
+	subStream	= cfg.sub;
+	unsubStream	= cfg.unsub;
+}
+
 // creates a one-shot self-ending stream that redraws target vm
 // TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
 function hookStream(s, vm) {
@@ -273,7 +274,7 @@ function patchStyle(n, o) {
 		for (var nn in ns) {
 			var nv = ns[nn];
 
-			if (isStream != null && isStream(nv))
+			if (isStream(nv))
 				{ nv = hookStream(nv, n.vm()); }
 
 			if (os == null || nv != null && nv !== os[nn])
@@ -382,7 +383,7 @@ function patchAttrs(vnode, donor) {
 		var isDyn = isDynProp(vnode.tag, key);
 		var oval = isDyn ? vnode.el[key] : oattrs[key];
 
-		if (isStream != null && isStream(nval))
+		if (isStream(nval))
 			{ nattrs[key] = nval = hookStream(nval, vnode.vm()); }
 
 		if (nval === oval) {}
@@ -709,7 +710,7 @@ function patchAttrs2(vnode) {
 		var nval = nattrs[key];
 		var isDyn = isDynProp(vnode.tag, key);
 
-		if (isStream != null && isStream(nval))
+		if (isStream(nval))
 			{ nattrs[key] = nval = hookStream(nval, vnode.vm()); }
 
 		if (isStyleProp(key))

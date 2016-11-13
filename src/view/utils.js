@@ -1,5 +1,4 @@
 import { startsWith, isUndef } from '../utils';
-import { streamVal, subStream, unsubStream } from '../streamCfg';
 
 const t = true;
 
@@ -87,20 +86,4 @@ export function isDynProp(tag, attr) {
 //	}
 
 	return false;
-}
-
-// creates a one-shot self-ending stream that redraws target vm
-// TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
-export function hookStream(s, vm) {
-	var redrawStream = subStream(s, val => {
-		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
-		if (redrawStream) {
-			// if vm fully is formed (or mounted vm.node.el?)
-			if (vm.node != null)
-				vm.redraw();
-			unsubStream(redrawStream);
-		}
-	});
-
-	return streamVal(s);
 }

@@ -1,7 +1,6 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
-import { isStream, streamVal } from '../streamCfg';
-import { hookStream } from './utils';
+import { isStream, hookStream } from './addons/streamCfg';
 
 function setRef(vm, name, node) {
 	var path = ["refs"].concat(name.replace("^", "").split("."));
