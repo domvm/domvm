@@ -11,13 +11,6 @@ export const FIXED_BODY = 1;
 export const FAST_REMOVE = 2;
 
 export function defineElement(tag, arg1, arg2, flags) {
-	let node = new VNode;
-
-	node.type = ELEMENT;
-
-	if (flags != null)
-		node.flags = flags;
-
 	var attrs, body;
 
 	if (arg2 == null) {
@@ -30,6 +23,17 @@ export function defineElement(tag, arg1, arg2, flags) {
 		attrs = arg1;
 		body = arg2;
 	}
+
+	return initElementNode(tag, attrs, body, flags);
+}
+
+export function initElementNode(tag, attrs, body, flags) {
+	let node = new VNode;
+
+	node.type = ELEMENT;
+
+	if (flags != null)
+		node.flags = flags;
 
 	if (attrs != null) {
 		if (attrs._key != null)

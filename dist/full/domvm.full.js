@@ -525,13 +525,6 @@ var FIXED_BODY = 1;
 var FAST_REMOVE = 2;
 
 function defineElement(tag, arg1, arg2, flags) {
-	var node = new VNode;
-
-	node.type = ELEMENT;
-
-	if (flags != null)
-		{ node.flags = flags; }
-
 	var attrs, body;
 
 	if (arg2 == null) {
@@ -544,6 +537,17 @@ function defineElement(tag, arg1, arg2, flags) {
 		attrs = arg1;
 		body = arg2;
 	}
+
+	return initElementNode(tag, attrs, body, flags);
+}
+
+function initElementNode(tag, attrs, body, flags) {
+	var node = new VNode;
+
+	node.type = ELEMENT;
+
+	if (flags != null)
+		{ node.flags = flags; }
 
 	if (attrs != null) {
 		if (attrs._key != null)
@@ -2141,7 +2145,7 @@ function jsonml(node) {
 			if (isArr(body))
 				{ body = body.map(jsonml); }
 
-			node = defineElement(tag, attrs, body, false);
+			node = initElementNode(tag, attrs, body, false);
 		}
 		// view defs: [MyView, model, key, opts]
 		else if (isFunc(node[0]))

@@ -1,6 +1,6 @@
 import { isVal, isArr, isObj, isFunc, isElem } from '../../utils';
 
-import { defineElement } from "../defineElement";
+import { initElementNode } from "../defineElement";
 import { defineText } from "../defineText";
 import { defineComment } from "../defineComment";
 import { defineView } from "../defineView";
@@ -53,7 +53,7 @@ export function jsonml(node) {
 			if (isArr(body))
 				body = body.map(jsonml);
 
-			node = defineElement(tag, attrs, body, false);
+			node = initElementNode(tag, attrs, body, false);
 		}
 		// view defs: [MyView, model, key, opts]
 		else if (isFunc(node[0]))
