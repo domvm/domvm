@@ -81,7 +81,7 @@ export function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 				}
 			}
 		}
-		else if (isStream != null && isStream(vnew.body))
+		else if (isStream(vnew.body))
 			vnew.body = hookStream(vnew.body, vnew.vm());
 	}
 }
