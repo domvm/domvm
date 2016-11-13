@@ -104,7 +104,8 @@ export function html(node, dynProps) {
 			break;
 		case TEXT:
 			return escHtml(node.body);
-			break;
+		case COMMENT:
+			return "<!--" + escHtml(node.body) + "-->";
 	}
 
 	if (!voidTags.test(node.tag)) {

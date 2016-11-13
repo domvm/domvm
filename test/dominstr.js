@@ -55,6 +55,7 @@
 			"document.createElement": null,
 			"document.createElementNS": null,
 			"document.createTextNode": null,
+			"document.createComment": null,
 
 			"Element.prototype.appendChild": null,
 			"Element.prototype.removeChild": null,

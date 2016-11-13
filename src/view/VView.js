@@ -1,4 +1,4 @@
-import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
+import { VVIEW } from './VTYPES';
 
 // placeholder for declared views
 export function VView(view, model, key, opts) {

@@ -13,6 +13,10 @@ export function createTextNode(body) {
 	return doc.createTextNode(body);
 }
 
+export function createComment(body) {
+	return doc.createComment(body);
+}
+
 // ? removes if !recycled
 export function nextSib(sib) {
 	return sib.nextSibling;

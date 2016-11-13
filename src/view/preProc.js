@@ -1,4 +1,4 @@
-import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
+import { TEXT, VVIEW, VMODEL } from './VTYPES';
 import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
 import { isStream, hookStream } from './addons/stubs';
 

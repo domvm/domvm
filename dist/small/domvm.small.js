@@ -615,6 +615,10 @@ function createTextNode(body) {
 	return doc.createTextNode(body);
 }
 
+function createComment(body) {
+	return doc.createComment(body);
+}
+
 // ? removes if !recycled
 function nextSib(sib) {
 	return sib.nextSibling;
@@ -739,7 +743,7 @@ function hydrateBody(vnode) {
 //  TODO: DRY this out. reusing normal patch here negatively affects V8's JIT
 function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
-		if (vnode.type === ELEMENT) {
+		if (vnode.type == ELEMENT) {
 			vnode.el = withEl || createElement(vnode.tag);
 
 			if (vnode.attrs != null)
@@ -754,8 +758,10 @@ function hydrate(vnode, withEl) {
 					{ vnode.el.textContent = vnode.body; }
 			}
 		}
-		else if (vnode.type === TEXT)
+		else if (vnode.type == TEXT)
 			{ vnode.el = withEl || createTextNode(vnode.body); }
+		else if (vnode.type == COMMENT)
+			{ vnode.el = withEl || createComment(vnode.body); }
 	}
 
 	vnode.el._node = vnode;

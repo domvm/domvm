@@ -7,7 +7,7 @@ import { setAttr } from './patchAttrs';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
 import { createView } from './createView';
-import { createElement, createTextNode, insertBefore } from './dom';
+import { createElement, createTextNode, createComment, insertBefore } from './dom';
 
 
 // TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT
@@ -53,7 +53,7 @@ export function hydrateBody(vnode) {
 //  TODO: DRY this out. reusing normal patch here negatively affects V8's JIT
 export function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
-		if (vnode.type === ELEMENT) {
+		if (vnode.type == ELEMENT) {
 			vnode.el = withEl || createElement(vnode.tag);
 
 			if (vnode.attrs != null)
@@ -68,8 +68,10 @@ export function hydrate(vnode, withEl) {
 					vnode.el.textContent = vnode.body;
 			}
 		}
-		else if (vnode.type === TEXT)
+		else if (vnode.type == TEXT)
 			vnode.el = withEl || createTextNode(vnode.body);
+		else if (vnode.type == COMMENT)
+			vnode.el = withEl || createComment(vnode.body);
 	}
 
 	vnode.el._node = vnode;

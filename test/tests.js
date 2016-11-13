@@ -800,6 +800,17 @@ QUnit.module("Elems & id/class");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });
 	});
 
+	QUnit.test('Comment: <!--test-->', function(assert) {
+		var tpl = cm("test");
+
+		instr.start();
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<!--test-->';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createComment: 1, insertBefore: 1 });
+	});
+
 	QUnit.test('Text body: ["div", "moo"]', function(assert) {
 		var tpl = el("div", "moo");
 
