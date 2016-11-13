@@ -1,6 +1,8 @@
-import mini from './mini';
+// #destub: autoPx,isStream,hookStream
+
+import { default as small } from './mini';
 
 import { createRouter } from '../../src/router';
-mini.createRouter = createRouter;
+small.createRouter = createRouter;
 
-export default mini;
+export default small;

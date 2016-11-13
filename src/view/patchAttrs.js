@@ -2,7 +2,7 @@ import { isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
 import { isFunc, emptyObj } from '../utils';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
-import { isStream, hookStream } from './addons/streamCfg';
+import { isStream, hookStream } from './addons/stubs';
 
 export function remAttr(node, name) {		// , asProp
 	node.el.removeAttribute(name);

@@ -88,9 +88,7 @@ export function deepUnset(targ, path) {
 }
 */
 
-function sliceArgs(args, offs) {
-	return Array.prototype.slice.call(args, offs || 0)
-}
+
 
 function cmpArr(a, b) {
 	var alen = a.length;
@@ -166,44 +164,6 @@ function isDynProp(tag, attr) {
 	return false;
 }
 
-var t = true;
-
-var unitlessProps = {
-	animationIterationCount: t,
-	boxFlex: t,
-	boxFlexGroup: t,
-	columnCount: t,
-	counterIncrement: t,
-	fillOpacity: t,
-	flex: t,
-	flexGrow: t,
-	flexOrder: t,
-	flexPositive: t,
-	flexShrink: t,
-	float: t,
-	fontWeight: t,
-	gridColumn: t,
-	lineHeight: t,
-	lineClamp: t,
-	opacity: t,
-	order: t,
-	orphans: t,
-	stopOpacity: t,
-	strokeDashoffset: t,
-	strokeOpacity: t,
-	strokeWidth: t,
-	tabSize: t,
-	transform: t,
-	transformOrigin: t,
-	widows: t,
-	zIndex: t,
-	zoom: t,
-};
-
-function autoPx(name, val) {
-	return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
-}
-
 var isStream = function() { return false };
 
 var streamVal = null;
@@ -226,6 +186,7 @@ var unsubStream = null;
 // stubs for optional addons that still exist in code so need lightweight impls to run
 function isStreamStub() { return false; }
 function hookStreamStub() { }
+function autoPxStub(name, val) { return val; }
 
 // assumes if styles exist both are objects or both are strings
 function patchStyle(n, o) {
@@ -243,7 +204,7 @@ function patchStyle(n, o) {
 				{ nv = hookStreamStub(nv, n.vm()); }
 
 			if (os == null || nv != null && nv !== os[nn])
-				{ n.el.style[nn] = autoPx(nn, nv); }
+				{ n.el.style[nn] = autoPxStub(nn, nv); }
 		}
 
 		// clean old
@@ -1527,7 +1488,7 @@ function injectElement(el) {
 	return node;
 }
 
-var nano = {
+var pico = {
 	ViewModel: ViewModel,
 	VNode: VNode,
 
@@ -1545,83 +1506,7 @@ var nano = {
 	FAST_REMOVE: FAST_REMOVE,
 };
 
-// #destub: autoPx
-
-VNodeProto.patch = function(n) {
-	return patch$1(this, n);
-};
-
-// newNode can be either {class: style: } or full new VNode
-// will/didPatch hooks?
-function patch$1(o, n) {
-	if (n.type != null) {
-		// no full patching of view roots, just use redraw!
-		if (o.vmid != null)
-			{ return; }
-
-		preProc(n, o.parent, o.idx, null, null);
-		o.parent.body[o.idx] = n;
-//		o.parent = o.el = o.body = null;		// helps gc?
-		patch(n, o);
-		drainDidHooks(n.vm());
-	}
-	else {
-		// TODO: re-establish refs
-
-		// shallow-clone target
-		var donor = Object.create(o);
-		// fixate orig attrs
-		donor.attrs = assignObj({}, o.attrs);
-		// assign new attrs into live targ node
-		var oattrs = assignObj(o.attrs, donor.attrs, n);
-		// prepend any fixed shorthand class
-		if (o._class != null) {
-			var aclass = oattrs.class;
-			oattrs.class = aclass != null && aclass != "" ? o._class + " " + aclass : o._class;
-		}
-
-		patchAttrs(o, donor);
-	}
-}
-
-ViewModelProto.emit = emit;
-ViewModelProto.on = on;
-
-function emit(evName) {
-	var arguments$1 = arguments;
-
-	var targ = this;
-
-	do {
-		var evs = targ.events;
-		var fn = evs ? evs[evName] : null;
-
-		if (fn) {
-			fn.apply(null, sliceArgs(arguments$1, 1));
-			break;
-		}
-
-	} while (targ = targ.parent());
-}
-
-function on(evName, fn) {
-	var t = this;
-
-	if (t.events == null)
-		{ t.events = {}; }
-
-	if (isVal(evName))
-		{ t.events[evName] = fn; }
-	else {
-		var evs = evName;
-		for (var evName in evs)
-			{ t.on(evName, evs[evName]); }
-	}
-}
-
-// #destub: autoPx
-
-return nano;
+return pico;
 
 })));
-//# sourceMappingURL=domvm.micro.js.map
+//# sourceMappingURL=domvm.pico.js.map

@@ -13,8 +13,28 @@ module.exports.compile = compile;
 function compile(buildName) {
 	var start = +new Date;
 
+	var entry = './dist/builds/' + buildName + '.js';
+	var stubs = './src/view/addons/stubs.js';
+
+	// will hold contents of orig stubs.js
+	var stubsOrig, stubsNew;
+
+	var entryData = fs.readFileSync(entry, 'utf8');
+
+	var destub = /#destub: ([\w,]+)/gm.exec(entryData);
+
+	if (destub) {
+		stubsOrig = stubsNew = fs.readFileSync(stubs, 'utf8');
+
+		destub[1].split(",").forEach(function(fnName) {
+			stubsNew = stubsNew.replace(fnName + "Stub as ", "");
+		});
+
+		fs.writeFileSync(stubs, stubsNew, 'utf8');
+	}
+
 	rollup({
-		entry: './dist/builds/' + buildName + '.js',
+		entry: entry,
 		plugins: [ buble() ],
 	})
 	.then(function(bundle) {
@@ -36,19 +56,28 @@ function compile(buildName) {
 			dest: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		});
 
+		if (destub)
+			fs.writeFileSync(stubs, stubsOrig, 'utf8');
+
 		console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
 
 		minify(buildName, start);
+	}).catch(function(err) {
+		if (destub)
+			fs.writeFileSync(stubs, stubsOrig, 'utf8');
 	})
 }
 
 function minify(buildName, start) {
 	// --souce_map_input dist/domvm.full.js.map	// --create_source_map dist/domvm.full.min.js.map
 
+	var src = "dist/" + buildName + "/domvm." + buildName + ".js";
+	var dst = "dist/" + buildName + "/domvm." + buildName + ".min.js";
+
 	let cmd = [
 		"java -jar compiler.jar --language_in=ECMASCRIPT6_STRICT",
-		"--js             dist/" + buildName + "/domvm." + buildName + ".js",
-		"--js_output_file dist/" + buildName + "/domvm." + buildName + ".min.js",
+		"--js             " + src,
+		"--js_output_file " + dst,
 	].join(" ");
 
 	exec(cmd, function(error, stdout, stderr) {

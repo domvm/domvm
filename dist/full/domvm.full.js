@@ -179,43 +179,6 @@ function isDynProp(tag, attr) {
 	return false;
 }
 
-var isStream = function() { return false };
-
-var streamVal = null;
-var subStream = null;
-var unsubStream = null;
-
-/* example flyd adapter:
-{
-	is:		s => flyd.isStream(s),
-	val:	s => s(),
-	sub:	(s,fn) => flyd.on(fn, s),
-	unsub:	s => s.end(),
-}
-*/
-function streamCfg(cfg) {
-	isStream	= cfg.is;
-	streamVal	= cfg.val;
-	subStream	= cfg.sub;
-	unsubStream	= cfg.unsub;
-}
-
-// creates a one-shot self-ending stream that redraws target vm
-// TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
-function hookStream(s, vm) {
-	var redrawStream = subStream(s, function (val) {
-		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
-		if (redrawStream) {
-			// if vm fully is formed (or mounted vm.node.el?)
-			if (vm.node != null)
-				{ vm.redraw(); }
-			unsubStream(redrawStream);
-		}
-	});
-
-	return streamVal(s);
-}
-
 var t = true;
 
 var unitlessProps = {
@@ -252,6 +215,43 @@ var unitlessProps = {
 
 function autoPx(name, val) {
 	return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
+}
+
+var isStream = function() { return false };
+
+var streamVal = null;
+var subStream = null;
+var unsubStream = null;
+
+/* example flyd adapter:
+{
+	is:		s => flyd.isStream(s),
+	val:	s => s(),
+	sub:	(s,fn) => flyd.on(fn, s),
+	unsub:	s => s.end(),
+}
+*/
+function streamCfg(cfg) {
+	isStream	= cfg.is;
+	streamVal	= cfg.val;
+	subStream	= cfg.sub;
+	unsubStream	= cfg.unsub;
+}
+
+// creates a one-shot self-ending stream that redraws target vm
+// TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
+function hookStream(s, vm) {
+	var redrawStream = subStream(s, function (val) {
+		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
+		if (redrawStream) {
+			// if vm fully is formed (or mounted vm.node.el?)
+			if (vm.node != null)
+				{ vm.redraw(); }
+			unsubStream(redrawStream);
+		}
+	});
+
+	return streamVal(s);
 }
 
 // assumes if styles exist both are objects or both are strings
@@ -1554,7 +1554,7 @@ function injectElement(el) {
 	return node;
 }
 
-var micro = {
+var nano = {
 	ViewModel: ViewModel,
 	VNode: VNode,
 
@@ -1571,6 +1571,8 @@ var micro = {
 	FIXED_BODY: FIXED_BODY,
 	FAST_REMOVE: FAST_REMOVE,
 };
+
+// #destub: autoPx
 
 VNodeProto.patch = function(n) {
 	return patch$1(this, n);
@@ -1644,6 +1646,8 @@ function on(evName, fn) {
 	}
 }
 
+// #destub: autoPx
+
 if (typeof flyd != "undefined") {
 	streamCfg({
 		is:		function (s) { return flyd.isStream(s); },
@@ -1653,9 +1657,11 @@ if (typeof flyd != "undefined") {
 	});
 }
 
-micro.streamCfg = streamCfg;
+// #destub: autoPx,isStream,hookStream
 
-micro.prop = prop;
+nano.streamCfg = streamCfg;
+
+nano.prop = prop;
 
 var stack = [];
 	var pos = null;
@@ -1944,7 +1950,9 @@ var stack = [];
 	};
 */
 
-micro.createRouter = createRouter;
+// #destub: autoPx,isStream,hookStream
+
+nano.createRouter = createRouter;
 
 ViewModelProto.html = function(dynProps) {
 	var vm = this;
@@ -2174,9 +2182,11 @@ function jsonml(node) {
 	return node;
 }
 
-micro.jsonml = jsonml;
+// #destub: autoPx,isStream,hookStream
 
-return micro;
+nano.jsonml = jsonml;
+
+return nano;
 
 })));
 //# sourceMappingURL=domvm.full.js.map

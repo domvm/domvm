@@ -2,7 +2,7 @@ import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr } from '../utils';
 import { views } from './ViewModel';
 import { isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
-import { isStream, hookStream } from './addons/streamCfg';
+import { isStream, hookStream } from './addons/stubs';
 import { setAttr } from './patchAttrs';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';

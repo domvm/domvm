@@ -8,11 +8,13 @@
   "version": "2.0.0-dev",
   "main": "dist/domvm.full.js",
   "scripts": {
+    "watch:pico": "node watch.js pico",
     "watch:nano": "node watch.js nano",
     "watch:micro": "node watch.js micro",
     "watch:mini": "node watch.js mini",
     "watch:small": "node watch.js small",
     "watch:full": "node watch.js full",
+    "build:pico": "node build.js pico",
     "build:nano": "node build.js nano",
     "build:micro": "node build.js micro",
     "build:mini": "node build.js mini",

@@ -1,10 +1,12 @@
-import small from './small';
+// #destub: autoPx,isStream,hookStream
+
+import { default as full } from './small';
 
 import "../../src/view/addons/html";
 import "../../src/view/addons/attach";
 
 import { jsonml } from "../../src/view/addons/jsonml";
 
-small.jsonml = jsonml;
+full.jsonml = jsonml;
 
-export default small;
+export default full;

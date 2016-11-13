@@ -1,7 +1,7 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
 import { isArr, isObj, isVal, isFunc } from '../../utils';
 import { isEvProp, isDynProp } from '../utils';
-import { autoPx } from './autoPx';
+import { autoPx } from './stubs';
 
 import { ViewModelProto } from '../ViewModel';
 import { VNodeProto } from '../VNode';
