@@ -1,6 +1,6 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { VNode } from './VNode';
-import { parseTag } from './parseTag';
+import { parseTag } from './addons/parseTag';
 import { isObj, isUndef } from '../utils';
 
 // optimization flags
