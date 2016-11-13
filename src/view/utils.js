@@ -1,4 +1,4 @@
-import { startsWith, isUndef } from '../utils';
+import { startsWith } from '../utils';
 
 export function isEvProp(name) {
 	return startsWith(name, "on");

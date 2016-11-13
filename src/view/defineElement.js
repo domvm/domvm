@@ -1,7 +1,7 @@
-import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
+import { ELEMENT } from './VTYPES';
 import { VNode } from './VNode';
 import { parseTag } from './addons/parseTag';
-import { isObj, isUndef } from '../utils';
+import { isObj } from '../utils';
 
 // optimization flags
 
@@ -11,14 +11,16 @@ export const FIXED_BODY = 1;
 export const FAST_REMOVE = 2;
 
 export function defineElement(tag, arg1, arg2, flags) {
-	var node = new VNode(ELEMENT);
+	let node = new VNode;
+
+	node.type = ELEMENT;
 
 	if (flags != null)
 		node.flags = flags;
 
 	var attrs, body;
 
-	if (isUndef(arg2)) {
+	if (arg2 == null) {
 		if (isObj(arg1))
 			attrs = arg1;
 		else

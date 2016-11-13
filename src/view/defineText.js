@@ -1,8 +1,9 @@
-import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
+import { TEXT } from './VTYPES';
 import { VNode } from './VNode';
 
 export function defineText(body) {
-	var n = new VNode(TEXT);
-	n.body = body;
-	return n;
+	let node = new VNode;
+	node.type = TEXT;
+	node.body = body;
+	return node;
 }

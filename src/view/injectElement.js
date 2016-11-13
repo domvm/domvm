@@ -1,8 +1,9 @@
-import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
+import { ELEMENT } from './VTYPES';
 import { VNode } from './VNode';
 
 export function injectElement(el) {
-	var node = new VNode(ELEMENT);
+	let node = new VNode;
+	node.type = ELEMENT;
 	node.el = node.key = el;
 	return node;
 }

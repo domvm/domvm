@@ -1,8 +1,6 @@
 import { views } from './ViewModel';
 
-export function VNode(type) {
-	this.type = type;
-}
+export function VNode() {}
 
 export const VNodeProto = VNode.prototype = {
 	constructor: VNode,

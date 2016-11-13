@@ -30,10 +30,6 @@ function startsWith(haystack, needle) {
 	return haystack.lastIndexOf(needle, 0) === 0;
 }
 
-function isUndef(val) {
-	return typeof val == "undefined";
-}
-
 var isArr = Array.isArray;
 
 function isObj(val) {
@@ -426,9 +422,7 @@ function fireHooks(name, o, n, immediate) {
 	}
 }
 
-function VNode(type) {
-	this.type = type;
-}
+function VNode() {}
 
 var VNodeProto = VNode.prototype = {
 	constructor: VNode,
@@ -513,14 +507,16 @@ var FIXED_BODY = 1;
 var FAST_REMOVE = 2;
 
 function defineElement(tag, arg1, arg2, flags) {
-	var node = new VNode(ELEMENT);
+	var node = new VNode;
+
+	node.type = ELEMENT;
 
 	if (flags != null)
 		{ node.flags = flags; }
 
 	var attrs, body;
 
-	if (isUndef(arg2)) {
+	if (arg2 == null) {
 		if (isObj(arg1))
 			{ attrs = arg1; }
 		else
@@ -1473,13 +1469,17 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 }
 
 function defineText(body) {
-	var n = new VNode(TEXT);
-	n.body = body;
-	return n;
+	var node = new VNode;
+	node.type = TEXT;
+	node.body = body;
+	return node;
 }
 
 function defineComment(body) {
-	return new VNode(COMMENT).body(body);
+	var node = new VNode;
+	node.type = COMMENT;
+	node.body = body;
+	return node;
 }
 
 // placeholder for declared views
@@ -1526,7 +1526,8 @@ function injectView(vm) {
 }
 
 function injectElement(el) {
-	var node = new VNode(ELEMENT);
+	var node = new VNode;
+	node.type = ELEMENT;
 	node.el = node.key = el;
 	return node;
 }

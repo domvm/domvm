@@ -8,10 +8,6 @@ export function startsWith(haystack, needle) {
 	return haystack.lastIndexOf(needle, 0) === 0;
 }
 
-export function isUndef(val) {
-	return typeof val == "undefined";
-}
-
 export const isArr = Array.isArray;
 
 export function isObj(val) {
