@@ -14,7 +14,6 @@ Instead, domvm offers straightforward, pure-js development without opinionated s
 Architect reusable apps without fighting a pre-defined structure, learning tomes-worth of idiomatic abstractions or leaning on non-reusable, esoteric template DSLs.
 
 ---
+## Looking for domvm v1?
 
-## Looking for domvm v1.x?
-
-It's still available in the [1.x-dev branch](https://github.com/leeoniya/domvm/tree/1.x-dev). This is v2.x-dev which is [up to 3.5x faster](https://github.com/leeoniya/domvm/issues/101#issuecomment-260141793), [smaller](https://github.com/leeoniya/domvm/blob/2.x-dev/dist/README.md) and more refined while keeping the core features and API which made 1.x a pleasure to use. The first stable v2.0.0 will be ready in Jan 2017, but the view layer is already fully-featured and beta quality *today*; the router is being ported and refined from 1.x.
+It's still available in the [1.x-dev branch](https://github.com/leeoniya/domvm/tree/1.x-dev). This is v2 which is [up to 3.5x faster](https://github.com/leeoniya/domvm/issues/101#issuecomment-260141793), [smaller](https://github.com/leeoniya/domvm/blob/2.x-dev/dist/README.md) and more refined while keeping the core features and API which made v1 a pleasure to use. The first stable v2 will be ready in Jan 2017, but the view layer is already fully-featured and beta quality *today*; the router is being ported and refined from v1.
