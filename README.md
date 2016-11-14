@@ -15,4 +15,6 @@ Architect reusable apps without fighting a pre-defined structure, learning tomes
 
 ---
 
-## Looking for domvm v1.x? It's still available in the [1.x-dev branch](https://github.com/leeoniya/domvm/tree/1.x-dev). This is v2.x-dev which is faster and better while keeping the impotant core 1.x features. The first stable v2.0.0 will be ready in Jan 2017, but the view layer is already fully-featured *today*; the router is being ported and refined form 1.x.
+## Looking for domvm v1.x?
+
+It's still available in the [1.x-dev branch](https://github.com/leeoniya/domvm/tree/1.x-dev). This is v2.x-dev which is [up to 3.5x faster](https://github.com/leeoniya/domvm/issues/101#issuecomment-260141793), [smaller](https://github.com/leeoniya/domvm/blob/2.x-dev/dist/README.md) and more refined while keeping the core features and API which made 1.x a pleasure to use. The first stable v2.0.0 will be ready in Jan 2017, but the view layer is already fully-featured and beta quality *today*; the router is being ported and refined from 1.x.
