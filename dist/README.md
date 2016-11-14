@@ -1,10 +1,10 @@
 | build      | size (min) | contents                                       |
 | ---------- | ---------- | ---------------------------------------------- |
-| [pico][1]  | 10.1k      |  view core (changes if/when nano can be split) |
+| [pico][1]  | 10.2k      |  view core (changes if/when nano can be split) |
 | [nano][2]  | 10.9k      |  pico  + `cssTag` + `autoPx`                   |
-| [micro][3] | 11.5k      |  nano  + `patch` + `emit`                      |
-| [mini][4]  | 12.1k      |  micro + `streamCfg` + `streamFlyd` + `prop`   |
-| [small][5] | 14.5k      |  mini  + `router`                              |
+| [micro][3] | 11.6k      |  nano  + `patch` + `emit`                      |
+| [mini][4]  | 12.2k      |  micro + `streamCfg` + `streamFlyd` + `prop`   |
+| [small][5] | 14.6k      |  mini  + `router`                              |
 | [full][6]  | 16.7k      |  small + `html` + `attach` + `jsonml`          |
 
 [1]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/pico/domvm.pico.min.js
