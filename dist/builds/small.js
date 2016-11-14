@@ -1,4 +1,4 @@
-// #destub: autoPx,isStream,hookStream
+// #destub: cssTag,autoPx,isStream,hookStream
 
 import { default as small } from './mini';
 

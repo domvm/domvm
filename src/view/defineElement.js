@@ -1,6 +1,6 @@
 import { ELEMENT } from './VTYPES';
 import { VNode } from './VNode';
-import { parseTag } from './addons/parseTag';
+import { cssTag } from './addons/stubs';
 import { isObj } from '../utils';
 
 // optimization flags
@@ -63,7 +63,7 @@ export function initElementNode(tag, attrs, body, flags) {
 		node.attrs = attrs;
 	}
 
-	var parsed = parseTag(tag);
+	var parsed = cssTag(tag);
 
 	node.tag = parsed.tag;
 

@@ -164,6 +164,12 @@ function isDynProp(tag, attr) {
 	return false;
 }
 
+var tagCache = {};
+
+var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
+
+//	function VTag() {}
+
 var isStream = function() { return false };
 
 var streamVal = null;
@@ -187,6 +193,9 @@ var unsubStream = null;
 function isStreamStub() { return false; }
 function hookStreamStub() { }
 function autoPxStub(name, val) { return val; }
+
+var tagObj = {};
+function cssTagStub(tag) { tagObj.tag = tag; return tagObj; }
 
 // assumes if styles exist both are objects or both are strings
 function patchStyle(n, o) {
@@ -423,34 +432,6 @@ var VNodeProto = VNode.prototype = {
 	*/
 };
 
-var tagCache = {};
-
-var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
-
-//	function VTag() {}
-function parseTag(raw) {
-	var cached = tagCache[raw];
-
-	if (cached == null) {
-		var tag, id, cls, attr;
-
-		tagCache[raw] = cached = {
-			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
-			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
-			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
-			attrs:	null,
-		};
-
-		while (attr = RE_ATTRS.exec(raw)) {
-			if (cached.attrs == null)
-				{ cached.attrs = {}; }
-			cached.attrs[attr[1]] = attr[2] || "";
-		}
-	}
-
-	return cached;
-}
-
 // optimization flags
 
 // prevents inserting/removing/reordering of children
@@ -511,7 +492,7 @@ function initElementNode(tag, attrs, body, flags) {
 		node.attrs = attrs;
 	}
 
-	var parsed = parseTag(tag);
+	var parsed = cssTagStub(tag);
 
 	node.tag = parsed.tag;
 

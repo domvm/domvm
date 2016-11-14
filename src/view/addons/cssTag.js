@@ -3,7 +3,7 @@ const tagCache = {};
 const RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
 
 //	function VTag() {}
-export function parseTag(raw) {
+export function cssTag(raw) {
 	var cached = tagCache[raw];
 
 	if (cached == null) {

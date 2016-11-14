@@ -1,7 +1,7 @@
 | build      | size (min) | contents                                       |
 | ---------- | ---------- | ---------------------------------------------- |
-| [pico][1]  | 10.4k      |  view core (changes if/when nano can be split) |
-| [nano][2]  | 10.9k      |  pico  + `autoPx`                              |
+| [pico][1]  | 10.1k      |  view core (changes if/when nano can be split) |
+| [nano][2]  | 10.9k      |  pico  + `cssTag` + `autoPx`                   |
 | [micro][3] | 11.5k      |  nano  + `patch` + `emit`                      |
 | [mini][4]  | 12.1k      |  micro + `streamCfg` + `streamFlyd` + `prop`   |
 | [small][5] | 14.5k      |  mini  + `router`                              |

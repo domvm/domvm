@@ -204,6 +204,34 @@ function autoPx(name, val) {
 	return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
 }
 
+var tagCache = {};
+
+var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
+
+//	function VTag() {}
+function cssTag(raw) {
+	var cached = tagCache[raw];
+
+	if (cached == null) {
+		var tag, id, cls, attr;
+
+		tagCache[raw] = cached = {
+			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
+			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
+			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
+			attrs:	null,
+		};
+
+		while (attr = RE_ATTRS.exec(raw)) {
+			if (cached.attrs == null)
+				{ cached.attrs = {}; }
+			cached.attrs[attr[1]] = attr[2] || "";
+		}
+	}
+
+	return cached;
+}
+
 var isStream = function() { return false };
 
 var streamVal = null;
@@ -462,34 +490,6 @@ var VNodeProto = VNode.prototype = {
 	*/
 };
 
-var tagCache = {};
-
-var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
-
-//	function VTag() {}
-function parseTag(raw) {
-	var cached = tagCache[raw];
-
-	if (cached == null) {
-		var tag, id, cls, attr;
-
-		tagCache[raw] = cached = {
-			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
-			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
-			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
-			attrs:	null,
-		};
-
-		while (attr = RE_ATTRS.exec(raw)) {
-			if (cached.attrs == null)
-				{ cached.attrs = {}; }
-			cached.attrs[attr[1]] = attr[2] || "";
-		}
-	}
-
-	return cached;
-}
-
 // optimization flags
 
 // prevents inserting/removing/reordering of children
@@ -550,7 +550,7 @@ function initElementNode(tag, attrs, body, flags) {
 		node.attrs = attrs;
 	}
 
-	var parsed = parseTag(tag);
+	var parsed = cssTag(tag);
 
 	node.tag = parsed.tag;
 
@@ -1551,7 +1551,7 @@ var nano = {
 	FAST_REMOVE: FAST_REMOVE,
 };
 
-// #destub: autoPx
+// #destub: cssTag,autoPx
 
 VNodeProto.patch = function(n) {
 	return patch$1(this, n);
@@ -1625,7 +1625,7 @@ function on(evName, fn) {
 	}
 }
 
-// #destub: autoPx
+// #destub: cssTag,autoPx
 
 return nano;
 
