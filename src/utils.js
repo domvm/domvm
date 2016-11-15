@@ -72,6 +72,14 @@ export function sliceArgs(args, offs) {
 	return Array.prototype.slice.call(args, offs || 0)
 }
 
+export function cmpObj(a, b) {
+	for (var i in a)
+		if (a[i] !== b[i])
+			return false;
+
+	return true;
+}
+
 export function cmpArr(a, b) {
 	const alen = a.length;
 

@@ -94,6 +94,14 @@ function sliceArgs(args, offs) {
 	return Array.prototype.slice.call(args, offs || 0)
 }
 
+function cmpObj(a, b) {
+	for (var i in a)
+		{ if (a[i] !== b[i])
+			{ return false; } }
+
+	return true;
+}
+
 function cmpArr(a, b) {
 	var alen = a.length;
 
@@ -1211,6 +1219,8 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 	// remove this?
 	if (opts) {
+		vm.opts = opts;
+
 		if (opts.hooks)
 			{ vm.hook(opts.hooks); }
 	//	if (opts.diff)
@@ -1237,6 +1247,7 @@ var ViewModelProto = ViewModel.prototype = {
 	view: null,
 	key: null,
 	model: null,
+	opts: null,
 	node: null,
 //	diff: null,
 //	diffLast: null,	// prior array of diff values
@@ -1291,23 +1302,33 @@ var ViewModelProto = ViewModel.prototype = {
 	_updateAsync: null,
 
 	_diff: null,
-	_diffArr: [],
-	/*
-	function(ancest) {
-	//	var vm = this;
-	//	return !ancest : redraw.call(vm) vm.parent ? vm.parent.redraw(ancest - 1);
-	},
-	*/
-	diff: function(diff) {
+	// @diff should be a callback that returns an array of values to shallow-compare
+	//   if the returned values are the same on subsequent redraw calls, then redraw() is prevented
+	// @diff2 may be a callback that will run if arrays dont match and recieves the old & new arrays which
+	//   it can then use to shallow-patch the top-level vnode if needed (like apply {display: none}) and
+	//   return false to prevent further redraw()
+	diff: function(cfg) {
 		var vm = this;
-		this._diff = function(model) {
-			var diffArr = diff(model);
 
-			if (!cmpArr(diffArr, vm._diffArr)) {
-				vm._diffArr = diffArr;
-				return false;
+		var getVals = cfg.vals;
+		var thenFn = cfg.then;
+
+		var oldVals = getVals(vm, vm.model, vm.key, vm.opts);
+		var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
+
+		vm._diff = function() {
+			var newVals = getVals(vm, vm.model, vm.key, vm.opts);
+			var isSame = cmpFn(oldVals, newVals);
+
+			if (!isSame) {
+				// thenFn must return false to prevent redraw
+				if (thenFn != null && thenFn(vm, oldVals, newVals) === false)
+					{ isSame = true; }
+
+				oldVals = newVals;
 			}
-			return true;
+
+			return isSame;
 		};
 	},
 //	hooks: function(hooks) {},
@@ -1344,7 +1365,39 @@ function drainDidHooks(vm) {
 	}
 }
 
+/*
+export function cleanExposedRefs(orefs, nrefs) {
+	for (var key in orefs) {
+		// ref not present in new refs
+		if (nrefs == null || !(key in nrefs)) {
+			var val = orefs[key];
 
+
+//			var path = [];
+//			// dig nown if val i a namespace
+//			while (isObj(val) && val.type == null) {
+//				path.push(val);
+//				val =
+//			}
+
+
+			if (isObj(val)) {
+				// is a vnode
+				if (val.type) {
+					// is an exposed ref
+					if (val.ref[0] == "^") {
+						console.log("clean parents of absent exposed ref");
+					}
+				}
+				// is namespace, dig down
+				else {
+
+				}
+			}
+		}
+	}
+}
+*/
 
 function mount(el, isRoot, withDOM) {		// , asSub, refEl
 	var vm = this;
@@ -1400,7 +1453,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vold = vm.node;
 
 	// no diff, just re-parent old
-	if (vm._diff != null && vm._diff(vm.model)) {
+	if (isMounted && vm._diff != null && vm._diff()) {
 		// will doing this outside of preproc cause de-opt, add shallow opt to preproc?
 		if (vold && newParent) {
 			newParent.body[newIdx] = vold;

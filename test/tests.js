@@ -1900,8 +1900,10 @@ QUnit.module("Non-persistent model replacement");
 		var redraws = 0;
 
 		function ViewA(vm, model) {
-			vm.diff(function(model) {
-				return [model.class, model.text];
+			vm.diff({
+				vals: function(vm, model) {
+					return [model.class, model.text];
+				}
 			});
 
 			return function() {

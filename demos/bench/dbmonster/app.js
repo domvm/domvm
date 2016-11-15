@@ -36,6 +36,7 @@ function DBMonView() {
 }
 */
 
+/*
 // avoids array flattening, uses concat()
 function DBMonView() {
 	return (vm, dbs) =>
@@ -60,8 +61,9 @@ function DBMonView() {
 			])
 		])
 }
+*/
 
-/*
+
 // sub-view & diff (avoids array flattening)
 function DBMonView() {
 	return (vm, dbs) =>
@@ -75,8 +77,10 @@ function DBMonView() {
 }
 
 function DB(vm) {
-	vm.diff(function(db) {
-		return [db.lastMutationId];
+	vm.diff({
+		vals: function(vm, db) {
+			return [db.lastMutationId];
+		}
 	});
 
 	return (vm, db) =>
@@ -91,8 +95,10 @@ function DB(vm) {
 }
 
 function Query(vm) {
-	vm.diff(function(query) {
-		return [query, query.elapsed];
+	vm.diff({
+		vals: function(vm, query) {
+			return [query, query.elapsed];
+		}
 	});
 
 	return (vm, query) =>
@@ -104,7 +110,6 @@ function Query(vm) {
 			])
 		]);
 }
-*/
 
 
 let dbs		= null,

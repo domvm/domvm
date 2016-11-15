@@ -63,6 +63,7 @@ function compile(buildName) {
 
 		minify(buildName, start);
 	}).catch(function(err) {
+		console.log(err);
 		if (destub)
 			fs.writeFileSync(stubs, stubsOrig, 'utf8');
 	})
