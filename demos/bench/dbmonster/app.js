@@ -36,7 +36,7 @@ function DBMonView() {
 }
 */
 
-/*
+
 // avoids array flattening, uses concat()
 function DBMonView() {
 	return (vm, dbs) =>
@@ -61,9 +61,9 @@ function DBMonView() {
 			])
 		])
 }
-*/
 
 
+/*
 // sub-view & diff (avoids array flattening)
 function DBMonView() {
 	return (vm, dbs) =>
@@ -110,7 +110,7 @@ function Query(vm) {
 			])
 		]);
 }
-
+*/
 
 let dbs		= null,
 	raf		= null,

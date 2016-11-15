@@ -1659,7 +1659,7 @@ function patch$1(o, n) {
 		// fixate orig attrs
 		donor.attrs = assignObj({}, o.attrs);
 		// assign new attrs into live targ node
-		var oattrs = assignObj(o.attrs, donor.attrs, n);
+		var oattrs = assignObj(o.attrs, n);
 		// prepend any fixed shorthand class
 		if (o._class != null) {
 			var aclass = oattrs.class;
