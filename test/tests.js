@@ -726,6 +726,70 @@ QUnit.module("Other mods");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 1, createElement: 1, insertBefore: 1 });
 	});
 
+	QUnit.test('(body) textNode -> elem', function(assert) {
+		tpl = el("span", [
+			el("em", "foo"),
+			tx(" bar "),
+			el("strong", "baz"),
+		]);
+		var expcHtml = '<span><em>foo</em> bar <strong>baz</strong></span>';
+
+		instr.start();
+		var vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 3, createTextNode: 1, insertBefore: 4, textContent: 2 });
+
+		tpl = el("span", [
+			el("em", "foo"),
+			el("br"),
+			el("strong", "baz"),
+		]);
+		var expcHtml = '<span><em>foo</em><br><strong>baz</strong></span>';
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		// TODO-optim: can be replaceChild instead of removeChild/insertBefore
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 1, createElement: 1, insertBefore: 1 });
+	});
+
+	QUnit.test('(body) textNode -> elem (recycle)', function(assert) {
+		tpl = el(".wrap", [
+			el("div", [
+				tx("David"),
+				el("input"),
+			]),
+			el("div", [
+				el("input[name=name]"),
+				el("input[name=score]"),
+			])
+		]);
+		var expcHtml = '<div class="wrap"><div>David<input></div><div><input name="name"><input name="score"></div></div>';
+
+		instr.start();
+		var vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 6, className: 1, createTextNode: 1, insertBefore: 7, setAttribute: 2});
+
+		tpl = el(".wrap", [
+			el("div", [
+				el("input[name=name]"),
+				el("input[name=score]"),
+			])
+		]);
+		var expcHtml = '<div class="wrap"><div><input name="name"><input name="score"></div></div>';
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		// TODO-optim: can be replaceChild instead of removeChild/insertBefore
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 1 + 3, createElement: 1, insertBefore: 1, setAttribute: 2 });
+	});
+
 	QUnit.test('(body) elem -> textNode', function(assert) {
 		tpl = el("span", [
 			el("em", "foo"),
@@ -754,6 +818,7 @@ QUnit.module("Other mods");
 		// TODO-optim: can be replaceChild instead of removeChild/insertBefore
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 1, createTextNode: 1, insertBefore: 1 });
 	});
+
 /*
 	QUnit.test('Model as node _key', function(assert) {
 		var model = {text: "a"};

@@ -958,7 +958,7 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 				{ return o; }
 		}
 
-		if (n == o.el._node || n.tag !== o.tag || n.type !== o.type)
+		if (o.el._node != o || n.tag !== o.tag || n.type !== o.type)
 			{ continue; }
 
 		// if n.view

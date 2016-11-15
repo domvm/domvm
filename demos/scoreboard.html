@@ -88,7 +88,7 @@
 					)),
 					el("form.admin", [
 						players.map(player =>
-							el(".player", {_key: player}, [
+							el(".player", [
 								tx(player.name),
 								el("input.score", {type: "number", value: player.score, onchange: [handleScoreChange, player]}),
 								el("button",      {type: "button", onclick: [handleDeleteClick, player]}, "X"),
@@ -175,22 +175,6 @@
 		];
 
 		domvm.createView(Scoreboard, players).mount(document.body);
-
-/*		BUG: if un-keyed and player is removed from data list David->input recycling fails to work properly
-
-		<form class="admin">
-			<div class="player">
-			  David
-			  <input type="number" class="score">
-			  <button type="button">X</button>
-			</div>
-			<div class="player">
-			  <input type="text" name="name" placeholder="New player...">
-			  <input type="number" name="score" class="score">
-			  <button type="button">Add</button>
-			</div>
-		</form>
-*/
 	</script>
 </body>
 </html>
