@@ -121,7 +121,7 @@ export function curry(fn, args, ctx) {
 
 export function prop(val, cb, ctx, args) {
 	return function(newVal, execCb) {
-		if (!isUndef(newVal) && newVal !== val) {
+		if (typeof newVal != "undefined" && newVal !== val) {
 			val = newVal;
 			execCb !== false && isFunc(cb) && cb.apply(ctx, args);
 		}

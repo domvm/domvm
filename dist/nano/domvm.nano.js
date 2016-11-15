@@ -1272,36 +1272,6 @@ var ViewModelProto = ViewModel.prototype = {
 	_redrawAsync: null,		// this is set in constructor per view
 	_updateAsync: null,
 
-	_diff: null,
-	// @diff should be a callback that returns an array of values to shallow-compare
-	//   if the returned values are the same on subsequent redraw calls, then redraw() is prevented
-	// @diff2 may be a callback that will run if arrays dont match and recieves the old & new arrays which
-	//   it can then use to shallow-patch the top-level vnode if needed (like apply {display: none}) and
-	//   return false to prevent further redraw()
-	diff: function(cfg) {
-		var vm = this;
-
-		var getVals = cfg.vals;
-		var thenFn = cfg.then;
-
-		var oldVals = getVals(vm, vm.model, vm.key, vm.opts);
-		var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
-
-		vm._diff = function() {
-			var newVals = getVals(vm, vm.model, vm.key, vm.opts);
-			var isSame = cmpFn(oldVals, newVals);
-
-			if (!isSame) {
-				// thenFn must return false to prevent redraw
-				if (thenFn != null && thenFn(vm, oldVals, newVals) === false)
-					{ isSame = true; }
-
-				oldVals = newVals;
-			}
-
-			return isSame;
-		};
-	},
 //	hooks: function(hooks) {},
 	hook: function(hooks) {
 		this.hooks = hooks;
@@ -1601,6 +1571,75 @@ var nano$1 = {
 	FIXED_BODY: FIXED_BODY,
 	FAST_REMOVE: FAST_REMOVE,
 };
+
+ViewModelProto._diff = null;
+
+// @diff should be a callback that returns an array of values to shallow-compare
+//   if the returned values are the same on subsequent redraw calls, then redraw() is prevented
+// @diff2 may be a callback that will run if arrays dont match and recieves the old & new arrays which
+//   it can then use to shallow-patch the top-level vnode if needed (like apply {display: none}) and
+//   return false to prevent further redraw()
+ViewModelProto.diff = function(cfg) {
+	var vm = this;
+
+	var getVals = cfg.vals;
+	var thenFn = cfg.then;
+
+	var oldVals = getVals(vm, vm.model, vm.key, vm.opts);
+	var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
+
+	vm._diff = function() {
+		var newVals = getVals(vm, vm.model, vm.key, vm.opts);
+		var isSame = cmpFn(oldVals, newVals);
+
+		if (!isSame) {
+			// thenFn must return false to prevent redraw
+			if (thenFn != null && thenFn(vm, oldVals, newVals) === false)
+				{ isSame = true; }
+
+			oldVals = newVals;
+		}
+
+		return isSame;
+	};
+};
+
+VNodeProto.patch = function(n) {
+	return patch$1(this, n);
+};
+
+// newNode can be either {class: style: } or full new VNode
+// will/didPatch hooks?
+function patch$1(o, n) {
+	if (n.type != null) {
+		// no full patching of view roots, just use redraw!
+		if (o.vmid != null)
+			{ return; }
+
+		preProc(n, o.parent, o.idx, null, null);
+		o.parent.body[o.idx] = n;
+//		o.parent = o.el = o.body = null;		// helps gc?
+		patch(n, o);
+		drainDidHooks(n.vm());
+	}
+	else {
+		// TODO: re-establish refs
+
+		// shallow-clone target
+		var donor = Object.create(o);
+		// fixate orig attrs
+		donor.attrs = assignObj({}, o.attrs);
+		// assign new attrs into live targ node
+		var oattrs = assignObj(o.attrs, n);
+		// prepend any fixed shorthand class
+		if (o._class != null) {
+			var aclass = oattrs.class;
+			oattrs.class = aclass != null && aclass != "" ? o._class + " " + aclass : o._class;
+		}
+
+		patchAttrs(o, donor);
+	}
+}
 
 // #destub: cssTag,autoPx
 
