@@ -111,7 +111,7 @@ export function html(node, dynProps) {
 	if (!voidTags.test(node.tag)) {
 		if (isArr(node.body)) {
 			node.body.forEach(function(n2) {
-				buf += html(n2);
+				buf += html(n2, dynProps);
 			});
 		}
 		else

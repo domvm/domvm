@@ -354,8 +354,11 @@ function patchEvent(node, name, nval, oval) {
 		{ bindEv(el, name, wrapHandlers(nval)); }
 }
 
-function remAttr(node, name) {		// , asProp
-	node.el.removeAttribute(name);
+function remAttr(node, name, asProp) {
+	if (asProp)
+		{ node.el[name] = ""; }
+	else
+		{ node.el.removeAttribute(name); }
 }
 
 // setAttr
@@ -378,10 +381,11 @@ function setAttr(node, name, val, asProp) {
 function patchAttrs(vnode, donor) {
 	var nattrs = vnode.attrs || emptyObj;
 	var oattrs = donor.attrs || emptyObj;
+	var tag = vnode.tag;
 
 	for (var key in nattrs) {
 		var nval = nattrs[key];
-		var isDyn = isDynProp(vnode.tag, key);
+		var isDyn = isDynProp(tag, key);
 		var oval = isDyn ? vnode.el[key] : oattrs[key];
 
 		if (isStreamStub(nval))
@@ -404,7 +408,7 @@ function patchAttrs(vnode, donor) {
 			!isSplProp(key) &&
 			!isEvProp(key)
 		)
-			{ remAttr(vnode, key); }
+			{ remAttr(vnode, key, isDynProp(tag, key)); }
 	}
 }
 

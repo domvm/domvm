@@ -1,5 +1,3 @@
-// domvm.createView.config({ debounce: false });
-
 QUnit.config.reorder = false;
 
 var	el = domvm.defineElement,
@@ -1089,6 +1087,48 @@ QUnit.module("Attrs/Props");
 		// the visual state should be reset back to the model state
 		var expcHtml = '<input type="checkbox" id="check3">';
 		evalOut(assert, checkEl, check3.vm.html(false), expcHtml, callCounts, { checked: 1 }, {checked: checkEl.checked}, {checked: true});
+	});
+
+	QUnit.test("Dynamic props, always unset if absent after recycle", function(assert) {
+		var tpl = null;
+
+		function View() {
+			return function() {
+				return tpl;
+			}
+		}
+
+		var a, b, c, d, e, f;
+
+		tpl = el("div", [
+			a = el("input[type=checkbox]", {checked: true}),
+			b = el("input[type=checkbox]"),
+			c = el("input[type=text]", {value: "abc"}),
+			d = el("input[type=text]"),
+		]);
+		var expcHtml = '<div><input type="checkbox"><input type="checkbox"><input type="text"><input type="text"></div>';
+
+		instr.start();
+		var vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(false), expcHtml, callCounts, { createElement: 5, insertBefore: 5, setAttribute: 4, checked: 1, value: 1 });
+		assert.equal(a.el.checked, true, "a.checked == true");
+		assert.equal(c.el.value, "abc", "c.value == 'abc'");
+
+		tpl = el("div", [
+			e = el("input[type=checkbox]"),
+			f = el("input[type=text]"),
+		]);
+		var expcHtml = '<div><input type="checkbox"><input type="text"></div>';
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(false), expcHtml, callCounts, { removeChild: 2, setAttribute: 1, checked: 1 });
+		assert.equal(e.el.checked, false, "e.checked == false");
+		assert.equal(f.el.value, "", "f.value == ''");
 	});
 })();
 
