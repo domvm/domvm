@@ -4,7 +4,6 @@ const fs = require('fs');
 const exec = require('child_process').exec;
 const zlib = require('zlib');
 
-
 function getBuilds() {
 	return [
 		{
@@ -144,7 +143,7 @@ function buildDistTable() {
 
 	var colWidths = {
 		build: 0,
-		size: 0,
+		"min / gz": 0,
 		contents: 0,
 		brings: 0,
 	};
@@ -164,14 +163,12 @@ function buildDistTable() {
 		var minLen = (minified.length / 1024).toFixed(1);
 		var gzLen = (gzipped.length / 1024).toFixed(1);
 
-		build.size = minLen + "k / " + gzLen + "k";
-
+		build["min / gz"] = minLen + "k / " + gzLen + "k";
 		build.build = "[" + buildName + "][" + (i+1) + "]";
 
-		colWidths.build    = Math.max(colWidths.build,    build.build.length);
-		colWidths.size     = Math.max(colWidths.size,     build.size.length);
-		colWidths.contents = Math.max(colWidths.contents, build.contents.length);
-		colWidths.brings   = Math.max(colWidths.brings,   build.brings.length);
+		for (var colName in colWidths)
+			colWidths[colName] = Math.max(colWidths[colName], build[colName].length);
+
 	});
 
 	var table = '';
