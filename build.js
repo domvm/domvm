@@ -2,13 +2,48 @@ const rollup = require('rollup').rollup;
 const buble = require('rollup-plugin-buble');
 const fs = require('fs');
 const exec = require('child_process').exec;
+const zlib = require('zlib');
+
+
+function getBuilds() {
+	return [
+		{
+			build: "pico",
+			contents: "view core (changes if/when nano can be split)",
+			brings: "dom recycling, lifecycle hooks, parameterized events & delegation, sub-views, element injection, raw html, vnode refs, css objects",
+		},
+		{
+			build: "nano",
+			contents: "pico  + `cssTag` + `autoPx` + `diff` + `patch`",
+			brings: "tpl conveniences: `\"input[type=checkbox].some-class\"`, `{style: {width: 20}}`; optims: `vnode.patch({class: ..., style...})`, `vm.diff({vals:...then:...})`",
+		},
+		{
+			build: "micro",
+			contents: "nano  + `emit` + `vmBody`",
+			brings: "subview-to-parent events `vm.emit('myNotif', arg1, arg2...)`, `vm.body()` can get child views",
+		},
+		{
+			build: "mini",
+			contents: "micro + `streamCfg` + `streamFlyd` + `prop`",
+			brings: "view reactivity; reduce need for explicit `redraw()` calls",
+		},
+		{
+			build: "small",
+			contents: "mini  + `router`",
+			brings: "client-side router",
+		},
+		{
+			build: "full",
+			contents: "small + `html` + `attach` + `jsonml`",
+			brings: "isomorphism/SSR, jsonml template preprocessor",
+		},
+	];
+}
 
 var args = process.argv.slice(2);
 
 if (args.length == 1)
 	compile(args[0]);
-
-module.exports.compile = compile;
 
 function compile(buildName) {
 	var start = +new Date;
@@ -62,6 +97,8 @@ function compile(buildName) {
 		console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
 
 		minify(buildName, start);
+
+		buildDistTable();
 	}).catch(function(err) {
 		console.log(err);
 		if (destub)
@@ -83,6 +120,9 @@ function minify(buildName, start) {
 
 	exec(cmd, function(error, stdout, stderr) {
 		console.log((+new Date - start) + "ms: Closure done (build: " + buildName + ")");
+
+		buildDistTable();
+
 		/*
 		console.log('stdout: ' + stdout);
 		console.log('stderr: ' + stderr);
@@ -93,3 +133,66 @@ function minify(buildName, start) {
 		*/
 	});
 }
+
+function padRight(str, padStr, len) {
+	return str + padStr.repeat(len - str.length);
+}
+
+// builds markdown table
+function buildDistTable() {
+	var builds = getBuilds();
+
+	var colWidths = {
+		build: 0,
+		size: 0,
+		contents: 0,
+		brings: 0,
+	};
+
+	var appendix = [];
+
+	builds.forEach(function(build, i) {
+		var buildName = build.build;
+
+		var path = "dist/" + buildName + "/domvm." + buildName + ".min.js";
+
+		appendix.push("["+(i+1)+"]: https://github.com/leeoniya/domvm/blob/2.x-dev/" + path);
+
+		var minified = fs.readFileSync("./" + path, 'utf8');
+		var gzipped = zlib.gzipSync(minified, {level: 6});
+
+		var minLen = (minified.length / 1024).toFixed(1);
+		var gzLen = (gzipped.length / 1024).toFixed(1);
+
+		build.size = minLen + "k / " + gzLen + "k";
+
+		build.build = "[" + buildName + "][" + (i+1) + "]";
+
+		colWidths.build    = Math.max(colWidths.build,    build.build.length);
+		colWidths.size     = Math.max(colWidths.size,     build.size.length);
+		colWidths.contents = Math.max(colWidths.contents, build.contents.length);
+		colWidths.brings   = Math.max(colWidths.brings,   build.brings.length);
+	});
+
+	var table = '';
+
+	for (var colName in colWidths)
+		table += "| " + padRight(colName, " ", colWidths[colName] + 1);
+	table += "|\n";
+
+	for (var colName in colWidths)
+		table += "| " + padRight("", "-", colWidths[colName]) + " ";
+	table += "|\n";
+
+	builds.forEach(function(build, i) {
+		for (var colName in colWidths)
+			table += "| " + padRight(build[colName], " ", colWidths[colName] + 1);
+		table += "|\n";
+	});
+
+	table += "\n" + appendix.join("\n");
+
+	fs.writeFileSync("./dist/README.md", table, 'utf8');
+}
+
+module.exports.compile = compile;
