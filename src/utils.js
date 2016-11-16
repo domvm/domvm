@@ -45,6 +45,8 @@ export function assignObj(targ) {
 	return targ;
 }
 
+// export const defProp = Object.defineProperty;
+
 export function deepSet(targ, path, val) {
 	var seg;
 
@@ -55,6 +57,7 @@ export function deepSet(targ, path, val) {
 			targ[seg] = targ = targ[seg] || {};
 	}
 }
+
 /*
 export function deepUnset(targ, path) {
 	var seg;

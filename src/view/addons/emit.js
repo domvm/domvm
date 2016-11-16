@@ -1,6 +1,7 @@
 import { ViewModelProto } from '../ViewModel';
 import { isVal, sliceArgs } from '../../utils';
 
+ViewModelProto.events = null;
 ViewModelProto.emit = emit;
 ViewModelProto.on = on;
 

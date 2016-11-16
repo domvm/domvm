@@ -2,7 +2,7 @@
 | ---------- | ---------- | ----------------------------------------------- | --------------------------------
 | [pico][1]  | 10.1k      |  view core (changes if/when nano can be split)  | dom recycling, lifecycle hooks, parameterized events & delegation, sub-views, element injection, raw html, vnode refs, css objects
 | [nano][2]  | 11.5k      |  pico  + `cssTag` + `autoPx` + `diff` + `patch` | tpl conveniences: `"input[type=checkbox].some-class"`, `{style: {width: 20}}`; optims: `vnode.patch({class: ..., style...})`, `vm.diff({vals:...then:...})`
-| [micro][3] | 11.7k      |  nano  + `emit`                                 | subview-to-parent events `vm.emit('myNotif', arg1, arg2...)`
+| [micro][3] | 11.7k      |  nano  + `emit` + `vmBody`                      | subview-to-parent events `vm.emit('myNotif', arg1, arg2...)`, `vm.body()` can get child views
 | [mini][4]  | 12.4k      |  micro + `streamCfg` + `streamFlyd` + `prop`    | view reactivity; reduce need for explicit `redraw()` calls
 | [small][5] | 14.8k      |  mini  + `router`                               | client-side router
 | [full][6]  | 16.9k      |  small + `html` + `attach` + `jsonml`           | isomorphism/SSR, jsonml template preprocessor

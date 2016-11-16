@@ -91,10 +91,6 @@ export const ViewModelProto = ViewModel.prototype = {
 		return null;
 	},
 
-	body: function() {
-		return nextSubVms(this.node, []);
-	},
-
 	root: function() {
 		var p = this.node;
 
@@ -128,25 +124,8 @@ export const ViewModelProto = ViewModel.prototype = {
 	hook: function(hooks) {
 		this.hooks = hooks;
 	},
-	events: null,
 };
 
-function nextSubVms(n, accum) {
-	var body = n.body;
-
-	if (isArr(body)) {
-		for (var i = 0; i < body.length; i++) {
-			var n2 = body[i];
-
-			if (n2.vmid != null)
-				accum.push(views[n2.vmid]);
-			else
-				nextSubVms(n2, accum);
-		}
-	}
-
-	return accum;
-}
 
 export function drainDidHooks(vm) {
 	if (didQueue.length) {
@@ -158,11 +137,13 @@ export function drainDidHooks(vm) {
 	}
 }
 
+/*
 function isEmptyObj(o) {
 	for (var k in o)
 		return false;
 	return true;
 }
+*/
 
 /*
 export function cleanExposedRefs(orefs, nrefs) {

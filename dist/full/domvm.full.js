@@ -67,6 +67,8 @@ function assignObj(targ) {
 	return targ;
 }
 
+// export const defProp = Object.defineProperty;
+
 function deepSet(targ, path, val) {
 	var seg;
 
@@ -77,6 +79,7 @@ function deepSet(targ, path, val) {
 			{ targ[seg] = targ = targ[seg] || {}; }
 	}
 }
+
 /*
 export function deepUnset(targ, path) {
 	var seg;
@@ -1272,10 +1275,6 @@ var ViewModelProto = ViewModel.prototype = {
 		return null;
 	},
 
-	body: function() {
-		return nextSubVms(this.node, []);
-	},
-
 	root: function() {
 		var p = this.node;
 
@@ -1309,25 +1308,8 @@ var ViewModelProto = ViewModel.prototype = {
 	hook: function(hooks) {
 		this.hooks = hooks;
 	},
-	events: null,
 };
 
-function nextSubVms(n, accum) {
-	var body = n.body;
-
-	if (isArr(body)) {
-		for (var i = 0; i < body.length; i++) {
-			var n2 = body[i];
-
-			if (n2.vmid != null)
-				{ accum.push(views[n2.vmid]); }
-			else
-				{ nextSubVms(n2, accum); }
-		}
-	}
-
-	return accum;
-}
 
 function drainDidHooks(vm) {
 	if (didQueue.length) {
@@ -1338,6 +1320,14 @@ function drainDidHooks(vm) {
 			{ item[0](item[1], item[2]); }
 	}
 }
+
+/*
+function isEmptyObj(o) {
+	for (var k in o)
+		return false;
+	return true;
+}
+*/
 
 /*
 export function cleanExposedRefs(orefs, nrefs) {
@@ -1676,6 +1666,7 @@ function patch$1(o, n) {
 
 // #destub: cssTag,autoPx
 
+ViewModelProto.events = null;
 ViewModelProto.emit = emit;
 ViewModelProto.on = on;
 
@@ -1709,6 +1700,35 @@ function on(evName, fn) {
 		for (var evName in evs)
 			{ t.on(evName, evs[evName]); }
 	}
+}
+
+/*
+defProp(ViewModelProto, 'body', {
+	get: function() {
+		return nextSubVms(this.node, []);
+	}
+});
+*/
+
+ViewModelProto.body = function() {
+	return nextSubVms(this.node, []);
+};
+
+function nextSubVms(n, accum) {
+	var body = n.body;
+
+	if (isArr(body)) {
+		for (var i = 0; i < body.length; i++) {
+			var n2 = body[i];
+
+			if (n2.vmid != null)
+				{ accum.push(views[n2.vmid]); }
+			else
+				{ nextSubVms(n2, accum); }
+		}
+	}
+
+	return accum;
 }
 
 // #destub: cssTag,autoPx
