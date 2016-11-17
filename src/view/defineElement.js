@@ -1,11 +1,11 @@
-import { isObj } from '../utils';
+import { isPlainObj } from '../utils';
 import { initElementNode } from './initElementNode';
 
 export function defineElement(tag, arg1, arg2, flags) {
 	var attrs, body;
 
 	if (arg2 == null) {
-		if (isObj(arg1))
+		if (isPlainObj(arg1))
 			attrs = arg1;
 		else
 			body = arg1;

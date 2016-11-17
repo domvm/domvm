@@ -1,7 +1,7 @@
 import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
-import { isArr, isObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, raft } from "../utils";
+import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, raft } from "../utils";
 import { repaint } from "./utils";
 import { insertBefore, removeChild, nextSib } from "./dom";
 import { didQueue, fireHooks } from "./hooks";
@@ -155,13 +155,13 @@ export function cleanExposedRefs(orefs, nrefs) {
 
 //			var path = [];
 //			// dig nown if val i a namespace
-//			while (isObj(val) && val.type == null) {
+//			while (isPlainObj(val) && val.type == null) {
 //				path.push(val);
 //				val =
 //			}
 
 
-			if (isObj(val)) {
+			if (isPlainObj(val)) {
 				// is a vnode
 				if (val.type) {
 					// is an exposed ref

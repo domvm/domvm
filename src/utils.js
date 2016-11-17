@@ -10,8 +10,8 @@ export function startsWith(haystack, needle) {
 
 export const isArr = Array.isArray;
 
-export function isObj(val) {
-	return val != null && typeof val == "object" && val.constructor == Object;
+export function isPlainObj(val) {
+	return val != null && val.constructor == Object;		//  && typeof val == "object"
 }
 
 export function insertArr(targ, arr, pos, rem) {
@@ -72,7 +72,10 @@ export function deepUnset(targ, path) {
 */
 
 export function sliceArgs(args, offs) {
-	return Array.prototype.slice.call(args, offs || 0)
+	var arr = [];
+	for (var i = offs; i < args.length; i++)
+		arr.push(args[i]);
+	return arr;
 }
 
 export function cmpObj(a, b) {

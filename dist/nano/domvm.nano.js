@@ -32,8 +32,8 @@ function startsWith(haystack, needle) {
 
 var isArr = Array.isArray;
 
-function isObj(val) {
-	return val != null && typeof val == "object" && val.constructor == Object;
+function isPlainObj(val) {
+	return val != null && val.constructor == Object;		//  && typeof val == "object"
 }
 
 function insertArr(targ, arr, pos, rem) {
@@ -91,7 +91,12 @@ export function deepUnset(targ, path) {
 }
 */
 
-
+function sliceArgs(args, offs) {
+	var arr = [];
+	for (var i = offs; i < args.length; i++)
+		{ arr.push(args[i]); }
+	return arr;
+}
 
 function cmpObj(a, b) {
 	for (var i in a)
@@ -351,7 +356,7 @@ function patchEvent(node, name, nval, oval) {
 	else if (isFunc(nval) && nval != oval)
 		{ bindEv(el, name, wrapHandler(nval, [])); }
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
-	else		// isObj, TODO:, diff with old/clean
+	else		// isPlainObj, TODO:, diff with old/clean
 		{ bindEv(el, name, wrapHandlers(nval)); }
 }
 
@@ -484,7 +489,11 @@ var VNodeProto = VNode.prototype = {
 	tag:	null,
 	attrs:	null,
 	body:	null,
-	flags:	0,
+
+	_flags:	0,
+	flags: function(flags) {
+		this._flags = flags;
+	},
 
 	_class:	null,
 
@@ -516,7 +525,7 @@ function initElementNode(tag, attrs, body, flags) {
 	node.type = ELEMENT;
 
 	if (flags != null)
-		{ node.flags = flags; }
+		{ node._flags = flags; }
 
 	if (attrs != null) {
 		if (attrs._key != null)
@@ -609,7 +618,7 @@ function deepNotifyRemove(node) {
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if (!(node.flags & FAST_REMOVE) && isArr(node.body))
+	if (!(node._flags & FAST_REMOVE) && isArr(node.body))
 		{ node.body.forEach(deepNotifyRemove); }
 
 	return res;
@@ -623,7 +632,7 @@ function _removeChild(parEl, el, immediate) {
 //	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
 //		console.log("clean exposed ref", node.ref);
 
-	if (!(node.flags & FAST_REMOVE) && isArr(node.body)) {
+	if (!(node._flags & FAST_REMOVE) && isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)
 			{ _removeChild(el, node.body[i].el); }
@@ -1056,7 +1065,7 @@ function patchChildren(vnode, donor) {
 		}
 	}
 
-	if (!(vnode.flags & FIXED_BODY))
+	if (!(vnode._flags & FIXED_BODY))
 		{ syncChildren(vnode); }
 }
 
@@ -1303,13 +1312,13 @@ export function cleanExposedRefs(orefs, nrefs) {
 
 //			var path = [];
 //			// dig nown if val i a namespace
-//			while (isObj(val) && val.type == null) {
+//			while (isPlainObj(val) && val.type == null) {
 //				path.push(val);
 //				val =
 //			}
 
 
-			if (isObj(val)) {
+			if (isPlainObj(val)) {
 				// is a vnode
 				if (val.type) {
 					// is an exposed ref
@@ -1481,7 +1490,7 @@ function defineElement(tag, arg1, arg2, flags) {
 	var attrs, body;
 
 	if (arg2 == null) {
-		if (isObj(arg1))
+		if (isPlainObj(arg1))
 			{ attrs = arg1; }
 		else
 			{ body = arg1; }
@@ -1492,6 +1501,28 @@ function defineElement(tag, arg1, arg2, flags) {
 	}
 
 	return initElementNode(tag, attrs, body, flags);
+}
+
+function defineElementSpread(tag) {
+	var args = arguments;
+	var len = args.length;
+	var body, attrs;
+
+	if (len > 1) {
+		var bodyIdx = 1;
+
+		if (isPlainObj(args[1])) {
+			attrs = args[1];
+			bodyIdx = 2;
+		}
+
+		if (len == bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx])))
+			{ body = args[bodyIdx]; }
+		else
+			{ body = sliceArgs(args, bodyIdx); }
+	}
+
+	return initElementNode(tag, attrs, body);
 }
 
 function defineComment(body) {
@@ -1558,6 +1589,7 @@ var nano$1 = {
 	createView: createView,
 
 	defineElement: defineElement,
+	defineElementSpread: defineElementSpread,
 	defineText: defineText,
 	defineComment: defineComment,
 	defineView: defineView,

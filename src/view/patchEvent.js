@@ -58,6 +58,6 @@ export function patchEvent(node, name, nval, oval) {
 	else if (isFunc(nval) && nval != oval)
 		bindEv(el, name, wrapHandler(nval, []));
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
-	else		// isObj, TODO:, diff with old/clean
+	else		// isPlainObj, TODO:, diff with old/clean
 		bindEv(el, name, wrapHandlers(nval));
 }

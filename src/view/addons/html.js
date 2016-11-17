@@ -1,5 +1,5 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
-import { isArr, isObj, isVal, isFunc } from '../../utils';
+import { isArr, isPlainObj, isVal, isFunc } from '../../utils';
 import { isEvProp, isDynProp } from '../utils';
 import { autoPx } from './stubs';
 
@@ -68,7 +68,7 @@ export function html(node, dynProps) {
 
 			if (node.attrs) {
 				var style = isVal(node.attrs.style) ? node.attrs.style : "";
-				var css = isObj(node.attrs.style) ? node.attrs.style : null;
+				var css = isPlainObj(node.attrs.style) ? node.attrs.style : null;
 
 				if (css)
 					style += styleStr(css);
@@ -82,7 +82,7 @@ export function html(node, dynProps) {
 				//	if (isFunc(val))
 				//		val = val();
 
-					if (isObj(val))	// ?
+					if (isPlainObj(val))	// ?
 						continue;
 
 					if (val === true)

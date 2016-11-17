@@ -30,7 +30,11 @@ export const VNodeProto = VNode.prototype = {
 	tag:	null,
 	attrs:	null,
 	body:	null,
-	flags:	0,
+
+	_flags:	0,
+	flags: function(flags) {
+		this._flags = flags;
+	},
 
 	_class:	null,
 

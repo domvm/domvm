@@ -1,7 +1,7 @@
 import { ELEMENT } from './VTYPES';
 import { VNode } from './VNode';
 import { cssTag } from './addons/stubs';
-import { isObj } from '../utils';
+import { isPlainObj } from '../utils';
 
 // optimization flags
 
@@ -16,7 +16,7 @@ export function initElementNode(tag, attrs, body, flags) {
 	node.type = ELEMENT;
 
 	if (flags != null)
-		node.flags = flags;
+		node._flags = flags;
 
 	if (attrs != null) {
 		if (attrs._key != null)

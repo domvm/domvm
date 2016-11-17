@@ -1,4 +1,4 @@
-import { isVal, isArr, isObj, isFunc, isElem } from '../../utils';
+import { isVal, isArr, isPlainObj, isFunc, isElem } from '../../utils';
 
 import { initElementNode } from '../initElementNode';
 import { defineText } from "../defineText";
@@ -33,7 +33,7 @@ export function jsonml(node) {
 			if (len > 1) {
 				var bodyIdx = 1;
 
-				if (isObj(node[1])) {
+				if (isPlainObj(node[1])) {
 					attrs = node[1];
 					bodyIdx = 2;
 				}
@@ -53,7 +53,7 @@ export function jsonml(node) {
 			if (isArr(body))
 				body = body.map(jsonml);
 
-			node = initElementNode(tag, attrs, body, false);
+			node = initElementNode(tag, attrs, body);
 		}
 		// view defs: [MyView, model, key, opts]
 		else if (isFunc(node[0]))
@@ -71,7 +71,7 @@ export function jsonml(node) {
 	// injected elements
 	else if (isElem(node))
 		node = injectElement(node);
-	else if (isObj(node)) {
+	else if (isPlainObj(node)) {
 		// injected vms
 		if (isFunc(node.redraw))
 			node = injectView(node);

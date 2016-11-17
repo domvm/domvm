@@ -8,6 +8,36 @@ var el = domvm.defineElement,
 // uncomment to optimize for fixed-layout nodes (no removal/insertion/reordering)
 // var el = (tag, arg1, arg2) => domvm.defineElement(tag, arg1, arg2, domvm.FIXED_BODY);
 
+
+/*
+var el = domvm.defineElementSpread;
+
+// uses spread & array flattening
+function DBMonView() {
+	return (vm, dbs) =>
+		el("div",
+			el("table.table.table-striped.latest-data",
+				el("tbody", dbs.map(db =>
+					el("tr",
+						el("td.dbname", db.dbname),
+						el("td.query-count",
+							el("span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries)
+						), db.lastSample.topFiveQueries.map(query =>
+						el("td", { class: query.elapsedClassName },
+							el("span", query.formatElapsed),
+							el(".popover.left",
+								el(".popover-content", query.query),
+								el(".arrow")
+							)
+						))
+					)
+				))
+			)
+		)
+}
+*/
+
+
 /*
 // naive implementation, no optims
 function DBMonView() {
