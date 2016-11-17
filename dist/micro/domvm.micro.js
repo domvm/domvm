@@ -512,23 +512,6 @@ var FIXED_BODY = 1;
 // doesnt fire eager deep willRemove hooks, doesnt do bottom-up removeChild
 var FAST_REMOVE = 2;
 
-function defineElement(tag, arg1, arg2, flags) {
-	var attrs, body;
-
-	if (arg2 == null) {
-		if (isObj(arg1))
-			{ attrs = arg1; }
-		else
-			{ body = arg1; }
-	}
-	else {
-		attrs = arg1;
-		body = arg2;
-	}
-
-	return initElementNode(tag, attrs, body, flags);
-}
-
 function initElementNode(tag, attrs, body, flags) {
 	var node = new VNode;
 
@@ -1484,6 +1467,23 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 		parentVm.body.push(vm);
 	}
 */
+}
+
+function defineElement(tag, arg1, arg2, flags) {
+	var attrs, body;
+
+	if (arg2 == null) {
+		if (isObj(arg1))
+			{ attrs = arg1; }
+		else
+			{ body = arg1; }
+	}
+	else {
+		attrs = arg1;
+		body = arg2;
+	}
+
+	return initElementNode(tag, attrs, body, flags);
 }
 
 function defineText(body) {

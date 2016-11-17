@@ -1,6 +1,6 @@
 import { isVal, isArr, isObj, isFunc, isElem } from '../../utils';
 
-import { initElementNode } from "../defineElement";
+import { initElementNode } from '../initElementNode';
 import { defineText } from "../defineText";
 import { defineComment } from "../defineComment";
 import { defineView } from "../defineView";

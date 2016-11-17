@@ -1,7 +1,7 @@
 import { isArr, isProm, curry } from '../utils';
 import { fireHooks } from './hooks';
 import { views } from './ViewModel';
-import { FIXED_BODY, FAST_REMOVE } from './defineElement';
+import { FIXED_BODY, FAST_REMOVE } from './initElementNode';
 
 const doc = document;
 

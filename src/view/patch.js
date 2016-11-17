@@ -7,7 +7,7 @@ import { syncChildren } from './syncChildren';
 import { fireHooks } from './hooks';
 import { patchAttrs } from './patchAttrs';
 import { createView } from './createView';
-import { FIXED_BODY, FAST_REMOVE } from './defineElement';
+import { FIXED_BODY, FAST_REMOVE } from './initElementNode';
 
 //import { DEBUG } from './DEBUG';
 
