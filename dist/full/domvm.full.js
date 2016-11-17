@@ -518,9 +518,6 @@ var VNodeProto = VNode.prototype = {
 	body:	null,
 
 	_flags:	0,
-	flags: function(flags) {
-		this._flags = flags;
-	},
 
 	_class:	null,
 
@@ -1530,28 +1527,6 @@ function defineElement(tag, arg1, arg2, flags) {
 	return initElementNode(tag, attrs, body, flags);
 }
 
-function defineElementSpread(tag) {
-	var args = arguments;
-	var len = args.length;
-	var body, attrs;
-
-	if (len > 1) {
-		var bodyIdx = 1;
-
-		if (isPlainObj(args[1])) {
-			attrs = args[1];
-			bodyIdx = 2;
-		}
-
-		if (len == bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx])))
-			{ body = args[bodyIdx]; }
-		else
-			{ body = sliceArgs(args, bodyIdx); }
-	}
-
-	return initElementNode(tag, attrs, body);
-}
-
 function defineComment(body) {
 	var node = new VNode;
 	node.type = COMMENT;
@@ -1616,7 +1591,6 @@ var nano = {
 	createView: createView,
 
 	defineElement: defineElement,
-	defineElementSpread: defineElementSpread,
 	defineText: defineText,
 	defineComment: defineComment,
 	defineView: defineView,
@@ -1697,7 +1671,36 @@ function patch$1(o, n) {
 	}
 }
 
+VNodeProto.flags = function(flags) {
+	this._flags = flags;
+	return this;
+};
+
+function defineElementSpread(tag) {
+	var args = arguments;
+	var len = args.length;
+	var body, attrs;
+
+	if (len > 1) {
+		var bodyIdx = 1;
+
+		if (isPlainObj(args[1])) {
+			attrs = args[1];
+			bodyIdx = 2;
+		}
+
+		if (len == bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx])))
+			{ body = args[bodyIdx]; }
+		else
+			{ body = sliceArgs(args, bodyIdx); }
+	}
+
+	return initElementNode(tag, attrs, body);
+}
+
 // #destub: cssTag,autoPx
+
+nano.defineElementSpread = defineElementSpread;
 
 ViewModelProto.events = null;
 ViewModelProto.emit = emit;

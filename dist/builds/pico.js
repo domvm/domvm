@@ -5,7 +5,6 @@ import { createView } from "../../src/view/createView";
 
 import { FIXED_BODY, FAST_REMOVE } from '../../src/view/initElementNode';
 import { defineElement } from "../../src/view/defineElement";
-import { defineElementSpread } from "../../src/view/defineElementSpread";
 import { defineText } from "../../src/view/defineText";
 import { defineComment } from "../../src/view/defineComment";
 import { defineView } from "../../src/view/defineView";
@@ -20,7 +19,6 @@ export default {
 	createView,
 
 	defineElement,
-	defineElementSpread,
 	defineText,
 	defineComment,
 	defineView,

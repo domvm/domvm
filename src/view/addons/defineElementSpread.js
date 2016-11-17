@@ -1,9 +1,11 @@
-import { isPlainObj, isArr, isVal, sliceArgs } from '../utils';
-import { initElementNode } from './initElementNode';
+import { isPlainObj, isArr, isVal, sliceArgs } from '../../utils';
+import { VNodeProto } from '../VNode';
+import { initElementNode } from '../initElementNode';
 
-function isDomvmNode(obj) {
-	return typeof obj.type == "number";		// meh weak
-}
+VNodeProto.flags = function(flags) {
+	this._flags = flags;
+	return this;
+};
 
 export function defineElementSpread(tag) {
 	var args = arguments;
