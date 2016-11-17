@@ -830,9 +830,8 @@ function syncChildren(node) {
 		lftSib		= parEl.firstChild,
 		rgtNode		= body[body.length - 1],
 		rgtSib		= parEl.lastChild,
-		newSibs;
-
-	var tmpSib = null;
+		newSibs,
+		tmpSib;
 
 	if (lftSib == null) {
 		body.forEach(function (node2) { return parEl.appendChild(hydrate(node2)); });
