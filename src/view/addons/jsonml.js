@@ -26,9 +26,8 @@ export function jsonml(node) {
 			node = null;
 		// elem defs: ["div"], ["div", {attrs}], ["div", [children]], ["div", ...children], ["div", {attrs}, [children]], ["div", {attrs}, ...children]
 		else if (isStr(node[0])) {
-			var tag = node[0];
-			var body = null;
-			var attrs = null;
+			var tag = node[0],
+				body, attrs;
 
 			if (len > 1) {
 				var bodyIdx = 1;

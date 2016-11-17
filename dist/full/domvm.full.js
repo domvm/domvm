@@ -824,7 +824,7 @@ function sortDOM(parEl, lftSib, rgtSib, cmpFn) {
 //	DEBUG && console.log("selection sort!");
 
 	return tmpEdges(function(lftLft, rgtRgt) {
-		var min = null;
+		var min;
 
 		for (var i = lftSib; i !== rgtRgt; i = nextSib(i)) {
 			lftSib = min = i;
@@ -857,7 +857,7 @@ function syncChildren(node) {
 		lftSib		= parEl.firstChild,
 		rgtNode		= body[body.length - 1],
 		rgtSib		= parEl.lastChild,
-		newSibs		= null;
+		newSibs;
 
 	var tmpSib = null;
 
@@ -2248,9 +2248,8 @@ function jsonml(node) {
 			{ node = null; }
 		// elem defs: ["div"], ["div", {attrs}], ["div", [children]], ["div", ...children], ["div", {attrs}, [children]], ["div", {attrs}, ...children]
 		else if (isStr(node[0])) {
-			var tag = node[0];
-			var body = null;
-			var attrs = null;
+			var tag = node[0],
+				body, attrs;
 
 			if (len > 1) {
 				var bodyIdx = 1;
