@@ -1087,6 +1087,13 @@ function patchChildren(vnode, donor) {
 		{ syncChildren(vnode); }
 }
 
+function defineText(body) {
+	var node = new VNode;
+	node.type = TEXT;
+	node.body = body;
+	return node;
+}
+
 function setRef(vm, name, node) {
 	var path = ["refs"].concat(name.replace("^", "").split("."));
 
@@ -1130,6 +1137,9 @@ function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 
 //				if (isFunc(node2))
 //					node2 = body[i] = node2();
+
+				if (isVal(node2))
+					{ body[i] = node2 = defineText(node2); }
 
 				// remove null/undefined
 				if (node2 == null)
@@ -1509,13 +1519,6 @@ function defineElement(tag, arg1, arg2, flags) {
 	}
 
 	return initElementNode(tag, attrs, body, flags);
-}
-
-function defineText(body) {
-	var node = new VNode;
-	node.type = TEXT;
-	node.body = body;
-	return node;
 }
 
 function defineComment(body) {

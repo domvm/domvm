@@ -163,6 +163,23 @@ QUnit.module("Unrenderable values");
 
 		evalOut(assert, vm2.node.el, vm2.html(), expcHtml, callCounts, { createElement: 1, createTextNode: 1, insertBefore: 2 });
 	});
+
+	QUnit.test('Convert plain values in body [] to defineText(val)', function(assert) {
+		tpl = el("div", [
+			"a",
+			el("i", "b"),
+			"c",
+			"d",
+			tx("e"),
+		]);
+
+		var expcHtml = '<div>a<i>b</i>cde</div>';
+		instr.start();
+		var vm2 = domvm.createView(ViewAny).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm2.node.el, vm2.html(), expcHtml, callCounts, { createElement: 2, createTextNode: 2, insertBefore: 4, textContent: 1 });
+	});
 })();
 
 QUnit.module("Flat List");

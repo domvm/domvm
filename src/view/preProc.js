@@ -1,4 +1,5 @@
 import { TEXT, VVIEW, VMODEL } from './VTYPES';
+import { defineText } from './defineText';
 import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
 import { isStream, hookStream } from './addons/stubs';
 
@@ -45,6 +46,9 @@ export function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 
 //				if (isFunc(node2))
 //					node2 = body[i] = node2();
+
+				if (isVal(node2))
+					body[i] = node2 = defineText(node2);
 
 				// remove null/undefined
 				if (node2 == null)
