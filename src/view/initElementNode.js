@@ -16,7 +16,7 @@ export function initElementNode(tag, attrs, body, flags) {
 	node.type = ELEMENT;
 
 	if (flags != null)
-		node._flags = flags;
+		node.flags = flags;
 
 	if (attrs != null) {
 		if (attrs._key != null)

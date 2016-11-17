@@ -1,11 +1,5 @@
 import { isPlainObj, isArr, isVal, sliceArgs } from '../../utils';
-import { VNodeProto } from '../VNode';
 import { initElementNode } from '../initElementNode';
-
-VNodeProto.flags = function(flags) {
-	this._flags = flags;
-	return this;
-};
 
 export function defineElementSpread(tag) {
 	var args = arguments;

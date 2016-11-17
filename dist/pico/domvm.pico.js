@@ -423,7 +423,7 @@ var VNodeProto = VNode.prototype = {
 	attrs:	null,
 	body:	null,
 
-	_flags:	0,
+	flags:	0,
 
 	_class:	null,
 
@@ -455,7 +455,7 @@ function initElementNode(tag, attrs, body, flags) {
 	node.type = ELEMENT;
 
 	if (flags != null)
-		{ node._flags = flags; }
+		{ node.flags = flags; }
 
 	if (attrs != null) {
 		if (attrs._key != null)
@@ -548,7 +548,7 @@ function deepNotifyRemove(node) {
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if (!(node._flags & FAST_REMOVE) && isArr(node.body))
+	if (!(node.flags & FAST_REMOVE) && isArr(node.body))
 		{ node.body.forEach(deepNotifyRemove); }
 
 	return res;
@@ -562,7 +562,7 @@ function _removeChild(parEl, el, immediate) {
 //	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
 //		console.log("clean exposed ref", node.ref);
 
-	if (!(node._flags & FAST_REMOVE) && isArr(node.body)) {
+	if (!(node.flags & FAST_REMOVE) && isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)
 			{ _removeChild(el, node.body[i].el); }
@@ -994,7 +994,7 @@ function patchChildren(vnode, donor) {
 		}
 	}
 
-	if (!(vnode._flags & FIXED_BODY))
+	if (!(vnode.flags & FIXED_BODY))
 		{ syncChildren(vnode); }
 }
 

@@ -160,6 +160,6 @@ function patchChildren(vnode, donor) {
 		}
 	}
 
-	if (!(vnode._flags & FIXED_BODY))
+	if (!(vnode.flags & FIXED_BODY))
 		syncChildren(vnode);
 }

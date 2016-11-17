@@ -31,7 +31,7 @@ export const VNodeProto = VNode.prototype = {
 	attrs:	null,
 	body:	null,
 
-	_flags:	0,
+	flags:	0,
 
 	_class:	null,
 
