@@ -13,7 +13,7 @@ function getBuilds() {
 		},
 		{
 			build: "nano",
-			contents: "pico  + `cssTag` + `autoPx` + `defineElementSpread` + `diff` + `patch`",
+			contents: "pico  + `cssTag` + `autoPx` + `spreadBody` + `diff` + `patch`",
 			brings: "tpl conveniences: `\"input[type=checkbox].some-class\"`, `{style: {width: 20}}`, `el(\"div\", el(\"span\", \"foo\")...)`; optims: `vnode.patch({class: ..., style...})`, `vm.diff({vals:...then:...})`",
 		},
 		{
