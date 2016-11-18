@@ -1,16 +1,17 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
+import { createView } from '../createView';
 import { isArr, isPlainObj, isVal, isFunc } from '../../utils';
 import { isEvProp, isDynProp } from '../utils';
 import { autoPx } from './stubs';
 
-import { ViewModelProto } from '../ViewModel';
+import { ViewModelProto, views } from '../ViewModel';
 import { VNodeProto } from '../VNode';
 
 ViewModelProto.html = function(dynProps) {
 	var vm = this;
 
 	if (vm.node == null)
-		vm.mount(null, false, false);
+		vm._redraw(null, null, false);
 
 	return html(vm.node, dynProps);
 };
@@ -59,7 +60,12 @@ function escHtml(string) {
 
 export function html(node, dynProps) {
 	var buf = "";
+
 	switch (node.type) {
+		case VVIEW:
+			return createView(node.view, node.model, node.key, node.opts).html();
+		case VMODEL:
+			return views[node.vmid].html();
 		case ELEMENT:
 			if (node.el != null && node.tag == null)
 				return node.el.outerHTML;		// pre-existing dom elements (does not currently account for any props applied to them)

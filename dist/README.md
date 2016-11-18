@@ -5,7 +5,7 @@
 | [micro][3] | 12.1k / 4.9k | nano  + `emit` + `vmBody`                                     | subview-to-parent events `vm.emit('myNotif', arg1, arg2...)`, `vm.body()` can get child views                                                                                                  |
 | [mini][4]  | 12.7k / 5.1k | micro + `streamCfg` + `streamFlyd` + `prop`                   | view reactivity; reduce need for explicit `redraw()` calls                                                                                                                                     |
 | [small][5] | 15.1k / 6.2k | mini  + `router`                                              | client-side router                                                                                                                                                                             |
-| [full][6]  | 16.7k / 6.8k | small + `html` + `attach`                                     | isomorphism/SSR                                                                                                                                                                                |
+| [full][6]  | 16.8k / 6.8k | small + `html` + `attach`                                     | isomorphism/SSR                                                                                                                                                                                |
 
 [1]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/pico/domvm.pico.min.js
 [2]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/nano/domvm.nano.min.js

@@ -179,7 +179,7 @@ export function cleanExposedRefs(orefs, nrefs) {
 }
 */
 
-function mount(el, isRoot, withDOM) {		// , asSub, refEl
+function mount(el, isRoot) {		// , asSub, refEl
 	var vm = this;
 
 	if (isRoot) {
@@ -190,7 +190,7 @@ function mount(el, isRoot, withDOM) {		// , asSub, refEl
 		hydrate(this.node, el);
 	}
 	else {
-		this._redraw(null, null, withDOM);
+		this._redraw(null, null);
 
 		if (el)
 			insertBefore(el, this.node.el);			// el.appendChild(this.node.el);

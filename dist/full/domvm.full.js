@@ -1357,7 +1357,7 @@ export function cleanExposedRefs(orefs, nrefs) {
 }
 */
 
-function mount(el, isRoot, withDOM) {		// , asSub, refEl
+function mount(el, isRoot) {		// , asSub, refEl
 	var vm = this;
 
 	if (isRoot) {
@@ -1368,7 +1368,7 @@ function mount(el, isRoot, withDOM) {		// , asSub, refEl
 		hydrate(this.node, el);
 	}
 	else {
-		this._redraw(null, null, withDOM);
+		this._redraw(null, null);
 
 		if (el)
 			{ insertBefore(el, this.node.el); }			// el.appendChild(this.node.el);
@@ -2071,7 +2071,7 @@ ViewModelProto.html = function(dynProps) {
 	var vm = this;
 
 	if (vm.node == null)
-		{ vm.mount(null, false, false); }
+		{ vm._redraw(null, null, false); }
 
 	return html(vm.node, dynProps);
 };
@@ -2120,7 +2120,12 @@ function escHtml(string) {
 
 function html(node, dynProps) {
 	var buf = "";
+
 	switch (node.type) {
+		case VVIEW:
+			return createView(node.view, node.model, node.key, node.opts).html();
+		case VMODEL:
+			return views[node.vmid].html();
 		case ELEMENT:
 			if (node.el != null && node.tag == null)
 				{ return node.el.outerHTML; }		// pre-existing dom elements (does not currently account for any props applied to them)

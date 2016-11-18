@@ -1391,13 +1391,16 @@ QUnit.module("Subview redraw(true) Branch Consistency");
 QUnit.module("Various Others");
 
 (function() {
+	var imperView = null;
+
 	function SomeView(vm) {
 		return function() {
 			return el("div", [
 				el("div", [
 					el("strong", [
 						vw(SomeView2)
-					])
+					]),
+					imperView ? iv(imperView) : null,
 				])
 			]);
 		};
@@ -1421,6 +1424,16 @@ QUnit.module("Various Others");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 4, insertBefore: 4, textContent: 1 });
 	});
 
+	QUnit.test('html() renders subviews without explicit mount()', function(assert) {
+		imperView = domvm.createView(SomeView2);
+
+		instr.start();
+		vm = domvm.createView(SomeView);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><div><strong><em>yay!</em></strong><em>yay!</em></div></div>';
+		assert.equal(vm.html(), expcHtml);
+	});
 
 	function FlattenView(vm) {
 		return function() {
