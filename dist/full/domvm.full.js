@@ -607,7 +607,7 @@ function initElementNode(tag, attrs, body, flags) {
 	return node;
 }
 
-var doc = document;
+var doc = ENV_DOM ? document : null;
 
 function createElement(tag) {
 	return doc.createElement(tag);

@@ -1,4 +1,4 @@
-const ENV_DOM = typeof HTMLElement == "function";
+export const ENV_DOM = typeof HTMLElement == "function";
 const win = ENV_DOM ? window : {};
 const rAF = win.requestAnimationFrame;
 

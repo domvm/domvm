@@ -1,9 +1,9 @@
-import { isArr, isProm, curry } from '../utils';
+import { ENV_DOM, isArr, isProm, curry } from '../utils';
 import { fireHooks } from './hooks';
 import { views } from './ViewModel';
 import { FIXED_BODY, FAST_REMOVE } from './initElementNode';
 
-const doc = document;
+const doc = ENV_DOM ? document : null;
 
 export function createElement(tag) {
 	return doc.createElement(tag);
