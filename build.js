@@ -33,8 +33,8 @@ function getBuilds() {
 		},
 		{
 			build: "full",
-			contents: "small + `html` + `attach` + `jsonml`",
-			brings: "isomorphism/SSR, jsonml template preprocessor",
+			contents: "small + `html` + `attach`",
+			brings: "isomorphism/SSR",
 		},
 	];
 }
