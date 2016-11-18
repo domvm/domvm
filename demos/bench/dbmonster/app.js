@@ -153,7 +153,7 @@ function Query(vm) {
 }
 */
 
-let dbs		= null,
+var dbs		= null,
 	raf		= null,
 	vm		= null,
 	init	= true,
