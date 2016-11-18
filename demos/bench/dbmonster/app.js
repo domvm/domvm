@@ -5,14 +5,18 @@ var el = domvm.defineElement,
 	iv = domvm.injectView,
 	ie = domvm.injectElement;
 
-// uncomment to optimize for fixed-layout nodes (no removal/insertion/reordering)
-// var el = (tag, arg1, arg2) => domvm.defineElement(tag, arg1, arg2, domvm.FIXED_BODY);
-
 
 /*
 var el = domvm.defineElementSpread;
 
-// uses spread & array flattening
+// FIXED_BODY optimization for fixed-layout nodes (no removal/insertion/reordering)
+el = function() {
+	var vnode = domvm.defineElementSpread.apply(null, arguments);
+	vnode.flags = domvm.FIXED_BODY;
+	return vnode;
+};
+
+// uses spread w/ array flattening
 function DBMonView() {
 	return (vm, dbs) =>
 		el("div",
@@ -37,9 +41,8 @@ function DBMonView() {
 }
 */
 
-
 /*
-// naive implementation, no optims
+// naive implementation w/ array flattening
 function DBMonView() {
 	return (vm, dbs) =>
 		el("div", [
@@ -66,30 +69,38 @@ function DBMonView() {
 }
 */
 
+/*
+// FIXED_BODY optimization for fixed-layout nodes (no removal/insertion/reordering)
+el = function(tag, arg1, arg2) {
+	return domvm.defineElement(tag, arg1, arg2, domvm.FIXED_BODY);
+};
+*/
 
 // avoids array flattening, uses concat()
 function DBMonView() {
-	return (vm, dbs) =>
+	return function (vm, dbs) { return (
 		el("div", [
 			el("table.table.table-striped.latest-data", [
-				el("tbody", dbs.map(db =>
+				el("tbody", dbs.map(function(db) { return (
 					el("tr", [
-						el("td.dbname", db.dbname),
-						el("td.query-count", [
-							el("span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries)
-						])
-					].concat(db.lastSample.topFiveQueries.map(query =>
-						el("td", { class: query.elapsedClassName }, [
-							el("span", query.formatElapsed),
-							el(".popover.left", [
-								el(".popover-content", query.query),
-								el(".arrow"),
+							el("td.dbname", db.dbname),
+							el("td.query-count", [
+								el("span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries)
 							])
-						])
-					)))
-				))
+						].concat(db.lastSample.topFiveQueries.map(function(query) { return (
+							el("td", { class: query.elapsedClassName }, [
+								el("span", query.formatElapsed),
+								el(".popover.left", [
+									el(".popover-content", query.query),
+									el(".arrow"),
+								])
+							])
+						)}))
+					)
+				)}))
 			])
 		])
+	)}
 }
 
 
