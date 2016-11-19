@@ -9,22 +9,22 @@ function getBuilds() {
 		{
 			build: "pico",
 			contents: "view core",
-			brings: "dom recycling, lifecycle hooks, parameterized events & delegation, sub-views, element injection, raw html, vnode refs, css objects<br>**WARNING: this build's feature set may be reduced without notice**",
+			brings: "dom recycling<br>lifecycle hooks<br>parameterized events & delegation<br>sub-views<br>element injection<br>raw html<br>vnode refs<br>css objects<br><br>**WARNING: this build's feature set may be reduced without notice**",
 		},
 		{
 			build: "nano",
 			contents: "+ `cssTag`<br>+ `autoPx`<br>+ `spreadBody`<br>+ `diff`<br>+ `patch`<br>",
-			brings: "tpl conveniences: `\"input[type=checkbox].some-class\"`, `{style: {width: 20}}`, `el(\"div\", el(\"span\", \"foo\")...)`; optims: `vnode.patch({class: ..., style...})`, `vm.diff({vals:...then:...})`",
+			brings: "tpl conveniences:<br>`\"input[type=checkbox].some-class\"`<br>`{style: {width: 20}}`<br>`el(\"div\", el(\"span\", \"foo\")...)`<br><br>optims:<br>`vnode.patch({class: ..., style...})`<br>`vm.diff({vals:...then:...})`",
 		},
 		{
 			build: "micro",
 			contents: "+ `emit`<br> + `vmBody`<br>",
-			brings: "subview-to-parent events `vm.emit('myNotif', arg1, arg2...)`, `vm.body()` can get child views",
+			brings: "subview-to-parent events:<br>`vm.emit('myNotif', arg1, arg2...)`<br><br>get child views:<br>`vm.body()` ",
 		},
 		{
 			build: "mini",
 			contents: "+ `streamCfg`<br> + `streamFlyd`<br> + `prop`<br>",
-			brings: "view reactivity; reduce need for explicit `redraw()` calls",
+			brings: "view reactivity (reduce need for explicit `redraw()`)",
 		},
 		{
 			build: "small",
@@ -34,7 +34,7 @@ function getBuilds() {
 		{
 			build: "full",
 			contents: "+ `html`<br> + `attach`<br>",
-			brings: "isomorphism/SSR",
+			brings: "isomorphism & SSR",
 		},
 	];
 }
