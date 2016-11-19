@@ -13,27 +13,27 @@ function getBuilds() {
 		},
 		{
 			build: "nano",
-			contents: "+ `cssTag` + `autoPx` + `spreadBody` + `diff` + `patch`",
+			contents: "+ `cssTag`<br>+ `autoPx`<br>+ `spreadBody`<br>+ `diff`<br>+ `patch`<br>",
 			brings: "tpl conveniences: `\"input[type=checkbox].some-class\"`, `{style: {width: 20}}`, `el(\"div\", el(\"span\", \"foo\")...)`; optims: `vnode.patch({class: ..., style...})`, `vm.diff({vals:...then:...})`",
 		},
 		{
 			build: "micro",
-			contents: "+ `emit` + `vmBody`",
+			contents: "+ `emit`<br> + `vmBody`<br>",
 			brings: "subview-to-parent events `vm.emit('myNotif', arg1, arg2...)`, `vm.body()` can get child views",
 		},
 		{
 			build: "mini",
-			contents: "+ `streamCfg` + `streamFlyd` + `prop`",
+			contents: "+ `streamCfg`<br> + `streamFlyd`<br> + `prop`<br>",
 			brings: "view reactivity; reduce need for explicit `redraw()` calls",
 		},
 		{
 			build: "small",
-			contents: "+ `router`",
+			contents: "+ `router`<br>",
 			brings: "client-side router",
 		},
 		{
 			build: "full",
-			contents: "+ `html` + `attach`",
+			contents: "+ `html`<br> + `attach`<br>",
 			brings: "isomorphism/SSR",
 		},
 	];
