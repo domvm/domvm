@@ -298,137 +298,6 @@ function patchStyle(n, o) {
 	}
 }
 
-function bindEv(el, type, fn) {
-//	DEBUG && console.log("addEventListener");
-	el[type] = fn;
-}
-
-function handle(e, fn, args) {
-	var node = e.target._node;
-	var out = fn.apply(null, args.concat(e, node, node.vm()));
-
-	if (out === false) {
-		e.preventDefault();
-		e.stopPropagation();
-	}
-}
-
-function wrapHandler(fn, args) {
-//	console.log("wrapHandler");
-
-	return function wrap(e) {
-		handle(e, fn, args);
-	}
-}
-
-// delagated handlers {".moo": [fn, a, b]}, {".moo": fn}
-function wrapHandlers(hash) {
-//	console.log("wrapHandlers");
-
-	return function wrap(e) {
-		for (var sel in hash) {
-			if (e.target.matches(sel)) {
-				var hnd = hash[sel];
-				var isarr = isArr(hnd);
-				var fn = isarr ? hnd[0] : hnd;
-				var args = isarr ? hnd.slice(1) : [];
-
-				handle(e, fn, args);
-			}
-		}
-	}
-}
-
-// could merge with on*
-
-function patchEvent(node, name, nval, oval) {
-	if (nval === oval)
-		{ return; }
-
-	var el = node.el;
-
-	// param'd eg onclick: [myFn, 1, 2, 3...]
-	if (isArr(nval)) {
-		var diff = oval == null || !cmpArr(nval, oval);
-		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
-	}
-	// basic onclick: myFn (or extracted)
-	else if (isFunc(nval) && nval != oval)
-		{ bindEv(el, name, wrapHandler(nval, [])); }
-	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
-	else		// isPlainObj, TODO:, diff with old/clean
-		{ bindEv(el, name, wrapHandlers(nval)); }
-}
-
-function remAttr(node, name, asProp) {
-	if (asProp)
-		{ node.el[name] = ""; }
-	else
-		{ node.el.removeAttribute(name); }
-}
-
-// setAttr
-// diff, ".", "on*", bool vals, skip _*, value/checked/selected selectedIndex
-function setAttr(node, name, val, asProp) {
-	var el = node.el;
-
-	if (val == null)
-		{ remAttr(node, name); }		//, asProp?  // will also removeAttr of style: null
-	else if (name == "class")
-		{ el.className = val; }
-	else if (name == "id" || typeof val == "boolean" || asProp)
-		{ el[name] = val; }
-	else if (name[0] == ".")
-		{ el[name.substr(1)] = val; }
-	else
-		{ el.setAttribute(name, val); }
-}
-
-function patchAttrs(vnode, donor) {
-	var nattrs = vnode.attrs || emptyObj;
-	var oattrs = donor.attrs || emptyObj;
-	var tag = vnode.tag;
-
-	for (var key in nattrs) {
-		var nval = nattrs[key];
-		var isDyn = isDynProp(tag, key);
-		var oval = isDyn ? vnode.el[key] : oattrs[key];
-
-		if (isStreamStub(nval))
-			{ nattrs[key] = nval = hookStreamStub(nval, vnode.vm()); }
-
-		if (nval === oval) {}
-		else if (isStyleProp(key))
-			{ patchStyle(vnode, donor); }
-		else if (isSplProp(key)) {}
-		else if (isEvProp(key))
-			{ patchEvent(vnode, key, nval, oval); }
-		else
-			{ setAttr(vnode, key, nval, isDyn); }
-	}
-
-	for (var key in oattrs) {
-	//	if (nattrs[key] == null &&
-		if (!(key in nattrs) &&
-			!isStyleProp(key) &&
-			!isSplProp(key) &&
-			!isEvProp(key)
-		)
-			{ remAttr(vnode, key, isDynProp(tag, key)); }
-	}
-}
-
-function createView(view, model, key, opts) {
-	if (view.type == VVIEW) {
-		model	= view.model;
-		key		= view.key;
-		opts	= view.opts;
-		view	= view.view;
-	}
-
-	return new ViewModel(view, model, key, opts);
-}
-
 var didQueue = [];
 
 function fireHook(did, fn, o, n, immediate) {
@@ -584,6 +453,12 @@ function initElementNode(tag, attrs, body, flags) {
 
 var doc = ENV_DOM ? document : null;
 
+function closestVNode(el) {
+	while (el._node == null)
+		{ el = el.parentNode; }
+	return el._node;
+}
+
 function createElement(tag) {
 	return doc.createElement(tag);
 }
@@ -675,6 +550,137 @@ function insertBefore(parEl, el, refEl) {
 
 function insertAfter(parEl, el, refEl) {
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
+}
+
+function bindEv(el, type, fn) {
+//	DEBUG && console.log("addEventListener");
+	el[type] = fn;
+}
+
+function handle(e, fn, args) {
+	var node = closestVNode(e.target);
+	var out = fn.apply(null, args.concat(e, node, node.vm()));
+
+	if (out === false) {
+		e.preventDefault();
+		e.stopPropagation();
+	}
+}
+
+function wrapHandler(fn, args) {
+//	console.log("wrapHandler");
+
+	return function wrap(e) {
+		handle(e, fn, args);
+	}
+}
+
+// delagated handlers {".moo": [fn, a, b]}, {".moo": fn}
+function wrapHandlers(hash) {
+//	console.log("wrapHandlers");
+
+	return function wrap(e) {
+		for (var sel in hash) {
+			if (e.target.matches(sel)) {
+				var hnd = hash[sel];
+				var isarr = isArr(hnd);
+				var fn = isarr ? hnd[0] : hnd;
+				var args = isarr ? hnd.slice(1) : [];
+
+				handle(e, fn, args);
+			}
+		}
+	}
+}
+
+// could merge with on*
+
+function patchEvent(node, name, nval, oval) {
+	if (nval === oval)
+		{ return; }
+
+	var el = node.el;
+
+	// param'd eg onclick: [myFn, 1, 2, 3...]
+	if (isArr(nval)) {
+		var diff = oval == null || !cmpArr(nval, oval);
+		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
+	}
+	// basic onclick: myFn (or extracted)
+	else if (isFunc(nval) && nval != oval)
+		{ bindEv(el, name, wrapHandler(nval, [])); }
+	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
+	else		// isPlainObj, TODO:, diff with old/clean
+		{ bindEv(el, name, wrapHandlers(nval)); }
+}
+
+function remAttr(node, name, asProp) {
+	if (asProp)
+		{ node.el[name] = ""; }
+	else
+		{ node.el.removeAttribute(name); }
+}
+
+// setAttr
+// diff, ".", "on*", bool vals, skip _*, value/checked/selected selectedIndex
+function setAttr(node, name, val, asProp) {
+	var el = node.el;
+
+	if (val == null)
+		{ remAttr(node, name); }		//, asProp?  // will also removeAttr of style: null
+	else if (name == "class")
+		{ el.className = val; }
+	else if (name == "id" || typeof val == "boolean" || asProp)
+		{ el[name] = val; }
+	else if (name[0] == ".")
+		{ el[name.substr(1)] = val; }
+	else
+		{ el.setAttribute(name, val); }
+}
+
+function patchAttrs(vnode, donor) {
+	var nattrs = vnode.attrs || emptyObj;
+	var oattrs = donor.attrs || emptyObj;
+	var tag = vnode.tag;
+
+	for (var key in nattrs) {
+		var nval = nattrs[key];
+		var isDyn = isDynProp(tag, key);
+		var oval = isDyn ? vnode.el[key] : oattrs[key];
+
+		if (isStreamStub(nval))
+			{ nattrs[key] = nval = hookStreamStub(nval, vnode.vm()); }
+
+		if (nval === oval) {}
+		else if (isStyleProp(key))
+			{ patchStyle(vnode, donor); }
+		else if (isSplProp(key)) {}
+		else if (isEvProp(key))
+			{ patchEvent(vnode, key, nval, oval); }
+		else
+			{ setAttr(vnode, key, nval, isDyn); }
+	}
+
+	for (var key in oattrs) {
+	//	if (nattrs[key] == null &&
+		if (!(key in nattrs) &&
+			!isStyleProp(key) &&
+			!isSplProp(key) &&
+			!isEvProp(key)
+		)
+			{ remAttr(vnode, key, isDynProp(tag, key)); }
+	}
+}
+
+function createView(view, model, key, opts) {
+	if (view.type == VVIEW) {
+		model	= view.model;
+		key		= view.key;
+		opts	= view.opts;
+		view	= view.view;
+	}
+
+	return new ViewModel(view, model, key, opts);
 }
 
 // TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT

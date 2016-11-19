@@ -5,6 +5,12 @@ import { FIXED_BODY, FAST_REMOVE } from './initElementNode';
 
 const doc = ENV_DOM ? document : null;
 
+export function closestVNode(el) {
+	while (el._node == null)
+		el = el.parentNode;
+	return el._node;
+}
+
 export function createElement(tag) {
 	return doc.createElement(tag);
 }
