@@ -8,8 +8,8 @@ function getBuilds() {
 	return [
 		{
 			build: "pico",
-			contents: "view core (changes if/when nano can be split)",
-			brings: "dom recycling, lifecycle hooks, parameterized events & delegation, sub-views, element injection, raw html, vnode refs, css objects",
+			contents: "view core",
+			brings: "dom recycling, lifecycle hooks, parameterized events & delegation, sub-views, element injection, raw html, vnode refs, css objects<br>**WARNING: this build's feature set may be reduced without notice**",
 		},
 		{
 			build: "nano",
