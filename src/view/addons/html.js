@@ -1,6 +1,6 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
 import { createView } from '../createView';
-import { isArr, isPlainObj, isVal, isFunc } from '../../utils';
+import { isArr, isPlainObj, isVal, isFunc, TRUE } from '../../utils';
 import { isEvProp, isDynProp } from '../utils';
 import { autoPx } from './stubs';
 
@@ -36,7 +36,24 @@ function styleStr(css) {
 	return style;
 }
 
-const voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
+const voidTags = {
+	img: TRUE,
+	br: TRUE,
+	input: TRUE,
+	col: TRUE,
+	link: TRUE,
+	meta: TRUE,
+	area: TRUE,
+	base: TRUE,
+	command: TRUE,
+	embed: TRUE,
+	hr: TRUE,
+	keygen: TRUE,
+	param: TRUE,
+	source: TRUE,
+	track: TRUE,
+	wbr: TRUE,
+};
 
 var htmlEnts = {
 	'&': '&amp;',
@@ -66,8 +83,6 @@ function escQuotes(string) {
 }
 
 export function html(node, dynProps) {
-	var buf = "";
-
 	switch (node.type) {
 		case VVIEW:
 			return createView(node.view, node.model, node.key, node.opts).html();
@@ -76,6 +91,8 @@ export function html(node, dynProps) {
 		case ELEMENT:
 			if (node.el != null && node.tag == null)
 				return node.el.outerHTML;		// pre-existing dom elements (does not currently account for any props applied to them)
+
+			var buf = "";
 
 			buf += "<" + node.tag;
 
@@ -114,24 +131,22 @@ export function html(node, dynProps) {
 				return buf + "/>";
 			else
 				buf += ">";
-			break;
+
+			if (voidTags[node.tag] == null) {
+				if (isArr(node.body)) {
+					node.body.forEach(function(n2) {
+						buf += html(n2, dynProps);
+					});
+				}
+				else
+					buf += node.raw ? node.body : escHtml(node.body) || "";
+
+				buf += "</" + node.tag + ">";
+			}
+			return buf;
 		case TEXT:
 			return escHtml(node.body);
 		case COMMENT:
 			return "<!--" + escHtml(node.body) + "-->";
 	}
-
-	if (!voidTags.test(node.tag)) {
-		if (isArr(node.body)) {
-			node.body.forEach(function(n2) {
-				buf += html(n2, dynProps);
-			});
-		}
-		else
-			buf += node.raw ? node.body : escHtml(node.body) || "";
-
-		buf += "</" + node.tag + ">";
-	}
-
-	return buf;
 };

@@ -21,6 +21,7 @@ var VVIEW		= 4;
 var VMODEL		= 5;
 
 var ENV_DOM = typeof HTMLElement == "function";
+
 var win = ENV_DOM ? window : {};
 var rAF = win.requestAnimationFrame;
 

@@ -21,6 +21,7 @@ var VVIEW		= 4;
 var VMODEL		= 5;
 
 var ENV_DOM = typeof HTMLElement == "function";
+var TRUE = true;
 var win = ENV_DOM ? window : {};
 var rAF = win.requestAnimationFrame;
 
@@ -191,38 +192,36 @@ function isDynProp(tag, attr) {
 	return false;
 }
 
-var t = true;
-
 var unitlessProps = {
-	animationIterationCount: t,
-	boxFlex: t,
-	boxFlexGroup: t,
-	columnCount: t,
-	counterIncrement: t,
-	fillOpacity: t,
-	flex: t,
-	flexGrow: t,
-	flexOrder: t,
-	flexPositive: t,
-	flexShrink: t,
-	float: t,
-	fontWeight: t,
-	gridColumn: t,
-	lineHeight: t,
-	lineClamp: t,
-	opacity: t,
-	order: t,
-	orphans: t,
-	stopOpacity: t,
-	strokeDashoffset: t,
-	strokeOpacity: t,
-	strokeWidth: t,
-	tabSize: t,
-	transform: t,
-	transformOrigin: t,
-	widows: t,
-	zIndex: t,
-	zoom: t,
+	animationIterationCount: TRUE,
+	boxFlex: TRUE,
+	boxFlexGroup: TRUE,
+	columnCount: TRUE,
+	counterIncrement: TRUE,
+//	fillOpacity: TRUE,
+	flex: TRUE,
+	flexGrow: TRUE,
+	flexOrder: TRUE,
+	flexPositive: TRUE,
+	flexShrink: TRUE,
+	float: TRUE,
+	fontWeight: TRUE,
+	gridColumn: TRUE,
+	lineHeight: TRUE,
+	lineClamp: TRUE,
+	opacity: TRUE,
+	order: TRUE,
+	orphans: TRUE,
+//	stopOpacity: TRUE,
+//	strokeDashoffset: TRUE,
+//	strokeOpacity: TRUE,
+//	strokeWidth: TRUE,
+	tabSize: TRUE,
+	transform: TRUE,
+	transformOrigin: TRUE,
+	widows: TRUE,
+	zIndex: TRUE,
+	zoom: TRUE,
 };
 
 function autoPx(name, val) {
@@ -2101,7 +2100,24 @@ function styleStr(css) {
 	return style;
 }
 
-var voidTags = /^(?:img|br|input|col|link|meta|area|base|command|embed|hr|keygen|param|source|track|wbr)$/;
+var voidTags = {
+	img: TRUE,
+	br: TRUE,
+	input: TRUE,
+	col: TRUE,
+	link: TRUE,
+	meta: TRUE,
+	area: TRUE,
+	base: TRUE,
+	command: TRUE,
+	embed: TRUE,
+	hr: TRUE,
+	keygen: TRUE,
+	param: TRUE,
+	source: TRUE,
+	track: TRUE,
+	wbr: TRUE,
+};
 
 var htmlEnts = {
 	'&': '&amp;',
@@ -2131,8 +2147,6 @@ function escQuotes(string) {
 }
 
 function html(node, dynProps) {
-	var buf = "";
-
 	switch (node.type) {
 		case VVIEW:
 			return createView(node.view, node.model, node.key, node.opts).html();
@@ -2141,6 +2155,8 @@ function html(node, dynProps) {
 		case ELEMENT:
 			if (node.el != null && node.tag == null)
 				{ return node.el.outerHTML; }		// pre-existing dom elements (does not currently account for any props applied to them)
+
+			var buf = "";
 
 			buf += "<" + node.tag;
 
@@ -2179,26 +2195,24 @@ function html(node, dynProps) {
 				{ return buf + "/>"; }
 			else
 				{ buf += ">"; }
-			break;
+
+			if (voidTags[node.tag] == null) {
+				if (isArr(node.body)) {
+					node.body.forEach(function(n2) {
+						buf += html(n2, dynProps);
+					});
+				}
+				else
+					{ buf += node.raw ? node.body : escHtml(node.body) || ""; }
+
+				buf += "</" + node.tag + ">";
+			}
+			return buf;
 		case TEXT:
 			return escHtml(node.body);
 		case COMMENT:
 			return "<!--" + escHtml(node.body) + "-->";
 	}
-
-	if (!voidTags.test(node.tag)) {
-		if (isArr(node.body)) {
-			node.body.forEach(function(n2) {
-				buf += html(n2, dynProps);
-			});
-		}
-		else
-			{ buf += node.raw ? node.body : escHtml(node.body) || ""; }
-
-		buf += "</" + node.tag + ">";
-	}
-
-	return buf;
 }
 
 ViewModelProto.attach = function(el) {
