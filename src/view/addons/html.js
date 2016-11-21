@@ -97,39 +97,34 @@ export function html(node, dynProps) {
 			buf += "<" + node.tag;
 
 			if (node.attrs) {
-				var style = isVal(node.attrs.style) ? node.attrs.style : "";
-				var css = isPlainObj(node.attrs.style) ? node.attrs.style : null;
-
-				if (css)
-					style += styleStr(css);
+				var style = null;
 
 				for (var pname in node.attrs) {
-					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_" || dynProps === false && isDynProp(node.tag, pname))
+					if (isEvProp(pname) || pname[0] == "." || pname[0] == "_" || dynProps === false && isDynProp(node.tag, pname))
 						continue;
 
 					var val = node.attrs[pname];
 
-				//	if (isFunc(val))
-				//		val = val();
-
-					if (isPlainObj(val))	// ?
+					if (pname == "style" && val != null) {
+						style = typeof val == "object" ? styleStr(val) : val;
 						continue;
+					}
 
 					if (val === true)
 						buf += " " + escHtml(pname) + '=""';
 					else if (val === false) {}
-					else if (val !== null && pname[0] !== ".")
+					else if (val != null && pname[0] != ".")
 						buf += " " + escHtml(pname) + '="' + escQuotes(val) + '"';
 				}
 
-				if (style.length)
+				if (style != null)
 					buf += ' style="' + escQuotes(style.trim()) + '"';
 			}
 
 			// if body-less svg node, auto-close & return
-			if (node.ns != null && node.tag !== "svg" && node.tag !== "math" && node.body == null)
-				return buf + "/>";
-			else
+		//	if (node.ns != null && node.tag !== "svg" && node.tag !== "math" && node.body == null)
+		//		return buf + "/>";
+		//	else
 				buf += ">";
 
 			if (voidTags[node.tag] == null) {
