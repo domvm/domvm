@@ -37,49 +37,43 @@ function styleStr(css) {
 }
 
 const voidTags = {
-	img: TRUE,
-	br: TRUE,
-	input: TRUE,
-	col: TRUE,
-	link: TRUE,
-	meta: TRUE,
-	area: TRUE,
-	base: TRUE,
-	command: TRUE,
-	embed: TRUE,
-	hr: TRUE,
-	keygen: TRUE,
-	param: TRUE,
-	source: TRUE,
-	track: TRUE,
-	wbr: TRUE,
+    area: TRUE,
+    base: TRUE,
+    br: TRUE,
+    col: TRUE,
+    command: TRUE,
+    embed: TRUE,
+    hr: TRUE,
+    img: TRUE,
+    input: TRUE,
+    keygen: TRUE,
+    link: TRUE,
+    meta: TRUE,
+    param: TRUE,
+    source: TRUE,
+    track: TRUE,
+	wbr: TRUE
 };
 
-var htmlEnts = {
-	'&': '&amp;',
-	'<': '&lt;',
-	'>': '&gt;',
-	'"': '&quot;',
-	"'": '&#x27;',
-	'/': '&#x2F;'
-};
+const ENTITY_RE = /[&<>"'\/]/g;
 
-var htmlEntsRx = /[&<>"'\/]/g;
+function escHtml(s) {
+	if (s == null) return '';
 
-function escHtml(string) {
-	if (string == null)
-		return '';
-
-	return ('' + string).replace(htmlEntsRx, function(match) {
-		return htmlEnts[match];
-	});
+	return String(s).replace(ENTITY_RE, s =>
+		s == '&' ? '&amp;'  :
+		s == '<' ? '&lt;'   :
+		s == '>' ? '&gt;'   :
+		s == '"' ? '&quot;' :
+		s == "'" ? '&#039;' :
+		s == '/' ? '&#x2f;' : ''
+	);
 }
 
-function escQuotes(string) {
-	if (string == null)
-		return '';
+function escQuotes(s) {
+	if (s == null) return '';
 
-	return ('' + string).replace(/"/g, htmlEnts['"']);
+	return String(s).replace(/"/g, '&quot;');		// also &?
 }
 
 export function html(node, dynProps) {
@@ -134,7 +128,7 @@ export function html(node, dynProps) {
 					});
 				}
 				else
-					buf += node.raw ? node.body : escHtml(node.body) || "";
+					buf += node.raw ? node.body : escHtml(node.body);
 
 				buf += "</" + node.tag + ">";
 			}
