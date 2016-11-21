@@ -251,7 +251,6 @@ function redrawSync(newParent, newIdx, withDOM) {
 		vm.refs = null;
 	}
 
-
 	var vnew = vm.render.call(vm.api, vm, vm.model, vm.key);		// vm.opts
 
 //	console.log(vm.key);

@@ -1435,7 +1435,6 @@ function redrawSync(newParent, newIdx, withDOM) {
 		vm.refs = null;
 	}
 
-
 	var vnew = vm.render.call(vm.api, vm, vm.model, vm.key);		// vm.opts
 
 //	console.log(vm.key);
@@ -2124,6 +2123,13 @@ function escHtml(string) {
 	});
 }
 
+function escQuotes(string) {
+	if (string == null)
+		{ return ''; }
+
+	return ('' + string).replace(/"/g, htmlEnts['"']);
+}
+
 function html(node, dynProps) {
 	var buf = "";
 
@@ -2136,7 +2142,7 @@ function html(node, dynProps) {
 			if (node.el != null && node.tag == null)
 				{ return node.el.outerHTML; }		// pre-existing dom elements (does not currently account for any props applied to them)
 
-			buf += "<" + escHtml(node.tag);
+			buf += "<" + node.tag;
 
 			if (node.attrs) {
 				var style = isVal(node.attrs.style) ? node.attrs.style : "";
@@ -2161,11 +2167,11 @@ function html(node, dynProps) {
 						{ buf += " " + escHtml(pname) + '=""'; }
 					else if (val === false) {}
 					else if (val !== null && pname[0] !== ".")
-						{ buf += " " + escHtml(pname) + '="' + escHtml(val) + '"'; }
+						{ buf += " " + escHtml(pname) + '="' + escQuotes(val) + '"'; }
 				}
 
 				if (style.length)
-					{ buf += ' style="' + escHtml(style.trim()) + '"'; }
+					{ buf += ' style="' + escQuotes(style.trim()) + '"'; }
 			}
 
 			// if body-less svg node, auto-close & return
@@ -2189,7 +2195,7 @@ function html(node, dynProps) {
 		else
 			{ buf += node.raw ? node.body : escHtml(node.body) || ""; }
 
-		buf += "</" + escHtml(node.tag) + ">";
+		buf += "</" + node.tag + ">";
 	}
 
 	return buf;
