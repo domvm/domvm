@@ -2071,17 +2071,17 @@ var stack = [];
 
 nano.createRouter = createRouter;
 
-ViewModelProto.html = function(dynProps) {
+ViewModelProto.html = function(dynProps, unreg) {
 	var vm = this;
 
 	if (vm.node == null)
 		{ vm._redraw(null, null, false); }
 
-	return html(vm.node, dynProps);
+	return html(vm.node, dynProps, unreg);
 };
 
-VNodeProto.html = function(dynProps) {
-	return html(this, dynProps);
+VNodeProto.html = function(dynProps, unreg) {
+	return html(this, dynProps, unreg);
 };
 
 
@@ -2098,6 +2098,10 @@ function styleStr(css) {
 	}
 
 	return style;
+}
+
+function toStr(val) {
+	return val == null ? '' : ''+val;
 }
 
 var voidTags = {
@@ -2119,35 +2123,50 @@ var voidTags = {
 	wbr: TRUE
 };
 
-var ENTITY_RE = /[&<>"'\/]/g;
-
 function escHtml(s) {
-	if (s == null) { return ''; }
+	s = toStr(s);
 
-	return String(s).replace(ENTITY_RE, function (s) { return s == '&' ? '&amp;'  :
-		s == '<' ? '&lt;'   :
-		s == '>' ? '&gt;'   :
-		s == '"' ? '&quot;' :
-		s == "'" ? '&#039;' :
-		s == '/' ? '&#x2f;' : ''; }
-	);
+	for (var i = 0, out = ''; i < s.length; i++) {
+		switch (s[i]) {
+			case '&': out += '&amp;';  break;
+			case '<': out += '&lt;';   break;
+			case '>': out += '&gt;';   break;
+			case '"': out += '&quot;'; break;
+			case "'": out += '&#039;'; break;
+			case '/': out += '&#x2f;'; break;
+			default:  out += s[i];
+		}
+	}
+
+	return out;
 }
 
 function escQuotes(s) {
-	if (s == null) { return ''; }
+	s = toStr(s);
 
-	return String(s).replace(/"/g, '&quot;');		// also &?
+	for (var i = 0, out = ''; i < s.length; i++)
+		{ out += s[i] == '"' ? '&quot;' : s[i]; }		// also &?
+
+	return out;
 }
 
-function html(node, dynProps) {
+function html(node, dynProps, unreg) {
+	unreg = unreg || !ENV_DOM;	// node ssr will always unreg
+
+	var out = null;
+
 	switch (node.type) {
 		case VVIEW:
-			return createView(node.view, node.model, node.key, node.opts).html();
+			out = createView(node.view, node.model, node.key, node.opts).html(dynProps, unreg);
+			break;
 		case VMODEL:
-			return views[node.vmid].html();
+			out = views[node.vmid].html();
+			break;
 		case ELEMENT:
-			if (node.el != null && node.tag == null)
-				{ return node.el.outerHTML; }		// pre-existing dom elements (does not currently account for any props applied to them)
+			if (node.el != null && node.tag == null) {
+				out = node.el.outerHTML;		// pre-existing dom elements (does not currently account for any props applied to them)
+				break;
+			}
 
 			var buf = "";
 
@@ -2187,7 +2206,7 @@ function html(node, dynProps) {
 			if (voidTags[node.tag] == null) {
 				if (isArr(node.body)) {
 					node.body.forEach(function(n2) {
-						buf += html(n2, dynProps);
+						buf += html(n2, dynProps, unreg);
 					});
 				}
 				else
@@ -2195,12 +2214,22 @@ function html(node, dynProps) {
 
 				buf += "</" + node.tag + ">";
 			}
-			return buf;
+			out = buf;
+			break;
 		case TEXT:
-			return escHtml(node.body);
+			out = escHtml(node.body);
+			break;
 		case COMMENT:
-			return "<!--" + escHtml(node.body) + "-->";
+			out = "<!--" + escHtml(node.body) + "-->";
+			break;
 	}
+
+	if (unreg && node.vmid != null) {
+		views[node.vmid].node = node.parent = null;
+		delete views[node.vmid];
+	}
+
+	return out;
 }
 
 ViewModelProto.attach = function(el) {
