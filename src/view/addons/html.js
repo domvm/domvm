@@ -59,8 +59,6 @@ const voidTags = {
 	wbr: TRUE
 };
 
-const ENTITY_RE = /[&<>"'\/]/g;
-
 function escHtml(s) {
 	s = toStr(s);
 
