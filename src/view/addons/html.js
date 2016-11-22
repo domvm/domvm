@@ -108,7 +108,7 @@ export function html(node, dynProps, unreg) {
 
 			buf += "<" + node.tag;
 
-			if (node.attrs) {
+			if (node.attrs != null) {
 				for (var pname in node.attrs) {
 					if (isEvProp(pname) || pname[0] == "." || pname[0] == "_" || dynProps === false && isDynProp(node.tag, pname))
 						continue;
@@ -123,7 +123,7 @@ export function html(node, dynProps, unreg) {
 					if (val === true)
 						buf += " " + escHtml(pname) + '=""';
 					else if (val === false) {}
-					else if (val != null && pname[0] != ".")
+					else if (val != null)
 						buf += " " + escHtml(pname) + '="' + escQuotes(val) + '"';
 				}
 
