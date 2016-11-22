@@ -137,7 +137,7 @@ export function html(node, dynProps, unreg) {
 		//	else
 				buf += ">";
 
-			if (voidTags[node.tag] == null) {
+			if (!voidTags[node.tag]) {
 				if (isArr(node.body)) {
 					node.body.forEach(function(n2) {
 						buf += html(n2, dynProps, unreg);
