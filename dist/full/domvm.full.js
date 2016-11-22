@@ -1396,8 +1396,7 @@ function unmount(asSub) {
 	// edge bug: this could also be willRemove promise-delayed; should .then() or something to make sure hooks fire in order
 	removeChild(parEl, node.el);
 
-	delete views[vm.id];
-	vm.node = node.parent = null;	// unhook to help gc?
+	views[vm.id] = null;
 
 //	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
 
@@ -2151,9 +2150,7 @@ function escQuotes(s) {
 }
 
 function html(node, dynProps, unreg) {
-	unreg = unreg || !ENV_DOM;	// node ssr will always unreg
-
-	var out = null;
+	var out, style;
 
 	switch (node.type) {
 		case VVIEW:
@@ -2173,8 +2170,6 @@ function html(node, dynProps, unreg) {
 			buf += "<" + node.tag;
 
 			if (node.attrs) {
-				var style = null;
-
 				for (var pname in node.attrs) {
 					if (isEvProp(pname) || pname[0] == "." || pname[0] == "_" || dynProps === false && isDynProp(node.tag, pname))
 						{ continue; }
@@ -2224,10 +2219,8 @@ function html(node, dynProps, unreg) {
 			break;
 	}
 
-	if (unreg && node.vmid != null) {
-		views[node.vmid].node = node.parent = null;
-		delete views[node.vmid];
-	}
+	if ((unreg || !ENV_DOM) && node.vmid != null)
+		{ views[node.vmid] = null; }
 
 	return out;
 }

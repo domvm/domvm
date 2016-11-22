@@ -89,9 +89,7 @@ function escQuotes(s) {
 }
 
 export function html(node, dynProps, unreg) {
-	unreg = unreg || !ENV_DOM;	// node ssr will always unreg
-
-	var out = null;
+	var out, style;
 
 	switch (node.type) {
 		case VVIEW:
@@ -111,8 +109,6 @@ export function html(node, dynProps, unreg) {
 			buf += "<" + node.tag;
 
 			if (node.attrs) {
-				var style = null;
-
 				for (var pname in node.attrs) {
 					if (isEvProp(pname) || pname[0] == "." || pname[0] == "_" || dynProps === false && isDynProp(node.tag, pname))
 						continue;
@@ -162,10 +158,8 @@ export function html(node, dynProps, unreg) {
 			break;
 	}
 
-	if (unreg && node.vmid != null) {
-		views[node.vmid].node = node.parent = null;
-		delete views[node.vmid];
-	}
+	if ((unreg || !ENV_DOM) && node.vmid != null)
+		views[node.vmid] = null;
 
 	return out;
 };
