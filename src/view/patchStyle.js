@@ -1,10 +1,10 @@
-import { isVal } from '../utils';
+import { isVal, emptyObj } from '../utils';
 import { autoPx, isStream, hookStream } from './addons/stubs';
 
 // assumes if styles exist both are objects or both are strings
 export function patchStyle(n, o) {
-	var ns = n.attrs.style;
-	var os = o ? o.attrs.style : null;		// || emptyObj?
+	var ns =     (n.attrs || emptyObj).style;
+	var os = o ? (o.attrs || emptyObj).style : null;
 
 	// replace or remove in full
 	if (ns == null || isVal(ns))

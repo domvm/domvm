@@ -296,8 +296,8 @@ function hookStream(s, vm) {
 
 // assumes if styles exist both are objects or both are strings
 function patchStyle(n, o) {
-	var ns = n.attrs.style;
-	var os = o ? o.attrs.style : null;		// || emptyObj?
+	var ns =     (n.attrs || emptyObj).style;
+	var os = o ? (o.attrs || emptyObj).style : null;
 
 	// replace or remove in full
 	if (ns == null || isVal(ns))
@@ -686,14 +686,12 @@ function patchAttrs(vnode, donor) {
 			{ setAttr(vnode, key, nval, isDyn); }
 	}
 
+	// TODO: handle key[0] == "."
+	// should bench style.cssText = "" vs removeAttribute("style")
 	for (var key in oattrs) {
-	//	if (nattrs[key] == null &&
-		if (!(key in nattrs) &&
-			!isStyleProp(key) &&
-			!isSplProp(key) &&
-			!isEvProp(key)
-		)
-			{ remAttr(vnode, key, isDynProp(tag, key)); }
+		!(key in nattrs) &&
+		!isSplProp(key) &&
+		remAttr(vnode, key, isDynProp(tag, key) || isEvProp(key));
 	}
 }
 
@@ -997,9 +995,6 @@ function patch(vnode, donor) {
 		return;
 	}
 
-	// BUG: donation would break:
-	// relies on both being present?
-	// div (with attrs) <-> div (no attrs)
 	if (vnode.attrs != null || donor.attrs != null)
 		{ patchAttrs(vnode, donor); }
 

@@ -51,13 +51,11 @@ export function patchAttrs(vnode, donor) {
 			setAttr(vnode, key, nval, isDyn);
 	}
 
+	// TODO: handle key[0] == "."
+	// should bench style.cssText = "" vs removeAttribute("style")
 	for (var key in oattrs) {
-	//	if (nattrs[key] == null &&
-		if (!(key in nattrs) &&
-			!isStyleProp(key) &&
-			!isSplProp(key) &&
-			!isEvProp(key)
-		)
-			remAttr(vnode, key, isDynProp(tag, key));
+		!(key in nattrs) &&
+		!isSplProp(key) &&
+		remAttr(vnode, key, isDynProp(tag, key) || isEvProp(key));
 	}
 }

@@ -65,9 +65,6 @@ export function patch(vnode, donor) {
 		return;
 	}
 
-	// BUG: donation would break:
-	// relies on both being present?
-	// div (with attrs) <-> div (no attrs)
 	if (vnode.attrs != null || donor.attrs != null)
 		patchAttrs(vnode, donor);
 

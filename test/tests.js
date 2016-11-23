@@ -1118,6 +1118,79 @@ QUnit.module("Attrs/Props");
 		assert.equal(e.el.checked, false, "e.checked == false");
 		assert.equal(f.el.value, "", "f.value == ''");
 	});
+/*
+	QUnit.test("Absent/null attrs after recycle", function(assert) {
+		var attrs = {};
+
+		function View() {
+			return function() {
+				return el("div", attrs, "moo");
+			}
+		}
+
+
+//		function View2() {
+//			return function() {
+//				return attrs ? el("div", attrs, "moo") : el("div", "moo");
+//			}
+//		}
+
+
+		instr.start();
+		var vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div>moo</div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, textContent: 1, insertBefore: 1 });
+
+		attrs = null;
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { });
+
+		attrs = {abc: 1};
+		var expcHtml = '<div abc="1">moo</div>';
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { setAttribute: 1 });
+
+	});
+*/
+	QUnit.test("Absent on* and style attrs after recycle", function(assert) {
+		var onclick = function() {};
+		var attrs = {style: "color: red;", onclick: onclick};		// TODO: props ".blah"
+
+		function View() {
+			return function() {
+				return el("div", attrs, "moo");
+			}
+		}
+
+		instr.start();
+		var vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div style="color: red;">moo</div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, cssText: 1, textContent: 1, insertBefore: 1 });
+		assert.equal(vm.node.el.onclick.name, "wrap", "onclick set");
+
+		attrs = null;		// or simply {}?
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div>moo</div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeAttribute: 1 });
+		assert.equal(vm.node.el.onclick, null, "onclick unset");
+	});
+
 })();
 
 // TODO: assert triple equal outerHTML === vm.html() === hardcoded html
