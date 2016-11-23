@@ -7,27 +7,25 @@
 	<script src="https://platform.twitter.com/widgets.js"></script>
 
 	<script>
+		var el = domvm.defineElement,
+			tx = domvm.defineText;
+
 		function randStr(len) {
 			return Math.random().toString(36).substr(2,len);
 		}
 
-		var el = domvm.defineElement,
-			tx = domvm.defineText;
-
 		function FeedView(vm, tweets) {
 			var hooks = {
-				didInsert: function(n) {
-					twttr.widgets.createTweet(n.data, n.el);	// { theme: 'dark' }
-				}
+				didInsert: n => twttr.widgets.createTweet(n.data, n.el)
 			};
 
-			return {
-				render: function() {
-					return el("#feed", [tx(randStr(10))].concat(tweets.map(tweetId =>
+			return () =>
+				el("#feed", [
+					tx(randStr(10)),
+					tweets.map(tweetId =>
 						el(".tweet", {_data: tweetId, _hooks: hooks})
-					)))
-				}
-			};
+					)
+				])
 		}
 
 		var tweets = [
