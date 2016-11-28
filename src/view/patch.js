@@ -1,4 +1,4 @@
-import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
+import { ELEMENT, TEXT, COMMENT, FRAGMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr } from '../utils';
 import { views } from './ViewModel';
 import { hydrateBody } from './hydrate';
@@ -133,7 +133,7 @@ function patchChildren(vnode, donor) {
 		var node2 = nbody[i];
 		var type2 = node2.type;
 
-		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT) {
+		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT || type2 == FRAGMENT) {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))
 				patch(node2, donor2);
 		}
@@ -157,6 +157,6 @@ function patchChildren(vnode, donor) {
 		}
 	}
 
-	if (!(vnode.flags & FIXED_BODY))
-		syncChildren(vnode);
+	if (!(vnode.flags & FIXED_BODY) && vnode.type != FRAGMENT)
+		syncChildren(vnode, donor);
 }

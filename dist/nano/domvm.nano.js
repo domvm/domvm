@@ -16,9 +16,10 @@
 var ELEMENT	= 1;
 var TEXT		= 2;
 var COMMENT	= 3;
+var FRAGMENT	= 4;
 // placeholder nodes
-var VVIEW		= 4;
-var VMODEL		= 5;
+var VVIEW		= 5;
+var VMODEL		= 6;
 
 var ENV_DOM = typeof HTMLElement == "function";
 var TRUE = true;
@@ -366,6 +367,10 @@ var VNodeProto = VNode.prototype = {
 	idx:	null,
 	parent:	null,
 
+	hasFrags: false,
+	flatIdx: null,
+	flatParent: null,
+
 	/*
 	// break out into optional fluent module
 	key:	function(val) { this.key	= val; return this; },
@@ -469,6 +474,10 @@ function createTextNode(body) {
 
 function createComment(body) {
 	return doc.createComment(body);
+}
+
+function createFragment() {
+	return doc.createDocumentFragment();
 }
 
 // ? removes if !recycled
@@ -707,7 +716,7 @@ function hydrateBody(vnode) {
 		var vnode2 = vnode.body[i];
 		var type2 = vnode2.type;
 
-		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT)
+		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT || type2 == FRAGMENT)
 			{ insertBefore(vnode.el, hydrate(vnode2)); }		// vnode.el.appendChild(hydrate(vnode2))
 		else if (type2 == VVIEW) {
 			var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new model updates
@@ -743,6 +752,10 @@ function hydrate(vnode, withEl) {
 			{ vnode.el = withEl || createTextNode(vnode.body); }
 		else if (vnode.type == COMMENT)
 			{ vnode.el = withEl || createComment(vnode.body); }
+		else if (vnode.type == FRAGMENT) {
+			vnode.el = withEl || createFragment();
+			hydrateBody(vnode);
+		}
 	}
 
 	vnode.el._node = vnode;
@@ -750,12 +763,36 @@ function hydrate(vnode, withEl) {
 	return vnode.el;
 }
 
-function nextNode(node, body) {
+function nextNode1(node, body) {
 	return body[node.idx + 1];
 }
 
-function prevNode(node, body) {
+function prevNode1(node, body) {
 	return body[node.idx - 1];
+}
+
+function nextNode2(node, body) {
+	return body[node.flatIdx + 1];
+}
+
+function prevNode2(node, body) {
+	return body[node.flatIdx - 1];
+}
+
+function parentNode1(node) {
+	return node.parent;
+}
+
+function parentNode2(node) {
+	return node.flatParent;
+}
+
+function cmpElNodeIdx(a, b) {
+	return a._node.idx - b._node.idx;
+}
+
+function cmpElNodeFlatIdx(a, b) {
+	return a._node.flatIdx - b._node.flatIdx;
 }
 
 function tmpEdges(fn, parEl, lftSib, rgtSib) {
@@ -771,8 +808,8 @@ function tmpEdges(fn, parEl, lftSib, rgtSib) {
 	};
 }
 
-function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
-	var areAdjacent	= rgtNode.idx == lftNode.idx + 1;
+function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode, frags) {
+	var areAdjacent	= frags ? rgtNode.flatIdx == lftNode.flatIdx + 1 : rgtNode.idx == lftNode.idx + 1;
 	var headToTail = areAdjacent ? false : lftSib._node == rgtNode;
 	var tailToHead = areAdjacent ? true  : rgtSib._node == lftNode;
 
@@ -817,17 +854,47 @@ function sortDOM(parEl, lftSib, rgtSib, cmpFn) {
 	}, parEl, lftSib, rgtSib);
 }
 
-function cmpElNodeIdx(a, b) {
-	return a._node.idx - b._node.idx;
+function flattenBody(body, acc, flatParent) {
+	var node2;
+
+	for (var i = 0; i < body.length; i++) {
+		node2 = body[i];
+
+		if (node2.type == FRAGMENT)
+			{ flattenBody(body[i].body, acc, flatParent); }
+		else {
+			node2.flatIdx = acc.length;
+			node2.flatParent = flatParent;
+			acc.push(node2);
+		}
+	}
+
+	return acc;
 }
 
-function syncChildren(node) {
-	var parEl	= node.el,
-		body	= node.body,
-		lftNode	= body[0],
-		rgtNode	= body[body.length - 1],
-		lftSib	= parEl.firstChild,
-		rgtSib	= parEl.lastChild,
+function syncChildren(node, donor) {
+	var frags = node.hasFrags;
+
+	if (frags) {
+		var body		= flattenBody(node.body,  [], node),
+			obody		= flattenBody(donor.body, [], donor),
+			parentNode	= parentNode2,
+			prevNode	= prevNode2,
+			nextNode	= nextNode2;
+	}
+	else {
+		var body		= node.body,
+			obody		= donor.body,
+			parentNode	= parentNode1,
+			prevNode	= prevNode1,
+			nextNode	= nextNode1;
+	}
+
+	var parEl		= node.el,
+		lftNode		= body[0],
+		rgtNode		= body[body.length - 1],
+		lftSib		= obody[0].el,
+		rgtSib		= obody[obody.length - 1].el,
 		newSibs,
 		tmpSib;
 
@@ -839,7 +906,7 @@ function syncChildren(node) {
 				{ var lsNode = lftSib._node; }
 
 			// remove any non-recycled sibs whose el.node has the old parent
-			if (lftSib && lsNode.parent != node) {
+			if (lftSib && parentNode(lsNode) != node) {
 				tmpSib = nextSib(lftSib);
 				lsNode.vmid != null ? lsNode.vm().unmount(true) : removeChild(parEl, lftSib);
 				lftSib = tmpSib;
@@ -865,7 +932,7 @@ function syncChildren(node) {
 			if (rgtSib)
 				{ var rsNode = rgtSib._node; }
 
-			if (rgtSib && rsNode.parent != node) {
+			if (rgtSib && parentNode(rsNode) != node) {
 				tmpSib = prevSib(rgtSib);
 				rsNode.vmid != null ? rsNode.vm().unmount(true) : removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
@@ -886,13 +953,13 @@ function syncChildren(node) {
 				{ break; }
 		}
 
-		if (newSibs = headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode)) {
+		if (newSibs = headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode, frags)) {
 			lftSib = newSibs.lftSib;
 			rgtSib = newSibs.rgtSib;
 			continue;
 		}
 
-		newSibs = sortDOM(parEl, lftSib, rgtSib, cmpElNodeIdx);
+		newSibs = sortDOM(parEl, lftSib, rgtSib, frags ? cmpElNodeFlatIdx : cmpElNodeIdx);
 		lftSib = newSibs.lftSib;
 		rgtSib = newSibs.rgtSib;
 	}
@@ -1022,7 +1089,7 @@ function patchChildren(vnode, donor) {
 		var node2 = nbody[i];
 		var type2 = node2.type;
 
-		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT) {
+		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT || type2 == FRAGMENT) {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))
 				{ patch(node2, donor2); }
 		}
@@ -1046,8 +1113,8 @@ function patchChildren(vnode, donor) {
 		}
 	}
 
-	if (!(vnode.flags & FIXED_BODY))
-		{ syncChildren(vnode); }
+	if (!(vnode.flags & FIXED_BODY) && vnode.type != FRAGMENT)
+		{ syncChildren(vnode, donor); }
 }
 
 function defineText(body) {
@@ -1115,6 +1182,9 @@ function preProc(vnew, parent, idx, ownVmid, extKey) {
 				}
 				else
 					{ preProc(node2, vnew, i); }
+
+					if (node2.type == FRAGMENT)
+						{ vnew.hasFrags = true; }
 			}
 		}
 	}
@@ -1467,6 +1537,17 @@ function defineComment(body) {
 	return node;
 }
 
+// expects body to be an array
+// TODO: ("type", attrs {}, body [])
+function defineFragment(body) {
+	var node = new VNode;
+
+	node.type = FRAGMENT;
+	node.body = body;
+
+	return node;
+}
+
 // placeholder for declared views
 function VView(view, model, key, opts) {
 	this.view = view;
@@ -1526,6 +1607,7 @@ var nano$1 = {
 	defineElement: defineElement,
 	defineText: defineText,
 	defineComment: defineComment,
+	defineFragment: defineFragment,
 	defineView: defineView,
 
 	injectView: injectView,

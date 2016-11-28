@@ -38,6 +38,10 @@ export const VNodeProto = VNode.prototype = {
 	idx:	null,
 	parent:	null,
 
+	hasFrags: false,
+	flatIdx: null,
+	flatParent: null,
+
 	/*
 	// break out into optional fluent module
 	key:	function(val) { this.key	= val; return this; },

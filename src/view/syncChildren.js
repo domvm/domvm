@@ -1,12 +1,37 @@
+import { FRAGMENT } from './VTYPES';
 import { hydrate } from './hydrate';
 import { prevSib, nextSib, insertBefore, insertAfter, removeChild } from './dom';
 
-function nextNode(node, body) {
+function nextNode1(node, body) {
 	return body[node.idx + 1];
 }
 
-function prevNode(node, body) {
+function prevNode1(node, body) {
 	return body[node.idx - 1];
+}
+
+function nextNode2(node, body) {
+	return body[node.flatIdx + 1];
+}
+
+function prevNode2(node, body) {
+	return body[node.flatIdx - 1];
+}
+
+function parentNode1(node) {
+	return node.parent;
+}
+
+function parentNode2(node) {
+	return node.flatParent;
+}
+
+function cmpElNodeIdx(a, b) {
+	return a._node.idx - b._node.idx;
+}
+
+function cmpElNodeFlatIdx(a, b) {
+	return a._node.flatIdx - b._node.flatIdx;
 }
 
 function tmpEdges(fn, parEl, lftSib, rgtSib) {
@@ -22,8 +47,8 @@ function tmpEdges(fn, parEl, lftSib, rgtSib) {
 	};
 }
 
-function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
-	var areAdjacent	= rgtNode.idx == lftNode.idx + 1;
+function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode, frags) {
+	var areAdjacent	= frags ? rgtNode.flatIdx == lftNode.flatIdx + 1 : rgtNode.idx == lftNode.idx + 1;
 	var headToTail = areAdjacent ? false : lftSib._node == rgtNode;
 	var tailToHead = areAdjacent ? true  : rgtSib._node == lftNode;
 
@@ -68,17 +93,47 @@ function sortDOM(parEl, lftSib, rgtSib, cmpFn) {
 	}, parEl, lftSib, rgtSib);
 }
 
-function cmpElNodeIdx(a, b) {
-	return a._node.idx - b._node.idx;
+function flattenBody(body, acc, flatParent) {
+	var node2;
+
+	for (var i = 0; i < body.length; i++) {
+		node2 = body[i];
+
+		if (node2.type == FRAGMENT)
+			flattenBody(body[i].body, acc, flatParent);
+		else {
+			node2.flatIdx = acc.length;
+			node2.flatParent = flatParent;
+			acc.push(node2);
+		}
+	}
+
+	return acc;
 }
 
-export function syncChildren(node) {
-	var parEl	= node.el,
-		body	= node.body,
-		lftNode	= body[0],
-		rgtNode	= body[body.length - 1],
-		lftSib	= parEl.firstChild,
-		rgtSib	= parEl.lastChild,
+export function syncChildren(node, donor) {
+	var frags = node.hasFrags;
+
+	if (frags) {
+		var body		= flattenBody(node.body,  [], node),
+			obody		= flattenBody(donor.body, [], donor),
+			parentNode	= parentNode2,
+			prevNode	= prevNode2,
+			nextNode	= nextNode2;
+	}
+	else {
+		var body		= node.body,
+			obody		= donor.body,
+			parentNode	= parentNode1,
+			prevNode	= prevNode1,
+			nextNode	= nextNode1;
+	}
+
+	var parEl		= node.el,
+		lftNode		= body[0],
+		rgtNode		= body[body.length - 1],
+		lftSib		= obody[0].el,
+		rgtSib		= obody[obody.length - 1].el,
 		newSibs,
 		tmpSib;
 
@@ -90,7 +145,7 @@ export function syncChildren(node) {
 				var lsNode = lftSib._node;
 
 			// remove any non-recycled sibs whose el.node has the old parent
-			if (lftSib && lsNode.parent != node) {
+			if (lftSib && parentNode(lsNode) != node) {
 				tmpSib = nextSib(lftSib);
 				lsNode.vmid != null ? lsNode.vm().unmount(true) : removeChild(parEl, lftSib);
 				lftSib = tmpSib;
@@ -116,7 +171,7 @@ export function syncChildren(node) {
 			if (rgtSib)
 				var rsNode = rgtSib._node;
 
-			if (rgtSib && rsNode.parent != node) {
+			if (rgtSib && parentNode(rsNode) != node) {
 				tmpSib = prevSib(rgtSib);
 				rsNode.vmid != null ? rsNode.vm().unmount(true) : removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
@@ -137,13 +192,13 @@ export function syncChildren(node) {
 				break;
 		}
 
-		if (newSibs = headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode)) {
+		if (newSibs = headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode, frags)) {
 			lftSib = newSibs.lftSib;
 			rgtSib = newSibs.rgtSib;
 			continue;
 		}
 
-		newSibs = sortDOM(parEl, lftSib, rgtSib, cmpElNodeIdx);
+		newSibs = sortDOM(parEl, lftSib, rgtSib, frags ? cmpElNodeFlatIdx : cmpElNodeIdx);
 		lftSib = newSibs.lftSib;
 		rgtSib = newSibs.rgtSib;
 	}

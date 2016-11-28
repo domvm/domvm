@@ -1,4 +1,4 @@
-import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
+import { ELEMENT, TEXT, COMMENT, FRAGMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr } from '../utils';
 import { views } from './ViewModel';
 import { isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
@@ -7,7 +7,7 @@ import { setAttr } from './patchAttrs';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
 import { createView } from './createView';
-import { createElement, createTextNode, createComment, insertBefore } from './dom';
+import { createElement, createTextNode, createComment, createFragment, insertBefore } from './dom';
 
 
 // TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT
@@ -36,7 +36,7 @@ export function hydrateBody(vnode) {
 		var vnode2 = vnode.body[i];
 		var type2 = vnode2.type;
 
-		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT)
+		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT || type2 == FRAGMENT)
 			insertBefore(vnode.el, hydrate(vnode2));		// vnode.el.appendChild(hydrate(vnode2))
 		else if (type2 == VVIEW) {
 			var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new model updates
@@ -72,6 +72,10 @@ export function hydrate(vnode, withEl) {
 			vnode.el = withEl || createTextNode(vnode.body);
 		else if (vnode.type == COMMENT)
 			vnode.el = withEl || createComment(vnode.body);
+		else if (vnode.type == FRAGMENT) {
+			vnode.el = withEl || createFragment();
+			hydrateBody(vnode);
+		}
 	}
 
 	vnode.el._node = vnode;
