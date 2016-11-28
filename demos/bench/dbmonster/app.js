@@ -230,4 +230,4 @@ var flags =
 perfMonitor.startFPSMonitor(flags);
 perfMonitor.initProfiler('vm.update()', flags);
 
-step();
+//step();

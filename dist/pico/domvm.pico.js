@@ -760,28 +760,17 @@ function cmpElNodeIdx(a, b) {
 }
 
 function syncChildren(node) {
-	var parEl = node.el;
-	var body = node.body;
-	// breaking condition is convergance
-
-	var lftNode		= body[0],
-		lftSib		= parEl.firstChild,
-		rgtNode		= body[body.length - 1],
-		rgtSib		= parEl.lastChild,
+	var parEl	= node.el,
+		body	= node.body,
+		lftNode	= body[0],
+		rgtNode	= body[body.length - 1],
+		lftSib	= parEl.firstChild,
+		rgtSib	= parEl.lastChild,
 		newSibs,
 		tmpSib;
 
-	if (lftSib == null) {
-		body.forEach(function (node2) { return parEl.appendChild(hydrate(node2)); });
-		return;
-	}
-	else if (lftNode == null) {
-//		DEBUG && console.log("todo: full dehydrate");
-	}
-
 	converge:
 	while (1) {
-//		DEBUG && console.log("from_left");
 //		from_left:
 		while (1) {
 			if (lftSib)
@@ -809,7 +798,6 @@ function syncChildren(node) {
 				{ break; }
 		}
 
-//		DEBUG && console.log("from_right");
 //		from_right:
 		while(1) {
 			if (rgtSib)
@@ -824,7 +812,7 @@ function syncChildren(node) {
 
 			if (rgtNode == lftNode)		// converged
 				{ break converge; }
-			if (rgtNode.el == null) {
+			else if (rgtNode.el == null) {
 				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vmid != null ? rgtNode.vm().mount(parEl, false, true, nextSib(rgtSib) :
 				rgtNode = prevNode(rgtNode, body);
 			}
