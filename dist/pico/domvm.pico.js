@@ -684,8 +684,6 @@ function hydrate(vnode, withEl) {
 	return vnode.el;
 }
 
-//import { DEBUG } from './DEBUG';
-
 function nextNode(node, body) {
 	return body[node.idx + 1];
 }
@@ -708,11 +706,9 @@ function tmpEdges(fn, parEl, lftSib, rgtSib) {
 }
 
 function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
-//	DEBUG && console.log("try head/tail magic");
-
-	var areAdjacent	= rgtNode.idx === lftNode.idx + 1;
-	var headToTail = areAdjacent ? false : lftSib._node === rgtNode;
-	var tailToHead = areAdjacent ? true  : rgtSib._node === lftNode;
+	var areAdjacent	= rgtNode.idx == lftNode.idx + 1;
+	var headToTail = areAdjacent ? false : lftSib._node == rgtNode;
+	var tailToHead = areAdjacent ? true  : rgtSib._node == lftNode;
 
 	if (headToTail || tailToHead) {
 		return tmpEdges(function(lftLft, rgtRgt) {
@@ -1048,7 +1044,7 @@ function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 				// flatten arrays
 				else if (isArr(node2))
 					{ insertArr(body, node2, i--, 1); }
-				else if (node2.type === TEXT) {
+				else if (node2.type == TEXT) {
 					// remove empty text nodes
 					if (node2.body == null || node2.body === "")
 						{ body.splice(i--, 1); }

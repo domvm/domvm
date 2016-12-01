@@ -56,7 +56,7 @@ export function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 				// flatten arrays
 				else if (isArr(node2))
 					insertArr(body, node2, i--, 1);
-				else if (node2.type === TEXT) {
+				else if (node2.type == TEXT) {
 					// remove empty text nodes
 					if (node2.body == null || node2.body === "")
 						body.splice(i--, 1);

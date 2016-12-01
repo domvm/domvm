@@ -1,8 +1,6 @@
 import { hydrate } from './hydrate';
 import { prevSib, nextSib, insertBefore, insertAfter, removeChild } from './dom';
 
-//import { DEBUG } from './DEBUG';
-
 function nextNode(node, body) {
 	return body[node.idx + 1];
 }
@@ -25,11 +23,9 @@ function tmpEdges(fn, parEl, lftSib, rgtSib) {
 }
 
 function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
-//	DEBUG && console.log("try head/tail magic");
-
-	var areAdjacent	= rgtNode.idx === lftNode.idx + 1;
-	var headToTail = areAdjacent ? false : lftSib._node === rgtNode;
-	var tailToHead = areAdjacent ? true  : rgtSib._node === lftNode;
+	var areAdjacent	= rgtNode.idx == lftNode.idx + 1;
+	var headToTail = areAdjacent ? false : lftSib._node == rgtNode;
+	var tailToHead = areAdjacent ? true  : rgtSib._node == lftNode;
 
 	if (headToTail || tailToHead) {
 		return tmpEdges(function(lftLft, rgtRgt) {
