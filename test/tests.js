@@ -84,10 +84,10 @@ QUnit.module("Unrenderable values");
 	var tpl = null,
 		vm = null;
 
-	QUnit.skip('Values are properly coerced or ignored', function(assert) {
-		tpl = ["div", 0, 25, "", NaN, 19, undefined, function() {return "blah";}, [], Infinity, null, {}, true, "yo", false];
+	QUnit.test('Values are properly coerced or ignored', function(assert) {
+		tpl = el("div", [0, 25, "", NaN, 19, undefined, function() {return "blah";}, [], Infinity, null, {}, true, "yo", false]);
 
-		var expcHtml = '<div>025NaN19blahInfinity[object Object]trueyofalse</div>';
+		var expcHtml = '<div>025NaN19undefinedfunction () {return "blah";}Infinitynull[object Object]trueyo</div>';
 
 		instr.start();
 		vm = domvm.createView(ViewAny).mount(testyDiv);
@@ -96,10 +96,22 @@ QUnit.module("Unrenderable values");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 2, createTextNode: 1 });
 	});
 
-	QUnit.skip('Mutation of some nodes is consistent and does correct DOM ops', function(assert) {
-		tpl = ["div", 0, ["span", "moo"], undefined, function() {return "blah";}, [["span", "bar"],["span","baz"]], Infinity, null, false];
+	QUnit.test('Mutation of some nodes is consistent and does correct DOM ops', function(assert) {
+		tpl = el("div", [
+			0,
+			el("span", "moo"),
+			undefined,
+			function() {return "blah";},
+			[
+				el("span", "bar"),
+				el("span","baz"),
+			],
+			Infinity,
+			null,
+			false
+		]);
 
-		var expcHtml = '<div>0<span>moo</span>blah<span>bar</span><span>baz</span>Infinityfalse</div>';
+		var expcHtml = '<div>0<span>moo</span>undefinedfunction () {return "blah";}<span>bar</span><span>baz</span>Infinitynull</div>';
 
 		instr.start();
 		vm.redraw(true);
@@ -128,6 +140,7 @@ QUnit.module("Unrenderable values");
 		evalOut(assert, vm2.node.el, vm2.html(), expcHtml, callCounts, { createElement: 3, createTextNode: 1, insertBefore: 4, textContent: 2 });
 	});
 
+	/* jsonml
 	QUnit.skip('Null values in 0 idx should not be treated as tags', function(assert) {
 		tpl = ["table.display-panel",
 			["tbody", [
@@ -163,6 +176,7 @@ QUnit.module("Unrenderable values");
 
 		evalOut(assert, vm2.node.el, vm2.html(), expcHtml, callCounts, { createElement: 1, createTextNode: 1, insertBefore: 2 });
 	});
+	*/
 
 	QUnit.test('Convert plain values in body [] to defineText(val)', function(assert) {
 		tpl = el("div", [
@@ -882,17 +896,6 @@ QUnit.module("Elems & id/class");
 
 		var expcHtml = '<input>';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });
-	});
-
-	QUnit.skip('SVG elem: ["svg"]', function(assert) {
-		var tpl = el("svg");
-
-		instr.start();
-		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
-		var callCounts = instr.end();
-
-		var expcHtml = '<svg></svg>';		// should include xlink & xmlns?
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElementNS: 1, insertBefore: 1 });
 	});
 
 	QUnit.test('["div#foo.class1.class2"]', function(assert) {
@@ -2537,6 +2540,7 @@ QUnit.module("Imperative VMs");
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { nodeValue: 2 });
 	});
 
+	/* jsonml
 	QUnit.skip('First-child VM should not be confused with props object', function(assert) {
 		vmE = domvm.createView(ViewE);
 
@@ -2548,6 +2552,7 @@ QUnit.module("Imperative VMs");
 
 		evalOut(assert, vmF.node.el, vmF.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
 	});
+	*/
 
 	QUnit.test('Avoid grafting unmounted sub-vm nodes', function(assert) {
 		var a = '';
@@ -2961,157 +2966,19 @@ QUnit.module("Lifecycle hooks");
 	});
 })();
 
-QUnit.module("Function node types & values");
+/*
+QUnit.module("SVG");
 
 (function() {
-	function ViewAny(vm) {
-		return function() { return tpl; };
-	}
-
-	function ViewAny2(vm) {
-		return function() { return tpl2; };
-	}
-
-	var tpl = null;
-	var tpl2 = null;
-	var vm;
-
-	QUnit.skip('Root node is function that returns node', function(assert) {
-		tpl = function() {
-			return ["p", "some text"];
-		};
-
-		var expcHtml = '<p>some text</p>';
+	QUnit.skip('SVG elem: ["svg"]', function(assert) {
+		var tpl = el("svg");
 
 		instr.start();
-		vm = domvm.createView(ViewAny).mount(testyDiv);
+		var vm = domvm.createView(anonView(tpl)).mount(testyDiv);
 		var callCounts = instr.end();
 
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
+		var expcHtml = '<svg></svg>';		// should include xlink & xmlns?
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElementNS: 1, insertBefore: 1 });
 	});
-
-	QUnit.skip('Body is getter function that returns text value', function(assert) {
-		tpl = ["p", function() { return "some text" }];
-
-		var expcHtml = '<p>some text</p>';
-
-		instr.start();
-		vm = domvm.createView(ViewAny).mount(testyDiv);
-		var callCounts = instr.end();
-
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
-	});
-
-	QUnit.skip('Body is function that returns child array', function(assert) {
-		tpl = ["p", function() { return [["strong", "some text"]] }];
-
-		var expcHtml = '<p><strong>some text</strong></p>';
-
-		instr.start();
-		vm = domvm.createView(ViewAny).mount(testyDiv);
-		var callCounts = instr.end();
-
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
-	});
-
-	QUnit.skip('Child node is function that returns node', function(assert) {
-		tpl = ["p", "something ", function() { return ["em", "foo"] }];
-
-		var expcHtml = '<p>something <em>foo</em></p>';
-
-		instr.start();
-		vm = domvm.createView(ViewAny).mount(testyDiv);
-		var callCounts = instr.end();
-
-//		console.log(vm.node.el.outerHTML);
-
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 3, createTextNode: 1, textContent: 1 });
-	});
-/*
-	TODO: this test fails but is visually correct, need to fix bug: implement adjacent text node merging
-	QUnit.test('Child node is getter function that returns text value', function(assert) {
-		tpl = ["p", "something ", function() { return "some text" }];		// cannot have child array that starts with text node
-
-		var expcHtml = '<p>something some text</p>';
-
-		instr.start();
-		vm = domvm.createView(ViewAny).mount(testyDiv);
-		var callCounts = instr.end();
-
-//		console.log(vm.node.el.outerHTML);
-
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 3, createTextNode: 2 });
-	});
-
-/*
-	QUnit.test('Body is function that returns single node', function(assert) {
-		tpl = ["p", function() { return ["strong", "some text"] }];
-
-		var expcHtml = '<p><strong>some text</strong></p>';
-
-		instr.start();
-		vm = domvm.createView(ViewAny).mount(testyDiv);
-		var callCounts = instr.end();
-
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
-	});
-*/
-	/*
-	// Higher-order (functions that return complex nodes that need further recursive processing)
-	// TODO?: higher order functions that return functions
-	// Need to do a do/while loop to iterativly simplify nodes
-	QUnit.test('Child node is function that returns sub-view', function(assert) {
-		tpl = ["p", [function() { tpl2 = ["em", "some text"]; return [ViewAny2]; }]];
-
-		var expcHtml = '<p>some text</p>';
-
-		instr.start();
-		vm = domvm.createView(ViewAny).mount(testyDiv);
-		var callCounts = instr.end();
-
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
-	});
-
-	QUnit.test('Child node is function that returns sub-array', function(assert) {
-		tpl = ["p", [["p", "moo"], function() { [["p", "cow"], ["em", "some text"]] }]];
-
-		var expcHtml = '<p>some text</p>';
-
-		instr.start();
-		vm = domvm.createView(ViewAny).mount(testyDiv);
-		var callCounts = instr.end();
-
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
-	});
-	*/
-
-	QUnit.skip('Attribute value is function/getter', function(assert) {
-		tpl = ["input", {value: function() { return "moo"; }}];
-
-		var expcHtml = '<input value="moo">';
-
-		instr.start();
-		vm = domvm.createView(ViewAny).mount(testyDiv);
-		var callCounts = instr.end();
-
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, setAttribute: 1 }, {value: vm.node.el.value}, {value: "moo"});
-	});
-
-	QUnit.skip('Style object attr value is function/getter', function(assert) {
-		tpl = ["input", {style: {width: function() { return "20px"; }}}];
-
-		var expcHtml = '<input style="width: 20px;">';
-
-		instr.start();
-		vm = domvm.createView(ViewAny).mount(testyDiv);
-		var callCounts = instr.end();
-
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });
-	});
-
-	// style object value is function/getter
-	// special props, id, className, _key, _ref?
 })();
-
-
-// QUnit.module("Keyed model & addlCtx replacement");
+*/

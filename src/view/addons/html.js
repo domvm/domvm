@@ -67,9 +67,9 @@ function escHtml(s) {
 			case '&': out += '&amp;';  break;
 			case '<': out += '&lt;';   break;
 			case '>': out += '&gt;';   break;
-			case '"': out += '&quot;'; break;
-			case "'": out += '&#039;'; break;
-			case '/': out += '&#x2f;'; break;
+		//	case '"': out += '&quot;'; break;
+		//	case "'": out += '&#039;'; break;
+		//	case '/': out += '&#x2f;'; break;
 			default:  out += s[i];
 		}
 	}
