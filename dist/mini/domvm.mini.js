@@ -1126,41 +1126,43 @@ function preProc(vnew, parent, idx, ownVmid, extKey) {		// , parentVm
 //				if (isFunc(node2))
 //					node2 = body[i] = node2();
 
-				if (isVal(node2))
-					{ body[i] = node2 = defineText(node2); }
-
 				// remove null/undefined
-				if (node2 == null)
+				if (node2 === false)
 					{ body.splice(i--, 1); }
 				// flatten arrays
 				else if (isArr(node2))
 					{ insertArr(body, node2, i--, 1); }
-				else if (node2.type == TEXT) {
-					// remove empty text nodes
-					if (node2.body == null || node2.body === "")
-						{ body.splice(i--, 1); }
-					// merge with previous text node
-					else if (i > 0 && body[i-1].type === TEXT) {
-						body[i-1].body += node2.body;
-						body.splice(i--, 1);
-					}
-					else
-						{ preProc(node2, vnew, i); }		// , /*vnew.vm ||*/ parentVm
-				}
 				else {
-			//		if (node2.ref != null)
-			//			parentVm.setRef(node2.ref, node2);
+					if (node2 == null || node2.type == null)
+						{ body[i] = node2 = defineText(""+node2); }
 
-					preProc(node2, vnew, i);			// , /*vnew.vm ||*/ parentVm
-	/*
-					// init/populate keys in in parent
-					if (node2.key != null) {
-						if (vnew.keys == null)
-							vnew.keys = {};
-
-						vnew.keys[node2.key] = i;
+					if (node2.type == TEXT) {
+						// remove empty text nodes
+						if (node2.body == null || node2.body === "")
+							{ body.splice(i--, 1); }
+						// merge with previous text node
+						else if (i > 0 && body[i-1].type === TEXT) {
+							body[i-1].body += node2.body;
+							body.splice(i--, 1);
+						}
+						else
+							{ preProc(node2, vnew, i); }		// , /*vnew.vm ||*/ parentVm
 					}
-	*/
+					else {
+				//		if (node2.ref != null)
+				//			parentVm.setRef(node2.ref, node2);
+
+						preProc(node2, vnew, i);			// , /*vnew.vm ||*/ parentVm
+		/*
+						// init/populate keys in in parent
+						if (node2.key != null) {
+							if (vnew.keys == null)
+								vnew.keys = {};
+
+							vnew.keys[node2.key] = i;
+						}
+		*/
+					}
 				}
 			}
 		}

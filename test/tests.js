@@ -1473,7 +1473,7 @@ QUnit.module("Various Others");
 					el("strong", [
 						vw(SomeView2)
 					]),
-					imperView ? iv(imperView) : null,
+					!!imperView && iv(imperView),
 				])
 			]);
 		};
