@@ -288,7 +288,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 				insertBefore(parEl, hydrate(vnew), refEl);
 			}
 			else
-				patch(vnew, vold);
+				patch(vnew, vold, isRedrawRoot);
 		}
 		else
 			hydrate(vnew);

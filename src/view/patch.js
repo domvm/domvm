@@ -1,7 +1,7 @@
 import { ELEMENT, TEXT, COMMENT, FRAGMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr } from '../utils';
 import { views } from './ViewModel';
-import { hydrateBody } from './hydrate';
+import { hydrateBody, flattenBody } from './hydrate';
 import { removeChild } from './dom';
 import { syncChildren } from './syncChildren';
 import { fireHooks } from './hooks';
@@ -49,7 +49,7 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists
-export function patch(vnode, donor) {
+export function patch(vnode, donor, isRedrawRoot) {
 	donor.hooks && fireHooks("willRecycle", donor, vnode);
 
 	var el = vnode.el = donor.el;
@@ -80,7 +80,7 @@ export function patch(vnode, donor) {
 		if (newIsArr) {
 		//	console.log('[] => []', obody, nbody);
 			// graft children
-			patchChildren(vnode, donor);
+			patchChildren(vnode, donor, isRedrawRoot);
 		}
 		// [] => "" | null
 		else if (nbody !== obody) {
@@ -123,11 +123,11 @@ export function patch(vnode, donor) {
 }
 
 // [] => []
-function patchChildren(vnode, donor) {
+function patchChildren(vnode, donor, isRedrawRoot) {
 	// first unrecycled node (search head)
 	var fromIdx = 0;
 
-	var donor2, nbody = vnode.body;
+	var donor2, nbody = vnode.body, hasFrags = false;
 
 	for (var i = 0; i < nbody.length; i++) {
 		var node2 = nbody[i];
@@ -139,12 +139,19 @@ function patchChildren(vnode, donor) {
 		}
 		else if (type2 == VVIEW) {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))		// update/moveTo
-				views[donor2.vmid]._update(node2.model, vnode, i);		// withDOM
+				var vm = views[donor2.vmid]._update(node2.model, vnode, i);		// withDOM
 			else
-				createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
+				var vm = createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
+
+			type2 = vm.node.type;
 		}
-		else if (type2 == VMODEL)
-			views[node2.vmid]._update(node2.model, vnode, i);
+		else if (type2 == VMODEL) {
+			var vm = views[node2.vmid]._update(node2.model, vnode, i);
+			type2 = vm.node.type;
+		}
+
+		if (type2 == FRAGMENT)
+			hasFrags = true;
 
 		// to keep search space small, if donation is non-contig, move node fwd?
 		// re-establish contigindex
@@ -157,6 +164,22 @@ function patchChildren(vnode, donor) {
 		}
 	}
 
-	if (!(vnode.flags & FIXED_BODY) && vnode.type != FRAGMENT)
-		syncChildren(vnode, donor);
+	if (!(vnode.flags & FIXED_BODY)) {
+		if (vnode.type == ELEMENT) {
+			if (hasFrags)
+				vnode.flatBody = flattenBody(vnode.body, [], vnode);
+
+			syncChildren(vnode, donor, hasFrags);
+		}
+		else if (vnode.type == FRAGMENT && isRedrawRoot) {
+			vnode = vnode.parent;
+
+			while (vnode.type != ELEMENT)
+				vnode = vnode.parent;
+
+			donor = {flatBody: vnode.flatBody};
+			vnode.flatBody = flattenBody(vnode.body, [], vnode);
+			syncChildren(vnode, donor, true);
+		}
+	}
 }

@@ -85,7 +85,7 @@ QUnit.module("Unrenderable values");
 		vm = null;
 
 	QUnit.test('Values are properly coerced or ignored', function(assert) {
-		tpl = el("div", [0, 25, "", NaN, 19, undefined, function() {return "blah";}, [], Infinity, null, {}, true, "yo", false]);
+		tpl = el("div", [0, 25, "", NaN, 19, undefined, function () {return "blah";}, [], Infinity, null, {}, true, "yo", false]);
 
 		var expcHtml = '<div>025NaN19function () {return "blah";}Infinity[object Object]trueyo</div>';
 
@@ -101,7 +101,7 @@ QUnit.module("Unrenderable values");
 			0,
 			el("span", "moo"),
 			undefined,
-			function() {return "blah";},
+			function () {return "blah";},
 			[
 				el("span", "bar"),
 				el("span","baz"),
@@ -1181,7 +1181,7 @@ QUnit.module("Attrs/Props");
 
 		var expcHtml = '<div style="color: red;">moo</div>';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, cssText: 1, textContent: 1, insertBefore: 1 });
-		assert.equal(vm.node.el.onclick.name, "wrap", "onclick set");
+		assert.equal(typeof vm.node.el.onclick, "function", "onclick set");
 
 		attrs = null;		// or simply {}?
 

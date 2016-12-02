@@ -1,4 +1,3 @@
-import { FRAGMENT } from './VTYPES';
 import { hydrate } from './hydrate';
 import { prevSib, nextSib, insertBefore, insertAfter, removeChild } from './dom';
 
@@ -93,59 +92,49 @@ function sortDOM(parEl, lftSib, rgtSib, cmpFn) {
 	}, parEl, lftSib, rgtSib);
 }
 
-function flattenBody(body, acc, flatParent) {
-	var node2;
-
-	for (var i = 0; i < body.length; i++) {
-		node2 = body[i];
-
-		if (node2.type == FRAGMENT)
-			flattenBody(body[i].body, acc, flatParent);
-		else {
-			node2.flatIdx = acc.length;
-			node2.flatParent = flatParent;
-			acc.push(node2);
-		}
-	}
-
-	return acc;
+function cmpElNodeIdx(a, b) {
+	return a._node.idx - b._node.idx;
 }
 
-export function syncChildren(node, donor) {
-	var frags = node.hasFrags;
-
+export function syncChildren(node, donor, frags) {
 	if (frags) {
-		var body		= flattenBody(node.body,  [], node),
-			obody		= flattenBody(donor.body, [], donor),
+		var parEl		= node.el,
+			body		= node.flatBody,
+			obody		= donor.flatBody,
 			parentNode	= parentNode2,
 			prevNode	= prevNode2,
 			nextNode	= nextNode2;
 	}
 	else {
-		var body		= node.body,
+		var parEl		= node.el,
+			body		= node.body,
 			obody		= donor.body,
 			parentNode	= parentNode1,
 			prevNode	= prevNode1,
 			nextNode	= nextNode1;
 	}
 
-	var parEl		= node.el,
-		lftNode		= body[0],
+	var	lftNode		= body[0],
 		rgtNode		= body[body.length - 1],
 		lftSib		= obody[0].el,
+	//	lftEnd		= prevSib(lftSib),
 		rgtSib		= obody[obody.length - 1].el,
+	//	rgtEnd		= nextSib(rgtSib),
 		newSibs,
-		tmpSib;
+		tmpSib,
+		lsNode,
+		rsNode;
+
 
 	converge:
 	while (1) {
 //		from_left:
 		while (1) {
-			if (lftSib)
-				var lsNode = lftSib._node;
+		//	if (lftSib == rgtEnd)		// if doing a partial sync (fragment), this is a breaking conditon for crossing into a neighboring fragment
+		//		break converge;
 
 			// remove any non-recycled sibs whose el.node has the old parent
-			if (lftSib && parentNode(lsNode) != node) {
+			if (lftSib && parentNode(lsNode = lftSib._node) != node) {
 				tmpSib = nextSib(lftSib);
 				lsNode.vmid != null ? lsNode.vm().unmount(true) : removeChild(parEl, lftSib);
 				lftSib = tmpSib;
@@ -168,10 +157,10 @@ export function syncChildren(node, donor) {
 
 //		from_right:
 		while(1) {
-			if (rgtSib)
-				var rsNode = rgtSib._node;
+		//	if (rgtSib == lftEnd)
+		//		break converge;
 
-			if (rgtSib && parentNode(rsNode) != node) {
+			if (rgtSib && parentNode(rsNode = rgtSib._node) != node) {
 				tmpSib = prevSib(rgtSib);
 				rsNode.vmid != null ? rsNode.vm().unmount(true) : removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;

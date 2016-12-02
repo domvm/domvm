@@ -1,4 +1,4 @@
-import { TEXT, FRAGMENT, VVIEW, VMODEL } from './VTYPES';
+import { TEXT, VVIEW, VMODEL } from './VTYPES';
 import { defineText } from './defineText';
 import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
 import { isStream, hookStream } from './addons/stubs';
@@ -61,9 +61,6 @@ export function preProc(vnew, parent, idx, ownVmid, extKey) {
 				}
 				else
 					preProc(node2, vnew, i);
-
-					if (node2.type == FRAGMENT)
-						vnew.hasFrags = true;
 			}
 		}
 	}

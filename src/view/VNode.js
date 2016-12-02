@@ -38,9 +38,9 @@ export const VNodeProto = VNode.prototype = {
 	idx:	null,
 	parent:	null,
 
-	hasFrags: false,
 	flatIdx: null,
 	flatParent: null,
+	flatBody: null,
 
 	/*
 	// break out into optional fluent module

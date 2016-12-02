@@ -9,7 +9,7 @@ export function defineFragment(arg0, arg1, arg2, flags) {
 
 	// [body]
 	if (len == 1) {
-		tag = "@frag";
+		tag = "frag";
 		body = arg0;
 	}
 	// tag, [body]
