@@ -87,7 +87,7 @@ QUnit.module("Unrenderable values");
 	QUnit.test('Values are properly coerced or ignored', function(assert) {
 		tpl = el("div", [0, 25, "", NaN, 19, undefined, function() {return "blah";}, [], Infinity, null, {}, true, "yo", false]);
 
-		var expcHtml = '<div>025NaN19undefinedfunction () {return "blah";}Infinitynull[object Object]trueyo</div>';
+		var expcHtml = '<div>025NaN19function () {return "blah";}Infinity[object Object]trueyo</div>';
 
 		instr.start();
 		vm = domvm.createView(ViewAny).mount(testyDiv);
@@ -111,7 +111,7 @@ QUnit.module("Unrenderable values");
 			false
 		]);
 
-		var expcHtml = '<div>0<span>moo</span>undefinedfunction () {return "blah";}<span>bar</span><span>baz</span>Infinitynull</div>';
+		var expcHtml = '<div>0<span>moo</span>function () {return "blah";}<span>bar</span><span>baz</span>Infinity</div>';
 
 		instr.start();
 		vm.redraw(true);
