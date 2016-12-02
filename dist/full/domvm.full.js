@@ -1562,13 +1562,32 @@ function defineComment(body) {
 	return node;
 }
 
-// expects body to be an array
-// TODO: ("type", attrs {}, body [])
-function defineFragment(body) {
-	var node = new VNode;
+// TODO: defineFragmentSpread?
+function defineFragment(arg0, arg1, arg2, flags) {
+	var len = arguments.length;
+
+	var tag, attrs, body;
+
+	// [body]
+	if (len == 1) {
+		tag = "@frag";
+		body = arg0;
+	}
+	// tag, [body]
+	else if (len == 2) {
+		tag = arg0;
+		body = arg1;
+	}
+	// tag, {attrs}, [body]
+	else if (len == 3) {
+		tag = arg0;
+		attrs = arg1;
+		body = arg2;
+	}
+
+	var node = initElementNode(tag, attrs, body, flags);
 
 	node.type = FRAGMENT;
-	node.body = body;
 
 	return node;
 }
