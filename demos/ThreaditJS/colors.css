@@ -1,0 +1,23 @@
+html {
+	background-color: #f5f5f5;
+}
+
+a{
+	color: #BD008C;
+	text-decoration:none;
+	font-weight:normal;
+	cursor: pointer;
+}
+
+a:hover {
+	color: #BD008C;
+	text-decoration:underline;
+	font-weight: normal;
+}
+
+input[type=submit] {
+	background-color: #BD008C;
+	color: #fff;
+	border: 0;
+	font-weight: bold;
+}
