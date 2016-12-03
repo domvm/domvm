@@ -946,9 +946,9 @@ function syncChildren(node, donor, frags) {
 
 	var	lftNode		= body[0],
 		rgtNode		= body[body.length - 1],
-		lftSib		= obody[0].el,
+		lftSib		= ((obody)[0] || emptyObj).el,
 	//	lftEnd		= prevSib(lftSib),
-		rgtSib		= obody[obody.length - 1].el,
+		rgtSib		= (obody[obody.length - 1] || emptyObj).el,
 	//	rgtEnd		= nextSib(rgtSib),
 		newSibs,
 		tmpSib,
