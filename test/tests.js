@@ -678,6 +678,26 @@ QUnit.module("Other mods");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 1, createElement: 1, setAttribute: 1, insertBefore: 1, textContent: 1 });
 	});
 
+	QUnit.test('(body) empty [] -> []', function(assert) {
+		tpl = el("span", []);
+		var expcHtml = '<span></span>';
+
+		instr.start();
+		var vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });
+
+		tpl = el("span", [tx("moo")]);
+		var expcHtml = '<span>moo</span>';
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createTextNode: 1, insertBefore: 1 });
+	});
+
 	QUnit.test('(body) [] -> text', function(assert) {
 		tpl = el("span", [
 			el("em","moo"),
