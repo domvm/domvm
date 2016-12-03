@@ -13,11 +13,15 @@
 	(global.domvm = factory());
 }(this, (function () { 'use strict';
 
+// VNode types
+// NOTE: when adding a a type here, add it above FRAGMENT and renumber. There are
+// optimizations in some places that test <= FRAGMENT to assert if node is a VNode
 var ELEMENT	= 1;
 var TEXT		= 2;
 var COMMENT	= 3;
 var FRAGMENT	= 4;
-// placeholder nodes
+
+// placeholder types
 var VVIEW		= 5;
 var VMODEL		= 6;
 
@@ -396,9 +400,6 @@ var VNodeProto = VNode.prototype = {
 
 	_class:	null,
 
-	// this enables fast keyed lookup of children via binary search
-	list: false,
-
 	idx:	null,
 	parent:	null,
 
@@ -428,6 +429,8 @@ function isSet(val) {
 var FIXED_BODY = 1;
 // doesnt fire eager deep willRemove hooks, doesnt do bottom-up removeChild
 var FAST_REMOVE = 2;
+// enables fast keyed lookup of children via binary search, expects homogeneous keyed body
+var KEYED_LIST = 4;
 
 function initElementNode(tag, attrs, body, flags) {
 	var node = new VNode;
@@ -453,8 +456,8 @@ function initElementNode(tag, attrs, body, flags) {
 		if (isSet(attrs._data))
 			{ node.data = attrs._data; }
 
-		if (isSet(attrs._list))
-			{ node.list = attrs._list; }
+		if (isSet(attrs._flags))
+			{ node.flags = attrs._flags; }
 
 		if (!isSet(node.key)) {
 			if (isSet(node.ref))
@@ -779,7 +782,8 @@ function hydrateBody(vnode) {
 		var vnode2 = vnode.body[i];
 		var type2 = vnode2.type;
 
-		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT || type2 == FRAGMENT)
+		// ELEMENT,TEXT,COMMENT,FRAGMENT
+		if (type2 <= FRAGMENT)
 			{ insertBefore(vnode.el, hydrate(vnode2)); }		// vnode.el.appendChild(hydrate(vnode2))
 		else if (type2 == VVIEW) {
 			var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new model updates
@@ -1144,7 +1148,7 @@ function sortByKey(a, b) {
 
 // [] => []
 function patchChildren(vnode, donor, isRedrawRoot) {
-	if (vnode.list) {
+	if (vnode.flags & KEYED_LIST) {
 		var list = donor.body.slice();
 		list.sort(sortByKey);
 		var find = findListDonor;
@@ -1724,6 +1728,7 @@ var nano$1 = {
 
 	FIXED_BODY: FIXED_BODY,
 	FAST_REMOVE: FAST_REMOVE,
+	KEYED_LIST: KEYED_LIST,
 };
 
 ViewModelProto._diff = null;

@@ -13,6 +13,8 @@ function isSet(val) {
 export const FIXED_BODY = 1;
 // doesnt fire eager deep willRemove hooks, doesnt do bottom-up removeChild
 export const FAST_REMOVE = 2;
+// enables fast keyed lookup of children via binary search, expects homogeneous keyed body
+export const KEYED_LIST = 4;
 
 export function initElementNode(tag, attrs, body, flags) {
 	let node = new VNode;
@@ -38,8 +40,8 @@ export function initElementNode(tag, attrs, body, flags) {
 		if (isSet(attrs._data))
 			node.data = attrs._data;
 
-		if (isSet(attrs._list))
-			node.list = attrs._list;
+		if (isSet(attrs._flags))
+			node.flags = attrs._flags;
 
 		if (!isSet(node.key)) {
 			if (isSet(node.ref))

@@ -7,7 +7,7 @@ import { syncChildren } from './syncChildren';
 import { fireHooks } from './hooks';
 import { patchAttrs } from './patchAttrs';
 import { createView } from './createView';
-import { FIXED_BODY, FAST_REMOVE } from './initElementNode';
+import { FIXED_BODY, FAST_REMOVE, KEYED_LIST } from './initElementNode';
 
 function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	for (var i = fromIdx || 0; i < obody.length; i++) {
@@ -130,7 +130,7 @@ function sortByKey(a, b) {
 
 // [] => []
 function patchChildren(vnode, donor, isRedrawRoot) {
-	if (vnode.list) {
+	if (vnode.flags & KEYED_LIST) {
 		var list = donor.body.slice();
 		list.sort(sortByKey);
 		var find = findListDonor;

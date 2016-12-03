@@ -56,7 +56,8 @@ export function hydrateBody(vnode) {
 		var vnode2 = vnode.body[i];
 		var type2 = vnode2.type;
 
-		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT || type2 == FRAGMENT)
+		// ELEMENT,TEXT,COMMENT,FRAGMENT
+		if (type2 <= FRAGMENT)
 			insertBefore(vnode.el, hydrate(vnode2));		// vnode.el.appendChild(hydrate(vnode2))
 		else if (type2 == VVIEW) {
 			var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new model updates
