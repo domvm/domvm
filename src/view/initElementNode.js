@@ -3,6 +3,10 @@ import { VNode } from './VNode';
 import { cssTag } from './addons/stubs';
 import { isPlainObj } from '../utils';
 
+function isSet(val) {
+	return val != null;
+}
+
 // optimization flags
 
 // prevents inserting/removing/reordering of children
@@ -15,31 +19,34 @@ export function initElementNode(tag, attrs, body, flags) {
 
 	node.type = ELEMENT;
 
-	if (flags != null)
+	if (isSet(flags))
 		node.flags = flags;
 
-	if (attrs != null) {
-		if (attrs._key != null)
+	if (isSet(attrs)) {
+		if (isSet(attrs._key))
 			node.key = attrs._key;
 
-		if (attrs._ref != null)
+		if (isSet(attrs._ref))
 			node.ref = attrs._ref;
 
-		if (attrs._hooks != null)
+		if (isSet(attrs._hooks))
 			node.hooks = attrs._hooks;
 
-		if (attrs._raw != null)
+		if (isSet(attrs._raw))
 			node.raw = attrs._raw;
 
-		if (attrs._data != null)
+		if (isSet(attrs._data))
 			node.data = attrs._data;
 
-		if (node.key == null) {
-			if (node.ref != null)
+		if (isSet(attrs._list))
+			node.list = attrs._list;
+
+		if (!isSet(node.key)) {
+			if (isSet(node.ref))
 				node.key = node.ref;
-			else if (attrs.id != null)
+			else if (isSet(attrs.id))
 				node.key = attrs.id;
-			else if (attrs.name != null)
+			else if (isSet(attrs.name))
 				node.key = attrs.name;
 		}
 
@@ -53,16 +60,16 @@ export function initElementNode(tag, attrs, body, flags) {
 	if (parsed.id || parsed.class || parsed.attrs) {
 		var p = node.attrs || {};
 
-		if (parsed.id && p.id == null)
+		if (parsed.id && !isSet(p.id))
 			p.id = parsed.id;
 
 		if (parsed.class) {
 			node._class = parsed.class;		// static class
-			p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
+			p.class = parsed.class + (isSet(p.class) ? (" " + p.class) : "");
 		}
 		if (parsed.attrs) {
 			for (var key in parsed.attrs)
-				if (p[key] == null)
+				if (!isSet(p[key]))
 					p[key] = parsed.attrs[key];
 		}
 

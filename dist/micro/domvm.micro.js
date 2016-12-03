@@ -147,6 +147,38 @@ function curry(fn, args, ctx) {
 	};
 }
 
+
+
+// adapted from https://github.com/Olical/binary-search
+function binaryKeySearch(list, item) {
+    var min = 0;
+    var max = list.length - 1;
+    var guess;
+
+	var bitwise = (max <= 2147483647) ? true : false;
+	if (bitwise) {
+		while (min <= max) {
+			guess = (min + max) >> 1;
+			if (list[guess].key === item) { return guess; }
+			else {
+				if (list[guess].key < item) { min = guess + 1; }
+				else { max = guess - 1; }
+			}
+		}
+	} else {
+		while (min <= max) {
+			guess = Math.floor((min + max) / 2);
+			if (list[guess].key === item) { return guess; }
+			else {
+				if (list[guess].key < item) { min = guess + 1; }
+				else { max = guess - 1; }
+			}
+		}
+	}
+
+    return -1;
+}
+
 function isEvProp(name) {
 	return startsWith(name, "on");
 }
@@ -364,6 +396,9 @@ var VNodeProto = VNode.prototype = {
 
 	_class:	null,
 
+	// this enables fast keyed lookup of children via binary search
+	list: false,
+
 	idx:	null,
 	parent:	null,
 
@@ -383,6 +418,10 @@ var VNodeProto = VNode.prototype = {
 	*/
 };
 
+function isSet(val) {
+	return val != null;
+}
+
 // optimization flags
 
 // prevents inserting/removing/reordering of children
@@ -395,31 +434,34 @@ function initElementNode(tag, attrs, body, flags) {
 
 	node.type = ELEMENT;
 
-	if (flags != null)
+	if (isSet(flags))
 		{ node.flags = flags; }
 
-	if (attrs != null) {
-		if (attrs._key != null)
+	if (isSet(attrs)) {
+		if (isSet(attrs._key))
 			{ node.key = attrs._key; }
 
-		if (attrs._ref != null)
+		if (isSet(attrs._ref))
 			{ node.ref = attrs._ref; }
 
-		if (attrs._hooks != null)
+		if (isSet(attrs._hooks))
 			{ node.hooks = attrs._hooks; }
 
-		if (attrs._raw != null)
+		if (isSet(attrs._raw))
 			{ node.raw = attrs._raw; }
 
-		if (attrs._data != null)
+		if (isSet(attrs._data))
 			{ node.data = attrs._data; }
 
-		if (node.key == null) {
-			if (node.ref != null)
+		if (isSet(attrs._list))
+			{ node.list = attrs._list; }
+
+		if (!isSet(node.key)) {
+			if (isSet(node.ref))
 				{ node.key = node.ref; }
-			else if (attrs.id != null)
+			else if (isSet(attrs.id))
 				{ node.key = attrs.id; }
-			else if (attrs.name != null)
+			else if (isSet(attrs.name))
 				{ node.key = attrs.name; }
 		}
 
@@ -433,16 +475,16 @@ function initElementNode(tag, attrs, body, flags) {
 	if (parsed.id || parsed.class || parsed.attrs) {
 		var p = node.attrs || {};
 
-		if (parsed.id && p.id == null)
+		if (parsed.id && !isSet(p.id))
 			{ p.id = parsed.id; }
 
 		if (parsed.class) {
 			node._class = parsed.class;		// static class
-			p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
+			p.class = parsed.class + (isSet(p.class) ? (" " + p.class) : "");
 		}
 		if (parsed.attrs) {
 			for (var key in parsed.attrs)
-				{ if (p[key] == null)
+				{ if (!isSet(p[key]))
 					{ p[key] = parsed.attrs[key]; } }
 		}
 
@@ -981,13 +1023,9 @@ function syncChildren(node, donor, frags) {
 	}
 }
 
-//import { DEBUG } from './DEBUG';
-
-function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
-	var oldBody = oPar.body;
-
-	for (var i = fromIdx || 0; i < oldBody.length; i++) {
-		var o = oldBody[i];
+function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
+	for (var i = fromIdx || 0; i < obody.length; i++) {
+		var o = obody[i];
 
 		if (n.type == VVIEW && o.vmid != null) {			// also ignore recycled/moved?
 			var ov = views[o.vmid];
@@ -1017,6 +1055,12 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 	}
 
 	return null;
+}
+
+// list must be a sorted list of vnodes by key
+function findListDonor(n, list) {
+	var idx = binaryKeySearch(list, n.key);
+	return idx > -1 ? list[idx] : null;
 }
 
 // have it handle initial hydrate? !donor?
@@ -1094,23 +1138,38 @@ function patch(vnode, donor, isRedrawRoot) {
 	donor.hooks && fireHooks("didRecycle", donor, vnode);
 }
 
+function sortByKey(a, b) {
+	return a.key > b.key ? 1 : a.key < b.key ? -1 : 0;
+}
+
 // [] => []
 function patchChildren(vnode, donor, isRedrawRoot) {
-	// first unrecycled node (search head)
-	var fromIdx = 0;
+	if (vnode.list) {
+		var list = donor.body.slice();
+		list.sort(sortByKey);
+		var find = findListDonor;
+	}
+	else {
+		var list = donor.body;
+		var find = findDonor;
+	}
 
-	var donor2, nbody = vnode.body, hasFrags = false;
+	var donor2,
+		fromIdx = 0,				// first unrecycled node (search head)
+		nbody = vnode.body,
+		hasFrags = false;
 
 	for (var i = 0; i < nbody.length; i++) {
 		var node2 = nbody[i];
 		var type2 = node2.type;
 
-		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT || type2 == FRAGMENT) {
-			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))
+		// ELEMENT,TEXT,COMMENT,FRAGMENT
+		if (type2 <= FRAGMENT) {
+			if (donor2 = find(node2, list, fromIdx))
 				{ patch(node2, donor2); }
 		}
 		else if (type2 == VVIEW) {
-			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))		// update/moveTo
+			if (donor2 = find(node2, list, fromIdx))		// update/moveTo
 				{ var vm = views[donor2.vmid]._update(node2.model, vnode, i); }		// withDOM
 			else
 				{ var vm = createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
@@ -1127,13 +1186,8 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 
 		// to keep search space small, if donation is non-contig, move node fwd?
 		// re-establish contigindex
-
-		if (donor2) {
-			if (donor2.idx == fromIdx) {							// todo: conditional contigidx (first non-null)
-			//	while (obody[fromIdx] && obody[fromIdx].recycled)
-				fromIdx++;
-			}
-		}
+		if (!vnode.list && donor2 != null && donor2.idx == fromIdx)
+			{ fromIdx++; }
 	}
 
 	if (!(vnode.flags & FIXED_BODY)) {

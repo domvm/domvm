@@ -136,3 +136,33 @@ export function prop(val, cb, ctx, args) {
 		return val;
 	};
 }
+
+// adapted from https://github.com/Olical/binary-search
+export function binaryKeySearch(list, item) {
+    var min = 0;
+    var max = list.length - 1;
+    var guess;
+
+	var bitwise = (max <= 2147483647) ? true : false;
+	if (bitwise) {
+		while (min <= max) {
+			guess = (min + max) >> 1;
+			if (list[guess].key === item) { return guess; }
+			else {
+				if (list[guess].key < item) { min = guess + 1; }
+				else { max = guess - 1; }
+			}
+		}
+	} else {
+		while (min <= max) {
+			guess = Math.floor((min + max) / 2);
+			if (list[guess].key === item) { return guess; }
+			else {
+				if (list[guess].key < item) { min = guess + 1; }
+				else { max = guess - 1; }
+			}
+		}
+	}
+
+    return -1;
+}

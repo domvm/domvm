@@ -35,6 +35,9 @@ export const VNodeProto = VNode.prototype = {
 
 	_class:	null,
 
+	// this enables fast keyed lookup of children via binary search
+	list: false,
+
 	idx:	null,
 	parent:	null,
 
