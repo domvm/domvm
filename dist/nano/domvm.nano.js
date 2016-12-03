@@ -16,9 +16,10 @@
 var ELEMENT	= 1;
 var TEXT		= 2;
 var COMMENT	= 3;
+var FRAGMENT	= 4;
 // placeholder nodes
-var VVIEW		= 4;
-var VMODEL		= 5;
+var VVIEW		= 5;
+var VMODEL		= 6;
 
 var ENV_DOM = typeof window != "undefined";
 var TRUE = true;
@@ -366,6 +367,10 @@ var VNodeProto = VNode.prototype = {
 	idx:	null,
 	parent:	null,
 
+	flatIdx: null,
+	flatParent: null,
+	flatBody: null,
+
 	/*
 	// break out into optional fluent module
 	key:	function(val) { this.key	= val; return this; },
@@ -469,6 +474,10 @@ function createTextNode(body) {
 
 function createComment(body) {
 	return doc.createComment(body);
+}
+
+function createFragment() {
+	return doc.createDocumentFragment();
 }
 
 // ? removes if !recycled
@@ -681,6 +690,24 @@ function createView(view, model, key, opts) {
 	return new ViewModel(view, model, key, opts);
 }
 
+function flattenBody(body, acc, flatParent) {
+	var node2;
+
+	for (var i = 0; i < body.length; i++) {
+		node2 = body[i];
+
+		if (node2.type == FRAGMENT)
+			{ flattenBody(body[i].body, acc, flatParent); }
+		else {
+			node2.flatIdx = acc.length;
+			node2.flatParent = flatParent;
+			acc.push(node2);
+		}
+	}
+
+	return acc;
+}
+
 // TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT
 function patchAttrs2(vnode) {
 	var nattrs = vnode.attrs;
@@ -702,23 +729,33 @@ function patchAttrs2(vnode) {
 	}
 }
 
+// hydrateBody doubles as hasFrags test
 function hydrateBody(vnode) {
+	var hasFrags = false;			// profile pre-init to false
+
 	for (var i = 0; i < vnode.body.length; i++) {
 		var vnode2 = vnode.body[i];
 		var type2 = vnode2.type;
 
-		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT)
+		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT || type2 == FRAGMENT)
 			{ insertBefore(vnode.el, hydrate(vnode2)); }		// vnode.el.appendChild(hydrate(vnode2))
 		else if (type2 == VVIEW) {
 			var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new model updates
+			type2 = vm.node.type;
 			insertBefore(vnode.el, hydrate(vm.node));
 		}
 		else if (type2 == VMODEL) {
 			var vm = views[vnode2.vmid];
 			vm._redraw(vnode, i);					// , false
+			type2 = vm.node.type;
 			insertBefore(vnode.el, vm.node.el);		// , hydrate(vm.node)
 		}
+
+		if (type2 == FRAGMENT)
+			{ hasFrags = true; }
 	}
+
+	return hasFrags;
 }
 
 //  TODO: DRY this out. reusing normal patch here negatively affects V8's JIT
@@ -730,8 +767,10 @@ function hydrate(vnode, withEl) {
 			if (vnode.attrs != null)
 				{ patchAttrs2(vnode); }
 
-			if (isArr(vnode.body))
-				{ hydrateBody(vnode); }
+			if (isArr(vnode.body)) {
+				if (hydrateBody(vnode))
+					{ vnode.flatBody = flattenBody(vnode.body, [], vnode); }
+			}
 			else if (vnode.body != null && vnode.body !== "") {
 				if (vnode.raw)
 					{ vnode.el.innerHTML = vnode.body; }
@@ -743,6 +782,10 @@ function hydrate(vnode, withEl) {
 			{ vnode.el = withEl || createTextNode(vnode.body); }
 		else if (vnode.type == COMMENT)
 			{ vnode.el = withEl || createComment(vnode.body); }
+		else if (vnode.type == FRAGMENT) {
+			vnode.el = withEl || createFragment();
+			hydrateBody(vnode);
+		}
 	}
 
 	vnode.el._node = vnode;
@@ -750,12 +793,32 @@ function hydrate(vnode, withEl) {
 	return vnode.el;
 }
 
-function nextNode(node, body) {
+function nextNode1(node, body) {
 	return body[node.idx + 1];
 }
 
-function prevNode(node, body) {
+function prevNode1(node, body) {
 	return body[node.idx - 1];
+}
+
+function nextNode2(node, body) {
+	return body[node.flatIdx + 1];
+}
+
+function prevNode2(node, body) {
+	return body[node.flatIdx - 1];
+}
+
+function parentNode1(node) {
+	return node.parent;
+}
+
+function parentNode2(node) {
+	return node.flatParent;
+}
+
+function cmpElNodeFlatIdx(a, b) {
+	return a._node.flatIdx - b._node.flatIdx;
 }
 
 function tmpEdges(fn, parEl, lftSib, rgtSib) {
@@ -771,8 +834,8 @@ function tmpEdges(fn, parEl, lftSib, rgtSib) {
 	};
 }
 
-function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
-	var areAdjacent	= rgtNode.idx == lftNode.idx + 1;
+function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode, frags) {
+	var areAdjacent	= frags ? rgtNode.flatIdx == lftNode.flatIdx + 1 : rgtNode.idx == lftNode.idx + 1;
 	var headToTail = areAdjacent ? false : lftSib._node == rgtNode;
 	var tailToHead = areAdjacent ? true  : rgtSib._node == lftNode;
 
@@ -821,25 +884,45 @@ function cmpElNodeIdx(a, b) {
 	return a._node.idx - b._node.idx;
 }
 
-function syncChildren(node) {
-	var parEl	= node.el,
-		body	= node.body,
-		lftNode	= body[0],
-		rgtNode	= body[body.length - 1],
-		lftSib	= parEl.firstChild,
-		rgtSib	= parEl.lastChild,
+function syncChildren(node, donor, frags) {
+	if (frags) {
+		var parEl		= node.el,
+			body		= node.flatBody,
+			obody		= donor.flatBody,
+			parentNode	= parentNode2,
+			prevNode	= prevNode2,
+			nextNode	= nextNode2;
+	}
+	else {
+		var parEl		= node.el,
+			body		= node.body,
+			obody		= donor.body,
+			parentNode	= parentNode1,
+			prevNode	= prevNode1,
+			nextNode	= nextNode1;
+	}
+
+	var	lftNode		= body[0],
+		rgtNode		= body[body.length - 1],
+		lftSib		= obody[0].el,
+	//	lftEnd		= prevSib(lftSib),
+		rgtSib		= obody[obody.length - 1].el,
+	//	rgtEnd		= nextSib(rgtSib),
 		newSibs,
-		tmpSib;
+		tmpSib,
+		lsNode,
+		rsNode;
+
 
 	converge:
 	while (1) {
 //		from_left:
 		while (1) {
-			if (lftSib)
-				{ var lsNode = lftSib._node; }
+		//	if (lftSib == rgtEnd)		// if doing a partial sync (fragment), this is a breaking conditon for crossing into a neighboring fragment
+		//		break converge;
 
 			// remove any non-recycled sibs whose el.node has the old parent
-			if (lftSib && lsNode.parent != node) {
+			if (lftSib && parentNode(lsNode = lftSib._node) != node) {
 				tmpSib = nextSib(lftSib);
 				lsNode.vmid != null ? lsNode.vm().unmount(true) : removeChild(parEl, lftSib);
 				lftSib = tmpSib;
@@ -862,10 +945,10 @@ function syncChildren(node) {
 
 //		from_right:
 		while(1) {
-			if (rgtSib)
-				{ var rsNode = rgtSib._node; }
+		//	if (rgtSib == lftEnd)
+		//		break converge;
 
-			if (rgtSib && rsNode.parent != node) {
+			if (rgtSib && parentNode(rsNode = rgtSib._node) != node) {
 				tmpSib = prevSib(rgtSib);
 				rsNode.vmid != null ? rsNode.vm().unmount(true) : removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
@@ -886,13 +969,13 @@ function syncChildren(node) {
 				{ break; }
 		}
 
-		if (newSibs = headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode)) {
+		if (newSibs = headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode, frags)) {
 			lftSib = newSibs.lftSib;
 			rgtSib = newSibs.rgtSib;
 			continue;
 		}
 
-		newSibs = sortDOM(parEl, lftSib, rgtSib, cmpElNodeIdx);
+		newSibs = sortDOM(parEl, lftSib, rgtSib, frags ? cmpElNodeFlatIdx : cmpElNodeIdx);
 		lftSib = newSibs.lftSib;
 		rgtSib = newSibs.rgtSib;
 	}
@@ -938,7 +1021,7 @@ function findDonorNode(n, nPar, oPar, fromIdx, toIdx) {		// pre-tested isView?
 
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists
-function patch(vnode, donor) {
+function patch(vnode, donor, isRedrawRoot) {
 	donor.hooks && fireHooks("willRecycle", donor, vnode);
 
 	var el = vnode.el = donor.el;
@@ -969,7 +1052,7 @@ function patch(vnode, donor) {
 		if (newIsArr) {
 		//	console.log('[] => []', obody, nbody);
 			// graft children
-			patchChildren(vnode, donor);
+			patchChildren(vnode, donor, isRedrawRoot);
 		}
 		// [] => "" | null
 		else if (nbody !== obody) {
@@ -1012,28 +1095,35 @@ function patch(vnode, donor) {
 }
 
 // [] => []
-function patchChildren(vnode, donor) {
+function patchChildren(vnode, donor, isRedrawRoot) {
 	// first unrecycled node (search head)
 	var fromIdx = 0;
 
-	var donor2, nbody = vnode.body;
+	var donor2, nbody = vnode.body, hasFrags = false;
 
 	for (var i = 0; i < nbody.length; i++) {
 		var node2 = nbody[i];
 		var type2 = node2.type;
 
-		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT) {
+		if (type2 == ELEMENT || type2 == TEXT || type2 == COMMENT || type2 == FRAGMENT) {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))
 				{ patch(node2, donor2); }
 		}
 		else if (type2 == VVIEW) {
 			if (donor2 = findDonorNode(node2, vnode, donor, fromIdx))		// update/moveTo
-				{ views[donor2.vmid]._update(node2.model, vnode, i); }		// withDOM
+				{ var vm = views[donor2.vmid]._update(node2.model, vnode, i); }		// withDOM
 			else
-				{ createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
+				{ var vm = createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
+
+			type2 = vm.node.type;
 		}
-		else if (type2 == VMODEL)
-			{ views[node2.vmid]._update(node2.model, vnode, i); }
+		else if (type2 == VMODEL) {
+			var vm = views[node2.vmid]._update(node2.model, vnode, i);
+			type2 = vm.node.type;
+		}
+
+		if (type2 == FRAGMENT)
+			{ hasFrags = true; }
 
 		// to keep search space small, if donation is non-contig, move node fwd?
 		// re-establish contigindex
@@ -1046,8 +1136,24 @@ function patchChildren(vnode, donor) {
 		}
 	}
 
-	if (!(vnode.flags & FIXED_BODY))
-		{ syncChildren(vnode); }
+	if (!(vnode.flags & FIXED_BODY)) {
+		if (vnode.type == ELEMENT) {
+			if (hasFrags)
+				{ vnode.flatBody = flattenBody(vnode.body, [], vnode); }
+
+			syncChildren(vnode, donor, hasFrags);
+		}
+		else if (vnode.type == FRAGMENT && isRedrawRoot) {
+			vnode = vnode.parent;
+
+			while (vnode.type != ELEMENT)
+				{ vnode = vnode.parent; }
+
+			donor = {flatBody: vnode.flatBody};
+			vnode.flatBody = flattenBody(vnode.body, [], vnode);
+			syncChildren(vnode, donor, true);
+		}
+	}
 }
 
 function defineText(body) {
@@ -1404,7 +1510,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 				insertBefore(parEl, hydrate(vnew), refEl);
 			}
 			else
-				{ patch(vnew, vold); }
+				{ patch(vnew, vold, isRedrawRoot); }
 		}
 		else
 			{ hydrate(vnew); }
@@ -1467,6 +1573,36 @@ function defineComment(body) {
 	return node;
 }
 
+// TODO: defineFragmentSpread?
+function defineFragment(arg0, arg1, arg2, flags) {
+	var len = arguments.length;
+
+	var tag, attrs, body;
+
+	// [body]
+	if (len == 1) {
+		tag = "frag";
+		body = arg0;
+	}
+	// tag, [body]
+	else if (len == 2) {
+		tag = arg0;
+		body = arg1;
+	}
+	// tag, {attrs}, [body]
+	else if (len == 3) {
+		tag = arg0;
+		attrs = arg1;
+		body = arg2;
+	}
+
+	var node = initElementNode(tag, attrs, body, flags);
+
+	node.type = FRAGMENT;
+
+	return node;
+}
+
 // placeholder for declared views
 function VView(view, model, key, opts) {
 	this.view = view;
@@ -1526,6 +1662,7 @@ var nano$1 = {
 	defineElement: defineElement,
 	defineText: defineText,
 	defineComment: defineComment,
+	defineFragment: defineFragment,
 	defineView: defineView,
 
 	injectView: injectView,
