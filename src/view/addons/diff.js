@@ -1,18 +1,23 @@
 import { ViewModelProto } from '../ViewModel';
-import { isArr, cmpArr, cmpObj } from '../../utils';
+import { isArr, isFunc, cmpArr, cmpObj } from '../../utils';
 
 ViewModelProto._diff = null;
 
-// @diff should be a callback that returns an array of values to shallow-compare
+// @vals should be a callback that returns an array or object of values to shallow-compare
 //   if the returned values are the same on subsequent redraw calls, then redraw() is prevented
-// @diff2 may be a callback that will run if arrays dont match and recieves the old & new arrays which
+// @then may be a callback that will run if arrays dont match and receives the old & new arrays which
 //   it can then use to shallow-patch the top-level vnode if needed (like apply {display: none}) and
-//   return false to prevent further redraw()
+//   return `false` to prevent further redraw()
+// if @cfg is a function, it's assumed to be @vals
 ViewModelProto.diff = function(cfg) {
 	var vm = this;
 
-	var getVals = cfg.vals;
-	var thenFn = cfg.then;
+	if (isFunc(cfg))
+		var getVals = cfg;
+	else {
+		var getVals = cfg.vals;
+		var thenFn = cfg.then;
+	}
 
 	var oldVals = getVals(vm, vm.model, vm.key, vm.opts);
 	var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
