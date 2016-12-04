@@ -9,7 +9,7 @@ function getBuilds() {
 		{
 			build: "pico",
 			contents: "view core",
-			brings: "dom recycling<br>lifecycle hooks<br>parameterized events & delegation<br>sub-views<br>element injection<br>raw html<br>vnode refs<br>css objects<br><br>**WARNING: this build's feature set may be reduced without notice**",
+			brings: "dom recycling<br>lifecycle hooks<br>parameterized events & delegation<br>sub-views<br>fragments<br>element injection<br>raw html<br>vnode refs<br>css objects<br>**WARNING: this build's feature set may be reduced without notice**",
 		},
 		{
 			build: "nano",
@@ -47,7 +47,7 @@ if (args.length == 1)
 function compile(buildName) {
 	var start = +new Date;
 
-	var entry = './dist/builds/' + buildName + '.js';
+	var entry = './builds/' + buildName + '.js';
 	var stubs = './src/view/addons/stubs.js';
 
 	// will hold contents of orig stubs.js
