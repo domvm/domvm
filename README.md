@@ -1,4 +1,4 @@
-<img src="logo.png" alt="domvm logo" style="max-width:100%;" align="right" height="60">
+<img src="domvm.png" alt="domvm logo" style="max-width:100%;" align="right" height="60">
 
 domvm (DOM ViewModel)
 ---------------------
