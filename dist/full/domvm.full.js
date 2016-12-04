@@ -13,9 +13,10 @@
 	(global.domvm = factory());
 }(this, (function () { 'use strict';
 
+// NOTE: if adding a new *VNode* type, make it < FRAGMENT and renumber rest.
+// There are some places that test <= FRAGMENT to assert if node is a VNode
+
 // VNode types
-// NOTE: when adding a a type here, add it above FRAGMENT and renumber. There are
-// optimizations in some places that test <= FRAGMENT to assert if node is a VNode
 var ELEMENT	= 1;
 var TEXT		= 2;
 var COMMENT	= 3;

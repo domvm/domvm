@@ -1,6 +1,7 @@
+// NOTE: if adding a new *VNode* type, make it < FRAGMENT and renumber rest.
+// There are some places that test <= FRAGMENT to assert if node is a VNode
+
 // VNode types
-// NOTE: when adding a a type here, add it above FRAGMENT and renumber. There are
-// optimizations in some places that test <= FRAGMENT to assert if node is a VNode
 export const ELEMENT	= 1;
 export const TEXT		= 2;
 export const COMMENT	= 3;

@@ -47,7 +47,7 @@ if (args.length == 1)
 function compile(buildName) {
 	var start = +new Date;
 
-	var entry = './builds/' + buildName + '.js';
+	var entry = './src/builds/' + buildName + '.js';
 	var stubs = './src/view/addons/stubs.js';
 
 	// will hold contents of orig stubs.js

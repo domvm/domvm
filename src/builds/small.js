@@ -2,7 +2,7 @@
 
 import { default as small } from "./mini";
 
-import { createRouter } from "../src/router";
+import { createRouter } from "../router";
 small.createRouter = createRouter;
 
 export default small;
