@@ -8,33 +8,33 @@ function getBuilds() {
 	return [
 		{
 			build: "pico",
-			contents: "view core",
-			brings: "dom recycling<br>lifecycle hooks<br>parameterized events & delegation<br>sub-views<br>fragments<br>element injection<br>raw html<br>vnode refs<br>css objects<br>**WARNING: this build's feature set may be reduced without notice**",
+			contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>fragments<br>element injection<br>raw html<br>vnode refs<br>css objects",
+			descr: "view core<br><br>**This build is unstable by design; features that get decoupled<br>can move to nano+ builds at any commit!**",
 		},
 		{
 			build: "nano",
 			contents: "+ `cssTag`<br>+ `autoPx`<br>+ `spreadBody`<br>+ `diff`<br>+ `patch`<br>",
-			brings: "tpl conveniences:<br>`\"input[type=checkbox].some-class\"`<br>`{style: {width: 20}}`<br>`el(\"div\", el(\"span\", \"foo\")...)`<br><br>optims:<br>`vnode.patch({class: ..., style...})`<br>`vm.diff({vals:...then:...})`",
+			descr: "tpl conveniences:<br>`\"input[type=checkbox].some-class\"`<br>`{style: {width: 20}}`<br>`el(\"div\", el(\"span\", \"foo\")...)`<br><br>optims:<br>`vnode.patch({class: ..., style...})`<br>`vm.diff({vals:...then:...})`",
 		},
 		{
 			build: "micro",
 			contents: "+ `emit`<br> + `vmBody`<br>",
-			brings: "subview-to-parent events:<br>`vm.emit('myNotif', arg1, arg2...)`<br><br>get child views:<br>`vm.body()` ",
+			descr: "subview-to-parent events:<br>`vm.emit('myNotif', arg1, arg2...)`<br><br>get child views:<br>`vm.body()` ",
 		},
 		{
 			build: "mini",
 			contents: "+ `streamCfg`<br> + `streamFlyd`<br> + `prop`<br>",
-			brings: "view reactivity (reduce need for explicit `redraw()`)",
+			descr: "view reactivity (reduce need for explicit `redraw()`)",
 		},
 		{
 			build: "small",
 			contents: "+ `router`<br>",
-			brings: "client-side router",
+			descr: "client-side router",
 		},
 		{
 			build: "full",
 			contents: "+ `html`<br> + `attach`<br>",
-			brings: "isomorphism & SSR",
+			descr: "isomorphism & SSR",
 		},
 	];
 }
@@ -145,7 +145,7 @@ function buildDistTable() {
 		build: 0,
 		"min / gz": 0,
 		contents: 0,
-		brings: 0,
+		descr: 0,
 	};
 
 	var appendix = [];
