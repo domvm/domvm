@@ -1335,9 +1335,8 @@ var ViewModelProto = ViewModel.prototype = {
 	_redrawAsync: null,		// this is set in constructor per view
 	_updateAsync: null,
 
-//	hooks: function(hooks) {},
 	hook: function(hooks) {
-		this.hooks = hooks;
+		this.hooks = this.hooks || assignObj({}, this.hooks, hooks);
 	},
 };
 
