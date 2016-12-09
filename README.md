@@ -24,26 +24,21 @@ It's still available in the [1.x-dev branch](https://github.com/leeoniya/domvm/t
 
 Simple up/down incrementor.
 
-**Try it:** https://jsfiddle.net/cdaLfztb/
+**Try it:** https://jsfiddle.net/n0dfxp4o/
 
 
 ```js
-// Element VNode creator
-var el = domvm.defineElement;
+var el = domvm.defineElement;			// Element VNode creator
 
-// view closure (called once during init)
-function CounterView(vm) {
-	// view's internal state
+function CounterView(vm) {				// view closure (called once during init)
 	var count = 0;
 
-	// click handler
-	function add(num) {
+	function add(num) {					// click handler
 		count += num;
 		vm.redraw();
 	}
 
-	// rendering function (called on each redraw)
-	return function() {
+	return function() {					// template renderer (called on each redraw)
 		return el("#counter", [
 			el("button", {onclick: [add, -1]}, "-"),
 			el("strong", {style: "padding: 0 10px;"}, count),
@@ -52,8 +47,9 @@ function CounterView(vm) {
 	};
 }
 
-// create the ViewModel & append into document
-var counterVm = domvm.createView(CounterView).mount(document.body);
+var vm = domvm.createView(CounterView);	// create view
+
+vm.mount(document.body);				// mount into document
 ```
 
 Contact list view with provided data, external modification & redraw.
@@ -81,7 +77,7 @@ function ContactListView(vm, contacts) {
 }
 
 var contacts = [
-	{name: "Bob", age: 35},
+	{name: "Bob",   age: 35},
 	{name: "Alice", age: 19},
 	{name: "Homer", age: 42},
 ];
@@ -92,7 +88,7 @@ var cntcVm = domvm.createView(ContactListView, contacts).mount(document.body);
 setTimeout(function() {
 	contacts.push(
 		{name: "Susan", age: 56},
-		{name: "Tom", age: 33}
+		{name: "Tom",   age: 33}
 	);
 	cntcVm.redraw();
 }, 2000);
