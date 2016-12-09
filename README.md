@@ -20,9 +20,9 @@ It's still available in the [1.x-dev branch](https://github.com/leeoniya/domvm/t
 
 
 ---
-### Quick Example
+### Quick Examples
 
-Here's simple up/down incrementor.
+Simple up/down incrementor.
 
 **Try it:** https://jsfiddle.net/cdaLfztb/
 
@@ -54,4 +54,46 @@ function CounterView(vm) {
 
 // create the ViewModel & append into document
 var counterVm = domvm.createView(CounterView).mount(document.body);
+```
+
+Contact list view with provided data, external modification & redraw.
+
+**Try it:** https://jsfiddle.net/8q90jt8k/
+
+```js
+var el = domvm.defineElement;
+
+function ContactListView(vm, contacts) {
+	return function() {
+		return el("table#contacts", [
+			el("tr", [
+				el("th", "Name"),
+				el("th", "Age"),
+			]),
+			contacts.map(function(cntc) {
+				return el("tr", [
+					el("td", cntc.name),
+					el("td", cntc.age),
+				]);
+			})
+		]);
+	};
+}
+
+var contacts = [
+	{name: "Bob", age: 35},
+	{name: "Alice", age: 19},
+	{name: "Homer", age: 42},
+];
+
+var cntcVm = domvm.createView(ContactListView, contacts).mount(document.body);
+
+// externally add to contact list & redraw view
+setTimeout(function() {
+	contacts.push(
+		{name: "Susan", age: 56},
+		{name: "Tom", age: 33}
+	);
+	cntcVm.redraw();
+}, 2000);
 ```
