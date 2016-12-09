@@ -47,24 +47,52 @@ function CounterView(vm) {				// view closure (called once during init)
 	};
 }
 
-var vm = domvm.createView(CounterView);	// create view
+var vm = domvm.createView(CounterView);	// create ViewModel
 
 vm.mount(document.body);				// mount into document
 ```
 
-Contact list view with provided data, external modification & redraw.
+Sortable table with provided data.
 
-**Try it:** https://jsfiddle.net/8q90jt8k/
+**Try it:** https://jsfiddle.net/oaoz6f5t/
 
 ```js
 var el = domvm.defineElement;
 
 function ContactListView(vm, contacts) {
+	var sortCol = null;
+	var sortDesc = false;
+
+	function sorter(a, b) {
+		var x = sortDesc ? b : a,
+			y = sortDesc ? a : b;
+
+		return (""+x[sortCol]).localeCompare(""+y[sortCol]);
+	}
+
+	function colClick(colName) {
+		if (colName == sortCol)
+			sortDesc = !sortDesc;
+		else {
+			sortCol = colName;
+			sortDesc = false;
+		}
+
+		contacts.sort(sorter);
+
+		vm.redraw();
+	}
+
+	function colClass(_sortCol) {
+		if (_sortCol == sortCol)
+			return sortDesc ? "sortDesc" : "sortAsc";
+	}
+
 	return function() {
 		return el("table#contacts", [
 			el("tr", [
-				el("th", "Name"),
-				el("th", "Age"),
+				el("th", {class: colClass("name"), onclick: [colClick, "name"]}, "Name"),
+				el("th", {class: colClass( "age"), onclick: [colClick,  "age"]},  "Age"),
 			]),
 			contacts.map(function(cntc) {
 				return el("tr", [
@@ -77,19 +105,10 @@ function ContactListView(vm, contacts) {
 }
 
 var contacts = [
-	{name: "Bob",   age: 35},
-	{name: "Alice", age: 19},
-	{name: "Homer", age: 42},
+	{name: "Bob",   age: 19},
+	{name: "Alice", age: 42},
+	{name: "Homer", age: 35},
 ];
 
-var cntcVm = domvm.createView(ContactListView, contacts).mount(document.body);
-
-// externally add to contact list & redraw view
-setTimeout(function() {
-	contacts.push(
-		{name: "Susan", age: 56},
-		{name: "Tom",   age: 33}
-	);
-	cntcVm.redraw();
-}, 2000);
+domvm.createView(ContactListView, contacts).mount(document.body);
 ```
