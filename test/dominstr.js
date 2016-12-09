@@ -56,6 +56,9 @@
 			"document.createElementNS": null,
 			"document.createTextNode": null,
 			"document.createComment": null,
+			"document.createDocumentFragment": null,
+
+			"DocumentFragment.prototype.insertBefore": null,		// appendChild
 
 			"Element.prototype.appendChild": null,
 			"Element.prototype.removeChild": null,

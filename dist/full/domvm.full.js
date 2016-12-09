@@ -2356,11 +2356,14 @@ function html(node, dynProps, unreg) {
 				buf += ">";
 
 			if (!voidTags[node.tag]) {
-				if (isArr(node.body)) {
-					node.body.forEach(function(n2) {
-						buf += html(n2, dynProps, unreg);
-					});
-				}
+				var html2 = function(n2) {
+					buf += html(n2, dynProps, unreg);
+				};
+
+				if (node.flatBody != null)
+					{ node.flatBody.forEach(html2); }
+				else if (isArr(node.body))
+					{ node.body.forEach(html2); }
 				else
 					{ buf += node.raw ? node.body : escHtml(node.body); }
 
@@ -2374,6 +2377,8 @@ function html(node, dynProps, unreg) {
 		case COMMENT:
 			out = "<!--" + escHtml(node.body) + "-->";
 			break;
+	//	case FRAGMENT:
+	//		break;
 	}
 
 	if ((unreg || !ENV_DOM) && node.vmid != null)

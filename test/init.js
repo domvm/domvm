@@ -3,6 +3,7 @@ QUnit.config.reorder = false;
 var	el = domvm.defineElement,
 	tx = domvm.defineText,
 	cm = domvm.defineComment,
+	fr = domvm.defineFragment,
 	vw = domvm.defineView,
 	iv = domvm.injectView,
 	ie = domvm.injectElement;
