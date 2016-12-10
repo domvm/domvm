@@ -7,20 +7,19 @@ A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 ---
 ### Intro
 
-domvm is a pure javascript, flexible view layer for your web applications - no more, no less.
-You can write a working app in the next 3 minutes or learn its entire API in 1 hour.
-It is tiny, fast, zero-dependency and tooling-free; just include and use.
-It will not hold your hand, nor will it force your hand.
+domvm is a flexible, pure-js view layer for web apps.
 
-Don't let a view layer dictate your architecture; be the boss.
+- Its entire API can be learned in under 1 hour.
+- It will happily fit into any existing codebase - whatever the structure.
+- It's suitable for building complex applications or simple widgets.
+- It's tiny, fast, zero-dependency and tooling-free; just include and use.
+
+But beware, domvm will not hold your hand, nor will it force your hand.
+It lets you - not the view layer - dictate your app architecture.
 
 ---
 
-[Features](/dist/README.md)
-
-[Demos](/demos)
-
-[Benchmarks](/demos/bench)
+[Features](/dist/README.md), [Demos](/demos), [Benchmarks](/demos/bench)
 
 ---
 ### Simple Incrementor
