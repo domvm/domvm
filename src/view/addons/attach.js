@@ -1,3 +1,5 @@
+import { FRAGMENT, VVIEW, VMODEL } from '../VTYPES';
+import { createView } from '../createView';
 import { isArr } from '../../utils';
 import { isStyleProp, isSplProp, isEvProp, isDynProp } from '../utils';
 import { patchEvent } from '../patchEvent';
@@ -36,9 +38,17 @@ export function attach(vnode, withEl) {
 	if (isArr(vnode.body)) {
 		var c = withEl.firstChild;
 		var i = 0;
-		var v = vnode.body[i++];
+		var v = vnode.body[i];
 		do {
+			if (v.type == VVIEW)
+				v = createView(v.view, v.model, v.key, v.opts)._redraw(vnode, i, false).node;
+			else if (v.type == VMODEL)
+				v = v.node || v._redraw(vnode, i, false).node;
+			else if (v.type == FRAGMENT) {
+				// TODO, use flatBody
+			}
+
 			attach(v, c);
-		} while ((c = c.nextSibling) && (v = vnode.body[i++]))
+		} while ((c = c.nextSibling) && (v = vnode.body[++i]))
 	}
 }
