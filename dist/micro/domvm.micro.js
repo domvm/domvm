@@ -1512,6 +1512,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vold = vm.node;
 
 	// no diff, just re-parent old
+	// TODO: allow returning vm.node as no-change indicator
 	if (isMounted && vm._diff != null && vm._diff()) {
 		// will doing this outside of preproc cause de-opt, add shallow opt to preproc?
 		if (vold && newParent) {

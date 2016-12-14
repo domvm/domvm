@@ -13,12 +13,17 @@
     "watch:micro": "node watch.js micro",
     "watch:mini": "node watch.js mini",
     "watch:small": "node watch.js small",
+    "watch:client": "node watch.js client",
+    "watch:server": "node watch.js server",
     "watch:full": "node watch.js full",
+
     "build:pico": "node build.js pico",
     "build:nano": "node build.js nano",
     "build:micro": "node build.js micro",
     "build:mini": "node build.js mini",
     "build:small": "node build.js small",
+    "build:client": "node build.js client",
+    "build:server": "node build.js server",
     "build:full": "node build.js full"
   },
   "repository": {

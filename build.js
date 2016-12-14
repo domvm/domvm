@@ -27,14 +27,19 @@ function getBuilds() {
 			descr: "view reactivity (reduce need for explicit `redraw()`)",
 		},
 		{
-			build: "small",
-			contents: "+ `router`<br>",
-			descr: "client-side router",
+			build: "client",
+			contents: "`mini`<br> + `router`<br> + `attach`<br>",
+			descr: "client-side router & isomorphic hydration",
+		},
+		{
+			build: "server",
+			contents: "`mini`<br> + `html`<br>",
+			descr: "SSR rendering",
 		},
 		{
 			build: "full",
-			contents: "+ `html`<br> + `attach`<br>",
-			descr: "isomorphism & SSR",
+			contents: "`mini`<br> + `router`<br> + `attach`<br> + `html`<br>",
+			descr: "everything (for tests/debug)",
 		},
 	];
 }
