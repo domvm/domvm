@@ -278,10 +278,20 @@ function redrawSync(newParent, newIdx, withDOM) {
 		if (vold) {
 			// root node replacement
 			if (vold.tag !== vnew.tag) {
+				// hack to prevent the replacement from triggering mount/unmount
+				vold.vmid = vnew.vmid = null;
+
 				var parEl = vold.el.parentNode;
 				var refEl = nextSib(vold.el);
 				removeChild(parEl, vold.el);
 				insertBefore(parEl, hydrate(vnew), refEl);
+
+				// another hack that allows any higher-level syncChildren to set
+				// reconciliation bounds using a live node
+				vold.el = vnew.el;
+
+				// restore
+				vnew.vmid = vm.id;
 			}
 			else
 				patch(vnew, vold, isRedrawRoot);
