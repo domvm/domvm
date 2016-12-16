@@ -28,8 +28,8 @@ function getBuilds() {
 		},
 		{
 			build: "client",
-			contents: "`mini`<br> + `router`<br> + `attach`<br>",
-			descr: "client-side router & isomorphic hydration",
+			contents: "`mini`<br> + `attach`<br>",
+			descr: "SSR hydration",
 		},
 		{
 			build: "server",
@@ -38,9 +38,9 @@ function getBuilds() {
 		},
 		{
 			build: "full",
-			contents: "`mini`<br> + `router`<br> + `attach`<br> + `html`<br>",
+			contents: "`mini`<br> + `attach`<br> + `html`<br>",
 			descr: "everything (for tests/debug)",
-		},
+		}
 	];
 }
 
