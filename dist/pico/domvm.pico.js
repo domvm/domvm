@@ -1240,7 +1240,7 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key == null ? model : key;
 
-	var out = view.call(vm.api, vm, model, key);			// , opts
+	var out = view.call(vm, vm, model, key);			// , opts
 
 	if (isFunc(out))
 		{ vm.render = out; }
@@ -1465,7 +1465,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		vm.refs = null;
 	}
 
-	var vnew = vm.render.call(vm.api, vm, vm.model, vm.key);		// vm.opts
+	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
 
 //	console.log(vm.key);
 
