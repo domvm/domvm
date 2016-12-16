@@ -212,10 +212,6 @@ function unmount(asSub) {
 	// edge bug: this could also be willRemove promise-delayed; should .then() or something to make sure hooks fire in order
 	removeChild(parEl, node.el);
 
-	views[vm.id] = null;
-
-//	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
-
 	if (!asSub)
 		drainDidHooks(vm);
 }

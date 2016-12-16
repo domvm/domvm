@@ -68,6 +68,8 @@ function _removeChild(parEl, el, immediate) {
 
 	parEl.removeChild(el);
 
+	vm && (views[vm.id] = null);
+
 	hooks && fireHooks("didRemove", node, null, immediate);
 
 	vm && vm.hooks && fireHooks("didUnmount", vm, null, immediate);

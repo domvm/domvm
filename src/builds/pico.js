@@ -1,4 +1,4 @@
-import { ViewModel } from "../view/ViewModel";
+import { ViewModel, views as _views } from "../view/ViewModel";
 import { VNode } from "../view/VNode";
 
 import { createView } from "../view/createView";
@@ -15,6 +15,8 @@ import { injectElement } from "../view/injectElement";
 import { FIXED_BODY, FAST_REMOVE, KEYED_LIST } from "../view/initElementNode";
 
 export default {
+	_views,
+
 	ViewModel,
 	VNode,
 
