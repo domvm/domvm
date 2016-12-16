@@ -501,6 +501,8 @@ function _removeChild(parEl, el, immediate) {
 
 	parEl.removeChild(el);
 
+	vm && (views[vm.id] = null);
+
 	hooks && fireHooks("didRemove", node, null, immediate);
 
 	vm && vm.hooks && fireHooks("didUnmount", vm, null, immediate);
@@ -1427,10 +1429,6 @@ function unmount(asSub) {
 	// edge bug: this could also be willRemove promise-delayed; should .then() or something to make sure hooks fire in order
 	removeChild(parEl, node.el);
 
-	views[vm.id] = null;
-
-//	vm.hooks && fireHooks("didUnmount", vm, null, immediate);
-
 	if (!asSub)
 		{ drainDidHooks(vm); }
 }
@@ -1497,10 +1495,20 @@ function redrawSync(newParent, newIdx, withDOM) {
 		if (vold) {
 			// root node replacement
 			if (vold.tag !== vnew.tag) {
+				// hack to prevent the replacement from triggering mount/unmount
+				vold.vmid = vnew.vmid = null;
+
 				var parEl = vold.el.parentNode;
 				var refEl = nextSib(vold.el);
 				removeChild(parEl, vold.el);
 				insertBefore(parEl, hydrate(vnew), refEl);
+
+				// another hack that allows any higher-level syncChildren to set
+				// reconciliation bounds using a live node
+				vold.el = vnew.el;
+
+				// restore
+				vnew.vmid = vm.id;
 			}
 			else
 				{ patch(vnew, vold, isRedrawRoot); }
@@ -1647,6 +1655,8 @@ function injectElement(el) {
 }
 
 var pico = {
+	_views: views,
+
 	ViewModel: ViewModel,
 	VNode: VNode,
 
