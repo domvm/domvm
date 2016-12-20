@@ -13,8 +13,6 @@ Object.defineProperties(Array.prototype, {
 });
 
 function error(msg, data) {
-//	console.error(msg, data);
-
 	return Promise.reject({
 		message: msg,
 		data: data,
