@@ -2,9 +2,7 @@ T.time("Setup");
 
 var el = domvm.defineElement,
 	tx = domvm.defineText,
-	vw = domvm.defineView,
-	curView,
-	rootVm;
+	vw = domvm.defineView;
 
 Object.defineProperties(Array.prototype, {
     flatMap: {
@@ -72,7 +70,7 @@ function ThreaditView(vm, deps) {
 				el("a", {href: "http://leeoniya.github.io/domvm/demos/threaditjs/"}, "ThreaditJS: domvm")
 			]),
 			el(".main", [
-				curView
+				V2
 			])
 		]);
 	};
@@ -90,7 +88,7 @@ function ThreadListView(vm) {
 		: el(".threads", data.threads.flatMap(thread => [
 			el("p", [
 				//	deps.router.href("thread", {id: thread.id})			r.goto("comment", [5]);  onclick: [onClick, thread.id]
-				el("a", {href: router.href("thread", {id: thread.id}), _raw: true}, T.trimTitle(thread.text))
+				el("a", {href: R.href('thread', { id: thread.id }), _raw: true}, T.trimTitle(thread.text))
 			]),
 			el("p.comment_count", thread.comment_count + " comment" + (thread.comment_count !== 1 ? "s" : "")),
 			el("hr"),
@@ -163,8 +161,8 @@ function ThreadBranchView(vm) {
 
 // todo: should optionally set route?
 function setView(view, data) {
-	curView = vw(view, data, false);
-	rootVm && rootVm.redraw();
+	V2 = vw(view, data, false);
+	V && V.redraw();
 }
 
 function loadEndpt(endPt, reqArgs, view, preData, procData) {
@@ -247,52 +245,46 @@ function CommentReplyView(vm, comment) {
 	}
 }
 
-// init app, init view, init router, refresh router()
 
-var router = domvm.createRouter(ThreaditRouter);
+var V = null,		// root view
+	V2 = null;		// sub-view (content)
 
-var hooks = {
-	willRedraw: vm => console.time("redraw vm #" + vm.id),
-	didRedraw: vm => console.timeEnd("redraw vm #" + vm.id),
-};
+var titlePre = "ThreaditJS: domvm | ";
 
-var deps = {app: null, router: router};
+// root router
+var R = createRouter({
+	prefix: "#",
+	willEnter: function(r) {
+		if (V != null) return;
 
-rootVm = domvm.createView(ThreaditView, deps, false, {hooks: hooks}).mount(document.body);
+		var hooks = {
+			willRedraw: vm => console.time("redraw vm #" + vm.id),
+			didRedraw: vm => console.timeEnd("redraw vm #" + vm.id),
+		};
 
-router.refresh();
-
-function ThreaditRouter(router) {
-	/*
-	router.config({
-		useHist: false,
-	//	root: "/domvm/demos/threaditjs",
-	});
-	*/
-
-	var titlePre = "ThreaditjS: domvm | ";
-
-	return {
-		threadList: {
+		V = domvm.createView(ThreaditView, null, false, {hooks: hooks}).mount(document.body);
+	},
+	routes: [
+		{
+			name: "threadList",
 			path: "/",
-			onenter: function(segs) {
+			title: titlePre + "Thread List",
+			onenter: function() {
 				T.timeEnd("Setup");
-				document.title = titlePre + "Thread List";
 				loadThreadList();
 			},
 		},
-		thread: {
+		{
+			name: "thread",
 			path: "/threads/:id",
-			vars: {id: /[a-zA-Z0-9]{5,7}/},
-			onenter: function(segs) {
+//			vars: {id: /[a-zA-Z0-9]{5,7}/},
+			title: s => titlePre + "Thread #" + s.id,
+			onenter: function(s) {
 				T.timeEnd("Setup");
-				document.title = titlePre + "Thread #" + segs.id;
-				loadComments(segs.id);
+				loadComments(s.id);
 			},
 		},
-//		_noMatch: {
-//			path: "/404",
-//		}
-	};
-}
+	]
+});
 
+R.boot(true);
