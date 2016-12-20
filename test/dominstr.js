@@ -14,41 +14,44 @@
 	var isIE = navigator.userAgent.indexOf("Trident/") !== -1;
 	var isMS = isEdge || isIE;
 
+	var getDescr = Object.getOwnPropertyDescriptor;
+	var defProp = Object.defineProperty;
+
 	var nodeProto = Node.prototype;
-	var textContent = Object.getOwnPropertyDescriptor(nodeProto, "textContent");
-	var nodeValue = Object.getOwnPropertyDescriptor(nodeProto, "nodeValue");
+	var textContent = getDescr(nodeProto, "textContent");
+	var nodeValue = getDescr(nodeProto, "nodeValue");
 
 	var htmlProto = HTMLElement.prototype;
-//	var innerText = Object.getOwnPropertyDescriptor(htmlProto, "innerText");
+	var innerText = getDescr(htmlProto, "innerText");
 
 	var elemProto	= Element.prototype;
-	var innerHTML	= Object.getOwnPropertyDescriptor(!isIE ? elemProto : htmlProto, "innerHTML");
-	var className	= Object.getOwnPropertyDescriptor(!isIE ? elemProto : htmlProto, "className");
-	var id			= Object.getOwnPropertyDescriptor(!isIE ? elemProto : htmlProto, "id");
+	var innerHTML	= getDescr(!isIE ? elemProto : htmlProto, "innerHTML");
+	var className	= getDescr(!isIE ? elemProto : htmlProto, "className");
+	var id			= getDescr(!isIE ? elemProto : htmlProto, "id");
 
 	var styleProto	= CSSStyleDeclaration.prototype;
 
-	var cssText		= Object.getOwnPropertyDescriptor(styleProto, "cssText");
+	var cssText		= getDescr(styleProto, "cssText");
 
 	var inpProto = HTMLInputElement.prototype;
 	var areaProto = HTMLTextAreaElement.prototype;
 	var selProto = HTMLSelectElement.prototype;
 	var optProto = HTMLOptionElement.prototype;
 
-	var inpChecked = Object.getOwnPropertyDescriptor(inpProto, "checked");
-	var inpVal = Object.getOwnPropertyDescriptor(inpProto, "value");
+	var inpChecked = getDescr(inpProto, "checked");
+	var inpVal = getDescr(inpProto, "value");
 
-	var areaVal = Object.getOwnPropertyDescriptor(areaProto, "value");
+	var areaVal = getDescr(areaProto, "value");
 
-	var selVal = Object.getOwnPropertyDescriptor(selProto, "value");
-	var selIndex = Object.getOwnPropertyDescriptor(selProto, "selectedIndex");
+	var selVal = getDescr(selProto, "value");
+	var selIndex = getDescr(selProto, "selectedIndex");
 
-	var optSel = Object.getOwnPropertyDescriptor(optProto, "selected");
+	var optSel = getDescr(optProto, "selected");
 
 	// onclick, onkey*, etc..
 
 //	var styleProto = CSSStyleDeclaration.prototype;
-//	var setProperty = Object.getOwnPropertyDescriptor(styleProto, "setProperty");
+//	var setProperty = getDescr(styleProto, "setProperty");
 
 	function DOMInstr(withTime) {
 		var origOps = {
@@ -64,6 +67,7 @@
 			"Element.prototype.removeChild": null,
 			"Element.prototype.insertBefore": null,
 			"Element.prototype.replaceChild": null,
+			"Element.prototype.remove": null,
 
 			"Element.prototype.setAttribute": null,
 			"Element.prototype.setAttributeNS": null,
@@ -105,7 +109,7 @@
 			}
 
 			counts.textContent = 0;
-			Object.defineProperty(nodeProto, "textContent", {
+			defProp(nodeProto, "textContent", {
 				set: function(s) {
 					counts.textContent++;
 					textContent.set.call(this, s);
@@ -113,23 +117,23 @@
 			});
 
 			counts.nodeValue = 0;
-			Object.defineProperty(nodeProto, "nodeValue", {
+			defProp(nodeProto, "nodeValue", {
 				set: function(s) {
 					counts.nodeValue++;
 					nodeValue.set.call(this, s);
 				},
 			});
-/*
+
 			counts.innerText = 0;
-			Object.defineProperty(htmlProto, "innerText", {
+			defProp(htmlProto, "innerText", {
 				set: function(s) {
 					counts.innerText++;
 					innerText.set.call(this, s);
 				},
 			});
-*/
+
 			counts.innerHTML = 0;
-			Object.defineProperty(!isIE ? elemProto : htmlProto, "innerHTML", {
+			defProp(!isIE ? elemProto : htmlProto, "innerHTML", {
 				set: function(s) {
 					counts.innerHTML++;
 					innerHTML.set.call(this, s);
@@ -137,7 +141,7 @@
 			});
 
 			counts.className = 0;
-			Object.defineProperty(!isIE ? elemProto : htmlProto, "className", {
+			defProp(!isIE ? elemProto : htmlProto, "className", {
 				set: function(s) {
 					counts.className++;
 					className.set.call(this, s);
@@ -145,7 +149,7 @@
 			});
 
 			counts.cssText = 0;
-			Object.defineProperty(styleProto, "cssText", {
+			defProp(styleProto, "cssText", {
 				set: function(s) {
 					counts.cssText++;
 					cssText.set.call(this, s);
@@ -153,7 +157,7 @@
 			});
 
 			counts.id = 0;
-			Object.defineProperty(!isIE ? elemProto : htmlProto, "id", {
+			defProp(!isIE ? elemProto : htmlProto, "id", {
 				set: function(s) {
 					counts.id++;
 					id.set.call(this, s);
@@ -161,7 +165,7 @@
 			});
 
 			counts.checked = 0;
-			Object.defineProperty(inpProto, "checked", {
+			defProp(inpProto, "checked", {
 				set: function(s) {
 					counts.checked++;
 					inpChecked.set.call(this, s);
@@ -169,19 +173,19 @@
 			});
 
 			counts.value = 0;
-			Object.defineProperty(inpProto, "value", {
+			defProp(inpProto, "value", {
 				set: function(s) {
 					counts.value++;
 					inpVal.set.call(this, s);
 				},
 			});
-			Object.defineProperty(areaProto, "value", {
+			defProp(areaProto, "value", {
 				set: function(s) {
 					counts.value++;
 					areaVal.set.call(this, s);
 				},
 			});
-			Object.defineProperty(selProto, "value", {
+			defProp(selProto, "value", {
 				set: function(s) {
 					counts.value++;
 					selVal.set.call(this, s);
@@ -189,7 +193,7 @@
 			});
 
 			counts.selectedIndex = 0;
-			Object.defineProperty(selProto, "selectedIndex", {
+			defProp(selProto, "selectedIndex", {
 				set: function(s) {
 					counts.selectedIndex++;
 					selIndex.set.call(this, s);
@@ -197,7 +201,7 @@
 			});
 
 			counts.selected = 0;
-			Object.defineProperty(optProto, "selected", {
+			defProp(optProto, "selected", {
 				set: function(s) {
 					counts.selected++;
 					optSel.set.call(this, s);
@@ -206,7 +210,7 @@
 
 			/*
 			counts.setProperty = 0;
-			Object.defineProperty(styleProto, "setProperty", {
+			defProp(styleProto, "setProperty", {
 				set: function(s) {
 					counts.setProperty++;
 					setProperty.set.call(this, s);
@@ -226,20 +230,20 @@
 				p.ctx[p.last] = origOps[opName];
 			}
 
-			Object.defineProperty(nodeProto, "textContent", textContent);
-			Object.defineProperty(nodeProto, "nodeValue", nodeValue);
-//			Object.defineProperty(htmlProto, "innerText", innerText);
-			Object.defineProperty(!isIE ? elemProto : htmlProto, "innerHTML", innerHTML);
-			Object.defineProperty(!isIE ? elemProto : htmlProto, "className", className);
-			Object.defineProperty(!isIE ? elemProto : htmlProto, "id", id);
-			Object.defineProperty(inpProto,  "checked", inpChecked);
-			Object.defineProperty(inpProto,  "value", inpVal);
-			Object.defineProperty(areaProto, "value", areaVal);
-			Object.defineProperty(selProto,  "value", selVal);
-			Object.defineProperty(selProto,  "selectedIndex", selIndex);
-			Object.defineProperty(optProto,  "selected", optSel);
-		//	Object.defineProperty(styleProto, "setProperty", setProperty);
-			Object.defineProperty(styleProto, "cssText", cssText);
+			defProp(nodeProto, "textContent", textContent);
+			defProp(nodeProto, "nodeValue", nodeValue);
+			defProp(htmlProto, "innerText", innerText);
+			defProp(!isIE ? elemProto : htmlProto, "innerHTML", innerHTML);
+			defProp(!isIE ? elemProto : htmlProto, "className", className);
+			defProp(!isIE ? elemProto : htmlProto, "id", id);
+			defProp(inpProto,  "checked", inpChecked);
+			defProp(inpProto,  "value", inpVal);
+			defProp(areaProto, "value", areaVal);
+			defProp(selProto,  "value", selVal);
+			defProp(selProto,  "selectedIndex", selIndex);
+			defProp(optProto,  "selected", optSel);
+		//	defProp(styleProto, "setProperty", setProperty);
+			defProp(styleProto, "cssText", cssText);
 
 			var out = {};
 
