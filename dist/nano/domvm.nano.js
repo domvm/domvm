@@ -284,12 +284,6 @@ function cssTag(raw) {
 	return cached;
 }
 
-var isStream = function() { return false };
-
-var streamVal = null;
-var subStream = null;
-var unsubStream = null;
-
 /* example flyd adapter:
 {
 	is:		s => flyd.isStream(s),

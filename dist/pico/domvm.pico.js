@@ -208,17 +208,7 @@ function isDynProp(tag, attr) {
 	return false;
 }
 
-var tagCache = {};
-
-var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
-
 //	function VTag() {}
-
-var isStream = function() { return false };
-
-var streamVal = null;
-var subStream = null;
-var unsubStream = null;
 
 /* example flyd adapter:
 {
