@@ -2,6 +2,7 @@ const rollup = require('rollup').rollup;
 const buble = require('rollup-plugin-buble');
 const fs = require('fs');
 const exec = require('child_process').exec;
+const execSync = require('child_process').execSync;
 const zlib = require('zlib');
 
 function getBuilds() {
@@ -77,15 +78,21 @@ function compile(buildName) {
 		plugins: [ buble() ],
 	})
 	.then(function(bundle) {
+		var pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+		var branches = execSync("git branch", {encoding: 'utf8'});
+		var branch = branches.match(/^\*.*$/gm)[0].substr(2);
+
+		var ver = branch.indexOf("-dev") != -1 ? branch : "v" + pkg.version;
+
 		bundle.write({
 			banner: [
 				"/**",
-				"* Copyright (c) 2016, Leon Sorokin",
+				"* Copyright (c) " + new Date().getFullYear() + ", Leon Sorokin",
 				"* All rights reserved. (MIT Licensed)",
 				"*",
 				"* domvm.full.js - DOM ViewModel",
 				"* A thin, fast, dependency-free vdom view layer",
-				"* @preserve https://github.com/leeoniya/domvm (2.x-dev, " + buildName + ")",
+				"* @preserve https://github.com/leeoniya/domvm (" + ver + ", " + buildName + ")",
 				"*/",
 				"",
 			].join("\n"),
