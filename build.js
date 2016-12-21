@@ -50,6 +50,11 @@ var args = process.argv.slice(2);
 if (args.length == 1)
 	compile(args[0]);
 
+function getCurBranch() {
+	var branches = execSync("git branch", {encoding: 'utf8'});
+	return branches.match(/^\*.*$/gm)[0].substr(2);
+}
+
 function compile(buildName) {
 	var start = +new Date;
 
@@ -79,8 +84,7 @@ function compile(buildName) {
 	})
 	.then(function(bundle) {
 		var pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
-		var branches = execSync("git branch", {encoding: 'utf8'});
-		var branch = branches.match(/^\*.*$/gm)[0].substr(2);
+		var branch = getCurBranch();
 
 		var ver = branch.indexOf("-dev") != -1 ? branch : "v" + pkg.version;
 
@@ -153,6 +157,8 @@ function padRight(str, padStr, len) {
 function buildDistTable() {
 	var builds = getBuilds();
 
+	var branch = getCurBranch();
+
 	var colWidths = {
 		build: 0,
 		"min / gz": 0,
@@ -167,7 +173,7 @@ function buildDistTable() {
 
 		var path = "dist/" + buildName + "/domvm." + buildName + ".min.js";
 
-		appendix.push("["+(i+1)+"]: https://github.com/leeoniya/domvm/blob/2.x-dev/" + path);
+		appendix.push("["+(i+1)+"]: https://github.com/leeoniya/domvm/blob/" + branch + "/" + path);
 
 		var minified = fs.readFileSync("./" + path, 'utf8');
 		var gzipped = zlib.gzipSync(minified, {level: 6});
