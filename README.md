@@ -22,97 +22,98 @@ It lets you - not the view layer - dictate your app architecture.
 [Features](/dist/README.md), [Demos](/demos), [Benchmarks](/demos/bench)
 
 ---
-### Simple Incrementor
+### A Simple Stepper
 
-**Try it:** https://jsfiddle.net/n0dfxp4o/
-
-```js
-var el = domvm.defineElement;			// Element VNode creator
-
-function CounterView(vm) {				// view closure (called once during init)
-	var count = 0;
-
-	function add(num) {					// click handler
-		count += num;
-		vm.redraw();
-	}
-
-	return function() {					// template renderer (called on each redraw)
-		return el("#counter", [
-			el("button", {onclick: [add, -1]}, "-"),
-			el("strong", {style: "padding: 0 10px;"}, count),
-			el("button", {onclick: [add, +1]}, "+"),
-		]);
-	};
-}
-
-var vm = domvm.createView(CounterView);	// create ViewModel
-
-vm.mount(document.body);				// mount into document
-```
-
-### Want decoupled view & app code?
+**Try it:** https://jsfiddle.net/csLa6bew/
 
 ```js
-var el = domvm.defineElement;
+var el = domvm.defineElement;						// Element VNode creator
 
-function CounterView(vm, counter) {
+function StepperView(vm, stepper) {					// view closure (called once during init)
 	function add(num) {
-		counter.add(num);
+		stepper.value += num;
 		vm.redraw();
 	}
 
-	return function() {
-		return el("#counter", [
+	function set(e) {
+		stepper.value = +e.target.value;
+	}
+
+	return function() {								// template renderer (called on each redraw)
+		return el("#stepper", [
 			el("button", {onclick: [add, -1]}, "-"),
-			el("strong", {style: "padding: 0 10px;"}, counter.count),
+			el("input[type=number]", {value: stepper.value, oninput: set}),
 			el("button", {onclick: [add, +1]}, "+"),
 		]);
 	};
 }
 
-function Counter() {
-	this.count = 0;
+var stepper = {										// some external model/data/state
+	value: 1
+};
 
-	this.add = function(num) {
-		this.count += num;
-	};
-}
+var vm = domvm.createView(StepperView, stepper);	// create ViewModel, passing model
 
-var counter = new Counter();
-
-var vm = domvm.createView(CounterView, counter).mount(document.body);
+vm.mount(document.body);							// mount into document
 ```
 
-### Prefer view-aware models instead?
+The above example is simple and decoupled. It provides a UI to modify our stepper object which itself needs no awareness of any visual representation.
+But what if we want to modify the stepper using an API and still have the UI reflect these changes. For this we need to add some coupling.
+One way to accomplish this is to beef up our stepper with an API and give it awareness of its view(s) which it will redraw.
+The end result is a lightly-coupled domain model that:
+
+1. Holds state, as needed.
+2. Exposes an API that can be used programmatically and is UI-consistent.
+3. Exposes view(s) which utilize the API and can be composed within other views.
+
+It is *this* fully capable, view-augmented domain model that domvm's author considers a truely reusable "component".
+
+**Try it:** https://jsfiddle.net/qgyu1g36/
 
 ```js
 var el = domvm.defineElement;
 
-function CounterView(vm, counter) {
-	var add = counter.add.bind(counter);
+function StepperView(vm, stepper) {
+	var add = stepper.add.bind(stepper);
+
+	function set(e) {
+		stepper.set(e.target.value);
+	}
 
 	return function() {
-		return el("#counter", [
+		return el("#stepper", [
 			el("button", {onclick: [add, -1]}, "-"),
-			el("strong", {style: "padding: 0 10px;"}, counter.count),
+			el("input[type=number]", {value: stepper.value, oninput: set}),
 			el("button", {onclick: [add, +1]}, "+"),
 		]);
 	};
 }
 
-function Counter() {
-	this.count = 0;
+function Stepper() {
+	this.value = 1;
 
 	this.add = function(num) {
-		this.count += num;
+		this.value += num;
 		this.view.redraw();
 	};
 
-	this.view = domvm.createView(CounterView, this);
+	this.set = function(num) {
+		this.value = +num;
+		this.view.redraw();
+	};
+
+	this.view = domvm.createView(StepperView, this);
 }
 
-var counter = new Counter();
+var stepper = new Stepper();
 
-counter.view.mount(document.body);
+stepper.view.mount(document.body);
+
+// now let's use the stepper's API to increment
+var i = 0;
+var it = setInterval(function() {
+	stepper.add(1);
+
+	if (i++ == 20) clearInterval(it);
+}, 250);
 ```
