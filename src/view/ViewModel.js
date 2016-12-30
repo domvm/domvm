@@ -1,7 +1,7 @@
 import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
-import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, raft } from "../utils";
+import { isArr, isPlainObj, isFunc, isProm, isClass, cmpArr, cmpObj, assignObj, curry, raft } from "../utils";
 import { repaint, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib } from "./dom";
 import { didQueue, fireHooks } from "./hooks";
@@ -15,19 +15,29 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key == null ? model : key;
 
-	var out = view.call(vm, vm, model, key);			// , opts
+	if (!isClass(view)) {
+		var out = view.call(vm, vm, model, key);			// , opts
 
-	if (isFunc(out))
-		vm.render = out;
-	else {
-		if (out.diff) {
-			vm.diff(out.diff);
-			delete out.diff;
+		if (isFunc(out))
+			vm.render = out;
+		else {
+			if (out.diff) {
+				vm.diff(out.diff);
+				delete out.diff;
+			}
+
+			assignObj(vm, out);
 		}
-
-		assignObj(vm, out);
 	}
+	else {
+	//	handle .diff re-definiton
+		var vdiff = vm.diff;
 
+		if (vdiff != null && vdiff != ViewModelProto.diff) {
+			vm.diff = ViewModelProto.diff.bind(vm);
+			vm.diff(vdiff);
+		}
+	}
 	// remove this?
 	if (opts) {
 		vm.opts = opts;

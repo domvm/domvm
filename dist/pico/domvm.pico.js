@@ -175,6 +175,13 @@ function binaryKeySearch(list, item) {
     return -1;
 }
 
+function isClass(fn) {
+	if (fn._isClass == null)
+		{ fn._isClass = !Object.getOwnPropertyDescriptor(fn, 'prototype').writable; }
+
+	return fn._isClass;
+}
+
 function isEvProp(name) {
 	return startsWith(name, "on");
 }
@@ -649,6 +656,8 @@ function createView(view, model, key, opts) {
 		opts	= view.opts;
 		view	= view.view;
 	}
+	else if (isClass(view))
+		{ return new view(model, key, opts); }
 
 	return new ViewModel(view, model, key, opts);
 }
@@ -1211,19 +1220,29 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key == null ? model : key;
 
-	var out = view.call(vm, vm, model, key);			// , opts
+	if (!isClass(view)) {
+		var out = view.call(vm, vm, model, key);			// , opts
 
-	if (isFunc(out))
-		{ vm.render = out; }
-	else {
-		if (out.diff) {
-			vm.diff(out.diff);
-			delete out.diff;
+		if (isFunc(out))
+			{ vm.render = out; }
+		else {
+			if (out.diff) {
+				vm.diff(out.diff);
+				delete out.diff;
+			}
+
+			assignObj(vm, out);
 		}
-
-		assignObj(vm, out);
 	}
+	else {
+	//	handle .diff re-definiton
+		var vdiff = vm.diff;
 
+		if (vdiff != null && vdiff != ViewModelProto.diff) {
+			vm.diff = ViewModelProto.diff.bind(vm);
+			vm.diff(vdiff);
+		}
+	}
 	// remove this?
 	if (opts) {
 		vm.opts = opts;

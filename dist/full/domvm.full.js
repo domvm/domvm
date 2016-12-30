@@ -197,6 +197,13 @@ function binaryKeySearch(list, item) {
     return -1;
 }
 
+function isClass(fn) {
+	if (fn._isClass == null)
+		{ fn._isClass = !Object.getOwnPropertyDescriptor(fn, 'prototype').writable; }
+
+	return fn._isClass;
+}
+
 function isEvProp(name) {
 	return startsWith(name, "on");
 }
@@ -750,6 +757,8 @@ function createView(view, model, key, opts) {
 		opts	= view.opts;
 		view	= view.view;
 	}
+	else if (isClass(view))
+		{ return new view(model, key, opts); }
 
 	return new ViewModel(view, model, key, opts);
 }
@@ -1312,19 +1321,29 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key == null ? model : key;
 
-	var out = view.call(vm, vm, model, key);			// , opts
+	if (!isClass(view)) {
+		var out = view.call(vm, vm, model, key);			// , opts
 
-	if (isFunc(out))
-		{ vm.render = out; }
-	else {
-		if (out.diff) {
-			vm.diff(out.diff);
-			delete out.diff;
+		if (isFunc(out))
+			{ vm.render = out; }
+		else {
+			if (out.diff) {
+				vm.diff(out.diff);
+				delete out.diff;
+			}
+
+			assignObj(vm, out);
 		}
-
-		assignObj(vm, out);
 	}
+	else {
+	//	handle .diff re-definiton
+		var vdiff = vm.diff;
 
+		if (vdiff != null && vdiff != ViewModelProto.diff) {
+			vm.diff = ViewModelProto.diff.bind(vm);
+			vm.diff(vdiff);
+		}
+	}
 	// remove this?
 	if (opts) {
 		vm.opts = opts;
@@ -1715,16 +1734,16 @@ ViewModelProto.diff = function(cfg) {
 		var thenFn = cfg.then;
 	}
 
-	var oldVals = getVals(vm, vm.model, vm.key, vm.opts);
+	var oldVals = getVals.call(vm, vm, vm.model, vm.key, vm.opts);
 	var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
 
 	vm._diff = function() {
-		var newVals = getVals(vm, vm.model, vm.key, vm.opts);
+		var newVals = getVals.call(vm, vm, vm.model, vm.key, vm.opts);
 		var isSame = cmpFn(oldVals, newVals);
 
 		if (!isSame) {
 			// thenFn must return false to prevent redraw
-			if (thenFn != null && thenFn(vm, oldVals, newVals) === false)
+			if (thenFn != null && thenFn.call(vm, vm, oldVals, newVals) === false)
 				{ isSame = true; }
 
 			oldVals = newVals;
