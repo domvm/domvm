@@ -1393,7 +1393,15 @@ function mount(el, isRoot) {		// , asSub, refEl
 			{ el.removeChild(el.firstChild); }
 
 		vm._redraw(null, null, false);
-		hydrate(vm.node, el);
+
+		// if placeholder node doesnt match root tag
+		if (el.nodeName.toLowerCase() != vm.node.tag) {
+			hydrate(vm.node);
+			insertBefore(el.parentNode, vm.node.el, el);
+			el.parentNode.removeChild(el);
+		}
+		else
+			{ hydrate(vm.node, el); }
 	}
 	else {
 		vm._redraw(null, null);
