@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2016, Leon Sorokin
+* Copyright (c) 2017, Leon Sorokin
 * All rights reserved. (MIT Licensed)
 *
 * domvm.full.js - DOM ViewModel
@@ -1462,20 +1462,28 @@ function mount(el, isRoot) {		// , asSub, refEl
 		while (el.firstChild)
 			{ el.removeChild(el.firstChild); }
 
-		this._redraw(null, null, false);
-		hydrate(this.node, el);
+		vm._redraw(null, null, false);
+
+		// if placeholder node doesnt match root tag
+		if (el.nodeName.toLowerCase() != vm.node.tag) {
+			hydrate(vm.node);
+			insertBefore(el.parentNode, vm.node.el, el);
+			el.parentNode.removeChild(el);
+		}
+		else
+			{ hydrate(vm.node, el); }
 	}
 	else {
-		this._redraw(null, null);
+		vm._redraw(null, null);
 
 		if (el)
-			{ insertBefore(el, this.node.el); }			// el.appendChild(this.node.el);
+			{ insertBefore(el, vm.node.el); }			// el.appendChild(vm.node.el);
 	}
 
 	if (el)
-		{ drainDidHooks(this); }
+		{ drainDidHooks(vm); }
 
-	return this;
+	return vm;
 }
 
 // asSub = true means this was called from a sub-routine, so don't drain did* hook queue

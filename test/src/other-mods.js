@@ -23,6 +23,37 @@ QUnit.module("Other mods");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 5, insertBefore: 5, textContent: 3 });
 	});
 
+	QUnit.test('mount(el, true), root span -> a', function(assert) {
+		var wrap = document.createElement("div");
+
+		var sibA = document.createElement("em");
+		sibA.textContent = "foo";
+
+		var place = document.createElement("span");
+		place.className = "placeholder";
+		place.textContent = "{moo}";
+
+		var sibB = document.createElement("strong");
+		sibB.textContent = "bar";
+
+		wrap.appendChild(sibA);
+		wrap.appendChild(place);
+		wrap.appendChild(sibB);
+
+		testyDiv.appendChild(wrap);
+
+		tpl = el("a", {href: "#"}, "bar");
+		var expcHtml = '<a href="#">bar</a>';
+
+		instr.start();
+		var vm = domvm.createView(View).mount(place, true);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 2, createElement: 1, insertBefore: 1, setAttribute: 1, textContent: 1 });
+
+		assert.equal(wrap.outerHTML, '<div><em>foo</em><a href=\"#\">bar</a><strong>bar</strong></div>', 'Mounted into correct sibling position');
+	});
+
 	QUnit.test('(root) span -> a', function(assert) {
 		tpl = el("span", "foo");
 		var expcHtml = '<span>foo</span>';
