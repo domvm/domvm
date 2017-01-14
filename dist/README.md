@@ -8,10 +8,10 @@
 | [server][6] | 15.7k / 6.2k | `mini`<br> + `html`<br>                                                                                                                                                | SSR rendering                                                                                                                                                                                                    |
 | [full][7]   | 16.1k / 6.4k | `mini`<br> + `attach`<br> + `html`<br>                                                                                                                                 | everything (for tests/debug)                                                                                                                                                                                     |
 
-[1]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/pico/domvm.pico.min.js
-[2]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/nano/domvm.nano.min.js
-[3]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/micro/domvm.micro.min.js
-[4]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/mini/domvm.mini.min.js
-[5]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/client/domvm.client.min.js
-[6]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/server/domvm.server.min.js
-[7]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/full/domvm.full.min.js
+[1]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/pico/domvm.pico.min.js
+[2]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/nano/domvm.nano.min.js
+[3]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/micro/domvm.micro.min.js
+[4]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/mini/domvm.mini.min.js
+[5]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/client/domvm.client.min.js
+[6]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/server/domvm.server.min.js
+[7]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/full/domvm.full.min.js
