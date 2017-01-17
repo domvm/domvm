@@ -18,6 +18,8 @@ export function setAttr(node, name, val, asProp) {
 
 	if (val == null)
 		remAttr(node, name);		//, asProp?  // will also removeAttr of style: null
+	else if (node.ns != null)
+		el.setAttribute(name, val);
 	else if (name == "class")
 		el.className = val;
 	else if (name == "id" || typeof val == "boolean" || asProp)

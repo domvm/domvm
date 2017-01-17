@@ -10,7 +10,9 @@ export function closestVNode(el) {
 	return el._node;
 }
 
-export function createElement(tag) {
+export function createElement(tag, ns) {
+	if (ns != null)
+		return doc.createElementNS(ns, tag);
 	return doc.createElement(tag);
 }
 

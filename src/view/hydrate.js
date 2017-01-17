@@ -6,6 +6,7 @@ import { setAttr } from './patchAttrs';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
 import { createView } from './createView';
+import { XML_NS, XLINK_NS } from './defineSvgElement';
 import { createElement, createTextNode, createComment, createFragment, insertBefore } from './dom';
 
 export function flattenBody(body, acc, flatParent) {
@@ -81,7 +82,10 @@ export function hydrateBody(vnode) {
 export function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
 		if (vnode.type == ELEMENT) {
-			vnode.el = withEl || createElement(vnode.tag);
+			vnode.el = withEl || createElement(vnode.tag, vnode.ns);
+
+			if (vnode.tag == "svg")
+				vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS);
 
 			if (vnode.attrs != null)
 				patchAttrs2(vnode);

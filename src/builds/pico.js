@@ -4,6 +4,7 @@ import { VNode } from "../view/VNode";
 import { createView } from "../view/createView";
 
 import { defineElement } from "../view/defineElement";
+import { defineSvgElement } from "../view/defineSvgElement";
 import { defineText } from "../view/defineText";
 import { defineComment } from "../view/defineComment";
 import { defineFragment } from "../view/defineFragment";
@@ -25,6 +26,7 @@ export default {
 	createView,
 
 	defineElement,
+	defineSvgElement,
 	defineText,
 	defineComment,
 	defineFragment,

@@ -415,6 +415,7 @@ var VNodeProto = VNode.prototype = {
 	data:	null,
 	hooks:	null,
 	raw:	false,
+	ns:		null,
 
 	el:		null,
 
@@ -535,7 +536,9 @@ function closestVNode(el) {
 	return el._node;
 }
 
-function createElement(tag) {
+function createElement(tag, ns) {
+	if (ns != null)
+		{ return doc.createElementNS(ns, tag); }
 	return doc.createElement(tag);
 }
 
@@ -711,6 +714,8 @@ function setAttr(node, name, val, asProp) {
 
 	if (val == null)
 		{ remAttr(node, name); }		//, asProp?  // will also removeAttr of style: null
+	else if (node.ns != null)
+		{ el.setAttribute(name, val); }
 	else if (name == "class")
 		{ el.className = val; }
 	else if (name == "id" || typeof val == "boolean" || asProp)
@@ -763,6 +768,33 @@ function createView(view, model, key, opts) {
 		{ return new view(model, key, opts); }
 
 	return new ViewModel(view, model, key, opts);
+}
+
+function defineElement(tag, arg1, arg2, flags) {
+	var attrs, body;
+
+	if (arg2 == null) {
+		if (isPlainObj(arg1))
+			{ attrs = arg1; }
+		else
+			{ body = arg1; }
+	}
+	else {
+		attrs = arg1;
+		body = arg2;
+	}
+
+	return initElementNode(tag, attrs, body, flags);
+}
+
+var XML_NS = "http://www.w3.org/2000/xmlns/";
+var SVG_NS = "http://www.w3.org/2000/svg";
+var XLINK_NS = "http://www.w3.org/1999/xlink";
+
+function defineSvgElement(tag, arg1, arg2, flags) {
+	var n = defineElement(tag, arg1, arg2, flags);
+	n.ns = SVG_NS;
+	return n;
 }
 
 function flattenBody(body, acc, flatParent) {
@@ -838,7 +870,10 @@ function hydrateBody(vnode) {
 function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
 		if (vnode.type == ELEMENT) {
-			vnode.el = withEl || createElement(vnode.tag);
+			vnode.el = withEl || createElement(vnode.tag, vnode.ns);
+
+			if (vnode.tag == "svg")
+				{ vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS); }
 
 			if (vnode.attrs != null)
 				{ patchAttrs2(vnode); }
@@ -1593,23 +1628,6 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 */
 }
 
-function defineElement(tag, arg1, arg2, flags) {
-	var attrs, body;
-
-	if (arg2 == null) {
-		if (isPlainObj(arg1))
-			{ attrs = arg1; }
-		else
-			{ body = arg1; }
-	}
-	else {
-		attrs = arg1;
-		body = arg2;
-	}
-
-	return initElementNode(tag, attrs, body, flags);
-}
-
 function defineComment(body) {
 	var node = new VNode;
 	node.type = COMMENT;
@@ -1706,6 +1724,7 @@ var nano = {
 	createView: createView,
 
 	defineElement: defineElement,
+	defineSvgElement: defineSvgElement,
 	defineText: defineText,
 	defineComment: defineComment,
 	defineFragment: defineFragment,

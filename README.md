@@ -105,6 +105,7 @@ For convenience, we'll alias each factory function with a short variable:
 var el = domvm.defineElement,
     tx = domvm.defineText,
     cm = domvm.defineComment,
+    sv = domvm.defineSvgElement,
     vw = domvm.defineView,
     iv = domvm.injectView,
     ie = domvm.injectElement;
@@ -113,7 +114,6 @@ var el = domvm.defineElement,
 <!-- TODO
 domvm.defineElementSpread
 domvm.defineFragment
-domvm.defineSvgElement
 -->
 
 Using `defineText` isn't strictly necessary since all encountered numbers and strings will be automatically converted into `defineText` vnodes for you.
