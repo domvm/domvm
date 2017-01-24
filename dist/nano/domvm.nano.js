@@ -1323,8 +1323,8 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 		if (opts.hooks)
 			{ vm.hook(opts.hooks); }
-	//	if (opts.diff)
-	//		this.diff(opts.diff);
+		if (opts.diff)
+			{ vm.diff(opts.diff); }
 	}
 
 	// these must be created here since debounced per view
