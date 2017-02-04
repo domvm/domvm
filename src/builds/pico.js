@@ -3,6 +3,8 @@ import { VNode } from "../view/VNode";
 
 import { createView } from "../view/createView";
 
+import { h } from "../view/h";
+
 import { defineElement } from "../view/defineElement";
 import { defineText } from "../view/defineText";
 import { defineComment } from "../view/defineComment";
@@ -21,6 +23,8 @@ export default {
 	VNode,
 
 	createView,
+
+	h,
 
 	defineElement,
 	defineText,
