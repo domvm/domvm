@@ -14,12 +14,12 @@ function getBuilds() {
 		},
 		{
 			build: "nano",
-			contents: "+ `cssTag`<br>+ `autoPx`<br>+ `spreadBody`<br>+ `diff`<br>+ `patch`<br>",
+			contents: "+ `h`<br>+ `selectorTag`<br>+ `autoPx`<br>+ `defineElementSpread`<br>+ `diff`<br>+ `patch`<br>",
 			descr: "tpl conveniences:<br>`\"input[type=checkbox].some-class\"`<br>`{style: {width: 20}}`<br>`el(\"div\", el(\"span\", \"foo\")...)`<br><br>optims:<br>`vnode.patch({class: ..., style...})`<br>`vm.diff({vals:...then:...})`",
 		},
 		{
 			build: "micro",
-			contents: "+ `emit`<br> + `vmBody`<br>",
+			contents: "+ `emit`<br> + `body`<br>",
 			descr: "subview-to-parent events:<br>`vm.emit('myNotif', arg1, arg2...)`<br><br>get child views:<br>`vm.body()` ",
 		},
 		{

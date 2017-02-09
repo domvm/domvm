@@ -60,9 +60,7 @@ function isProm(val) {
 	return typeof val === "object" && isFunc(val.then);
 }
 
-function isElem(val) {
-	return ENV_DOM && val instanceof HTMLElement;
-}
+
 
 function assignObj(targ) {
 	var args = arguments;
@@ -1567,26 +1565,11 @@ function defineElement(tag, arg1, arg2, flags) {
 	return initElementNode(tag, attrs, body, flags);
 }
 
-// placeholder for declared views
-function VView(view, model, key, opts) {
-	this.view = view;
-	this.model = model;
-	this.key = key == null ? model : key;	// same logic as ViewModel
-	this.opts = opts;
-}
-
-VView.prototype = {
-	constructor: VView,
-
-	type: VVIEW,
-	view: null,
-	model: null,
-	key: null,
-	opts: null,
-};
-
-function defineView(view, model, key, opts) {
-	return new VView(view, model, key, opts);
+function defineComment(body) {
+	var node = new VNode;
+	node.type = COMMENT;
+	node.body = body;
+	return node;
 }
 
 // TODO: defineFragmentSpread?
@@ -1619,11 +1602,26 @@ function defineFragment(arg0, arg1, arg2, flags) {
 	return node;
 }
 
-function injectElement(el) {
-	var node = new VNode;
-	node.type = ELEMENT;
-	node.el = node.key = el;
-	return node;
+// placeholder for declared views
+function VView(view, model, key, opts) {
+	this.view = view;
+	this.model = model;
+	this.key = key == null ? model : key;	// same logic as ViewModel
+	this.opts = opts;
+}
+
+VView.prototype = {
+	constructor: VView,
+
+	type: VVIEW,
+	view: null,
+	model: null,
+	key: null,
+	opts: null,
+};
+
+function defineView(view, model, key, opts) {
+	return new VView(view, model, key, opts);
 }
 
 // placeholder for injected ViewModels
@@ -1647,25 +1645,10 @@ function injectView(vm) {
 	return new VModel(vm);
 }
 
-function noop() {}
-
-// does not handle defineComment, defineText, defineSVG (ambiguous); use plain text vals or explicit factories in templates.
-// does not handle defineElementSpread (not available in all builds); use exlicit factories in templates.
-function h(a) {
-	return (
-		isVal(a)				? defineElement		:
-		isFunc(a)				? defineView		:	// todo: es6 class constructor
-		isElem(a)				? injectElement		:
-		a instanceof ViewModel	? injectView		:
-		isArr(a)				? defineFragment	:
-		noop
-	).apply(null, arguments);
-}
-
-function defineComment(body) {
+function injectElement(el) {
 	var node = new VNode;
-	node.type = COMMENT;
-	node.body = body;
+	node.type = ELEMENT;
+	node.el = node.key = el;
 	return node;
 }
 
@@ -1676,8 +1659,6 @@ var pico = {
 	VNode: VNode,
 
 	createView: createView,
-
-	h: h,
 
 	defineElement: defineElement,
 	defineText: defineText,
