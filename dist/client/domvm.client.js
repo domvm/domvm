@@ -60,7 +60,9 @@ function isProm(val) {
 	return typeof val === "object" && isFunc(val.then);
 }
 
-
+function isElem(val) {
+	return ENV_DOM && val instanceof HTMLElement;
+}
 
 function assignObj(targ) {
 	var args = arguments;
@@ -1352,8 +1354,8 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 		if (opts.hooks)
 			{ vm.hook(opts.hooks); }
-	//	if (opts.diff)
-	//		this.diff(opts.diff);
+		if (opts.diff)
+			{ vm.diff(opts.diff); }
 	}
 
 	// these must be created here since debounced per view
@@ -1546,6 +1548,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		// will doing this outside of preproc cause de-opt, add shallow opt to preproc?
 		if (vold && newParent) {
 			newParent.body[newIdx] = vold;
+			vold.idx = newIdx;
 			vold.parent = newParent;
 		}
 		return vm;
@@ -1847,6 +1850,21 @@ function patch$1(o, n) {
 	}
 }
 
+function noop() {}
+
+// does not handle defineComment, defineText, defineSVG (ambiguous); use plain text vals or explicit factories in templates.
+// does not handle defineElementSpread (not available in all builds); use exlicit factories in templates.
+function h(a) {
+	return (
+		isVal(a)				? defineElement		:
+		isFunc(a)				? defineView		:	// todo: es6 class constructor
+		isElem(a)				? injectElement		:
+		a instanceof ViewModel	? injectView		:
+		isArr(a)				? defineFragment	:
+		noop
+	).apply(null, arguments);
+}
+
 function defineElementSpread(tag) {
 	var args = arguments;
 	var len = args.length;
@@ -1870,6 +1888,8 @@ function defineElementSpread(tag) {
 }
 
 // #destub: cssTag,autoPx
+
+nano.h = h;
 
 nano.defineElementSpread = defineElementSpread;
 

@@ -1253,8 +1253,8 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 		if (opts.hooks)
 			{ vm.hook(opts.hooks); }
-	//	if (opts.diff)
-	//		this.diff(opts.diff);
+		if (opts.diff)
+			{ vm.diff(opts.diff); }
 	}
 
 	// these must be created here since debounced per view
@@ -1447,6 +1447,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		// will doing this outside of preproc cause de-opt, add shallow opt to preproc?
 		if (vold && newParent) {
 			newParent.body[newIdx] = vold;
+			vold.idx = newIdx;
 			vold.parent = newParent;
 		}
 		return vm;
