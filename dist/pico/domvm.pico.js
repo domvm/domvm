@@ -1447,6 +1447,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		// will doing this outside of preproc cause de-opt, add shallow opt to preproc?
 		if (vold && newParent) {
 			newParent.body[newIdx] = vold;
+			vold.idx = newIdx;
 			vold.parent = newParent;
 		}
 		return vm;
