@@ -581,9 +581,6 @@ function _removeChild(parEl, el, immediate) {
 
 	var vm = node.vmid != null ? node.vm() : null;
 
-//	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
-//		console.log("clean exposed ref", node.ref);
-
 	if (!(node.flags & FAST_REMOVE) && isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)
@@ -1250,28 +1247,18 @@ function defineText(body) {
 }
 
 function setRef(vm, name, node) {
-	var path = ["refs"].concat(name.replace("^", "").split("."));
-
+	var path = ["refs"].concat(name.split("."));
 	deepSet(vm, path, node);
-
-	// bubble
-	var par;
-	if (name[0] == "^" && (par = vm.parent()))
-		{ setRef(par, name, node); }
 }
 
 // vnew, vold
-function preProc(vnew, parent, idx, ownVmid, extKey) {
+function preProc(vnew, parent, idx, ownVmid) {
 	if (vnew.type == VMODEL || vnew.type == VVIEW)
 		{ return; }
 
 	vnew.parent = parent;
 	vnew.idx = idx;
 	vnew.vmid = ownVmid;
-
-	// set external ref eg vw(MyView, data, "^moo")
-	if (extKey != null && typeof extKey == "string" && extKey[0] == "^")
-		{ vnew.ref = extKey; }
 
 	if (vnew.ref != null)
 		{ setRef(vnew.vm(), vnew.ref, vnew); }
@@ -1452,40 +1439,6 @@ function isEmptyObj(o) {
 }
 */
 
-/*
-export function cleanExposedRefs(orefs, nrefs) {
-	for (var key in orefs) {
-		// ref not present in new refs
-		if (nrefs == null || !(key in nrefs)) {
-			var val = orefs[key];
-
-
-//			var path = [];
-//			// dig nown if val i a namespace
-//			while (isPlainObj(val) && val.type == null) {
-//				path.push(val);
-//				val =
-//			}
-
-
-			if (isPlainObj(val)) {
-				// is a vnode
-				if (val.type) {
-					// is an exposed ref
-					if (val.ref[0] == "^") {
-						console.log("clean parents of absent exposed ref");
-					}
-				}
-				// is namespace, dig down
-				else {
-
-				}
-			}
-		}
-	}
-}
-*/
-
 function mount(el, isRoot) {		// , asSub, refEl
 	var vm = this;
 
@@ -1557,7 +1510,6 @@ function redrawSync(newParent, newIdx, withDOM) {
 	isMounted && vm.hooks && fireHooks("willRedraw", vm);
 
 	// todo: test result of willRedraw hooks before clearing refs
-	// todo: also clean up any refs exposed by this view from parents, should tag with src_vm during setting
 	if (vm.refs) {
 	//	var orefs = vm.refs;
 		vm.refs = null;
@@ -1574,22 +1526,16 @@ function redrawSync(newParent, newIdx, withDOM) {
 //	vnew.vmid = vm.id;
 
 	if (newParent) {
-		preProc(vnew, newParent, newIdx, vm.id, vm.key);
+		preProc(vnew, newParent, newIdx, vm.id);
 		newParent.body[newIdx] = vnew;
 		// todo: bubble refs, etc?
 	}
 	else if (vold && vold.parent) {
-		preProc(vnew, vold.parent, vold.idx, vm.id, vm.key);
+		preProc(vnew, vold.parent, vold.idx, vm.id);
 		vold.parent.body[vold.idx] = vnew;
 	}
 	else
-		{ preProc(vnew, null, null, vm.id, vm.key); }
-
-	// after preproc re-populates new refs find any exposed refs in old
-	// that are not also in new and unset from all parents
-	// only do for redraw roots since refs are reset at all redraw levels
-//	if (isRedrawRoot && orefs)
-//		cleanExposedRefs(orefs, vnew.refs);
+		{ preProc(vnew, null, null, vm.id); }
 
 	if (withDOM !== false) {
 		if (vold) {
@@ -1825,7 +1771,7 @@ function patch$1(o, n) {
 		if (o.vmid != null)
 			{ return; }
 
-		preProc(n, o.parent, o.idx, null, null);
+		preProc(n, o.parent, o.idx, null);
 		o.parent.body[o.idx] = n;
 //		o.parent = o.el = o.body = null;		// helps gc?
 		patch(n, o);

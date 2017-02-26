@@ -4,28 +4,18 @@ import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
 import { isStream, hookStream } from './addons/stubs';
 
 function setRef(vm, name, node) {
-	var path = ["refs"].concat(name.replace("^", "").split("."));
-
+	var path = ["refs"].concat(name.split("."));
 	deepSet(vm, path, node);
-
-	// bubble
-	var par;
-	if (name[0] == "^" && (par = vm.parent()))
-		setRef(par, name, node);
 }
 
 // vnew, vold
-export function preProc(vnew, parent, idx, ownVmid, extKey) {
+export function preProc(vnew, parent, idx, ownVmid) {
 	if (vnew.type == VMODEL || vnew.type == VVIEW)
 		return;
 
 	vnew.parent = parent;
 	vnew.idx = idx;
 	vnew.vmid = ownVmid;
-
-	// set external ref eg vw(MyView, data, "^moo")
-	if (extKey != null && typeof extKey == "string" && extKey[0] == "^")
-		vnew.ref = extKey;
 
 	if (vnew.ref != null)
 		setRef(vnew.vm(), vnew.ref, vnew);

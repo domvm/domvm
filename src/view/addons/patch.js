@@ -18,7 +18,7 @@ export function patch(o, n) {
 		if (o.vmid != null)
 			return;
 
-		preProc(n, o.parent, o.idx, null, null);
+		preProc(n, o.parent, o.idx, null);
 		o.parent.body[o.idx] = n;
 //		o.parent = o.el = o.body = null;		// helps gc?
 		fullPatch(n, o);

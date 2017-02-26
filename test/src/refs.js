@@ -73,95 +73,13 @@ QUnit.module("refs & didRedraw()");
 		// todo: ensure refs get re-ref'd on redraw/reuse
 	});
 
-	// Exposed/bubbled refs
-
-	var footVm;
-
-	var data = {
-		a: "foo",
-		b: "bar",
-		c: "baz",
-	};
-
-	function updateData() {
-		data.a = "moo";
-		data.b = "cow";
-		data.c = "now";
-	}
-
-	function AppView(vm, data) {
-		vm.on("redrawMainAndFooter", function() {
-			vm.refs.main.vm().redraw(true);
-			vm.refs.footer.vm().redraw(true);
-		});
-
-		return function() {
-			return el("div", [
-				tx(data.a),
-				vw(MainView, data),
-				vw(FooterView, data, "^footer"),
-			]);
-		};
-	}
-
-	function MainView(vm, data) {
-		return function() {
-			return el("strong", {_ref: "^main"}, data.b);
-		};
-	}
-
-	function FooterView(vm, data) {
-		footVm = vm;
-
-		return function() {
-			return el("em", data.c);
-		};
-	}
-
-	QUnit.test('Exposed refs', function(assert) {
-		instr.start();
-		var vm = domvm.createView(AppView, data).mount(testyDiv);
-		var callCounts = instr.end();
-
-		var expcHtml = '<div>foo<strong>bar</strong><em>baz</em></div>';
-
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 3, insertBefore: 4, textContent: 2, createTextNode: 1 });
-
-		updateData();
-
-		instr.start();
-		vm.emit("redrawMainAndFooter");
-		var callCounts = instr.end();
-
-		var expcHtml = '<div>foo<strong>cow</strong><em>now</em></div>';
-
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { nodeValue: 2 });
-	});
-
-
-	function TestView() {
-		return function() {
-			return el("div", {_ref: "a.b.c"});
-		}
-	}
-
-	function TestView1() {
-		return function() {
-			return el("div", [
-				vw(TestView2)
-			]);
-		}
-	}
-
-	var vm2;
-	function TestView2(vm) {
-		vm2 = vm;
-		return function() {
-			return el("div", {_ref: "^a.b.c"});
-		}
-	}
-
 	QUnit.test('Namespaced a.b.c', function(assert) {
+		function TestView() {
+			return function() {
+				return el("div", {_ref: "a.b.c"});
+			}
+		}
+
 		instr.start();
 		var vm = domvm.createView(TestView).mount(testyDiv);
 		var callCounts = instr.end();
@@ -171,17 +89,5 @@ QUnit.module("refs & didRedraw()");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });
 
 		assert.equal(vm.refs.a.b.c, vm.node);
-	});
-
-	QUnit.test('Namespaced & exposed ^a.b.c', function(assert) {
-		instr.start();
-		var vm = domvm.createView(TestView1).mount(testyDiv);
-		var callCounts = instr.end();
-
-		var expcHtml = '<div><div></div></div>';
-
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2 });
-
-		assert.equal(vm.refs.a.b.c, vm2.node);
 	});
 })();
