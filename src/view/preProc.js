@@ -47,10 +47,10 @@ export function preProc(vnew, parent, idx, ownVmid) {
 						body.splice(i--, 1);
 					}
 					else
-						preProc(node2, vnew, i);
+						preProc(node2, vnew, i, null);
 				}
 				else
-					preProc(node2, vnew, i);
+					preProc(node2, vnew, i, null);
 			}
 		}
 	}
