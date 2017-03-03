@@ -160,7 +160,7 @@ function mount(el, isRoot) {		// , asSub, refEl
 			el.parentNode.removeChild(el);
 		}
 		else
-			hydrate(vm.node, el);
+			insertBefore(el.parentNode, hydrate(vm.node, el), el);
 	}
 	else {
 		vm._redraw(null, null);

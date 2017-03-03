@@ -509,9 +509,10 @@ function removeChild(parEl, el) {
 
 // todo: hooks
 function insertBefore(parEl, el, refEl) {
-	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
+	var node = el._node, hooks = node.hooks, inDom = el.parentNode != null;
 
-	var vm = !inDom && node.vmid != null ? node.vm() : null;
+	// el == refEl is asserted as a no-op insert called to fire hooks
+	var vm = (el == refEl || !inDom) && node.vmid != null ? node.vm() : null;
 
 	vm && vm.hooks && fireHooks("willMount", vm);
 
@@ -1354,7 +1355,7 @@ function mount(el, isRoot) {		// , asSub, refEl
 			el.parentNode.removeChild(el);
 		}
 		else
-			{ hydrate(vm.node, el); }
+			{ insertBefore(el.parentNode, hydrate(vm.node, el), el); }
 	}
 	else {
 		vm._redraw(null, null);
