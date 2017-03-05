@@ -1,6 +1,7 @@
 import { TEXT, VVIEW, VMODEL } from './VTYPES';
 import { defineText } from './defineText';
 import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
+import { getVm } from './utils';
 import { isStream, hookStream } from './addons/stubs';
 
 function setRef(vm, name, node) {
@@ -9,16 +10,16 @@ function setRef(vm, name, node) {
 }
 
 // vnew, vold
-export function preProc(vnew, parent, idx, ownVmid) {
+export function preProc(vnew, parent, idx, ownVm) {
 	if (vnew.type == VMODEL || vnew.type == VVIEW)
 		return;
 
 	vnew.parent = parent;
 	vnew.idx = idx;
-	vnew.vmid = ownVmid;
+	vnew.vm = ownVm;
 
 	if (vnew.ref != null)
-		setRef(vnew.vm(), vnew.ref, vnew);
+		setRef(getVm(vnew), vnew.ref, vnew);
 
 	if (isArr(vnew.body)) {
 		// declarative elems, comments, text nodes
@@ -55,5 +56,5 @@ export function preProc(vnew, parent, idx, ownVmid) {
 		}
 	}
 	else if (isStream(vnew.body))
-		vnew.body = hookStream(vnew.body, vnew.vm());
+		vnew.body = hookStream(vnew.body, getVm(vnew));
 }

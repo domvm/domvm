@@ -4,20 +4,20 @@ import { isArr, isPlainObj, isVal, isFunc, TRUE, ENV_DOM } from '../../utils';
 import { isEvProp, isDynProp } from '../utils';
 import { autoPx } from './stubs';
 
-import { ViewModelProto, views } from '../ViewModel';
+import { ViewModelProto } from '../ViewModel';
 import { VNodeProto } from '../VNode';
 
-ViewModelProto.html = function(dynProps, unreg) {
+ViewModelProto.html = function(dynProps) {
 	var vm = this;
 
 	if (vm.node == null)
 		vm._redraw(null, null, false);
 
-	return html(vm.node, dynProps, unreg);
+	return html(vm.node, dynProps);
 };
 
-VNodeProto.html = function(dynProps, unreg) {
-	return html(this, dynProps, unreg);
+VNodeProto.html = function(dynProps) {
+	return html(this, dynProps);
 };
 
 
@@ -86,15 +86,15 @@ function escQuotes(s) {
 	return out;
 }
 
-export function html(node, dynProps, unreg) {
+export function html(node, dynProps) {
 	var out, style;
 
 	switch (node.type) {
 		case VVIEW:
-			out = createView(node.view, node.model, node.key, node.opts).html(dynProps, unreg);
+			out = createView(node.view, node.model, node.key, node.opts).html(dynProps);
 			break;
 		case VMODEL:
-			out = views[node.vmid].html();
+			out = node.vm.html();
 			break;
 		case ELEMENT:
 			if (node.el != null && node.tag == null) {
@@ -137,7 +137,7 @@ export function html(node, dynProps, unreg) {
 
 			if (!voidTags[node.tag]) {
 				var html2 = function(n2) {
-					buf += html(n2, dynProps, unreg);
+					buf += html(n2, dynProps);
 				};
 
 				if (node.flatBody != null)
@@ -160,9 +160,6 @@ export function html(node, dynProps, unreg) {
 	//	case FRAGMENT:
 	//		break;
 	}
-
-	if ((unreg || !ENV_DOM) && node.vmid != null)
-		views[node.vmid] = null;
 
 	return out;
 };

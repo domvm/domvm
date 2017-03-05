@@ -1,7 +1,6 @@
 import { ELEMENT, TEXT, COMMENT, FRAGMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr } from '../utils';
-import { views } from './ViewModel';
-import { isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
+import { isStyleProp, isSplProp, isEvProp, isDynProp, getVm } from './utils';
 import { isStream, hookStream } from './addons/stubs';
 import { setAttr } from './patchAttrs';
 import { patchStyle } from './patchStyle';
@@ -36,7 +35,7 @@ function patchAttrs2(vnode) {
 		var isDyn = isDynProp(vnode.tag, key);
 
 		if (isStream(nval))
-			nattrs[key] = nval = hookStream(nval, vnode.vm());
+			nattrs[key] = nval = hookStream(nval, getVm(vnode));
 
 		if (isStyleProp(key))
 			patchStyle(vnode);
@@ -65,7 +64,7 @@ export function hydrateBody(vnode) {
 			insertBefore(vnode.el, hydrate(vm.node));
 		}
 		else if (type2 == VMODEL) {
-			var vm = views[vnode2.vmid];
+			var vm = vnode2.vm;
 			vm._redraw(vnode, i);					// , false
 			type2 = vm.node.type;
 			insertBefore(vnode.el, vm.node.el);		// , hydrate(vm.node)

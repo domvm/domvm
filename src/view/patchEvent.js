@@ -1,5 +1,6 @@
 import { isArr, isFunc, cmpArr } from '../utils';
 import { closestVNode } from './dom';
+import { getVm } from './utils';
 
 function bindEv(el, type, fn) {
 //	DEBUG && console.log("addEventListener");
@@ -8,7 +9,7 @@ function bindEv(el, type, fn) {
 
 function handle(e, fn, args) {
 	var node = closestVNode(e.target);
-	var out = fn.apply(null, args.concat(e, node, node.vm()));
+	var out = fn.apply(null, args.concat(e, node, getVm(node)));
 
 	if (out === false) {
 		e.preventDefault();
