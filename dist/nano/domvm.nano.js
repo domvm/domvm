@@ -4,7 +4,7 @@
 *
 * domvm.full.js - DOM ViewModel
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (v2.0.2, nano)
+* @preserve https://github.com/leeoniya/domvm (v2.0.3, nano)
 */
 
 (function (global, factory) {
@@ -221,6 +221,13 @@ function isDynProp(tag, attr) {
 	return false;
 }
 
+function getVm(n) {
+	n = n || emptyObj;
+	while (n.vm == null && n.parent)
+		{ n = n.parent; }
+	return n.vm;
+}
+
 var unitlessProps = {
 	animationIterationCount: TRUE,
 	boxFlex: TRUE,
@@ -316,7 +323,7 @@ function patchStyle(n, o) {
 			var nv = ns[nn];
 
 			if (isStreamStub(nv))
-				{ nv = hookStreamStub(nv, n.vm()); }
+				{ nv = hookStreamStub(nv, getVm(n)); }
 
 			if (os == null || nv != null && nv !== os[nn])
 				{ n.el.style[nn] = autoPx(nn, nv); }
@@ -369,16 +376,7 @@ var VNodeProto = VNode.prototype = {
 
 	type:	null,
 
-	vm: function() {
-		var n = this;
-
-		do {
-			if (n.vmid != null)
-				{ return views[n.vmid]; }
-		} while (n.parent && (n = n.parent));
-	},
-
-	vmid:	null,
+	vm:		null,
 
 	// all this stuff can just live in attrs (as defined) just have getters here for it
 	key:	null,
@@ -420,12 +418,12 @@ function isSet(val) {
 	return val != null;
 }
 
-// optimization flags
+// (de)optimization flags
 
 // prevents inserting/removing/reordering of children
 var FIXED_BODY = 1;
-// doesnt fire eager deep willRemove hooks, doesnt do bottom-up removeChild
-var FAST_REMOVE = 2;
+// forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
+var DEEP_REMOVE = 2;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
 var KEYED_LIST = 4;
 
@@ -534,36 +532,28 @@ function prevSib(sib) {
 
 // TODO: this should collect all deep proms from all hooks and return Promise.all()
 function deepNotifyRemove(node) {
-	var hooks = node.hooks;
-	var vm = node.vmid != null ? node.vm() : null;
+	var hooks = node.hooks, vm = node.vm;
 
 	vm && vm.hooks && fireHooks("willUnmount", vm);
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if (!(node.flags & FAST_REMOVE) && isArr(node.body))
+	if ((node.flags & DEEP_REMOVE) && isArr(node.body))
 		{ node.body.forEach(deepNotifyRemove); }
 
 	return res;
 }
 
 function _removeChild(parEl, el, immediate) {
-	var node = el._node, hooks = node.hooks;
+	var node = el._node, hooks = node.hooks, vm = node.vm;
 
-	var vm = node.vmid != null ? node.vm() : null;
-
-//	if (node.ref != null && node.ref[0] == "^")			// this will fail for fixed-nodes?
-//		console.log("clean exposed ref", node.ref);
-
-	if (!(node.flags & FAST_REMOVE) && isArr(node.body)) {
+	if ((node.flags & DEEP_REMOVE) && isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)
 			{ _removeChild(el, node.body[i].el); }
 	}
 
 	parEl.removeChild(el);
-
-	vm && (views[vm.id] = null);
 
 	hooks && fireHooks("didRemove", node, null, immediate);
 
@@ -584,15 +574,12 @@ function removeChild(parEl, el) {
 
 // todo: hooks
 function insertBefore(parEl, el, refEl) {
-	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
+	var node = el._node, hooks = node.hooks, inDom = el.parentNode != null;
 
-	var vm = !inDom && node.vmid != null ? node.vm() : null;
+	// el == refEl is asserted as a no-op insert called to fire hooks
+	var vm = (el == refEl || !inDom) && node.vm;
 
 	vm && vm.hooks && fireHooks("willMount", vm);
-
-	// this first happens during view creation, but if view is
-	// ever unmounted & remounted later, need to re-register
-	vm && (views[vm.id] = vm);
 
 	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
 	parEl.insertBefore(el, refEl);
@@ -612,7 +599,7 @@ function bindEv(el, type, fn) {
 
 function handle(e, fn, args) {
 	var node = closestVNode(e.target);
-	var out = fn.apply(null, args.concat(e, node, node.vm()));
+	var out = fn.apply(null, args.concat(e, node, getVm(node)));
 
 	if (out === false) {
 		e.preventDefault();
@@ -702,7 +689,7 @@ function patchAttrs(vnode, donor) {
 		var oval = isDyn ? vnode.el[key] : oattrs[key];
 
 		if (isStreamStub(nval))
-			{ nattrs[key] = nval = hookStreamStub(nval, vnode.vm()); }
+			{ nattrs[key] = nval = hookStreamStub(nval, getVm(vnode)); }
 
 		if (nval === oval) {}
 		else if (isStyleProp(key))
@@ -761,7 +748,7 @@ function patchAttrs2(vnode) {
 		var isDyn = isDynProp(vnode.tag, key);
 
 		if (isStreamStub(nval))
-			{ nattrs[key] = nval = hookStreamStub(nval, vnode.vm()); }
+			{ nattrs[key] = nval = hookStreamStub(nval, getVm(vnode)); }
 
 		if (isStyleProp(key))
 			{ patchStyle(vnode); }
@@ -790,7 +777,7 @@ function hydrateBody(vnode) {
 			insertBefore(vnode.el, hydrate(vm.node));
 		}
 		else if (type2 == VMODEL) {
-			var vm = views[vnode2.vmid];
+			var vm = vnode2.vm;
 			vm._redraw(vnode, i);					// , false
 			type2 = vm.node.type;
 			insertBefore(vnode.el, vm.node.el);		// , hydrate(vm.node)
@@ -969,7 +956,7 @@ function syncChildren(node, donor, frags) {
 			// remove any non-recycled sibs whose el.node has the old parent
 			if (lftSib && parentNode(lsNode = lftSib._node) != node) {
 				tmpSib = nextSib(lftSib);
-				lsNode.vmid != null ? lsNode.vm().unmount(true) : removeChild(parEl, lftSib);
+				lsNode.vm != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
 				lftSib = tmpSib;
 				continue;
 			}
@@ -977,7 +964,7 @@ function syncChildren(node, donor, frags) {
 			if (lftNode == null)		// reached end
 				{ break converge; }
 			else if (lftNode.el == null) {
-				insertBefore(parEl, hydrate(lftNode), lftSib);		// lftNode.vmid != null ? lftNode.vm().mount(parEl, false, true, lftSib) :
+				insertBefore(parEl, hydrate(lftNode), lftSib);		// lftNode.vm != null ? lftNode.vm.mount(parEl, false, true, lftSib) :
 				lftNode = nextNode(lftNode, body);
 			}
 			else if (lftNode.el === lftSib) {
@@ -995,7 +982,7 @@ function syncChildren(node, donor, frags) {
 
 			if (rgtSib && parentNode(rsNode = rgtSib._node) != node) {
 				tmpSib = prevSib(rgtSib);
-				rsNode.vmid != null ? rsNode.vm().unmount(true) : removeChild(parEl, rgtSib);
+				rsNode.vm != null ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
 				continue;
 			}
@@ -1003,7 +990,7 @@ function syncChildren(node, donor, frags) {
 			if (rgtNode == lftNode)		// converged
 				{ break converge; }
 			else if (rgtNode.el == null) {
-				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vmid != null ? rgtNode.vm().mount(parEl, false, true, nextSib(rgtSib) :
+				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vm != null ? rgtNode.vm.mount(parEl, false, true, nextSib(rgtSib) :
 				rgtNode = prevNode(rgtNode, body);
 			}
 			else if (rgtNode.el === rgtSib) {
@@ -1030,8 +1017,8 @@ function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	for (var i = fromIdx || 0; i < obody.length; i++) {
 		var o = obody[i];
 
-		if (n.type == VVIEW && o.vmid != null) {			// also ignore recycled/moved?
-			var ov = views[o.vmid];
+		if (n.type == VVIEW && o.vm != null) {			// also ignore recycled/moved?
+			var ov = o.vm;
 
 			// match by key & viewFn
 			if (ov.view == n.view && ov.key == n.key)
@@ -1173,14 +1160,14 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 		}
 		else if (type2 == VVIEW) {
 			if (donor2 = find(node2, list, fromIdx))		// update/moveTo
-				{ var vm = views[donor2.vmid]._update(node2.model, vnode, i); }		// withDOM
+				{ var vm = donor2.vm._update(node2.model, vnode, i); }		// withDOM
 			else
 				{ var vm = createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
 
 			type2 = vm.node.type;
 		}
 		else if (type2 == VMODEL) {
-			var vm = views[node2.vmid]._update(node2.model, vnode, i);
+			var vm = node2.vm._update(node2.model, vnode, i);
 			type2 = vm.node.type;
 		}
 
@@ -1221,31 +1208,29 @@ function defineText(body) {
 }
 
 function setRef(vm, name, node) {
-	var path = ["refs"].concat(name.replace("^", "").split("."));
-
+	var path = ["refs"].concat(name.split("."));
 	deepSet(vm, path, node);
+}
 
-	// bubble
-	var par;
-	if (name[0] == "^" && (par = vm.parent()))
-		{ setRef(par, name, node); }
+function setDeepRemove(node) {
+	while (node = node.parent)
+		{ node.flags |= DEEP_REMOVE; }
 }
 
 // vnew, vold
-function preProc(vnew, parent, idx, ownVmid, extKey) {
+function preProc(vnew, parent, idx, ownVm) {
 	if (vnew.type == VMODEL || vnew.type == VVIEW)
 		{ return; }
 
 	vnew.parent = parent;
 	vnew.idx = idx;
-	vnew.vmid = ownVmid;
-
-	// set external ref eg vw(MyView, data, "^moo")
-	if (extKey != null && typeof extKey == "string" && extKey[0] == "^")
-		{ vnew.ref = extKey; }
+	vnew.vm = ownVm;
 
 	if (vnew.ref != null)
-		{ setRef(vnew.vm(), vnew.ref, vnew); }
+		{ setRef(getVm(vnew), vnew.ref, vnew); }
+
+	if (vnew.hooks && vnew.hooks.willRemove || ownVm && ownVm.hooks && ownVm.hooks.willUnmount)
+		{ setDeepRemove(vnew); }
 
 	if (isArr(vnew.body)) {
 		// declarative elems, comments, text nodes
@@ -1274,32 +1259,22 @@ function preProc(vnew, parent, idx, ownVmid, extKey) {
 						body.splice(i--, 1);
 					}
 					else
-						{ preProc(node2, vnew, i); }
+						{ preProc(node2, vnew, i, null); }
 				}
 				else
-					{ preProc(node2, vnew, i); }
+					{ preProc(node2, vnew, i, null); }
 			}
 		}
 	}
 	else if (isStreamStub(vnew.body))
-		{ vnew.body = hookStreamStub(vnew.body, vnew.vm()); }
+		{ vnew.body = hookStreamStub(vnew.body, getVm(vnew)); }
 }
 
-// global id counter
-var vmid = 0;
-
-// global registry of all views
-// this helps the gc by simplifying the graph
-var views = {};
-
 function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
-	var id = vmid++;
-
 	var vm = this;
 
 	vm.api = {};
 
-	vm.id = id;
 	vm.view = view;
 	vm.model = model;
 	vm.key = key == null ? model : key;
@@ -1316,8 +1291,6 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 		assignObj(vm, out);
 	}
-
-	views[id] = vm;
 
 	// remove this?
 	if (opts) {
@@ -1343,8 +1316,6 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 var ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
 
-	id: null,
-
 	// view + key serve as the vm's unique identity
 	view: null,
 	key: null,
@@ -1360,14 +1331,7 @@ var ViewModelProto = ViewModel.prototype = {
 
 	// as plugins?
 	parent: function() {
-		var p = this.node;
-
-		while (p = p.parent) {
-			if (p.vmid != null)
-				{ return views[p.vmid]; }
-		}
-
-		return null;
+		return getVm(this.node.parent);
 	},
 
 	root: function() {
@@ -1376,7 +1340,7 @@ var ViewModelProto = ViewModel.prototype = {
 		while (p.parent)
 			{ p = p.parent; }
 
-		return views[p.vmid];
+		return p.vm;
 	},
 
 	api: null,
@@ -1423,40 +1387,6 @@ function isEmptyObj(o) {
 }
 */
 
-/*
-export function cleanExposedRefs(orefs, nrefs) {
-	for (var key in orefs) {
-		// ref not present in new refs
-		if (nrefs == null || !(key in nrefs)) {
-			var val = orefs[key];
-
-
-//			var path = [];
-//			// dig nown if val i a namespace
-//			while (isPlainObj(val) && val.type == null) {
-//				path.push(val);
-//				val =
-//			}
-
-
-			if (isPlainObj(val)) {
-				// is a vnode
-				if (val.type) {
-					// is an exposed ref
-					if (val.ref[0] == "^") {
-						console.log("clean parents of absent exposed ref");
-					}
-				}
-				// is namespace, dig down
-				else {
-
-				}
-			}
-		}
-	}
-}
-*/
-
 function mount(el, isRoot) {		// , asSub, refEl
 	var vm = this;
 
@@ -1473,7 +1403,7 @@ function mount(el, isRoot) {		// , asSub, refEl
 			el.parentNode.removeChild(el);
 		}
 		else
-			{ hydrate(vm.node, el); }
+			{ insertBefore(el.parentNode, hydrate(vm.node, el), el); }
 	}
 	else {
 		vm._redraw(null, null);
@@ -1528,7 +1458,6 @@ function redrawSync(newParent, newIdx, withDOM) {
 	isMounted && vm.hooks && fireHooks("willRedraw", vm);
 
 	// todo: test result of willRedraw hooks before clearing refs
-	// todo: also clean up any refs exposed by this view from parents, should tag with src_vm during setting
 	if (vm.refs) {
 	//	var orefs = vm.refs;
 		vm.refs = null;
@@ -1540,34 +1469,24 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	vm.node = vnew;
 
-//	vm.node = vnew;
-//	vnew.vm = vm;			// this causes a perf drop 1.53ms -> 1.62ms			how important is this?
-//	vnew.vmid = vm.id;
-
 	if (newParent) {
-		preProc(vnew, newParent, newIdx, vm.id, vm.key);
+		preProc(vnew, newParent, newIdx, vm);
 		newParent.body[newIdx] = vnew;
 		// todo: bubble refs, etc?
 	}
 	else if (vold && vold.parent) {
-		preProc(vnew, vold.parent, vold.idx, vm.id, vm.key);
+		preProc(vnew, vold.parent, vold.idx, vm);
 		vold.parent.body[vold.idx] = vnew;
 	}
 	else
-		{ preProc(vnew, null, null, vm.id, vm.key); }
-
-	// after preproc re-populates new refs find any exposed refs in old
-	// that are not also in new and unset from all parents
-	// only do for redraw roots since refs are reset at all redraw levels
-//	if (isRedrawRoot && orefs)
-//		cleanExposedRefs(orefs, vnew.refs);
+		{ preProc(vnew, null, null, vm); }
 
 	if (withDOM !== false) {
 		if (vold) {
 			// root node replacement
 			if (vold.tag !== vnew.tag) {
 				// hack to prevent the replacement from triggering mount/unmount
-				vold.vmid = vnew.vmid = null;
+				vold.vm = vnew.vm = null;
 
 				var parEl = vold.el.parentNode;
 				var refEl = nextSib(vold.el);
@@ -1579,7 +1498,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 				vold.el = vnew.el;
 
 				// restore
-				vnew.vmid = vm.id;
+				vnew.vm = vm;
 			}
 			else
 				{ patch(vnew, vold, isRedrawRoot); }
@@ -1699,14 +1618,14 @@ function defineView(view, model, key, opts) {
 
 // placeholder for injected ViewModels
 function VModel(vm) {
-	this.vmid = vm.id;
+	this.vm = vm;
 }
 
 VModel.prototype = {
 	constructor: VModel,
 
 	type: VMODEL,
-	vmid: null,
+	vm: null,
 };
 
 function injectView(vm) {
@@ -1726,8 +1645,6 @@ function injectElement(el) {
 }
 
 var nano$1 = {
-	_views: views,
-
 	ViewModel: ViewModel,
 	VNode: VNode,
 
@@ -1743,7 +1660,7 @@ var nano$1 = {
 	injectElement: injectElement,
 
 	FIXED_BODY: FIXED_BODY,
-	FAST_REMOVE: FAST_REMOVE,
+	DEEP_REMOVE: DEEP_REMOVE,
 	KEYED_LIST: KEYED_LIST,
 };
 
@@ -1793,14 +1710,14 @@ VNodeProto.patch = function(n) {
 function patch$1(o, n) {
 	if (n.type != null) {
 		// no full patching of view roots, just use redraw!
-		if (o.vmid != null)
+		if (o.vm != null)
 			{ return; }
 
-		preProc(n, o.parent, o.idx, null, null);
+		preProc(n, o.parent, o.idx, null);
 		o.parent.body[o.idx] = n;
 //		o.parent = o.el = o.body = null;		// helps gc?
 		patch(n, o);
-		drainDidHooks(n.vm());
+		drainDidHooks(getVm(n));
 	}
 	else {
 		// TODO: re-establish refs

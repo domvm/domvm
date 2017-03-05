@@ -95,6 +95,7 @@ QUnit.module("Various Others");
 	QUnit.test('Mount to existing element instead of append into', function(assert) {
 		var em = document.createElement("em");
 		em.textContent = "abc";
+		testyDiv.appendChild(em);
 
 		var expcHtml = '<em style="width: 30px; z-index: 5;">test</em>';
 
@@ -102,7 +103,7 @@ QUnit.module("Various Others");
 		vm = domvm.createView(SomeView3).mount(em, true);
 		var callCounts = instr.end();
 
-		evalOut(assert, em, vm.html(), expcHtml, callCounts, { textContent: 1, removeChild: 1 });
+		evalOut(assert, em, vm.html(), expcHtml, callCounts, { textContent: 1, removeChild: 1, insertBefore: 1 });
 	});
 
 	QUnit.test('Raw HTML as body', function(assert) {

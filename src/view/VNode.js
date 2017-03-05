@@ -1,5 +1,3 @@
-import { views } from './ViewModel';
-
 export function VNode() {}
 
 export const VNodeProto = VNode.prototype = {
@@ -7,16 +5,7 @@ export const VNodeProto = VNode.prototype = {
 
 	type:	null,
 
-	vm: function() {
-		var n = this;
-
-		do {
-			if (n.vmid != null)
-				return views[n.vmid];
-		} while (n.parent && (n = n.parent));
-	},
-
-	vmid:	null,
+	vm:		null,
 
 	// all this stuff can just live in attrs (as defined) just have getters here for it
 	key:	null,

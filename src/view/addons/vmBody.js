@@ -1,4 +1,4 @@
-import { ViewModelProto, views } from '../ViewModel';
+import { ViewModelProto } from '../ViewModel';
 import { isArr } from '../../utils';		// defProp
 
 /*
@@ -20,8 +20,8 @@ function nextSubVms(n, accum) {
 		for (var i = 0; i < body.length; i++) {
 			var n2 = body[i];
 
-			if (n2.vmid != null)
-				accum.push(views[n2.vmid]);
+			if (n2.vm != null)
+				accum.push(n2.vm);
 			else
 				nextSubVms(n2, accum);
 		}

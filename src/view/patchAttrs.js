@@ -1,4 +1,4 @@
-import { isStyleProp, isSplProp, isEvProp, isDynProp } from './utils';
+import { isStyleProp, isSplProp, isEvProp, isDynProp, getVm } from './utils';
 import { isFunc, emptyObj } from '../utils';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
@@ -39,7 +39,7 @@ export function patchAttrs(vnode, donor) {
 		var oval = isDyn ? vnode.el[key] : oattrs[key];
 
 		if (isStream(nval))
-			nattrs[key] = nval = hookStream(nval, vnode.vm());
+			nattrs[key] = nval = hookStream(nval, getVm(vnode));
 
 		if (nval === oval) {}
 		else if (isStyleProp(key))

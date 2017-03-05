@@ -1,4 +1,5 @@
 import { isVal, emptyObj } from '../utils';
+import { getVm } from './utils';
 import { autoPx, isStream, hookStream } from './addons/stubs';
 
 // assumes if styles exist both are objects or both are strings
@@ -14,7 +15,7 @@ export function patchStyle(n, o) {
 			var nv = ns[nn];
 
 			if (isStream(nv))
-				nv = hookStream(nv, n.vm());
+				nv = hookStream(nv, getVm(n));
 
 			if (os == null || nv != null && nv !== os[nn])
 				n.el.style[nn] = autoPx(nn, nv);

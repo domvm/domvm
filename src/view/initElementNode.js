@@ -7,12 +7,12 @@ function isSet(val) {
 	return val != null;
 }
 
-// optimization flags
+// (de)optimization flags
 
 // prevents inserting/removing/reordering of children
 export const FIXED_BODY = 1;
-// doesnt fire eager deep willRemove hooks, doesnt do bottom-up removeChild
-export const FAST_REMOVE = 2;
+// forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
+export const DEEP_REMOVE = 2;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
 export const KEYED_LIST = 4;
 

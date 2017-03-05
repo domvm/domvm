@@ -1,34 +1,34 @@
 import { TEXT, VVIEW, VMODEL } from './VTYPES';
 import { defineText } from './defineText';
 import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
+import { getVm } from './utils';
 import { isStream, hookStream } from './addons/stubs';
+import { DEEP_REMOVE } from './initElementNode';
 
 function setRef(vm, name, node) {
-	var path = ["refs"].concat(name.replace("^", "").split("."));
-
+	var path = ["refs"].concat(name.split("."));
 	deepSet(vm, path, node);
+}
 
-	// bubble
-	var par;
-	if (name[0] == "^" && (par = vm.parent()))
-		setRef(par, name, node);
+function setDeepRemove(node) {
+	while (node = node.parent)
+		node.flags |= DEEP_REMOVE;
 }
 
 // vnew, vold
-export function preProc(vnew, parent, idx, ownVmid, extKey) {
+export function preProc(vnew, parent, idx, ownVm) {
 	if (vnew.type == VMODEL || vnew.type == VVIEW)
 		return;
 
 	vnew.parent = parent;
 	vnew.idx = idx;
-	vnew.vmid = ownVmid;
-
-	// set external ref eg vw(MyView, data, "^moo")
-	if (extKey != null && typeof extKey == "string" && extKey[0] == "^")
-		vnew.ref = extKey;
+	vnew.vm = ownVm;
 
 	if (vnew.ref != null)
-		setRef(vnew.vm(), vnew.ref, vnew);
+		setRef(getVm(vnew), vnew.ref, vnew);
+
+	if (vnew.hooks && vnew.hooks.willRemove || ownVm && ownVm.hooks && ownVm.hooks.willUnmount)
+		setDeepRemove(vnew);
 
 	if (isArr(vnew.body)) {
 		// declarative elems, comments, text nodes
@@ -57,13 +57,13 @@ export function preProc(vnew, parent, idx, ownVmid, extKey) {
 						body.splice(i--, 1);
 					}
 					else
-						preProc(node2, vnew, i);
+						preProc(node2, vnew, i, null);
 				}
 				else
-					preProc(node2, vnew, i);
+					preProc(node2, vnew, i, null);
 			}
 		}
 	}
 	else if (isStream(vnew.body))
-		vnew.body = hookStream(vnew.body, vnew.vm());
+		vnew.body = hookStream(vnew.body, getVm(vnew));
 }

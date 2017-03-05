@@ -2,25 +2,15 @@ import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
 import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, raft } from "../utils";
-import { repaint } from "./utils";
+import { repaint, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib } from "./dom";
 import { didQueue, fireHooks } from "./hooks";
 
-// global id counter
-let vmid = 0;
-
-// global registry of all views
-// this helps the gc by simplifying the graph
-export const views = {};
-
 export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
-	var id = vmid++;
-
 	var vm = this;
 
 	vm.api = {};
 
-	vm.id = id;
 	vm.view = view;
 	vm.model = model;
 	vm.key = key == null ? model : key;
@@ -37,8 +27,6 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 		assignObj(vm, out);
 	}
-
-	views[id] = vm;
 
 	// remove this?
 	if (opts) {
@@ -64,8 +52,6 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 export const ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
 
-	id: null,
-
 	// view + key serve as the vm's unique identity
 	view: null,
 	key: null,
@@ -81,14 +67,7 @@ export const ViewModelProto = ViewModel.prototype = {
 
 	// as plugins?
 	parent: function() {
-		var p = this.node;
-
-		while (p = p.parent) {
-			if (p.vmid != null)
-				return views[p.vmid];
-		}
-
-		return null;
+		return getVm(this.node.parent);
 	},
 
 	root: function() {
@@ -97,7 +76,7 @@ export const ViewModelProto = ViewModel.prototype = {
 		while (p.parent)
 			p = p.parent;
 
-		return views[p.vmid];
+		return p.vm;
 	},
 
 	api: null,
@@ -144,40 +123,6 @@ function isEmptyObj(o) {
 }
 */
 
-/*
-export function cleanExposedRefs(orefs, nrefs) {
-	for (var key in orefs) {
-		// ref not present in new refs
-		if (nrefs == null || !(key in nrefs)) {
-			var val = orefs[key];
-
-
-//			var path = [];
-//			// dig nown if val i a namespace
-//			while (isPlainObj(val) && val.type == null) {
-//				path.push(val);
-//				val =
-//			}
-
-
-			if (isPlainObj(val)) {
-				// is a vnode
-				if (val.type) {
-					// is an exposed ref
-					if (val.ref[0] == "^") {
-						console.log("clean parents of absent exposed ref");
-					}
-				}
-				// is namespace, dig down
-				else {
-
-				}
-			}
-		}
-	}
-}
-*/
-
 function mount(el, isRoot) {		// , asSub, refEl
 	var vm = this;
 
@@ -194,7 +139,7 @@ function mount(el, isRoot) {		// , asSub, refEl
 			el.parentNode.removeChild(el);
 		}
 		else
-			hydrate(vm.node, el);
+			insertBefore(el.parentNode, hydrate(vm.node, el), el);
 	}
 	else {
 		vm._redraw(null, null);
@@ -249,7 +194,6 @@ function redrawSync(newParent, newIdx, withDOM) {
 	isMounted && vm.hooks && fireHooks("willRedraw", vm);
 
 	// todo: test result of willRedraw hooks before clearing refs
-	// todo: also clean up any refs exposed by this view from parents, should tag with src_vm during setting
 	if (vm.refs) {
 	//	var orefs = vm.refs;
 		vm.refs = null;
@@ -261,34 +205,24 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	vm.node = vnew;
 
-//	vm.node = vnew;
-//	vnew.vm = vm;			// this causes a perf drop 1.53ms -> 1.62ms			how important is this?
-//	vnew.vmid = vm.id;
-
 	if (newParent) {
-		preProc(vnew, newParent, newIdx, vm.id, vm.key);
+		preProc(vnew, newParent, newIdx, vm);
 		newParent.body[newIdx] = vnew;
 		// todo: bubble refs, etc?
 	}
 	else if (vold && vold.parent) {
-		preProc(vnew, vold.parent, vold.idx, vm.id, vm.key);
+		preProc(vnew, vold.parent, vold.idx, vm);
 		vold.parent.body[vold.idx] = vnew;
 	}
 	else
-		preProc(vnew, null, null, vm.id, vm.key);
-
-	// after preproc re-populates new refs find any exposed refs in old
-	// that are not also in new and unset from all parents
-	// only do for redraw roots since refs are reset at all redraw levels
-//	if (isRedrawRoot && orefs)
-//		cleanExposedRefs(orefs, vnew.refs);
+		preProc(vnew, null, null, vm);
 
 	if (withDOM !== false) {
 		if (vold) {
 			// root node replacement
 			if (vold.tag !== vnew.tag) {
 				// hack to prevent the replacement from triggering mount/unmount
-				vold.vmid = vnew.vmid = null;
+				vold.vm = vnew.vm = null;
 
 				var parEl = vold.el.parentNode;
 				var refEl = nextSib(vold.el);
@@ -300,7 +234,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 				vold.el = vnew.el;
 
 				// restore
-				vnew.vmid = vm.id;
+				vnew.vm = vm;
 			}
 			else
 				patch(vnew, vold, isRedrawRoot);

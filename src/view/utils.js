@@ -1,4 +1,4 @@
-import { startsWith } from '../utils';
+import { startsWith, emptyObj } from '../utils';
 
 export function isEvProp(name) {
 	return startsWith(name, "on");
@@ -33,4 +33,11 @@ export function isDynProp(tag, attr) {
 //	}
 
 	return false;
+}
+
+export function getVm(n) {
+	n = n || emptyObj;
+	while (n.vm == null && n.parent)
+		n = n.parent;
+	return n.vm;
 }

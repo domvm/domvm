@@ -1,20 +1,19 @@
 import { ELEMENT, TEXT, COMMENT, FRAGMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr, binaryKeySearch } from '../utils';
-import { views } from './ViewModel';
 import { hydrateBody, flattenBody } from './hydrate';
 import { removeChild } from './dom';
 import { syncChildren } from './syncChildren';
 import { fireHooks } from './hooks';
 import { patchAttrs } from './patchAttrs';
 import { createView } from './createView';
-import { FIXED_BODY, FAST_REMOVE, KEYED_LIST } from './initElementNode';
+import { FIXED_BODY, KEYED_LIST } from './initElementNode';
 
 function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	for (var i = fromIdx || 0; i < obody.length; i++) {
 		var o = obody[i];
 
-		if (n.type == VVIEW && o.vmid != null) {			// also ignore recycled/moved?
-			var ov = views[o.vmid];
+		if (n.type == VVIEW && o.vm != null) {			// also ignore recycled/moved?
+			var ov = o.vm;
 
 			// match by key & viewFn
 			if (ov.view == n.view && ov.key == n.key)
@@ -156,14 +155,14 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 		}
 		else if (type2 == VVIEW) {
 			if (donor2 = find(node2, list, fromIdx))		// update/moveTo
-				var vm = views[donor2.vmid]._update(node2.model, vnode, i);		// withDOM
+				var vm = donor2.vm._update(node2.model, vnode, i);		// withDOM
 			else
 				var vm = createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
 
 			type2 = vm.node.type;
 		}
 		else if (type2 == VMODEL) {
-			var vm = views[node2.vmid]._update(node2.model, vnode, i);
+			var vm = node2.vm._update(node2.model, vnode, i);
 			type2 = vm.node.type;
 		}
 

@@ -1,4 +1,5 @@
 import { assignObj } from '../../utils';
+import { getVm } from '../utils';
 import { patchAttrs } from '../patchAttrs';
 import { preProc } from '../preProc';
 import { patch as fullPatch } from '../patch';
@@ -15,14 +16,14 @@ VNodeProto.patch = function(n) {
 export function patch(o, n) {
 	if (n.type != null) {
 		// no full patching of view roots, just use redraw!
-		if (o.vmid != null)
+		if (o.vm != null)
 			return;
 
-		preProc(n, o.parent, o.idx, null, null);
+		preProc(n, o.parent, o.idx, null);
 		o.parent.body[o.idx] = n;
 //		o.parent = o.el = o.body = null;		// helps gc?
 		fullPatch(n, o);
-		drainDidHooks(n.vm());
+		drainDidHooks(getVm(n));
 	}
 	else {
 		// TODO: re-establish refs

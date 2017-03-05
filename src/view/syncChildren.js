@@ -137,7 +137,7 @@ export function syncChildren(node, donor, frags) {
 			// remove any non-recycled sibs whose el.node has the old parent
 			if (lftSib && parentNode(lsNode = lftSib._node) != node) {
 				tmpSib = nextSib(lftSib);
-				lsNode.vmid != null ? lsNode.vm().unmount(true) : removeChild(parEl, lftSib);
+				lsNode.vm != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
 				lftSib = tmpSib;
 				continue;
 			}
@@ -145,7 +145,7 @@ export function syncChildren(node, donor, frags) {
 			if (lftNode == null)		// reached end
 				break converge;
 			else if (lftNode.el == null) {
-				insertBefore(parEl, hydrate(lftNode), lftSib);		// lftNode.vmid != null ? lftNode.vm().mount(parEl, false, true, lftSib) :
+				insertBefore(parEl, hydrate(lftNode), lftSib);		// lftNode.vm != null ? lftNode.vm.mount(parEl, false, true, lftSib) :
 				lftNode = nextNode(lftNode, body);
 			}
 			else if (lftNode.el === lftSib) {
@@ -163,7 +163,7 @@ export function syncChildren(node, donor, frags) {
 
 			if (rgtSib && parentNode(rsNode = rgtSib._node) != node) {
 				tmpSib = prevSib(rgtSib);
-				rsNode.vmid != null ? rsNode.vm().unmount(true) : removeChild(parEl, rgtSib);
+				rsNode.vm != null ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
 				continue;
 			}
@@ -171,7 +171,7 @@ export function syncChildren(node, donor, frags) {
 			if (rgtNode == lftNode)		// converged
 				break converge;
 			else if (rgtNode.el == null) {
-				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vmid != null ? rgtNode.vm().mount(parEl, false, true, nextSib(rgtSib) :
+				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vm != null ? rgtNode.vm.mount(parEl, false, true, nextSib(rgtSib) :
 				rgtNode = prevNode(rgtNode, body);
 			}
 			else if (rgtNode.el === rgtSib) {
