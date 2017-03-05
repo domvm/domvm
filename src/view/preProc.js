@@ -3,10 +3,16 @@ import { defineText } from './defineText';
 import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
 import { getVm } from './utils';
 import { isStream, hookStream } from './addons/stubs';
+import { DEEP_REMOVE } from './initElementNode';
 
 function setRef(vm, name, node) {
 	var path = ["refs"].concat(name.split("."));
 	deepSet(vm, path, node);
+}
+
+function setDeepRemove(node) {
+	while (node = node.parent)
+		node.flags |= DEEP_REMOVE;
 }
 
 // vnew, vold
@@ -20,6 +26,9 @@ export function preProc(vnew, parent, idx, ownVm) {
 
 	if (vnew.ref != null)
 		setRef(getVm(vnew), vnew.ref, vnew);
+
+	if (vnew.hooks && vnew.hooks.willRemove || ownVm && ownVm.hooks && ownVm.hooks.willUnmount)
+		setDeepRemove(vnew);
 
 	if (isArr(vnew.body)) {
 		// declarative elems, comments, text nodes

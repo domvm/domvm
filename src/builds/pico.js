@@ -12,7 +12,7 @@ import { defineView } from "../view/defineView";
 import { injectView } from "../view/injectView";
 import { injectElement } from "../view/injectElement";
 
-import { FIXED_BODY, FAST_REMOVE, KEYED_LIST } from "../view/initElementNode";
+import { FIXED_BODY, DEEP_REMOVE, KEYED_LIST } from "../view/initElementNode";
 
 export default {
 	ViewModel,
@@ -30,6 +30,6 @@ export default {
 	injectElement,
 
 	FIXED_BODY,
-	FAST_REMOVE,
+	DEEP_REMOVE,
 	KEYED_LIST,
 }

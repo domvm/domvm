@@ -418,12 +418,12 @@ function isSet(val) {
 	return val != null;
 }
 
-// optimization flags
+// (de)optimization flags
 
 // prevents inserting/removing/reordering of children
 var FIXED_BODY = 1;
-// doesnt fire eager deep willRemove hooks, doesnt do bottom-up removeChild
-var FAST_REMOVE = 2;
+// forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
+var DEEP_REMOVE = 2;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
 var KEYED_LIST = 4;
 
@@ -538,7 +538,7 @@ function deepNotifyRemove(node) {
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if (!(node.flags & FAST_REMOVE) && isArr(node.body))
+	if ((node.flags & DEEP_REMOVE) && isArr(node.body))
 		{ node.body.forEach(deepNotifyRemove); }
 
 	return res;
@@ -547,7 +547,7 @@ function deepNotifyRemove(node) {
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks, vm = node.vm;
 
-	if (!(node.flags & FAST_REMOVE) && isArr(node.body)) {
+	if ((node.flags & DEEP_REMOVE) && isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)
 			{ _removeChild(el, node.body[i].el); }
@@ -1212,6 +1212,11 @@ function setRef(vm, name, node) {
 	deepSet(vm, path, node);
 }
 
+function setDeepRemove(node) {
+	while (node = node.parent)
+		{ node.flags |= DEEP_REMOVE; }
+}
+
 // vnew, vold
 function preProc(vnew, parent, idx, ownVm) {
 	if (vnew.type == VMODEL || vnew.type == VVIEW)
@@ -1223,6 +1228,9 @@ function preProc(vnew, parent, idx, ownVm) {
 
 	if (vnew.ref != null)
 		{ setRef(getVm(vnew), vnew.ref, vnew); }
+
+	if (vnew.hooks && vnew.hooks.willRemove || ownVm && ownVm.hooks && ownVm.hooks.willUnmount)
+		{ setDeepRemove(vnew); }
 
 	if (isArr(vnew.body)) {
 		// declarative elems, comments, text nodes
@@ -1652,7 +1660,7 @@ var nano = {
 	injectElement: injectElement,
 
 	FIXED_BODY: FIXED_BODY,
-	FAST_REMOVE: FAST_REMOVE,
+	DEEP_REMOVE: DEEP_REMOVE,
 	KEYED_LIST: KEYED_LIST,
 };
 

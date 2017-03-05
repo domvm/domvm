@@ -250,7 +250,7 @@ QUnit.module("Model replace & vm.diff()");
 		vmC.redraw(true);
 		var callCounts = instr.end();
 
-		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { id: 1, createElement: 3, insertBefore: 3, removeChild: 3, textContent: 2 });
+		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { id: 1, createElement: 3, insertBefore: 3, removeChild: 1, textContent: 2 });
 
 		myText = "cow";
 		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>cow</strong></div></div>';
@@ -259,7 +259,7 @@ QUnit.module("Model replace & vm.diff()");
 		vmC.redraw(true);
 		var callCounts = instr.end();
 
-		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { id: 1, createElement: 3, insertBefore: 3, removeChild: 3, textContent: 2 });
+		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { id: 1, createElement: 3, insertBefore: 3, removeChild: 1, textContent: 2 });
 	});
 
 /*

@@ -1,6 +1,6 @@
 import { ENV_DOM, isArr, isProm, curry } from '../utils';
 import { fireHooks } from './hooks';
-import { FIXED_BODY, FAST_REMOVE } from './initElementNode';
+import { FIXED_BODY, DEEP_REMOVE } from './initElementNode';
 
 const doc = ENV_DOM ? document : null;
 
@@ -44,7 +44,7 @@ function deepNotifyRemove(node) {
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if (!(node.flags & FAST_REMOVE) && isArr(node.body))
+	if ((node.flags & DEEP_REMOVE) && isArr(node.body))
 		node.body.forEach(deepNotifyRemove);
 
 	return res;
@@ -53,7 +53,7 @@ function deepNotifyRemove(node) {
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks, vm = node.vm;
 
-	if (!(node.flags & FAST_REMOVE) && isArr(node.body)) {
+	if ((node.flags & DEEP_REMOVE) && isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)
 			_removeChild(el, node.body[i].el);
