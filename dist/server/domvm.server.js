@@ -567,8 +567,10 @@ function deepNotifyRemove(node) {
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if ((node.flags & DEEP_REMOVE) && isArr(node.body))
-		{ node.body.forEach(deepNotifyRemove); }
+	if ((node.flags & DEEP_REMOVE) && isArr(node.body)) {
+		for (var i = 0; i < node.body.length; i++)
+			{ deepNotifyRemove(node.body[i]); }
+	}
 
 	return res;
 }
@@ -1971,6 +1973,13 @@ function escQuotes(s) {
 	return out;
 }
 
+function eachHtml(arr, dynProps) {
+	var buf = '';
+	for (var i = 0; i < arr.length; i++)
+		{ buf += html(arr[i], dynProps); }
+	return buf;
+}
+
 function html(node, dynProps) {
 	var out, style;
 
@@ -2021,14 +2030,10 @@ function html(node, dynProps) {
 				buf += ">";
 
 			if (!voidTags[node.tag]) {
-				var html2 = function(n2) {
-					buf += html(n2, dynProps);
-				};
-
 				if (node.flatBody != null)
-					{ node.flatBody.forEach(html2); }
+					{ buf += eachHtml(node.flatBody, dynProps); }
 				else if (isArr(node.body))
-					{ node.body.forEach(html2); }
+					{ buf += eachHtml(node.body, dynProps); }
 				else
 					{ buf += node.raw ? node.body : escHtml(node.body); }
 
