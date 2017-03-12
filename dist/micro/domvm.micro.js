@@ -33,6 +33,8 @@ var rAF = win.requestAnimationFrame;
 
 var emptyObj = {};
 
+function noop() {}
+
 function startsWith(haystack, needle) {
 	return haystack.lastIndexOf(needle, 0) === 0;
 }
@@ -308,7 +310,8 @@ function cssTag(raw) {
 
 // stubs for optional addons that still exist in code so need lightweight impls to run
 function isStreamStub() { return false; }
-function hookStreamStub() { }
+
+var hookStreamStub = noop;
 
 // assumes if styles exist both are objects or both are strings
 function patchStyle(n, o) {
@@ -1739,8 +1742,6 @@ function patch$1(o, n) {
 		patchAttrs(o, donor);
 	}
 }
-
-function noop() {}
 
 // does not handle defineComment, defineText, defineSVG (ambiguous); use plain text vals or explicit factories in templates.
 // does not handle defineElementSpread (not available in all builds); use exlicit factories in templates.

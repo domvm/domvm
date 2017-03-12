@@ -1,12 +1,10 @@
-import { isArr, isVal, isElem, isFunc } from '../utils';
-import { defineElement } from './defineElement';
-import { defineView } from './defineView';
-import { defineFragment } from './defineFragment';
-import { injectElement } from './injectElement';
-import { injectView } from './injectView';
-import { ViewModel } from './ViewModel';
-
-function noop() {}
+import { isArr, isVal, isElem, isFunc, noop } from '../../utils';
+import { defineElement } from '../defineElement';
+import { defineView } from '../defineView';
+import { defineFragment } from '../defineFragment';
+import { injectElement } from '../injectElement';
+import { injectView } from '../injectView';
+import { ViewModel } from '../ViewModel';
 
 // does not handle defineComment, defineText, defineSVG (ambiguous); use plain text vals or explicit factories in templates.
 // does not handle defineElementSpread (not available in all builds); use exlicit factories in templates.

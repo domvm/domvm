@@ -33,6 +33,8 @@ var rAF = win.requestAnimationFrame;
 
 var emptyObj = {};
 
+function noop() {}
+
 function startsWith(haystack, needle) {
 	return haystack.lastIndexOf(needle, 0) === 0;
 }
@@ -232,8 +234,8 @@ function getVm(n) {
 
 // stubs for optional addons that still exist in code so need lightweight impls to run
 function isStreamStub() { return false; }
-function hookStreamStub() { }
 function autoPxStub(name, val) { return val; }
+var hookStreamStub = noop;
 
 var tagObj = {};
 function cssTagStub(tag) { tagObj.tag = tag; return tagObj; }
