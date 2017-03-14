@@ -249,6 +249,20 @@ var placeholder = document.getElementById("widget");
 vm.mount(placeholder, true);		// replaces placeholder
 ```
 
+When a model mutates, you can request to redraw the view, optionally passing a boolean `sync` flag to force a synchronous redraw.
+
+```js
+vm.redraw(sync);
+```
+
+If you need to *replace* a view's model (as with immutable data structures), you can use `vm.update`, which will also redraw.
+If replacing a model, make sure you do not internally use the `model` passed to the view closure, since this cannot be changed.
+Instead, use the `model` argument provided to `render(vm, model, key)` or `vm.model` which will be replaced as needed.
+
+```js
+vm.update(newModel, sync);
+```
+
 Of course, you can nest views. This can be done either declaratively or via injection of any already-initialized view:
 
 ```js
