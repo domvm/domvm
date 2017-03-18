@@ -45,6 +45,50 @@ QUnit.module("Various Others");
 		assert.equal(vm.html(), expcHtml);
 	});
 
+	QUnit.test('Inserted nodes should not be matched up to sibling views with same root tags', function(assert) {
+		var nulls = false;
+
+		function ViewX() {
+			return function() {
+				return el("div", [
+					nulls ? null : el("div"),
+					vw(ViewY),
+					nulls ? null : el("div"),
+				]);
+			}
+		}
+
+		function ViewY() {
+			return function() {
+				return el("div", "foo");
+			};
+		}
+
+		instr.start();
+		vm = domvm.createView(ViewX).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><div></div><div>foo</div><div></div></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 4, insertBefore: 4, textContent: 1 });
+
+		nulls = true;
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><div>foo</div></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 2 });
+
+		nulls = false;
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><div></div><div>foo</div><div></div></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2 });
+	});
+
 	function FlattenView(vm) {
 		return function() {
 			return el("div", [

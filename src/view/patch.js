@@ -20,7 +20,7 @@ function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 				return o;
 		}
 
-		if (o.el._node != o || n.tag !== o.tag || n.type !== o.type)
+		if (o.el._node != o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm)
 			continue;
 
 		// if n.view
