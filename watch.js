@@ -6,7 +6,7 @@ var args = process.argv.slice(2);
 
 var buildName = args[0] || "full";
 
-watch('.', function(file) {
+watch('.', { recursive: true }, function(evName, file) {
 	if (/node_modules|dist|watch\.js|demos|test|stubs\.js/.test(file))
 		return;
 	if (/\.js$/.test(file))
