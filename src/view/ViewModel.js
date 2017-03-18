@@ -204,10 +204,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	isMounted && vm.hooks && fireHooks("willRedraw", vm);
 
 	// todo: test result of willRedraw hooks before clearing refs
-	if (vm.refs) {
-	//	var orefs = vm.refs;
-		vm.refs = null;
-	}
+	vm.refs = null;
 
 	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
 
