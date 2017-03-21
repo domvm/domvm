@@ -197,10 +197,6 @@ function binaryKeySearch(list, item) {
     return -1;
 }
 
-function isClass(fn) {
-	return !Object.getOwnPropertyDescriptor(fn, 'prototype').writable;
-}
-
 function isEvProp(name) {
 	return startsWith(name, "on");
 }
@@ -754,7 +750,7 @@ function createView(view, model, key, opts) {
 		opts	= view.opts;
 		view	= view.view;
 	}
-	else if (isClass(view))
+	else if (view.prototype._isClass)
 		{ return new view(model, key, opts); }
 
 	return new ViewModel(view, model, key, opts);
@@ -1318,7 +1314,7 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key == null ? model : key;
 
-	if (!isClass(view)) {
+	if (!view.prototype._isClass) {
 		var out = view.call(vm, vm, model, key);			// , opts
 
 		if (isFunc(out))
@@ -1364,6 +1360,8 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 var ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
+
+	_isClass: false,
 
 	// view + key serve as the vm's unique identity
 	view: null,

@@ -1,7 +1,7 @@
 import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
-import { isArr, isPlainObj, isFunc, isProm, isClass, cmpArr, cmpObj, assignObj, curry, raft } from "../utils";
+import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, raft } from "../utils";
 import { repaint, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib } from "./dom";
 import { didQueue, fireHooks } from "./hooks";
@@ -15,7 +15,7 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key == null ? model : key;
 
-	if (!isClass(view)) {
+	if (!view.prototype._isClass) {
 		var out = view.call(vm, vm, model, key);			// , opts
 
 		if (isFunc(out))
@@ -61,6 +61,8 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 export const ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
+
+	_isClass: false,
 
 	// view + key serve as the vm's unique identity
 	view: null,

@@ -168,7 +168,3 @@ export function binaryKeySearch(list, item) {
 
     return -1;
 }
-
-export function isClass(fn) {
-	return !Object.getOwnPropertyDescriptor(fn, 'prototype').writable;
-}
