@@ -1021,8 +1021,8 @@ function syncChildren(node, donor, frags) {
 }
 
 function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
-	for (var i = fromIdx || 0; i < obody.length; i++) {
-		var o = obody[i];
+	for (; fromIdx < obody.length; fromIdx++) {
+		var o = obody[fromIdx];
 
 		if (n.type == VVIEW && o.vm != null) {			// also ignore recycled/moved?
 			var ov = o.vm;
