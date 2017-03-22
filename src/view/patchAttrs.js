@@ -31,11 +31,10 @@ export function setAttr(node, name, val, asProp) {
 export function patchAttrs(vnode, donor) {
 	const nattrs = vnode.attrs || emptyObj;
 	const oattrs = donor.attrs || emptyObj;
-	const tag = vnode.tag;
 
 	for (var key in nattrs) {
 		var nval = nattrs[key];
-		var isDyn = isDynProp(tag, key);
+		var isDyn = isDynProp(vnode.tag, key);
 		var oval = isDyn ? vnode.el[key] : oattrs[key];
 
 		if (isStream(nval))
@@ -56,6 +55,6 @@ export function patchAttrs(vnode, donor) {
 	for (var key in oattrs) {
 		!(key in nattrs) &&
 		!isSplProp(key) &&
-		remAttr(vnode, key, isDynProp(tag, key) || isEvProp(key));
+		remAttr(vnode, key, isDynProp(vnode.tag, key) || isEvProp(key));
 	}
 }
