@@ -205,7 +205,32 @@ function YourView() {
 }
 ```
 
-&ast; For object-oriented folks, ES6 class-based views are [coming soon](#).
+Object-oriented folks may prefer ES6 class-based views. Simply include the ViewModel class wrapper.
+
+```html
+<script src="src/view/addons/ViewClass.js"></script>
+```
+```js
+var el = domvm.defineElement;
+
+class MyView extends View {
+    constructor() {
+        super();
+        this.state = {i: 0};
+    }
+
+    render() {
+        return el("div", "Hello World! " + this.state.i);
+    }
+}
+
+var vm = new MyView();
+
+vm.mount(document.body);
+```
+
+`this === vm`. See [/demos/es6-class-views.html](/demos/es6-class-views.html) for more details.
+
 
 Views can accept an external `model` to render (often referred to as `external state`, `data` or React's `props`):
 
