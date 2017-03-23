@@ -597,6 +597,14 @@ function insertAfter(parEl, el, refEl) {
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
 }
 
+var globalCfg = {
+	onevent: noop,
+};
+
+function config(newCfg) {
+	assignObj(globalCfg, newCfg);
+}
+
 function bindEv(el, type, fn) {
 //	DEBUG && console.log("addEventListener");
 	el[type] = fn;
@@ -604,7 +612,9 @@ function bindEv(el, type, fn) {
 
 function handle(e, fn, args) {
 	var node = closestVNode(e.target);
-	var out = fn.apply(null, args.concat(e, node, getVm(node)));
+	var vm = getVm(node);
+	var out = fn.apply(null, args.concat(e, node, vm));
+	globalCfg.onevent.apply(null, [e, node, vm].concat(args));
 
 	if (out === false) {
 		e.preventDefault();
@@ -617,7 +627,7 @@ function wrapHandler(fn, args) {
 
 	return function wrap(e) {
 		handle(e, fn, args);
-	}
+	};
 }
 
 // delagated handlers {".moo": [fn, a, b]}, {".moo": fn}
@@ -1660,6 +1670,8 @@ function injectElement(el) {
 }
 
 var nano = {
+	config: config,
+
 	ViewModel: ViewModel,
 	VNode: VNode,
 

@@ -14,7 +14,11 @@ import { injectElement } from "../view/injectElement";
 
 import { FIXED_BODY, DEEP_REMOVE, KEYED_LIST } from "../view/initElementNode";
 
+import { config } from '../view/config';
+
 export default {
+	config,
+
 	ViewModel,
 	VNode,
 
