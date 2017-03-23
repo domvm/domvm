@@ -4,36 +4,14 @@
 </head>
 <body>
 	<script src="../dist/nano/domvm.nano.js"></script>
+	<script src="../src/view/addons/ViewClass.js"></script>
 	<script src="lib/deepmerge.js"></script>
 	<script>
-		// boilerplate, w/setState too
-
-		class View {
-			constructor(model, key, opts) {
-				domvm.ViewModel.call(this, this.constructor, model, key, opts);
-			//	this.hook()
-			//	this.diff()
-			//	this.on()
-			}
-
-			// update()? that merges
-			setState(state, sync) {
-				this.state = this.state == null ? state : deepmerge(this.state, state);
-				this.redraw(sync);
-			}
-
-		//	state: null
-		}
-
-		const p = domvm.ViewModel.prototype;
-
-		for (var i in p)
-			View.prototype[i] = p[i];
-
-		View.prototype._isClass = true;
-
-
-
+		// update()? that merges
+		View.prototype.setState = function(state, sync) {
+			this.state = this.state == null ? state : deepmerge(this.state, state);
+			this.redraw(sync);
+		};
 
 		// now userspace code
 		var el = domvm.defineElement,
