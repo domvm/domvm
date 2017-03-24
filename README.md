@@ -90,7 +90,7 @@ domvm comes in [several builds](/dist) of increasing size and features. The `nan
 **Node**
 
 ```js
-var domvm = require("domvm");	// the "full" build
+var domvm = require("domvm");   // the "full" build
 ```
 
 ---
@@ -103,17 +103,17 @@ For convenience, we'll alias each factory function with a short variable:
 
 ```js
 var el = domvm.defineElement,
-	tx = domvm.defineText,
-	cm = domvm.defineComment,
-	vw = domvm.defineView,
-	iv = domvm.injectView,
-	ie = domvm.injectElement;
+    tx = domvm.defineText,
+    cm = domvm.defineComment,
+    sv = domvm.defineSvgElement,
+    vw = domvm.defineView,
+    iv = domvm.injectView,
+    ie = domvm.injectElement;
 ```
 
 <!-- TODO
 domvm.defineElementSpread
 domvm.defineFragment
-domvm.defineSvgElement
 -->
 
 Using `defineText` isn't strictly necessary since all encountered numbers and strings will be automatically converted into `defineText` vnodes for you.
@@ -122,51 +122,51 @@ Additionally, there's a convenience factory `domvm.h` that can discern `defineEl
 Below is a dense reference of most template semantics. Pay attention, there's a lot of neat stuff in here that won't be covered later!
 
 ```js
-el("p", "Hello")											// plain tags
-el("textarea[rows=10]#foo.bar.baz", "Hello")				// attr, id & class shorthands
-el(".kitty", "Hello")										// "div" can be omitted from tags
+el("p", "Hello")                                            // plain tags
+el("textarea[rows=10]#foo.bar.baz", "Hello")                // attr, id & class shorthands
+el(".kitty", "Hello")                                       // "div" can be omitted from tags
 
-el("input",  {type: "checkbox",    checked: true})			// boolean attrs
-el("input",  {type: "checkbox", ".checked": true})			// set property instead of attr
+el("input",  {type: "checkbox",    checked: true})          // boolean attrs
+el("input",  {type: "checkbox", ".checked": true})          // set property instead of attr
 
-el("button", {onclick: myFn}, "Hello")						// event handlers
-el("button", {onclick: [myFn, arg1, arg2]}, "Hello")		// parameterized
-el("ul",     {onclick: {".item": myFn}}, ...)				// delegated
-el("ul",     {onclick: {".item": [myFn, arg1, arg2]}}, ...)	// delegated & parameterized
+el("button", {onclick: myFn}, "Hello")                      // event handlers
+el("button", {onclick: [myFn, arg1, arg2]}, "Hello")        // parameterized
+el("ul",     {onclick: {".item": myFn}}, ...)               // delegated
+el("ul",     {onclick: {".item": [myFn, arg1, arg2]}}, ...) // delegated & parameterized
 
-el("p",      {style: "font-size: 10pt;"}, "Hello")			// style can be a string
-el("p",      {style: {fontSize: "10pt"}}, "Hello")			// or an object (camelCase only)
-el("div",    {style: {width: 35}},        "Hello")			// "px" will be added when needed
+el("p",      {style: "font-size: 10pt;"}, "Hello")          // style can be a string
+el("p",      {style: {fontSize: "10pt"}}, "Hello")          // or an object (camelCase only)
+el("div",    {style: {width: 35}},        "Hello")          // "px" will be added when needed
 
-el("h1", [													// attrs object is optional
-	el("em", "Important!"),
-	"foo", 123,												// plain values
-	ie(myElement),											// inject existing DOM nodes
-	el("br"),												// void tags without content
-	"", [], null, undefined, false,							// these will be auto-removed
-	NaN, true, {}, Infinity,								// these will be coerced to strings
-	[														// nested arrays will get flattened
-		el(".foo", {class: "bar"}, [						// short & attr class get merged: .foo.bar
-			"Baz",
-			el("hr"),
-		])
-	],
+el("h1", [                                                  // attrs object is optional
+    el("em", "Important!"),
+    "foo", 123,                                             // plain values
+    ie(myElement),                                          // inject existing DOM nodes
+    el("br"),                                               // void tags without content
+    "", [], null, undefined, false,                         // these will be auto-removed
+    NaN, true, {}, Infinity,                                // these will be coerced to strings
+    [                                                       // nested arrays will get flattened
+        el(".foo", {class: "bar"}, [                        // short & attr class get merged: .foo.bar
+            "Baz",
+            el("hr"),
+        ])
+    ],
 ])
 
 el("#ui", [
-	vw(NavBarView, navbar),									// sub-view w/model
-	vw(PanelView, panel, "panelA"),							// sub-view w/model & key
-	iv(someOtherView),										// injected external ViewModel
+    vw(NavBarView, navbar),                                 // sub-view w/model
+    vw(PanelView, panel, "panelA"),                         // sub-view w/model & key
+    iv(someOtherView),                                      // injected external ViewModel
 ])
 
 // special _* props
 
-el("p", {_raw: true}, "<span>A am text!</span>")			// raw innerHTML body, CAREFUL!
-el("p", {_key: "myParag"}, "Some text")						// keyed nodes
-el("p", {_data: {foo: 123}}, "Some text")					// per-node data (faster than attr)
+el("p", {_raw: true}, "<span>A am text!</span>")            // raw innerHTML body, CAREFUL!
+el("p", {_key: "myParag"}, "Some text")                     // keyed nodes
+el("p", {_data: {foo: 123}}, "Some text")                   // per-node data (faster than attr)
 
-el("p", {_ref: "myParag"}, "Some text")						// named refs (vm.refs.myParag)
-el("p", {_ref: "pets.james"}, "Some text")					// namespaced (vm.refs.pets.james)
+el("p", {_ref: "myParag"}, "Some text")                     // named refs (vm.refs.myParag)
+el("p", {_ref: "pets.james"}, "Some text")                  // namespaced (vm.refs.pets.james)
 ```
 
 <!-- TODO
@@ -190,30 +190,55 @@ This opens the door to much more interesting architectural patterns when needed,
 ```js
 var el = domvm.defineElement;
 
-function MyView() {											// named view closure
-	return function() {											// render()
-		return el("div", "Hello World!");							// template
-	};
+function MyView() {                                         // named view closure
+    return function() {                                         // render()
+        return el("div", "Hello World!");                           // template
+    };
 }
 
 function YourView() {
-	return {
-		render: function() {
-			return el("div", "Hello World!");
-		}
-	};
+    return {
+        render: function() {
+            return el("div", "Hello World!");
+        }
+    };
 }
 ```
 
-&ast; For object-oriented folks, ES6 class-based views are [coming soon](#).
+Object-oriented folks may prefer ES6 class-based views. Simply include the ViewModel class wrapper.
+
+```html
+<script src="src/view/addons/ViewClass.js"></script>
+```
+```js
+var el = domvm.defineElement;
+
+class MyView extends View {
+    constructor() {
+        super();
+        this.state = {i: 0};
+    }
+
+    render() {
+        return el("div", "Hello World! " + this.state.i);
+    }
+}
+
+var vm = new MyView();
+
+vm.mount(document.body);
+```
+
+`this === vm`. See [/demos/es6-class-views.html](/demos/es6-class-views.html) for more details.
+
 
 Views can accept an external `model` to render (often referred to as `external state`, `data` or React's `props`):
 
 ```js
 function MyView(vm, model, key, opts) {
-	return function(vm, model, key, opts) {
-		return el("div", "Hello " + model.firstName + "!");
-	};
+    return function(vm, model, key, opts) {
+        return el("div", "Hello " + model.firstName + "!");
+    };
 }
 ```
 
@@ -233,12 +258,12 @@ Rendering a view to the DOM is called mounting. To mount a top-level view, we cr
 
 ```js
 var model = {
-	firstName: "Leon"
+    firstName: "Leon"
 };
 
 var vm = domvm.createView(MyView, model);
 
-vm.mount(document.body);			// appends into target
+vm.mount(document.body);            // appends into target
 ```
 
 By default, `.mount(container)` will append the view into the container. Alternatively, to replace an existing placeholder element:
@@ -246,44 +271,58 @@ By default, `.mount(container)` will append the view into the container. Alterna
 ```js
 var placeholder = document.getElementById("widget");
 
-vm.mount(placeholder, true);		// replaces placeholder
+vm.mount(placeholder, true);        // replaces placeholder
+```
+
+When a model mutates, you can request to redraw the view, optionally passing a boolean `sync` flag to force a synchronous redraw.
+
+```js
+vm.redraw(sync);
+```
+
+If you need to *replace* a view's model (as with immutable data structures), you can use `vm.update`, which will also redraw.
+If replacing a model, make sure you do not internally use the `model` passed to the view closure, since this cannot be changed.
+Instead, use the `model` argument provided to `render(vm, model, key)` or `vm.model` which will be replaced as needed.
+
+```js
+vm.update(newModel, sync);
 ```
 
 Of course, you can nest views. This can be done either declaratively or via injection of any already-initialized view:
 
 ```js
 function ViewA(vm, model) {
-	return function() {
-		return el("div", [
-			el("strong", modelA.test),
-			vw(ViewB, modelA.modelB),				// implicit/declarative view
-			iv(model.viewC),						// injected explicit view
-		]),
-	};
+    return function() {
+        return el("div", [
+            el("strong", modelA.test),
+            vw(ViewB, modelA.modelB),               // implicit/declarative view
+            iv(model.viewC),                        // injected explicit view
+        ]),
+    };
 }
 
 function ViewB(vm, model) {
-	return function() {
-		return el("em", model.test2);
-	};
+    return function() {
+        return el("em", model.test2);
+    };
 }
 
 function ViewC(vm, model) {
-	return function() {
-		return el("em", model.test3);
-	};
+    return function() {
+        return el("em", model.test3);
+    };
 }
 
 var modelC = {
-	test3: 789,
+    test3: 789,
 };
 
 var modelA = {
-	test: 123,
-	modelB: {
-		test2: 456,
-	},
-	viewC: domvm.createView(ViewC, modelC),
+    test: 123,
+    modelB: {
+        test2: 456,
+    },
+    viewC: domvm.createView(ViewC, modelC),
 };
 
 var vmA = domvm.createView(ViewA, modelA).mount(document.body);
@@ -295,34 +334,34 @@ var vmA = domvm.createView(ViewA, modelA).mount(document.body);
 **Try it:** https://jsfiddle.net/csLa6bew/
 
 ```js
-var el = domvm.defineElement;						// element VNode creator
+var el = domvm.defineElement;                       // element VNode creator
 
-function StepperView(vm, stepper) {					// view closure (called once during init)
-	function add(num) {
-		stepper.value += num;
-		vm.redraw();
-	}
+function StepperView(vm, stepper) {                 // view closure (called once during init)
+    function add(num) {
+        stepper.value += num;
+        vm.redraw();
+    }
 
-	function set(e) {
-		stepper.value = +e.target.value;
-	}
+    function set(e) {
+        stepper.value = +e.target.value;
+    }
 
-	return function() {								// template renderer (called on each redraw)
-		return el("#stepper", [
-			el("button", {onclick: [add, -1]}, "-"),
-			el("input[type=number]", {value: stepper.value, oninput: set}),
-			el("button", {onclick: [add, +1]}, "+"),
-		]);
-	};
+    return function() {                             // template renderer (called on each redraw)
+        return el("#stepper", [
+            el("button", {onclick: [add, -1]}, "-"),
+            el("input[type=number]", {value: stepper.value, oninput: set}),
+            el("button", {onclick: [add, +1]}, "+"),
+        ]);
+    };
 }
 
-var stepper = {										// some external model/data/state
-	value: 1
+var stepper = {                                     // some external model/data/state
+    value: 1
 };
 
-var vm = domvm.createView(StepperView, stepper);	// create ViewModel, passing model
+var vm = domvm.createView(StepperView, stepper);    // create ViewModel, passing model
 
-vm.mount(document.body);							// mount into document
+vm.mount(document.body);                            // mount into document
 ```
 
 The above example is simple and decoupled. It provides a UI to modify our stepper object which itself needs no awareness of any visual representation.
@@ -342,35 +381,35 @@ It is *this* fully capable, view-augmented domain model that domvm's author cons
 var el = domvm.defineElement;
 
 function StepperView(vm, stepper) {
-	var add = stepper.add.bind(stepper);
+    var add = stepper.add.bind(stepper);
 
-	function set(e) {
-		stepper.set(e.target.value);
-	}
+    function set(e) {
+        stepper.set(e.target.value);
+    }
 
-	return function() {
-		return el("#stepper", [
-			el("button", {onclick: [add, -1]}, "-"),
-			el("input[type=number]", {value: stepper.value, oninput: set}),
-			el("button", {onclick: [add, +1]}, "+"),
-		]);
-	};
+    return function() {
+        return el("#stepper", [
+            el("button", {onclick: [add, -1]}, "-"),
+            el("input[type=number]", {value: stepper.value, oninput: set}),
+            el("button", {onclick: [add, +1]}, "+"),
+        ]);
+    };
 }
 
 function Stepper() {
-	this.value = 1;
+    this.value = 1;
 
-	this.add = function(num) {
-		this.value += num;
-		this.view.redraw();
-	};
+    this.add = function(num) {
+        this.value += num;
+        this.view.redraw();
+    };
 
-	this.set = function(num) {
-		this.value = +num;
-		this.view.redraw();
-	};
+    this.set = function(num) {
+        this.value = +num;
+        this.view.redraw();
+    };
 
-	this.view = domvm.createView(StepperView, this);
+    this.view = domvm.createView(StepperView, this);
 }
 
 var stepper = new Stepper();
@@ -380,9 +419,9 @@ stepper.view.mount(document.body);
 // now let's use the stepper's API to increment
 var i = 0;
 var it = setInterval(function() {
-	stepper.add(1);
+    stepper.add(1);
 
-	if (i++ == 20) clearInterval(it);
+    if (i++ == 20) clearInterval(it);
 }, 250);
 ```
 

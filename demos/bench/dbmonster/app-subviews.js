@@ -12,95 +12,52 @@ el = function(tag, arg1, arg2) {
 };
 */
 
-// avoids array flattening, uses concat()
-function DBMonView() {
-	return function (vm, dbs) { return (
-		el("div", [
-			el("table.table.table-striped.latest-data", [
-				el("tbody", dbs.map(function(db) { return (
-					el("tr", [
-							el("td.dbname", db.dbname),
-							el("td.query-count", [
-								el("span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries)
-							])
-						].concat(db.lastSample.topFiveQueries.map(function(query) { return (
-							el("td", { class: query.elapsedClassName }, [
-								el("span", query.formatElapsed),
-								el(".popover.left", [
-									el(".popover-content", query.query),
-									el(".arrow"),
-								])
-							])
-						)}))
-					)
-				)}))
-			])
-		])
-	)}
-}
-
-/*
-// naive implementation w/ array flattening
+// sub-view & diff (avoids array flattening)
 function DBMonView() {
 	return (vm, dbs) =>
 		el("div", [
 			el("table.table.table-striped.latest-data", [
 				el("tbody", dbs.map(db =>
-					el("tr", [
-						el("td.dbname", db.dbname),
-						el("td.query-count", [
-							el("span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries)
-						]),
-						db.lastSample.topFiveQueries.map(query =>
-							el("td", { class: query.elapsedClassName }, [
-								el("span", query.formatElapsed),
-								el(".popover.left", [
-									el(".popover-content", query.query),
-									el(".arrow"),
-								])
-							])
-						)
-					])
+					vw(DB, db, false)
 				))
 			])
 		])
 }
-*/
 
-/*
-var el = domvm.defineElementSpread;
+function DB(vm) {
+//	vm.diff({
+//		vals: function(vm, db) {
+//			return [db.lastMutationId];
+//		}
+//	});
 
-// FIXED_BODY optimization for fixed-layout nodes (no removal/insertion/reordering)
-el = function() {
-	var vnode = domvm.defineElementSpread.apply(null, arguments);
-	vnode.flags = domvm.FIXED_BODY;
-	return vnode;
-};
-
-// uses spread w/ array flattening
-function DBMonView() {
-	return (vm, dbs) =>
-		el("div",
-			el("table.table.table-striped.latest-data",
-				el("tbody", dbs.map(db =>
-					el("tr",
-						el("td.dbname", db.dbname),
-						el("td.query-count",
-							el("span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries)
-						), db.lastSample.topFiveQueries.map(query =>
-						el("td", { class: query.elapsedClassName },
-							el("span", query.formatElapsed),
-							el(".popover.left",
-								el(".popover-content", query.query),
-								el(".arrow")
-							)
-						))
-					)
-				))
-			)
-		)
+	return (vm, db) =>
+		el("tr", [
+			el("td.dbname", db.dbname),
+			el("td.query-count", [
+				el("span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries)
+			]),
+		].concat(db.lastSample.topFiveQueries.map(query =>
+			vw(Query, query, false)
+		)));
 }
-*/
+
+function Query(vm) {
+//	vm.diff({
+//		vals: function(vm, query) {
+//			return [query, query.elapsed];
+//		}
+//	});
+
+	return (vm, query) =>
+		el("td", { class: query.elapsedClassName }, [
+			el("span", query.formatElapsed),
+			el(".popover.left", [
+				el(".popover-content", query.query),
+				el(".arrow"),
+			])
+		]);
+}
 
 var dbs		= null,
 	raf		= null,

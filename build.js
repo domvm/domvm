@@ -112,8 +112,6 @@ function compile(buildName) {
 		console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
 
 		minify(buildName, start);
-
-		buildDistTable();
 	}).catch(function(err) {
 		console.log(err);
 		if (destub)
@@ -126,15 +124,23 @@ function minify(buildName, start) {
 
 	var src = "dist/" + buildName + "/domvm." + buildName + ".js";
 	var dst = "dist/" + buildName + "/domvm." + buildName + ".min.js";
+//	var mapName = "domvm." + buildName + ".min.js.map";
+//	var dstMap = "dist/" + buildName + "/" + mapName;
 
 	let cmd = [
 		"java -jar compiler.jar --language_in=ECMASCRIPT6_STRICT",
 		"--js             " + src,
 		"--js_output_file " + dst,
+	//	"--create_source_map " + dstMap,
+	//	"--source_map_include_content",
+	//	'--output_wrapper "%output%\n//# sourceMappingURL=' + mapName + '"',
 	].join(" ");
 
 	exec(cmd, function(error, stdout, stderr) {
 		console.log((+new Date - start) + "ms: Closure done (build: " + buildName + ")");
+
+	//	fs.writeFileSync(dst, fs.readFileSync(dst, 'utf8') + "//# sourceMappingURL="+mapName, 'utf8');
+	//	fs.writeFileSync(dstMap, fs.readFileSync(dstMap, 'utf8').replace(/dist\/nano\//g, ""), 'utf8');
 
 		buildDistTable();
 

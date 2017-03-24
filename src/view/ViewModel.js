@@ -15,19 +15,29 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key == null ? model : key;
 
-	var out = view.call(vm, vm, model, key);			// , opts
+	if (!view.prototype._isClass) {
+		var out = view.call(vm, vm, model, key);			// , opts
 
-	if (isFunc(out))
-		vm.render = out;
-	else {
-		if (out.diff) {
-			vm.diff(out.diff);
-			delete out.diff;
+		if (isFunc(out))
+			vm.render = out;
+		else {
+			if (out.diff) {
+				vm.diff(out.diff);
+				delete out.diff;
+			}
+
+			assignObj(vm, out);
 		}
-
-		assignObj(vm, out);
 	}
+	else {
+	//	handle .diff re-definiton
+		var vdiff = vm.diff;
 
+		if (vdiff != null && vdiff != ViewModelProto.diff) {
+			vm.diff = ViewModelProto.diff.bind(vm);
+			vm.diff(vdiff);
+		}
+	}
 	// remove this?
 	if (opts) {
 		vm.opts = opts;
@@ -51,6 +61,8 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 export const ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
+
+	_isClass: false,
 
 	// view + key serve as the vm's unique identity
 	view: null,
@@ -194,10 +206,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	isMounted && vm.hooks && fireHooks("willRedraw", vm);
 
 	// todo: test result of willRedraw hooks before clearing refs
-	if (vm.refs) {
-	//	var orefs = vm.refs;
-		vm.refs = null;
-	}
+	vm.refs = null;
 
 	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
 

@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+</head>
+<body>
+	<script src="../dist/nano/domvm.nano.js"></script>
+	<script src="../src/view/addons/ViewClass.js"></script>
+	<script src="lib/deepmerge.js"></script>
+	<script>
+		// update()? that merges
+		View.prototype.setState = function(state, sync) {
+			this.state = this.state == null ? state : deepmerge(this.state, state);
+			this.redraw(sync);
+		};
+
+		// now userspace code
+		var el = domvm.defineElement,
+			tx = domvm.defineText,
+			vw = domvm.defineView,
+			iv = domvm.injectView;
+
+		class MyView extends View {
+			constructor() {
+				super();
+				this.state = {i: 0};
+				this.hook({
+					didMount: function() {	// creates new fn every instance, not shared
+						console.log("mounted!");
+					}
+				})
+			}
+
+			render() {
+				return el("p", [
+					tx("Hello World: " + this.state.i),
+					vw(MyView2),
+				]);
+			}
+		//	diff() {
+		//		return [0];
+		//	}
+			// hooks:		// :(, must use this.hook() in constructor since ES6 classes can only contain methods
+		}
+
+		class MyView2 extends MyView {
+			render() {
+				return el("strong", [
+					tx("Fooo!"),
+					iv(vm3)
+				]);
+			}
+		}
+
+		class MyView3 extends View {
+			render() {
+				return el("em", "BARRR!");
+			}
+		}
+
+	//	MyView.prototype.hooks = {};
+
+		var vm3 = new MyView3();
+
+		var vm = new MyView();
+
+		vm.mount(document.body);
+
+		setInterval(function() {
+			vm.setState({i: ++vm.state.i});
+		}, 500)
+
+		console.log(vm instanceof MyView);
+	</script>
+</body>
+</html>

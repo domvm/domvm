@@ -5,6 +5,8 @@ const rAF = win.requestAnimationFrame;
 
 export const emptyObj = {};
 
+export function noop() {};
+
 export function startsWith(haystack, needle) {
 	return haystack.lastIndexOf(needle, 0) === 0;
 }

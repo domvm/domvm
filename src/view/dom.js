@@ -10,7 +10,9 @@ export function closestVNode(el) {
 	return el._node;
 }
 
-export function createElement(tag) {
+export function createElement(tag, ns) {
+	if (ns != null)
+		return doc.createElementNS(ns, tag);
 	return doc.createElement(tag);
 }
 
@@ -44,8 +46,10 @@ function deepNotifyRemove(node) {
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if ((node.flags & DEEP_REMOVE) && isArr(node.body))
-		node.body.forEach(deepNotifyRemove);
+	if ((node.flags & DEEP_REMOVE) && isArr(node.body)) {
+		for (var i = 0; i < node.body.length; i++)
+			deepNotifyRemove(node.body[i]);
+	}
 
 	return res;
 }

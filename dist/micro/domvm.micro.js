@@ -33,6 +33,8 @@ var rAF = win.requestAnimationFrame;
 
 var emptyObj = {};
 
+function noop() {}
+
 function startsWith(haystack, needle) {
 	return haystack.lastIndexOf(needle, 0) === 0;
 }
@@ -308,7 +310,8 @@ function cssTag(raw) {
 
 // stubs for optional addons that still exist in code so need lightweight impls to run
 function isStreamStub() { return false; }
-function hookStreamStub() { }
+
+var hookStreamStub = noop;
 
 // assumes if styles exist both are objects or both are strings
 function patchStyle(n, o) {
@@ -384,6 +387,7 @@ var VNodeProto = VNode.prototype = {
 	data:	null,
 	hooks:	null,
 	raw:	false,
+	ns:		null,
 
 	el:		null,
 
@@ -504,7 +508,9 @@ function closestVNode(el) {
 	return el._node;
 }
 
-function createElement(tag) {
+function createElement(tag, ns) {
+	if (ns != null)
+		{ return doc.createElementNS(ns, tag); }
 	return doc.createElement(tag);
 }
 
@@ -538,8 +544,10 @@ function deepNotifyRemove(node) {
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if ((node.flags & DEEP_REMOVE) && isArr(node.body))
-		{ node.body.forEach(deepNotifyRemove); }
+	if ((node.flags & DEEP_REMOVE) && isArr(node.body)) {
+		for (var i = 0; i < node.body.length; i++)
+			{ deepNotifyRemove(node.body[i]); }
+	}
 
 	return res;
 }
@@ -592,6 +600,14 @@ function insertAfter(parEl, el, refEl) {
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
 }
 
+var globalCfg = {
+	onevent: noop,
+};
+
+function config(newCfg) {
+	assignObj(globalCfg, newCfg);
+}
+
 function bindEv(el, type, fn) {
 //	DEBUG && console.log("addEventListener");
 	el[type] = fn;
@@ -599,7 +615,9 @@ function bindEv(el, type, fn) {
 
 function handle(e, fn, args) {
 	var node = closestVNode(e.target);
-	var out = fn.apply(null, args.concat(e, node, getVm(node)));
+	var vm = getVm(node);
+	var out = fn.apply(null, args.concat(e, node, vm));
+	globalCfg.onevent.apply(null, [e, node, vm].concat(args));
 
 	if (out === false) {
 		e.preventDefault();
@@ -612,7 +630,7 @@ function wrapHandler(fn, args) {
 
 	return function wrap(e) {
 		handle(e, fn, args);
-	}
+	};
 }
 
 // delagated handlers {".moo": [fn, a, b]}, {".moo": fn}
@@ -668,6 +686,8 @@ function setAttr(node, name, val, asProp) {
 
 	if (val == null)
 		{ remAttr(node, name); }		//, asProp?  // will also removeAttr of style: null
+	else if (node.ns != null)
+		{ el.setAttribute(name, val); }
 	else if (name == "class")
 		{ el.className = val; }
 	else if (name == "id" || typeof val == "boolean" || asProp)
@@ -681,11 +701,10 @@ function setAttr(node, name, val, asProp) {
 function patchAttrs(vnode, donor) {
 	var nattrs = vnode.attrs || emptyObj;
 	var oattrs = donor.attrs || emptyObj;
-	var tag = vnode.tag;
 
 	for (var key in nattrs) {
 		var nval = nattrs[key];
-		var isDyn = isDynProp(tag, key);
+		var isDyn = isDynProp(vnode.tag, key);
 		var oval = isDyn ? vnode.el[key] : oattrs[key];
 
 		if (isStreamStub(nval))
@@ -706,7 +725,7 @@ function patchAttrs(vnode, donor) {
 	for (var key in oattrs) {
 		!(key in nattrs) &&
 		!isSplProp(key) &&
-		remAttr(vnode, key, isDynProp(tag, key) || isEvProp(key));
+		remAttr(vnode, key, isDynProp(vnode.tag, key) || isEvProp(key));
 	}
 }
 
@@ -717,8 +736,37 @@ function createView(view, model, key, opts) {
 		opts	= view.opts;
 		view	= view.view;
 	}
+	else if (view.prototype._isClass)
+		{ return new view(model, key, opts); }
 
 	return new ViewModel(view, model, key, opts);
+}
+
+function defineElement(tag, arg1, arg2, flags) {
+	var attrs, body;
+
+	if (arg2 == null) {
+		if (isPlainObj(arg1))
+			{ attrs = arg1; }
+		else
+			{ body = arg1; }
+	}
+	else {
+		attrs = arg1;
+		body = arg2;
+	}
+
+	return initElementNode(tag, attrs, body, flags);
+}
+
+var XML_NS = "http://www.w3.org/2000/xmlns/";
+var SVG_NS = "http://www.w3.org/2000/svg";
+var XLINK_NS = "http://www.w3.org/1999/xlink";
+
+function defineSvgElement(tag, arg1, arg2, flags) {
+	var n = defineElement(tag, arg1, arg2, flags);
+	n.ns = SVG_NS;
+	return n;
 }
 
 function flattenBody(body, acc, flatParent) {
@@ -794,7 +842,10 @@ function hydrateBody(vnode) {
 function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
 		if (vnode.type == ELEMENT) {
-			vnode.el = withEl || createElement(vnode.tag);
+			vnode.el = withEl || createElement(vnode.tag, vnode.ns);
+
+			if (vnode.tag == "svg")
+				{ vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS); }
 
 			if (vnode.attrs != null)
 				{ patchAttrs2(vnode); }
@@ -1014,8 +1065,8 @@ function syncChildren(node, donor, frags) {
 }
 
 function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
-	for (var i = fromIdx || 0; i < obody.length; i++) {
-		var o = obody[i];
+	for (; fromIdx < obody.length; fromIdx++) {
+		var o = obody[fromIdx];
 
 		if (n.type == VVIEW && o.vm != null) {			// also ignore recycled/moved?
 			var ov = o.vm;
@@ -1025,7 +1076,7 @@ function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 				{ return o; }
 		}
 
-		if (o.el._node != o || n.tag !== o.tag || n.type !== o.type)
+		if (o.el._node != o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm)
 			{ continue; }
 
 		// if n.view
@@ -1279,19 +1330,29 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key == null ? model : key;
 
-	var out = view.call(vm, vm, model, key);			// , opts
+	if (!view.prototype._isClass) {
+		var out = view.call(vm, vm, model, key);			// , opts
 
-	if (isFunc(out))
-		{ vm.render = out; }
-	else {
-		if (out.diff) {
-			vm.diff(out.diff);
-			delete out.diff;
+		if (isFunc(out))
+			{ vm.render = out; }
+		else {
+			if (out.diff) {
+				vm.diff(out.diff);
+				delete out.diff;
+			}
+
+			assignObj(vm, out);
 		}
-
-		assignObj(vm, out);
 	}
+	else {
+	//	handle .diff re-definiton
+		var vdiff = vm.diff;
 
+		if (vdiff != null && vdiff != ViewModelProto.diff) {
+			vm.diff = ViewModelProto.diff.bind(vm);
+			vm.diff(vdiff);
+		}
+	}
 	// remove this?
 	if (opts) {
 		vm.opts = opts;
@@ -1315,6 +1376,8 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 var ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
+
+	_isClass: false,
 
 	// view + key serve as the vm's unique identity
 	view: null,
@@ -1458,10 +1521,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	isMounted && vm.hooks && fireHooks("willRedraw", vm);
 
 	// todo: test result of willRedraw hooks before clearing refs
-	if (vm.refs) {
-	//	var orefs = vm.refs;
-		vm.refs = null;
-	}
+	vm.refs = null;
 
 	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
 
@@ -1538,23 +1598,6 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 		parentVm.body.push(vm);
 	}
 */
-}
-
-function defineElement(tag, arg1, arg2, flags) {
-	var attrs, body;
-
-	if (arg2 == null) {
-		if (isPlainObj(arg1))
-			{ attrs = arg1; }
-		else
-			{ body = arg1; }
-	}
-	else {
-		attrs = arg1;
-		body = arg2;
-	}
-
-	return initElementNode(tag, attrs, body, flags);
 }
 
 function defineComment(body) {
@@ -1645,12 +1688,15 @@ function injectElement(el) {
 }
 
 var nano = {
+	config: config,
+
 	ViewModel: ViewModel,
 	VNode: VNode,
 
 	createView: createView,
 
 	defineElement: defineElement,
+	defineSvgElement: defineSvgElement,
 	defineText: defineText,
 	defineComment: defineComment,
 	defineFragment: defineFragment,
@@ -1682,16 +1728,16 @@ ViewModelProto.diff = function(cfg) {
 		var thenFn = cfg.then;
 	}
 
-	var oldVals = getVals(vm, vm.model, vm.key, vm.opts);
+	var oldVals = getVals.call(vm, vm, vm.model, vm.key, vm.opts);
 	var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
 
 	vm._diff = function() {
-		var newVals = getVals(vm, vm.model, vm.key, vm.opts);
+		var newVals = getVals.call(vm, vm, vm.model, vm.key, vm.opts);
 		var isSame = cmpFn(oldVals, newVals);
 
 		if (!isSame) {
 			// thenFn must return false to prevent redraw
-			if (thenFn != null && thenFn(vm, oldVals, newVals) === false)
+			if (thenFn != null && thenFn.call(vm, vm, oldVals, newVals) === false)
 				{ isSame = true; }
 
 			oldVals = newVals;
@@ -1737,8 +1783,6 @@ function patch$1(o, n) {
 		patchAttrs(o, donor);
 	}
 }
-
-function noop() {}
 
 // does not handle defineComment, defineText, defineSVG (ambiguous); use plain text vals or explicit factories in templates.
 // does not handle defineElementSpread (not available in all builds); use exlicit factories in templates.

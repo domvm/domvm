@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+	<title>global onevent</title>
+	<script src="../dist/nano/domvm.nano.js"></script>
+</head>
+<body>
+	<script>
+		domvm.config({
+			onevent: function(e, node, vm, arg1, arg2) {
+				VM.redraw();
+			}
+		});
+
+		function randHex() {
+			return "#"+((1<<24)*Math.random()|0).toString(16);
+		}
+
+		function noop(arg1, arg2) {}
+
+		var el = domvm.defineElement;
+
+		function View() {
+			return function() {
+				return el("div", {style: "background: " + randHex() + "; width: 100px; height: 100px;", onmousemove: [noop, 1, 2]});
+			}
+		}
+
+		var VM = domvm.createView(View).mount(document.body);
+	</script>
+</body>
+</html>
