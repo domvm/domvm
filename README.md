@@ -227,6 +227,10 @@ class MyView extends View {
 var vm = new MyView();
 
 vm.mount(document.body);
+
+// or...
+
+var vm = domvm.createView(MyView).mount(document.body);
 ```
 
 `this === vm`. See [/demos/es6-class-views.html](/demos/es6-class-views.html) for more details.
