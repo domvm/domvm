@@ -7,10 +7,10 @@ A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 ---
 ### Intro
 
-domvm is a flexible, pure-js view layer for coding web apps.
+domvm is a flexible, pure-js view layer for your web apps.
 
 - It's small: [~6k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code, zero-dependency and tooling-free.
-- Its entire API can be mastered in under 1 hour thanks to obvious, explicit behavior and debuggable plain JS templates.
+- Its entire API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious, explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
 - It'll happily fit into any existing codebase - whatever the structure.
 - It's well-suited for building [simple widgets](https://rawgit.com/leeoniya/domvm/2.x-dev/demos/calendar.html) and [complex, fault-tolerant applications](http://rawgit.com/leeoniya/domvm/2.x-dev/demos/ThreaditJS/index.html).
 
