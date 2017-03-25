@@ -137,9 +137,9 @@ export function html(node, dynProps) {
 			}
 
 			// if body-less svg node, auto-close & return
-		//	if (node.ns != null && node.tag !== "svg" && node.tag !== "math" && node.body == null)
-		//		return buf + "/>";
-		//	else
+			if (node.body == null && node.ns != null && node.tag !== "svg")
+				return buf + "/>";
+			else
 				buf += ">";
 
 			if (!voidTags[node.tag]) {

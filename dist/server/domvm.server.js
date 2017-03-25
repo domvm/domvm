@@ -770,33 +770,7 @@ function createView(view, model, key, opts) {
 	return new ViewModel(view, model, key, opts);
 }
 
-function defineElement(tag, arg1, arg2, flags) {
-	var attrs, body;
-
-	if (arg2 == null) {
-		if (isPlainObj(arg1))
-			{ attrs = arg1; }
-		else
-			{ body = arg1; }
-	}
-	else {
-		attrs = arg1;
-		body = arg2;
-	}
-
-	return initElementNode(tag, attrs, body, flags);
-}
-
-var XML_NS = "http://www.w3.org/2000/xmlns/";
-var SVG_NS = "http://www.w3.org/2000/svg";
-var XLINK_NS = "http://www.w3.org/1999/xlink";
-
-function defineSvgElement(tag, arg1, arg2, flags) {
-	var n = defineElement(tag, arg1, arg2, flags);
-	n.ns = SVG_NS;
-	return n;
-}
-
+//import { XML_NS, XLINK_NS } from './defineSvgElement';
 function flattenBody(body, acc, flatParent) {
 	var node2;
 
@@ -872,8 +846,8 @@ function hydrate(vnode, withEl) {
 		if (vnode.type == ELEMENT) {
 			vnode.el = withEl || createElement(vnode.tag, vnode.ns);
 
-			if (vnode.tag == "svg")
-				{ vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS); }
+		//	if (vnode.tag == "svg")
+		//		vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS);
 
 			if (vnode.attrs != null)
 				{ patchAttrs2(vnode); }
@@ -1628,6 +1602,33 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 */
 }
 
+function defineElement(tag, arg1, arg2, flags) {
+	var attrs, body;
+
+	if (arg2 == null) {
+		if (isPlainObj(arg1))
+			{ attrs = arg1; }
+		else
+			{ body = arg1; }
+	}
+	else {
+		attrs = arg1;
+		body = arg2;
+	}
+
+	return initElementNode(tag, attrs, body, flags);
+}
+
+//export const XML_NS = "http://www.w3.org/2000/xmlns/";
+var SVG_NS = "http://www.w3.org/2000/svg";
+//export const XLINK_NS = "http://www.w3.org/1999/xlink";
+
+function defineSvgElement(tag, arg1, arg2, flags) {
+	var n = defineElement(tag, arg1, arg2, flags);
+	n.ns = SVG_NS;
+	return n;
+}
+
 function defineComment(body) {
 	var node = new VNode;
 	node.type = COMMENT;
@@ -2065,10 +2066,10 @@ function html(node, dynProps) {
 			}
 
 			// if body-less svg node, auto-close & return
-		//	if (node.ns != null && node.tag !== "svg" && node.tag !== "math" && node.body == null)
-		//		return buf + "/>";
-		//	else
-				buf += ">";
+			if (node.body == null && node.ns != null && node.tag !== "svg")
+				{ return buf + "/>"; }
+			else
+				{ buf += ">"; }
 
 			if (!voidTags[node.tag]) {
 				if (node.flatBody != null)
