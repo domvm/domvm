@@ -216,7 +216,7 @@ var el = domvm.defineElement;
 class MyView extends View {
     constructor() {
         super();
-        this.state = {i: 0};
+        this.state = {i: 0};                                // this === vm
     }
 
     render() {
@@ -226,14 +226,12 @@ class MyView extends View {
 
 var vm = new MyView();
 
-vm.mount(document.body);
-
 // or...
 
-var vm = domvm.createView(MyView).mount(document.body);
+var vm = domvm.createView(MyView);
 ```
 
-`this === vm`. See [/demos/es6-class-views.html](/demos/es6-class-views.html) for more details.
+See [/demos/es6-class-views.html](/demos/es6-class-views.html) for more details.
 
 
 Views can accept an external `model` to render (often referred to as `external state`, `data` or React's `props`):
