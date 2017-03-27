@@ -7,7 +7,6 @@ import { defineElement } from "../view/defineElement";
 import { defineSvgElement } from "../view/defineSvgElement";
 import { defineText } from "../view/defineText";
 import { defineComment } from "../view/defineComment";
-import { defineFragment } from "../view/defineFragment";
 import { defineView } from "../view/defineView";
 
 import { injectView } from "../view/injectView";
@@ -29,7 +28,6 @@ export default {
 	defineSvgElement,
 	defineText,
 	defineComment,
-	defineFragment,
 	defineView,
 
 	injectView,

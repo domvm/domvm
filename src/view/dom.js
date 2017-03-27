@@ -24,10 +24,6 @@ export function createComment(body) {
 	return doc.createComment(body);
 }
 
-export function createFragment() {
-	return doc.createDocumentFragment();
-}
-
 // ? removes if !recycled
 export function nextSib(sib) {
 	return sib.nextSibling;

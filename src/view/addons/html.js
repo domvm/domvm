@@ -1,4 +1,4 @@
-import { ELEMENT, TEXT, COMMENT, FRAGMENT, VVIEW, VMODEL } from '../VTYPES';
+import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
 import { createView } from '../createView';
 import { isArr, isPlainObj, isVal, isFunc, TRUE, ENV_DOM } from '../../utils';
 import { isEvProp, isDynProp } from '../utils';
@@ -143,9 +143,7 @@ export function html(node, dynProps) {
 				buf += ">";
 
 			if (!voidTags[node.tag]) {
-				if (node.flatBody != null)
-					buf += eachHtml(node.flatBody, dynProps);
-				else if (isArr(node.body))
+				if (isArr(node.body))
 					buf += eachHtml(node.body, dynProps);
 				else
 					buf += node.raw ? node.body : escHtml(node.body);
@@ -160,8 +158,6 @@ export function html(node, dynProps) {
 		case COMMENT:
 			out = "<!--" + escHtml(node.body) + "-->";
 			break;
-	//	case FRAGMENT:
-	//		break;
 	}
 
 	return out;

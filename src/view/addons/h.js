@@ -1,7 +1,6 @@
-import { isArr, isVal, isElem, isFunc, noop } from '../../utils';
+import { isVal, isElem, isFunc, noop } from '../../utils';
 import { defineElement } from '../defineElement';
 import { defineView } from '../defineView';
-import { defineFragment } from '../defineFragment';
 import { injectElement } from '../injectElement';
 import { injectView } from '../injectView';
 import { ViewModel } from '../ViewModel';
@@ -14,7 +13,6 @@ export function h(a) {
 		isFunc(a)				? defineView		:	// todo: es6 class constructor
 		isElem(a)				? injectElement		:
 		a instanceof ViewModel	? injectView		:
-		isArr(a)				? defineFragment	:
 		noop
 	).apply(null, arguments);
 }
