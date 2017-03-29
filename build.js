@@ -142,6 +142,9 @@ function minify(buildName, start) {
 	//	fs.writeFileSync(dst, fs.readFileSync(dst, 'utf8') + "//# sourceMappingURL="+mapName, 'utf8');
 	//	fs.writeFileSync(dstMap, fs.readFileSync(dstMap, 'utf8').replace(/dist\/nano\//g, ""), 'utf8');
 
+		// remove "window.moo = moo;" patterns inserted to prevent gcc inlining.
+		fs.writeFileSync(dst, fs.readFileSync(dst, 'utf8').replace(/window\.\w+\s*=\s*\w+;/gmi, ""), 'utf8');
+
 		buildDistTable();
 
 		/*

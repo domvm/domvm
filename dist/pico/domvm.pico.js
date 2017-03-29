@@ -1491,6 +1491,9 @@ function injectElement(el) {
 	return node;
 }
 
+// prevent GCC from inlining some large funcs (which negatively affects Chrome's JIT)
+window.syncChildren = syncChildren;
+
 var pico = {
 	config: config,
 
