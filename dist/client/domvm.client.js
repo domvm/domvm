@@ -40,6 +40,10 @@ function startsWith(haystack, needle) {
 
 var isArr = Array.isArray;
 
+function isSet(val) {
+	return val != null;
+}
+
 function isPlainObj(val) {
 	return val != null && val.constructor == Object;		//  && typeof val == "object"
 }
@@ -440,10 +444,6 @@ var VNodeProto = VNode.prototype = {
 	body:	function(val) { this.body	= val; return this; },
 	*/
 };
-
-function isSet(val) {
-	return val != null;
-}
 
 // (de)optimization flags
 
@@ -955,7 +955,7 @@ function syncChildren(node, donor) {
 		}
 
 //		from_right:
-		while(1) {
+		while (1) {
 		//	if (rgtSib == lftEnd)
 		//		break converge;
 
@@ -1232,8 +1232,6 @@ function preProc(vnew, parent, idx, ownVm) {
 function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	var vm = this;
 
-	vm.api = {};
-
 	vm.view = view;
 	vm.model = model;
 	vm.key = key == null ? model : key;
@@ -1432,6 +1430,9 @@ function redrawSync(newParent, newIdx, withDOM) {
 	vm.refs = null;
 
 	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
+
+	if (vm.key !== false)
+		{ vnew.key = vm.key; }
 
 //	console.log(vm.key);
 

@@ -1,11 +1,7 @@
 import { ELEMENT } from './VTYPES';
 import { VNode } from './VNode';
 import { cssTag } from './addons/stubs';
-import { isPlainObj } from '../utils';
-
-function isSet(val) {
-	return val != null;
-}
+import { isSet, isPlainObj } from '../utils';
 
 // (de)optimization flags
 

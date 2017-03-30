@@ -9,8 +9,6 @@ import { didQueue, fireHooks } from "./hooks";
 export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	var vm = this;
 
-	vm.api = {};
-
 	vm.view = view;
 	vm.model = model;
 	vm.key = key == null ? model : key;
@@ -209,6 +207,9 @@ function redrawSync(newParent, newIdx, withDOM) {
 	vm.refs = null;
 
 	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
+
+	if (vm.key !== false)
+		vnew.key = vm.key;
 
 //	console.log(vm.key);
 

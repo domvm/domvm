@@ -124,7 +124,7 @@ export function syncChildren(node, donor) {
 		}
 
 //		from_right:
-		while(1) {
+		while (1) {
 		//	if (rgtSib == lftEnd)
 		//		break converge;
 
