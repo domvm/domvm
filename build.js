@@ -9,7 +9,7 @@ function getBuilds() {
 	return [
 		{
 			build: "pico",
-			contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>fragments<br>element injection<br>raw html<br>vnode refs<br>css objects",
+			contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>element injection<br>raw html<br>vnode refs<br>css objects<br>svg<br>global onevent",
 			descr: "view core<br><br>**This build is unstable by design; features that get decoupled<br>can move to nano+ builds at any commit!**",
 		},
 		{
@@ -128,7 +128,7 @@ function minify(buildName, start) {
 //	var dstMap = "dist/" + buildName + "/" + mapName;
 
 	let cmd = [
-		"java -jar compiler.jar --language_in=ECMASCRIPT6_STRICT",
+		"java -jar compiler.jar --language_in=ECMASCRIPT6_STRICT --language_out ECMASCRIPT5_STRICT",
 		"--js             " + src,
 		"--js_output_file " + dst,
 	//	"--create_source_map " + dstMap,
@@ -141,6 +141,9 @@ function minify(buildName, start) {
 
 	//	fs.writeFileSync(dst, fs.readFileSync(dst, 'utf8') + "//# sourceMappingURL="+mapName, 'utf8');
 	//	fs.writeFileSync(dstMap, fs.readFileSync(dstMap, 'utf8').replace(/dist\/nano\//g, ""), 'utf8');
+
+		// remove "window.moo = moo;" patterns inserted to prevent gcc inlining.
+		fs.writeFileSync(dst, fs.readFileSync(dst, 'utf8').replace(/window\.\w+\s*=\s*\w+;/gmi, ""), 'utf8');
 
 		buildDistTable();
 

@@ -67,9 +67,13 @@
 
 		setInterval(function() {
 			vm.setState({i: ++vm.state.i});
-		}, 500)
+		}, 500);
 
 		console.log(vm instanceof MyView);
+
+		// and also
+
+		var vm4 = domvm.createView(MyView3).mount(document.body);
 	</script>
 </body>
 </html>

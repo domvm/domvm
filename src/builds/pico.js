@@ -7,7 +7,6 @@ import { defineElement } from "../view/defineElement";
 import { defineSvgElement } from "../view/defineSvgElement";
 import { defineText } from "../view/defineText";
 import { defineComment } from "../view/defineComment";
-import { defineFragment } from "../view/defineFragment";
 import { defineView } from "../view/defineView";
 
 import { injectView } from "../view/injectView";
@@ -16,6 +15,10 @@ import { injectElement } from "../view/injectElement";
 import { FIXED_BODY, DEEP_REMOVE, KEYED_LIST } from "../view/initElementNode";
 
 import { config } from '../view/config';
+
+// prevent GCC from inlining some large funcs (which negatively affects Chrome's JIT)
+import { syncChildren } from "../view/syncChildren";
+window.syncChildren = syncChildren;
 
 export default {
 	config,
@@ -29,7 +32,6 @@ export default {
 	defineSvgElement,
 	defineText,
 	defineComment,
-	defineFragment,
 	defineView,
 
 	injectView,

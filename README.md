@@ -7,10 +7,10 @@ A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 ---
 ### Intro
 
-domvm is a flexible, pure-js view layer for coding web apps.
+domvm is a flexible, pure-js view layer for your web apps.
 
-- It's small: [~6k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code, zero-dependency and tooling-free.
-- Its entire API can be mastered in under 1 hour thanks to obvious, explicit behavior and debuggable plain JS templates.
+- It's small: [~5k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code, zero-dependency and tooling-free.
+- Its entire API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious, explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
 - It'll happily fit into any existing codebase - whatever the structure.
 - It's well-suited for building [simple widgets](https://rawgit.com/leeoniya/domvm/2.x-dev/demos/calendar.html) and [complex, fault-tolerant applications](http://rawgit.com/leeoniya/domvm/2.x-dev/demos/ThreaditJS/index.html).
 
@@ -216,7 +216,7 @@ var el = domvm.defineElement;
 class MyView extends View {
     constructor() {
         super();
-        this.state = {i: 0};
+        this.state = {i: 0};                                // this === vm
     }
 
     render() {
@@ -226,10 +226,12 @@ class MyView extends View {
 
 var vm = new MyView();
 
-vm.mount(document.body);
+// or...
+
+var vm = domvm.createView(MyView);
 ```
 
-`this === vm`. See [/demos/es6-class-views.html](/demos/es6-class-views.html) for more details.
+See [/demos/es6-class-views.html](/demos/es6-class-views.html) for more details.
 
 
 Views can accept an external `model` to render (often referred to as `external state`, `data` or React's `props`):

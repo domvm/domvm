@@ -1,6 +1,6 @@
-import { ELEMENT, TEXT, COMMENT, FRAGMENT, VVIEW, VMODEL } from './VTYPES';
+import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr, binaryKeySearch } from '../utils';
-import { hydrateBody, flattenBody } from './hydrate';
+import { hydrateBody } from './hydrate';
 import { removeChild } from './dom';
 import { syncChildren } from './syncChildren';
 import { fireHooks } from './hooks';
@@ -141,15 +141,14 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 
 	var donor2,
 		fromIdx = 0,				// first unrecycled node (search head)
-		nbody = vnode.body,
-		hasFrags = false;
+		nbody = vnode.body;
 
 	for (var i = 0; i < nbody.length; i++) {
 		var node2 = nbody[i];
 		var type2 = node2.type;
 
-		// ELEMENT,TEXT,COMMENT,FRAGMENT
-		if (type2 <= FRAGMENT) {
+		// ELEMENT,TEXT,COMMENT
+		if (type2 <= COMMENT) {
 			if (donor2 = find(node2, list, fromIdx))
 				patch(node2, donor2);
 		}
@@ -166,31 +165,12 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 			type2 = vm.node.type;
 		}
 
-		if (type2 == FRAGMENT)
-			hasFrags = true;
-
 		// to keep search space small, if donation is non-contig, move node fwd?
 		// re-establish contigindex
 		if (!vnode.list && donor2 != null && donor2.idx == fromIdx)
 			fromIdx++;
 	}
 
-	if (!(vnode.flags & FIXED_BODY)) {
-		if (vnode.type == ELEMENT) {
-			if (hasFrags)
-				vnode.flatBody = flattenBody(vnode.body, [], vnode);
-
-			syncChildren(vnode, donor, hasFrags);
-		}
-		else if (vnode.type == FRAGMENT && isRedrawRoot) {
-			vnode = vnode.parent;
-
-			while (vnode.type != ELEMENT)
-				vnode = vnode.parent;
-
-			donor = {flatBody: vnode.flatBody};
-			vnode.flatBody = flattenBody(vnode.body, [], vnode);
-			syncChildren(vnode, donor, true);
-		}
-	}
+	if (vnode.type == ELEMENT && !(vnode.flags & FIXED_BODY))
+		syncChildren(vnode, donor);
 }
