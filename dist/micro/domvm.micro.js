@@ -65,9 +65,7 @@ function isProm(val) {
 	return typeof val === "object" && isFunc(val.then);
 }
 
-function isElem(val) {
-	return ENV_DOM && val instanceof HTMLElement;
-}
+
 
 function assignObj(targ) {
 	var args = arguments;
@@ -1664,45 +1662,7 @@ function patch$1(o, n) {
 	}
 }
 
-// does not handle defineComment, defineText, defineSVG (ambiguous); use plain text vals or explicit factories in templates.
-// does not handle defineElementSpread (not available in all builds); use exlicit factories in templates.
-function h(a) {
-	return (
-		isVal(a)				? defineElement		:
-		isFunc(a)				? defineView		:	// todo: es6 class constructor
-		isElem(a)				? injectElement		:
-		a instanceof ViewModel	? injectView		:
-		noop
-	).apply(null, arguments);
-}
-
-function defineElementSpread(tag) {
-	var args = arguments;
-	var len = args.length;
-	var body, attrs;
-
-	if (len > 1) {
-		var bodyIdx = 1;
-
-		if (isPlainObj(args[1])) {
-			attrs = args[1];
-			bodyIdx = 2;
-		}
-
-		if (len == bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx])))
-			{ body = args[bodyIdx]; }
-		else
-			{ body = sliceArgs(args, bodyIdx); }
-	}
-
-	return initElementNode(tag, attrs, body);
-}
-
 // #destub: cssTag,autoPx
-
-nano.h = h;
-
-nano.defineElementSpread = defineElementSpread;
 
 ViewModelProto.events = null;
 ViewModelProto.emit = emit;

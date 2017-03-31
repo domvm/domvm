@@ -30,7 +30,7 @@ var h  = domvm.h,
 		};
 	}
 
-	QUnit.test('Factory disambig', function(assert) {
+	QUnit.skip('Factory disambig', function(assert) {
 		instr.start();
 		var vm = domvm.createView(ViewA).mount(testyDiv);
 		var callCounts = instr.end();
