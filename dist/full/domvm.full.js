@@ -65,9 +65,7 @@ function isProm(val) {
 	return typeof val === "object" && isFunc(val.then);
 }
 
-function isElem(val) {
-	return ENV_DOM && val instanceof HTMLElement;
-}
+
 
 function assignObj(targ) {
 	var args = arguments;
@@ -1237,7 +1235,7 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.key = key == null ? model : key;
 
 	if (!view.prototype._isClass) {
-		var out = view.call(vm, vm, model, key);			// , opts
+		var out = view.call(vm, vm, model, key, opts);
 
 		if (isFunc(out))
 			{ vm.render = out; }
@@ -1259,6 +1257,7 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 			vm.diff(vdiff);
 		}
 	}
+
 	// remove this?
 	if (opts) {
 		vm.opts = opts;
@@ -1272,6 +1271,11 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	// these must be created here since debounced per view
 	vm._redrawAsync = raft(function (_) { return vm._redraw(); });
 	vm._updateAsync = raft(function (newModel) { return vm._update(newModel); });
+
+	var hooks = vm.hooks;
+
+	if (hooks && hooks.didInit)
+		{ hooks.didInit.call(vm, vm, model, key, opts); }
 
 //	this.update(model, parent, idx, parentVm, false);
 
@@ -1692,45 +1696,7 @@ function patch$1(o, n) {
 	}
 }
 
-// does not handle defineComment, defineText, defineSVG (ambiguous); use plain text vals or explicit factories in templates.
-// does not handle defineElementSpread (not available in all builds); use exlicit factories in templates.
-function h(a) {
-	return (
-		isVal(a)				? defineElement		:
-		isFunc(a)				? defineView		:	// todo: es6 class constructor
-		isElem(a)				? injectElement		:
-		a instanceof ViewModel	? injectView		:
-		noop
-	).apply(null, arguments);
-}
-
-function defineElementSpread(tag) {
-	var args = arguments;
-	var len = args.length;
-	var body, attrs;
-
-	if (len > 1) {
-		var bodyIdx = 1;
-
-		if (isPlainObj(args[1])) {
-			attrs = args[1];
-			bodyIdx = 2;
-		}
-
-		if (len == bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx])))
-			{ body = args[bodyIdx]; }
-		else
-			{ body = sliceArgs(args, bodyIdx); }
-	}
-
-	return initElementNode(tag, attrs, body);
-}
-
 // #destub: cssTag,autoPx
-
-nano.h = h;
-
-nano.defineElementSpread = defineElementSpread;
 
 ViewModelProto.events = null;
 ViewModelProto.emit = emit;

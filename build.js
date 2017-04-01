@@ -14,7 +14,7 @@ function getBuilds() {
 		},
 		{
 			build: "nano",
-			contents: "+ `h`<br>+ `selectorTag`<br>+ `autoPx`<br>+ `defineElementSpread`<br>+ `diff`<br>+ `patch`<br>",
+			contents: "+ `selectorTag`<br> + `autoPx`<br> + `diff`<br> + `patch`<br>",
 			descr: "tpl conveniences:<br>`\"input[type=checkbox].some-class\"`<br>`{style: {width: 20}}`<br>`el(\"div\", el(\"span\", \"foo\")...)`<br><br>optims:<br>`vnode.patch({class: ..., style...})`<br>`vm.diff({vals:...then:...})`",
 		},
 		{

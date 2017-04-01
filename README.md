@@ -113,13 +113,12 @@ var el = domvm.defineElement,
 
 <!-- TODO
 domvm.defineElementSpread
-domvm.defineFragment
+Additionally, there's a convenience factory `domvm.h` that can discern `defineElement`, `defineView`, `injectView` and `injectElement` based on the provided arguments.
 -->
 
 Using `defineText` isn't strictly necessary since all encountered numbers and strings will be automatically converted into `defineText` vnodes for you.
-Additionally, there's a convenience factory `domvm.h` that can discern `defineElement`, `defineView`, `injectView` and `injectElement` based on the provided arguments.
 
-Below is a dense reference of most template semantics. Pay attention, there's a lot of neat stuff in here that won't be covered later!
+Below is a dense reference of most template semantics. **Pay attention!**, there's a lot of neat stuff in here that won't be covered later!
 
 ```js
 el("p", "Hello")                                            // plain tags
@@ -299,7 +298,7 @@ function ViewA(vm, model) {
             el("strong", modelA.test),
             vw(ViewB, modelA.modelB),               // implicit/declarative view
             iv(model.viewC),                        // injected explicit view
-        ]),
+        ]);
     };
 }
 
@@ -447,8 +446,10 @@ Node-level `will*` hooks allow a promise/thennable return and can delay the even
 
 Usage: `vm.hook({willMount: ...})` or `return {render: ..., hooks: {willMount: ...}}`
 
+- didInit (after view's closure/constructor)
+- willUpdate (before views's model is replaced)
 - will/didRedraw
-- will/didMount
-- will/didUnmount
+- will/didMount (dom insertion)
+- will/didUnmount (dom removal)
 
 View-level `will*` hooks are not yet promise handling, so cannot be used for delay, but you can just rely on the view's root node's hooks to accomplish similar goals.
