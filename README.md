@@ -446,9 +446,10 @@ Node-level `will*` hooks allow a promise/thennable return and can delay the even
 
 Usage: `vm.hook({willMount: ...})` or `return {render: ..., hooks: {willMount: ...}}`
 
+- didInit (after view's closure/constructor)
+- willUpdate (before views's model is replaced)
 - will/didRedraw
-- willUpdate
-- will/didMount
-- will/didUnmount
+- will/didMount (dom insertion)
+- will/didUnmount (dom removal)
 
 View-level `will*` hooks are not yet promise handling, so cannot be used for delay, but you can just rely on the view's root node's hooks to accomplish similar goals.
