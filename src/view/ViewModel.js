@@ -14,7 +14,7 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.key = key == null ? model : key;
 
 	if (!view.prototype._isClass) {
-		var out = view.call(vm, vm, model, key);			// , opts
+		var out = view.call(vm, vm, model, key, opts);
 
 		if (isFunc(out))
 			vm.render = out;
@@ -36,6 +36,7 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 			vm.diff(vdiff);
 		}
 	}
+
 	// remove this?
 	if (opts) {
 		vm.opts = opts;
@@ -49,6 +50,11 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	// these must be created here since debounced per view
 	vm._redrawAsync = raft(_ => vm._redraw());
 	vm._updateAsync = raft(newModel => vm._update(newModel));
+
+	var hooks = vm.hooks;
+
+	if (hooks && hooks.didInit)
+		hooks.didInit.call(vm, vm, model, key, opts);
 
 //	this.update(model, parent, idx, parentVm, false);
 
