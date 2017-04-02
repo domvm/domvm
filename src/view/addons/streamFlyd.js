@@ -1,6 +1,6 @@
 import { streamCfg } from './streamCfg';
 
-if (typeof flyd != "undefined") {
+if (typeof flyd !== "undefined") {
 	streamCfg({
 		is:		s => flyd.isStream(s),
 		val:	s => s(),

@@ -9,7 +9,7 @@ import { injectView } from "../injectView";
 import { injectElement } from "../injectElement";
 
 function isStr(val) {
-	return typeof val == "string";
+	return typeof val === "string";
 }
 
 // tpl must be an array representing a single domvm 1.x jsonML node
@@ -22,7 +22,7 @@ export function jsonml(node) {
 		var len = node.length;
 
 		// empty arrays
-		if (len == 0)
+		if (len === 0)
 			node = null;
 		// elem defs: ["div"], ["div", {attrs}], ["div", [children]], ["div", ...children], ["div", {attrs}, [children]], ["div", {attrs}, ...children]
 		else if (isStr(node[0])) {
@@ -37,7 +37,7 @@ export function jsonml(node) {
 					bodyIdx = 2;
 				}
 
-				if (len == bodyIdx + 1) {
+				if (len === bodyIdx + 1) {
 					var last = node[bodyIdx];
 					// explit child array or plain val
 					if (isVal(last) || isArr(last) && !isStr(last[0]) && !isFunc(last[0]))

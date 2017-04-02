@@ -1,15 +1,15 @@
-import { startsWith, emptyObj } from '../utils';
+import { emptyObj } from '../utils';
 
 export function isEvProp(name) {
-	return startsWith(name, "on");
+	return name[0] === "o" && name[1] === "n";
 }
 
 export function isSplProp(name) {
-	return name[0] == "_";
+	return name[0] === "_";
 }
 
 export function isStyleProp(name) {
-	return name == "style";
+	return name === "style";
 }
 
 export function repaint(node) {

@@ -71,7 +71,7 @@ export function initElementNode(tag, attrs, body, flags) {
 					p[key] = parsed.attrs[key];
 		}
 
-//		if (node.attrs != p)
+//		if (node.attrs !== p)
 			node.attrs = p;
 	}
 

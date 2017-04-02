@@ -32,9 +32,9 @@ function tmpEdges(fn, parEl, lftSib, rgtSib) {
 }
 
 function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
-	var areAdjacent	= rgtNode.idx == lftNode.idx + 1;
-	var headToTail = areAdjacent ? false : lftSib._node == rgtNode;
-	var tailToHead = areAdjacent ? true  : rgtSib._node == lftNode;
+	var areAdjacent	= rgtNode.idx === lftNode.idx + 1;
+	var headToTail = areAdjacent ? false : lftSib._node === rgtNode;
+	var tailToHead = areAdjacent ? true  : rgtSib._node === lftNode;
 
 	if (headToTail || tailToHead) {
 		return tmpEdges(function(lftLft, rgtRgt) {
@@ -102,7 +102,7 @@ export function syncChildren(node, donor) {
 //		from_left:
 		while (1) {
 			// remove any non-recycled sibs whose el.node has the old parent
-			if (lftSib && parentNode(lsNode = lftSib._node) != node) {
+			if (lftSib && parentNode(lsNode = lftSib._node) !== node) {
 				tmpSib = nextSib(lftSib);
 				lsNode.vm != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
 				lftSib = tmpSib;
@@ -125,17 +125,17 @@ export function syncChildren(node, donor) {
 
 //		from_right:
 		while (1) {
-		//	if (rgtSib == lftEnd)
+		//	if (rgtSib === lftEnd)
 		//		break converge;
 
-			if (rgtSib && parentNode(rsNode = rgtSib._node) != node) {
+			if (rgtSib && parentNode(rsNode = rgtSib._node) !== node) {
 				tmpSib = prevSib(rgtSib);
 				rsNode.vm != null ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
 				rgtSib = tmpSib;
 				continue;
 			}
 
-			if (rgtNode == lftNode)		// converged
+			if (rgtNode === lftNode)		// converged
 				break converge;
 			else if (rgtNode.el == null) {
 				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vm != null ? rgtNode.vm.mount(parEl, false, true, nextSib(rgtSib) :

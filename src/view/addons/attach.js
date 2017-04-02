@@ -40,9 +40,9 @@ export function attach(vnode, withEl) {
 		var i = 0;
 		var v = vnode.body[i];
 		do {
-			if (v.type == VVIEW)
+			if (v.type === VVIEW)
 				v = createView(v.view, v.model, v.key, v.opts)._redraw(vnode, i, false).node;
-			else if (v.type == VMODEL)
+			else if (v.type === VMODEL)
 				v = v.node || v._redraw(vnode, i, false).node;
 
 			attach(v, c);

@@ -12,15 +12,15 @@ function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
 
-		if (n.type == VVIEW && o.vm != null) {			// also ignore recycled/moved?
+		if (n.type === VVIEW && o.vm != null) {			// also ignore recycled/moved?
 			var ov = o.vm;
 
 			// match by key & viewFn
-			if (ov.view == n.view && ov.key == n.key)
+			if (ov.view === n.view && ov.key === n.key)
 				return o;
 		}
 
-		if (o.el._node != o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm)
+		if (o.el._node !== o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm)
 			continue;
 
 		// if n.view
@@ -61,7 +61,7 @@ export function patch(vnode, donor, isRedrawRoot) {
 	el._node = vnode;
 
 	// "" => ""
-	if (vnode.type == TEXT && nbody !== obody) {
+	if (vnode.type === TEXT && nbody !== obody) {
 		el.nodeValue = nbody;
 		return;
 	}
@@ -129,7 +129,9 @@ function sortByKey(a, b) {
 
 // [] => []
 function patchChildren(vnode, donor, isRedrawRoot) {
-	if (vnode.flags & KEYED_LIST) {
+	var isList = (vnode.flags & KEYED_LIST) === KEYED_LIST;
+
+	if (isList) {
 		var list = donor.body.slice();
 		list.sort(sortByKey);
 		var find = findListDonor;
@@ -152,7 +154,7 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 			if (donor2 = find(node2, list, fromIdx))
 				patch(node2, donor2);
 		}
-		else if (type2 == VVIEW) {
+		else if (type2 === VVIEW) {
 			if (donor2 = find(node2, list, fromIdx))		// update/moveTo
 				var vm = donor2.vm._update(node2.model, vnode, i);		// withDOM
 			else
@@ -160,17 +162,17 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 
 			type2 = vm.node.type;
 		}
-		else if (type2 == VMODEL) {
+		else if (type2 === VMODEL) {
 			var vm = node2.vm._update(node2.model, vnode, i);
 			type2 = vm.node.type;
 		}
 
 		// to keep search space small, if donation is non-contig, move node fwd?
 		// re-establish contigindex
-		if (!vnode.list && donor2 != null && donor2.idx == fromIdx)
+		if (!isList && donor2 != null && donor2.idx === fromIdx)
 			fromIdx++;
 	}
 
-	if (vnode.type == ELEMENT && !(vnode.flags & FIXED_BODY))
+	if (vnode.type === ELEMENT && (vnode.flags & FIXED_BODY) === 0)
 		syncChildren(vnode, donor);
 }

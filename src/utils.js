@@ -1,4 +1,4 @@
-export const ENV_DOM = typeof window != "undefined";
+export const ENV_DOM = typeof window !== "undefined";
 export const TRUE = true;
 const win = ENV_DOM ? window : {};
 const rAF = win.requestAnimationFrame;
@@ -7,10 +7,6 @@ export const emptyObj = {};
 
 export function noop() {};
 
-export function startsWith(haystack, needle) {
-	return haystack.lastIndexOf(needle, 0) === 0;
-}
-
 export const isArr = Array.isArray;
 
 export function isSet(val) {
@@ -18,7 +14,7 @@ export function isSet(val) {
 }
 
 export function isPlainObj(val) {
-	return val != null && val.constructor == Object;		//  && typeof val == "object"
+	return val != null && val.constructor === Object;		//  && typeof val === "object"
 }
 
 export function insertArr(targ, arr, pos, rem) {
@@ -58,7 +54,7 @@ export function deepSet(targ, path, val) {
 	var seg;
 
 	while (seg = path.shift()) {
-		if (path.length == 0)
+		if (path.length === 0)
 			targ[seg] = val;
 		else
 			targ[seg] = targ = targ[seg] || {};
@@ -70,7 +66,7 @@ export function deepUnset(targ, path) {
 	var seg;
 
 	while (seg = path.shift()) {
-		if (path.length == 0)
+		if (path.length === 0)
 			targ[seg] = val;
 		else
 			targ[seg] = targ = targ[seg] || {};
@@ -96,7 +92,7 @@ export function cmpObj(a, b) {
 export function cmpArr(a, b) {
 	const alen = a.length;
 
-	if (b.length != alen)
+	if (b.length !== alen)
 		return false;
 
 	for (var i = 0; i < alen; i++)
@@ -134,7 +130,7 @@ export function curry(fn, args, ctx) {
 
 export function prop(val, cb, ctx, args) {
 	return function(newVal, execCb) {
-		if (typeof newVal != "undefined" && newVal !== val) {
+		if (newVal !== undefined && newVal !== val) {
 			val = newVal;
 			execCb !== false && isFunc(cb) && cb.apply(ctx, args);
 		}

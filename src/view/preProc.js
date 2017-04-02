@@ -17,7 +17,7 @@ function setDeepRemove(node) {
 
 // vnew, vold
 export function preProc(vnew, parent, idx, ownVm) {
-	if (vnew.type == VMODEL || vnew.type == VVIEW)
+	if (vnew.type === VMODEL || vnew.type === VVIEW)
 		return;
 
 	vnew.parent = parent;
@@ -47,12 +47,12 @@ export function preProc(vnew, parent, idx, ownVm) {
 				if (node2.type == null)
 					body[i] = node2 = defineText(""+node2);
 
-				if (node2.type == TEXT) {
+				if (node2.type === TEXT) {
 					// remove empty text nodes
-					if (node2.body == null || node2.body == "")
+					if (node2.body == null || node2.body === "")
 						body.splice(i--, 1);
 					// merge with previous text node
-					else if (i > 0 && body[i-1].type == TEXT) {
+					else if (i > 0 && body[i-1].type === TEXT) {
 						body[i-1].body += node2.body;
 						body.splice(i--, 1);
 					}

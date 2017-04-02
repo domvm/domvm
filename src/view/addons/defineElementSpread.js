@@ -14,7 +14,7 @@ export function defineElementSpread(tag) {
 			bodyIdx = 2;
 		}
 
-		if (len == bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx])))
+		if (len === bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx])))
 			body = args[bodyIdx];
 		else
 			body = sliceArgs(args, bodyIdx);

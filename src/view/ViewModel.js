@@ -31,7 +31,7 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	//	handle .diff re-definiton
 		var vdiff = vm.diff;
 
-		if (vdiff != null && vdiff != ViewModelProto.diff) {
+		if (vdiff != null && vdiff !== ViewModelProto.diff) {
 			vm.diff = ViewModelProto.diff.bind(vm);
 			vm.diff(vdiff);
 		}
@@ -149,7 +149,7 @@ function mount(el, isRoot) {		// , asSub, refEl
 		vm._redraw(null, null, false);
 
 		// if placeholder node doesnt match root tag
-		if (el.nodeName.toLowerCase() != vm.node.tag) {
+		if (el.nodeName.toLowerCase() !== vm.node.tag) {
 			hydrate(vm.node);
 			insertBefore(el.parentNode, vm.node.el, el);
 			el.parentNode.removeChild(el);
