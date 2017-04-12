@@ -212,7 +212,7 @@ function isDynProp(tag, attr) {
 				case "value":
 				case "checked":
 				case "selected":
-				case "selectedIndex":
+//				case "selectedIndex":
 					return true;
 			}
 //	}
