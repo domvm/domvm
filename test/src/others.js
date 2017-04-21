@@ -206,6 +206,38 @@ QUnit.module("Various Others");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { insertBefore: 1 });
 	});
 
+	QUnit.test('Externally inserted element', function(assert) {
+		function View6(vm) {
+			return function() {
+				return el("div", [
+					el("span", "a"),
+					el("em", "b"),
+				]);
+			};
+		}
+
+		var expcHtml = '<div><span>a</span><em>b</em></div>';
+
+		instr.start();
+		vm = domvm.createView(View6).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 3, textContent: 2, insertBefore: 3 });
+
+		var el2 = document.createElement("strong");
+		el2.textContent = "cow";
+
+		vm.node.el.insertBefore(el2, vm.node.el.lastChild);
+
+		var expcHtml = '<div><span>a</span><strong>cow</strong><em>b</em></div>';
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html().replace("</span><em>","</span><strong>cow</strong><em>"), expcHtml, callCounts, { });
+	});
+
 	QUnit.test('Remove/clean child of sub-view', function(assert) {
 		var data = ["a"];
 		var data2 = ["b", "c"];
