@@ -147,7 +147,7 @@ QUnit.module("Various Others");
 		vm = domvm.createView(SomeView3).mount(em, true);
 		var callCounts = instr.end();
 
-		evalOut(assert, em, vm.html(), expcHtml, callCounts, { textContent: 1, removeChild: 1, insertBefore: 1 });
+		evalOut(assert, em, vm.html(), expcHtml, callCounts, { textContent: 2, insertBefore: 1 });
 	});
 
 	QUnit.test('Raw HTML as body', function(assert) {

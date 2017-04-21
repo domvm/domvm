@@ -3,7 +3,7 @@ import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
 import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, raft } from "../utils";
 import { repaint, getVm } from "./utils";
-import { insertBefore, removeChild, nextSib } from "./dom";
+import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { didQueue, fireHooks } from "./hooks";
 
 export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
@@ -143,8 +143,7 @@ function mount(el, isRoot) {		// , asSub, refEl
 	var vm = this;
 
 	if (isRoot) {
-		while (el.firstChild)
-			el.removeChild(el.firstChild);
+		clearChildren({el: el, flags: 0});
 
 		vm._redraw(null, null, false);
 

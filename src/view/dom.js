@@ -78,6 +78,17 @@ export function removeChild(parEl, el) {
 		_removeChild(parEl, el);
 }
 
+export function clearChildren(parent) {
+	var parEl = parent.el;
+
+	if ((parent.flags & DEEP_REMOVE) === 0)
+		parEl.textContent = null;
+	else {
+		while (parEl.firstChild)
+			removeChild(parEl, parEl.firstChild);
+	}
+}
+
 // todo: hooks
 export function insertBefore(parEl, el, refEl) {
 	var node = el._node, hooks = node.hooks, inDom = el.parentNode != null;

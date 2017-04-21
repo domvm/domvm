@@ -494,6 +494,17 @@ function removeChild(parEl, el) {
 		{ _removeChild(parEl, el); }
 }
 
+function clearChildren(parent) {
+	var parEl = parent.el;
+
+	if ((parent.flags & DEEP_REMOVE) === 0)
+		{ parEl.textContent = null; }
+	else {
+		while (parEl.firstChild)
+			{ removeChild(parEl, parEl.firstChild); }
+	}
+}
+
 // todo: hooks
 function insertBefore(parEl, el, refEl) {
 	var node = el._node, hooks = node.hooks, inDom = el.parentNode != null;
@@ -987,17 +998,15 @@ function patch(vnode, donor, isRedrawRoot) {
 				else
 					{ el.textContent = nbody; }
 			}
-			else {
-				while (el.firstChild)
-					{ removeChild(el, el.firstChild); }
-			}
+			else
+				{ clearChildren(donor); }
 		}
 	}
 	else {
 		// "" | null => []
 		if (newIsArr) {
 		//	console.log('"" => []', obody, nbody);	// hydrate new here?
-			el.firstChild && el.removeChild(el.firstChild);
+			clearChildren(donor);
 			hydrateBody(vnode);
 		}
 		// "" | null => "" | null
@@ -1022,7 +1031,16 @@ function sortByKey(a, b) {
 
 // [] => []
 function patchChildren(vnode, donor, isRedrawRoot) {
-	var isList = (vnode.flags & KEYED_LIST) === KEYED_LIST;
+	var nbody = vnode.body,
+		nlen = nbody.length,
+		domSync = donor.type === ELEMENT && (donor.flags & FIXED_BODY) === 0;
+
+	if (domSync && nlen === 0) {
+		clearChildren(donor);
+		return;
+	}
+
+	var isList = (donor.flags & KEYED_LIST) === KEYED_LIST;
 
 	if (isList) {
 		var list = donor.body.slice();
@@ -1035,10 +1053,9 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 	}
 
 	var donor2,
-		fromIdx = 0,				// first unrecycled node (search head)
-		nbody = vnode.body;
+		fromIdx = 0;				// first unrecycled node (search head)
 
-	for (var i = 0; i < nbody.length; i++) {
+	for (var i = 0; i < nlen; i++) {
 		var node2 = nbody[i];
 		var type2 = node2.type;
 
@@ -1066,8 +1083,8 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 			{ fromIdx++; }
 	}
 
-	if (vnode.type === ELEMENT && (vnode.flags & FIXED_BODY) === 0)
-		{ syncChildren(vnode, donor); }
+
+	domSync && syncChildren(vnode, donor);
 }
 
 function defineText(body) {
@@ -1277,8 +1294,7 @@ function mount(el, isRoot) {		// , asSub, refEl
 	var vm = this;
 
 	if (isRoot) {
-		while (el.firstChild)
-			{ el.removeChild(el.firstChild); }
+		clearChildren({el: el, flags: 0});
 
 		vm._redraw(null, null, false);
 
