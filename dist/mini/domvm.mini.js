@@ -919,10 +919,7 @@ function syncChildren(node, donor) {
 		newSibs,
 		tmpSib,
 		lsNode,
-		rsNode,
-		lftFaux		= 0,
-		rgtFaux		= 0;
-
+		rsNode;
 
 	converge:
 	while (1) {
@@ -930,9 +927,11 @@ function syncChildren(node, donor) {
 		while (1) {
 			// remove any non-recycled sibs whose el.node has the old parent
 			if (lftSib) {
-				// create faux vnodes for dom elements not created by domvm
-				if ((lsNode = lftSib._node) == null)
-					{ lsNode = lftSib._node = {parent: node, idx: lftNode.idx + (++lftFaux * .01)}; }
+				// skip dom elements not created by domvm
+				if ((lsNode = lftSib._node) == null) {
+					lftSib = nextSib(lftSib);
+					continue;
+				}
 
 				if (parentNode(lsNode) !== node) {
 					tmpSib = nextSib(lftSib);
@@ -962,8 +961,10 @@ function syncChildren(node, donor) {
 		//		break converge;
 
 			if (rgtSib) {
-				if ((rsNode = rgtSib._node) == null)
-					{ rsNode = rgtSib._node = {parent: node, idx: rgtNode.idx - (++rgtFaux * .01)}; }
+				if ((rsNode = rgtSib._node) == null) {
+					rgtSib = prevSib(rgtSib);
+					continue;
+				}
 
 				if (parentNode(rsNode) !== node) {
 					tmpSib = prevSib(rgtSib);

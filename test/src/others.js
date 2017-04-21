@@ -207,10 +207,13 @@ QUnit.module("Various Others");
 	});
 
 	QUnit.test('Externally inserted element', function(assert) {
+		var ins = false;
+
 		function View6(vm) {
 			return function() {
 				return el("div", [
 					el("span", "a"),
+					ins ? el("i", "me") : null,
 					el("em", "b"),
 				]);
 			};
@@ -236,6 +239,16 @@ QUnit.module("Various Others");
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html().replace("</span><em>","</span><strong>cow</strong><em>"), expcHtml, callCounts, { });
+
+		ins = true;
+
+		var expcHtml = "<div><span>a</span><strong>cow</strong><i>me</i><em>b</em></div>";
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html().replace("</span><i>","</span><strong>cow</strong><i>"), expcHtml, callCounts, { createElement: 1, textContent: 1, insertBefore: 1});
 	});
 
 	QUnit.test('Remove/clean child of sub-view', function(assert) {
