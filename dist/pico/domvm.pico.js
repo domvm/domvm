@@ -1364,7 +1364,8 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
 
-	if (vm.key != null)
+	// always assign vm key to root vnode (this is a de-opt)
+	if (vm.key !== false && vm.key != null && vnew.key !== vm.key)
 		{ vnew.key = vm.key; }
 
 //	console.log(vm.key);
