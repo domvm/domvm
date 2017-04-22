@@ -32,7 +32,7 @@ QUnit.module("flags/DEEP_REMOVE");
 
 		var expcHtml = '<div></div>';
 
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 2 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { textContent: 1 });
 	});
 
 	QUnit.test('On for deep willRemove', function(assert) {

@@ -42,7 +42,7 @@ function deepNotifyRemove(node) {
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if ((node.flags & DEEP_REMOVE) && isArr(node.body)) {
+	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
 		for (var i = 0; i < node.body.length; i++)
 			deepNotifyRemove(node.body[i]);
 	}
@@ -53,7 +53,7 @@ function deepNotifyRemove(node) {
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks, vm = node.vm;
 
-	if ((node.flags & DEEP_REMOVE) && isArr(node.body)) {
+	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)
 			_removeChild(el, node.body[i].el);
@@ -78,12 +78,23 @@ export function removeChild(parEl, el) {
 		_removeChild(parEl, el);
 }
 
+export function clearChildren(parent) {
+	var parEl = parent.el;
+
+	if ((parent.flags & DEEP_REMOVE) === 0)
+		parEl.textContent = null;
+	else {
+		while (parEl.firstChild)
+			removeChild(parEl, parEl.firstChild);
+	}
+}
+
 // todo: hooks
 export function insertBefore(parEl, el, refEl) {
 	var node = el._node, hooks = node.hooks, inDom = el.parentNode != null;
 
-	// el == refEl is asserted as a no-op insert called to fire hooks
-	var vm = (el == refEl || !inDom) && node.vm;
+	// el === refEl is asserted as a no-op insert called to fire hooks
+	var vm = (el === refEl || !inDom) && node.vm;
 
 	vm && vm.hooks && fireHooks("willMount", vm);
 

@@ -1,26 +1,26 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr, binaryKeySearch } from '../utils';
 import { hydrateBody } from './hydrate';
-import { removeChild } from './dom';
+import { clearChildren } from './dom';
 import { syncChildren } from './syncChildren';
 import { fireHooks } from './hooks';
 import { patchAttrs } from './patchAttrs';
 import { createView } from './createView';
-import { FIXED_BODY, KEYED_LIST } from './initElementNode';
+import { FIXED_BODY, DEEP_REMOVE, KEYED_LIST } from './initElementNode';
 
 function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
 
-		if (n.type == VVIEW && o.vm != null) {			// also ignore recycled/moved?
+		if (n.type === VVIEW && o.vm != null) {			// also ignore recycled/moved?
 			var ov = o.vm;
 
 			// match by key & viewFn
-			if (ov.view == n.view && ov.key == n.key)
+			if (ov.view === n.view && ov.key === n.key)
 				return o;
 		}
 
-		if (o.el._node != o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm)
+		if (o.el._node !== o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm)
 			continue;
 
 		// if n.view
@@ -61,7 +61,7 @@ export function patch(vnode, donor, isRedrawRoot) {
 	el._node = vnode;
 
 	// "" => ""
-	if (vnode.type == TEXT && nbody !== obody) {
+	if (vnode.type === TEXT && nbody !== obody) {
 		el.nodeValue = nbody;
 		return;
 	}
@@ -94,17 +94,15 @@ export function patch(vnode, donor, isRedrawRoot) {
 				else
 					el.textContent = nbody;
 			}
-			else {
-				while (el.firstChild)
-					removeChild(el, el.firstChild);
-			}
+			else
+				clearChildren(donor);
 		}
 	}
 	else {
 		// "" | null => []
 		if (newIsArr) {
 		//	console.log('"" => []', obody, nbody);	// hydrate new here?
-			el.firstChild && el.removeChild(el.firstChild);
+			clearChildren(donor);
 			hydrateBody(vnode);
 		}
 		// "" | null => "" | null
@@ -129,7 +127,18 @@ function sortByKey(a, b) {
 
 // [] => []
 function patchChildren(vnode, donor, isRedrawRoot) {
-	if (vnode.flags & KEYED_LIST) {
+	var nbody = vnode.body,
+		nlen = nbody.length,
+		domSync = donor.type === ELEMENT && (donor.flags & FIXED_BODY) === 0;
+
+	if (domSync && nlen === 0) {
+		clearChildren(donor);
+		return;
+	}
+
+	var isList = (donor.flags & KEYED_LIST) === KEYED_LIST;
+
+	if (isList) {
 		var list = donor.body.slice();
 		list.sort(sortByKey);
 		var find = findListDonor;
@@ -140,10 +149,9 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 	}
 
 	var donor2,
-		fromIdx = 0,				// first unrecycled node (search head)
-		nbody = vnode.body;
+		fromIdx = 0;				// first unrecycled node (search head)
 
-	for (var i = 0; i < nbody.length; i++) {
+	for (var i = 0; i < nlen; i++) {
 		var node2 = nbody[i];
 		var type2 = node2.type;
 
@@ -152,7 +160,7 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 			if (donor2 = find(node2, list, fromIdx))
 				patch(node2, donor2);
 		}
-		else if (type2 == VVIEW) {
+		else if (type2 === VVIEW) {
 			if (donor2 = find(node2, list, fromIdx))		// update/moveTo
 				var vm = donor2.vm._update(node2.model, vnode, i);		// withDOM
 			else
@@ -160,17 +168,17 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 
 			type2 = vm.node.type;
 		}
-		else if (type2 == VMODEL) {
+		else if (type2 === VMODEL) {
 			var vm = node2.vm._update(node2.model, vnode, i);
 			type2 = vm.node.type;
 		}
 
 		// to keep search space small, if donation is non-contig, move node fwd?
 		// re-establish contigindex
-		if (!vnode.list && donor2 != null && donor2.idx == fromIdx)
+		if (!isList && donor2 != null && donor2.idx === fromIdx)
 			fromIdx++;
 	}
 
-	if (vnode.type == ELEMENT && !(vnode.flags & FIXED_BODY))
-		syncChildren(vnode, donor);
+
+	domSync && syncChildren(vnode, donor);
 }

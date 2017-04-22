@@ -49,7 +49,7 @@ QUnit.module("Other mods");
 		var vm = domvm.createView(View).mount(place, true);
 		var callCounts = instr.end();
 
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 2, createElement: 1, insertBefore: 1, setAttribute: 1, textContent: 1 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 1, createElement: 1, insertBefore: 1, setAttribute: 1, textContent: 2 });
 
 		assert.equal(wrap.outerHTML, '<div><em>foo</em><a href=\"#\">bar</a><strong>bar</strong></div>', 'Mounted into correct sibling position');
 	});
@@ -159,7 +159,7 @@ QUnit.module("Other mods");
 		vm.redraw(true);
 		var callCounts = instr.end();
 
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, textContent: 2, createTextNode: 1, removeChild: 1, insertBefore: 3 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, textContent: 3, createTextNode: 1, insertBefore: 3 });
 	});
 
 	QUnit.test('(body) textNode -> elem', function(assert) {

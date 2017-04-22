@@ -29,7 +29,7 @@ function styleStr(css) {
 	var style = "";
 
 	for (var pname in css) {
-		if (css[pname] !== null)
+		if (css[pname] != null)
 			style += camelDash(pname) + ": " + autoPx(pname, css[pname]) + '; ';
 	}
 
@@ -81,7 +81,7 @@ function escQuotes(s) {
 	s = toStr(s);
 
 	for (var i = 0, out = ''; i < s.length; i++)
-		out += s[i] == '"' ? '&quot;' : s[i];		// also &?
+		out += s[i] === '"' ? '&quot;' : s[i];		// also &?
 
 	return out;
 }
@@ -115,13 +115,13 @@ export function html(node, dynProps) {
 
 			if (node.attrs != null) {
 				for (var pname in node.attrs) {
-					if (isEvProp(pname) || pname[0] == "." || pname[0] == "_" || dynProps === false && isDynProp(node.tag, pname))
+					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_" || dynProps === false && isDynProp(node.tag, pname))
 						continue;
 
 					var val = node.attrs[pname];
 
-					if (pname == "style" && val != null) {
-						style = typeof val == "object" ? styleStr(val) : val;
+					if (pname === "style" && val != null) {
+						style = typeof val === "object" ? styleStr(val) : val;
 						continue;
 					}
 

@@ -20,11 +20,11 @@ export function setAttr(node, name, val, asProp) {
 		remAttr(node, name);		//, asProp?  // will also removeAttr of style: null
 	else if (node.ns != null)
 		el.setAttribute(name, val);
-	else if (name == "class")
+	else if (name === "class")
 		el.className = val;
-	else if (name == "id" || typeof val == "boolean" || asProp)
+	else if (name === "id" || typeof val === "boolean" || asProp)
 		el[name] = val;
-	else if (name[0] == ".")
+	else if (name[0] === ".")
 		el[name.substr(1)] = val;
 	else
 		el.setAttribute(name, val);
@@ -52,7 +52,7 @@ export function patchAttrs(vnode, donor) {
 			setAttr(vnode, key, nval, isDyn);
 	}
 
-	// TODO: handle key[0] == "."
+	// TODO: handle key[0] === "."
 	// should bench style.cssText = "" vs removeAttribute("style")
 	for (var key in oattrs) {
 		!(key in nattrs) &&

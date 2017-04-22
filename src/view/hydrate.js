@@ -38,12 +38,12 @@ export function hydrateBody(vnode) {
 		// ELEMENT,TEXT,COMMENT
 		if (type2 <= COMMENT)
 			insertBefore(vnode.el, hydrate(vnode2));		// vnode.el.appendChild(hydrate(vnode2))
-		else if (type2 == VVIEW) {
+		else if (type2 === VVIEW) {
 			var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new model updates
 			type2 = vm.node.type;
 			insertBefore(vnode.el, hydrate(vm.node));
 		}
-		else if (type2 == VMODEL) {
+		else if (type2 === VMODEL) {
 			var vm = vnode2.vm;
 			vm._redraw(vnode, i);					// , false
 			type2 = vm.node.type;
@@ -55,10 +55,10 @@ export function hydrateBody(vnode) {
 //  TODO: DRY this out. reusing normal patch here negatively affects V8's JIT
 export function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
-		if (vnode.type == ELEMENT) {
+		if (vnode.type === ELEMENT) {
 			vnode.el = withEl || createElement(vnode.tag, vnode.ns);
 
-		//	if (vnode.tag == "svg")
+		//	if (vnode.tag === "svg")
 		//		vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS);
 
 			if (vnode.attrs != null)
@@ -73,9 +73,9 @@ export function hydrate(vnode, withEl) {
 					vnode.el.textContent = vnode.body;
 			}
 		}
-		else if (vnode.type == TEXT)
+		else if (vnode.type === TEXT)
 			vnode.el = withEl || createTextNode(vnode.body);
-		else if (vnode.type == COMMENT)
+		else if (vnode.type === COMMENT)
 			vnode.el = withEl || createComment(vnode.body);
 	}
 

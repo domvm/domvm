@@ -1,4 +1,4 @@
-import { isArr, startsWith } from '../utils';
+import { isArr } from '../utils';
 import { repaint } from './utils';
 
 export const didQueue = [];
@@ -18,7 +18,7 @@ export function fireHooks(name, o, n, immediate) {
 	var hook = o.hooks[name];
 
 	if (hook) {
-		var did = startsWith(name, "did");
+		var did = name[0] === "d" && name[1] === "i" && name[2] === "d";
 
 		if (isArr(hook)) {
 			// TODO: promise.all() this?

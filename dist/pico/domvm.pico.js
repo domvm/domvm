@@ -25,7 +25,7 @@ var COMMENT	= 3;
 var VVIEW		= 4;
 var VMODEL		= 5;
 
-var ENV_DOM = typeof window != "undefined";
+var ENV_DOM = typeof window !== "undefined";
 
 var win = ENV_DOM ? window : {};
 var rAF = win.requestAnimationFrame;
@@ -34,10 +34,6 @@ var emptyObj = {};
 
 function noop() {}
 
-function startsWith(haystack, needle) {
-	return haystack.lastIndexOf(needle, 0) === 0;
-}
-
 var isArr = Array.isArray;
 
 function isSet(val) {
@@ -45,7 +41,7 @@ function isSet(val) {
 }
 
 function isPlainObj(val) {
-	return val != null && val.constructor == Object;		//  && typeof val == "object"
+	return val != null && val.constructor === Object;		//  && typeof val === "object"
 }
 
 function insertArr(targ, arr, pos, rem) {
@@ -83,7 +79,7 @@ function deepSet(targ, path, val) {
 	var seg;
 
 	while (seg = path.shift()) {
-		if (path.length == 0)
+		if (path.length === 0)
 			{ targ[seg] = val; }
 		else
 			{ targ[seg] = targ = targ[seg] || {}; }
@@ -95,7 +91,7 @@ export function deepUnset(targ, path) {
 	var seg;
 
 	while (seg = path.shift()) {
-		if (path.length == 0)
+		if (path.length === 0)
 			targ[seg] = val;
 		else
 			targ[seg] = targ = targ[seg] || {};
@@ -110,7 +106,7 @@ export function deepUnset(targ, path) {
 function cmpArr(a, b) {
 	var alen = a.length;
 
-	if (b.length != alen)
+	if (b.length !== alen)
 		{ return false; }
 
 	for (var i = 0; i < alen; i++)
@@ -179,15 +175,15 @@ function binaryKeySearch(list, item) {
 }
 
 function isEvProp(name) {
-	return startsWith(name, "on");
+	return name[0] === "o" && name[1] === "n";
 }
 
 function isSplProp(name) {
-	return name[0] == "_";
+	return name[0] === "_";
 }
 
 function isStyleProp(name) {
-	return name == "style";
+	return name === "style";
 }
 
 function repaint(node) {
@@ -205,7 +201,7 @@ function isDynProp(tag, attr) {
 				case "value":
 				case "checked":
 				case "selected":
-				case "selectedIndex":
+//				case "selectedIndex":
 					return true;
 			}
 //	}
@@ -289,7 +285,7 @@ function fireHooks(name, o, n, immediate) {
 	var hook = o.hooks[name];
 
 	if (hook) {
-		var did = startsWith(name, "did");
+		var did = name[0] === "d" && name[1] === "i" && name[2] === "d";
 
 		if (isArr(hook)) {
 			// TODO: promise.all() this?
@@ -412,7 +408,7 @@ function initElementNode(tag, attrs, body, flags) {
 					{ p[key] = parsed.attrs[key]; } }
 		}
 
-//		if (node.attrs != p)
+//		if (node.attrs !== p)
 			node.attrs = p;
 	}
 
@@ -462,7 +458,7 @@ function deepNotifyRemove(node) {
 
 	var res = hooks && fireHooks("willRemove", node);
 
-	if ((node.flags & DEEP_REMOVE) && isArr(node.body)) {
+	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
 		for (var i = 0; i < node.body.length; i++)
 			{ deepNotifyRemove(node.body[i]); }
 	}
@@ -473,7 +469,7 @@ function deepNotifyRemove(node) {
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks, vm = node.vm;
 
-	if ((node.flags & DEEP_REMOVE) && isArr(node.body)) {
+	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
 	//	var parEl = node.el;
 		for (var i = 0; i < node.body.length; i++)
 			{ _removeChild(el, node.body[i].el); }
@@ -498,12 +494,23 @@ function removeChild(parEl, el) {
 		{ _removeChild(parEl, el); }
 }
 
+function clearChildren(parent) {
+	var parEl = parent.el;
+
+	if ((parent.flags & DEEP_REMOVE) === 0)
+		{ parEl.textContent = null; }
+	else {
+		while (parEl.firstChild)
+			{ removeChild(parEl, parEl.firstChild); }
+	}
+}
+
 // todo: hooks
 function insertBefore(parEl, el, refEl) {
 	var node = el._node, hooks = node.hooks, inDom = el.parentNode != null;
 
-	// el == refEl is asserted as a no-op insert called to fire hooks
-	var vm = (el == refEl || !inDom) && node.vm;
+	// el === refEl is asserted as a no-op insert called to fire hooks
+	var vm = (el === refEl || !inDom) && node.vm;
 
 	vm && vm.hooks && fireHooks("willMount", vm);
 
@@ -583,7 +590,7 @@ function patchEvent(node, name, nval, oval) {
 		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
 	}
 	// basic onclick: myFn (or extracted)
-	else if (isFunc(nval) && nval != oval)
+	else if (isFunc(nval) && nval !== oval)
 		{ bindEv(el, name, wrapHandler(nval, [])); }
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
 	else		// isPlainObj, TODO:, diff with old/clean
@@ -606,11 +613,11 @@ function setAttr(node, name, val, asProp) {
 		{ remAttr(node, name); }		//, asProp?  // will also removeAttr of style: null
 	else if (node.ns != null)
 		{ el.setAttribute(name, val); }
-	else if (name == "class")
+	else if (name === "class")
 		{ el.className = val; }
-	else if (name == "id" || typeof val == "boolean" || asProp)
+	else if (name === "id" || typeof val === "boolean" || asProp)
 		{ el[name] = val; }
-	else if (name[0] == ".")
+	else if (name[0] === ".")
 		{ el[name.substr(1)] = val; }
 	else
 		{ el.setAttribute(name, val); }
@@ -638,7 +645,7 @@ function patchAttrs(vnode, donor) {
 			{ setAttr(vnode, key, nval, isDyn); }
 	}
 
-	// TODO: handle key[0] == "."
+	// TODO: handle key[0] === "."
 	// should bench style.cssText = "" vs removeAttribute("style")
 	for (var key in oattrs) {
 		!(key in nattrs) &&
@@ -648,7 +655,7 @@ function patchAttrs(vnode, donor) {
 }
 
 function createView(view, model, key, opts) {
-	if (view.type == VVIEW) {
+	if (view.type === VVIEW) {
 		model	= view.model;
 		key		= view.key;
 		opts	= view.opts;
@@ -690,12 +697,12 @@ function hydrateBody(vnode) {
 		// ELEMENT,TEXT,COMMENT
 		if (type2 <= COMMENT)
 			{ insertBefore(vnode.el, hydrate(vnode2)); }		// vnode.el.appendChild(hydrate(vnode2))
-		else if (type2 == VVIEW) {
+		else if (type2 === VVIEW) {
 			var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new model updates
 			type2 = vm.node.type;
 			insertBefore(vnode.el, hydrate(vm.node));
 		}
-		else if (type2 == VMODEL) {
+		else if (type2 === VMODEL) {
 			var vm = vnode2.vm;
 			vm._redraw(vnode, i);					// , false
 			type2 = vm.node.type;
@@ -707,10 +714,10 @@ function hydrateBody(vnode) {
 //  TODO: DRY this out. reusing normal patch here negatively affects V8's JIT
 function hydrate(vnode, withEl) {
 	if (vnode.el == null) {
-		if (vnode.type == ELEMENT) {
+		if (vnode.type === ELEMENT) {
 			vnode.el = withEl || createElement(vnode.tag, vnode.ns);
 
-		//	if (vnode.tag == "svg")
+		//	if (vnode.tag === "svg")
 		//		vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS);
 
 			if (vnode.attrs != null)
@@ -725,9 +732,9 @@ function hydrate(vnode, withEl) {
 					{ vnode.el.textContent = vnode.body; }
 			}
 		}
-		else if (vnode.type == TEXT)
+		else if (vnode.type === TEXT)
 			{ vnode.el = withEl || createTextNode(vnode.body); }
-		else if (vnode.type == COMMENT)
+		else if (vnode.type === COMMENT)
 			{ vnode.el = withEl || createComment(vnode.body); }
 	}
 
@@ -762,9 +769,9 @@ function tmpEdges(fn, parEl, lftSib, rgtSib) {
 }
 
 function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
-	var areAdjacent	= rgtNode.idx == lftNode.idx + 1;
-	var headToTail = areAdjacent ? false : lftSib._node == rgtNode;
-	var tailToHead = areAdjacent ? true  : rgtSib._node == lftNode;
+	var areAdjacent	= rgtNode.idx === lftNode.idx + 1;
+	var headToTail = areAdjacent ? false : lftSib._node === rgtNode;
+	var tailToHead = areAdjacent ? true  : rgtSib._node === lftNode;
 
 	if (headToTail || tailToHead) {
 		return tmpEdges(function(lftLft, rgtRgt) {
@@ -826,17 +833,24 @@ function syncChildren(node, donor) {
 		lsNode,
 		rsNode;
 
-
 	converge:
 	while (1) {
 //		from_left:
 		while (1) {
 			// remove any non-recycled sibs whose el.node has the old parent
-			if (lftSib && parentNode(lsNode = lftSib._node) != node) {
-				tmpSib = nextSib(lftSib);
-				lsNode.vm != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
-				lftSib = tmpSib;
-				continue;
+			if (lftSib) {
+				// skip dom elements not created by domvm
+				if ((lsNode = lftSib._node) == null) {
+					lftSib = nextSib(lftSib);
+					continue;
+				}
+
+				if (parentNode(lsNode) !== node) {
+					tmpSib = nextSib(lftSib);
+					lsNode.vm != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
+					lftSib = tmpSib;
+					continue;
+				}
 			}
 
 			if (lftNode == null)		// reached end
@@ -855,17 +869,24 @@ function syncChildren(node, donor) {
 
 //		from_right:
 		while (1) {
-		//	if (rgtSib == lftEnd)
+		//	if (rgtSib === lftEnd)
 		//		break converge;
 
-			if (rgtSib && parentNode(rsNode = rgtSib._node) != node) {
-				tmpSib = prevSib(rgtSib);
-				rsNode.vm != null ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
-				rgtSib = tmpSib;
-				continue;
+			if (rgtSib) {
+				if ((rsNode = rgtSib._node) == null) {
+					rgtSib = prevSib(rgtSib);
+					continue;
+				}
+
+				if (parentNode(rsNode) !== node) {
+					tmpSib = prevSib(rgtSib);
+					rsNode.vm != null ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
+					rgtSib = tmpSib;
+					continue;
+				}
 			}
 
-			if (rgtNode == lftNode)		// converged
+			if (rgtNode === lftNode)		// converged
 				{ break converge; }
 			else if (rgtNode.el == null) {
 				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vm != null ? rgtNode.vm.mount(parEl, false, true, nextSib(rgtSib) :
@@ -895,15 +916,15 @@ function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
 
-		if (n.type == VVIEW && o.vm != null) {			// also ignore recycled/moved?
+		if (n.type === VVIEW && o.vm != null) {			// also ignore recycled/moved?
 			var ov = o.vm;
 
 			// match by key & viewFn
-			if (ov.view == n.view && ov.key == n.key)
+			if (ov.view === n.view && ov.key === n.key)
 				{ return o; }
 		}
 
-		if (o.el._node != o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm)
+		if (o.el._node !== o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm)
 			{ continue; }
 
 		// if n.view
@@ -944,7 +965,7 @@ function patch(vnode, donor, isRedrawRoot) {
 	el._node = vnode;
 
 	// "" => ""
-	if (vnode.type == TEXT && nbody !== obody) {
+	if (vnode.type === TEXT && nbody !== obody) {
 		el.nodeValue = nbody;
 		return;
 	}
@@ -977,17 +998,15 @@ function patch(vnode, donor, isRedrawRoot) {
 				else
 					{ el.textContent = nbody; }
 			}
-			else {
-				while (el.firstChild)
-					{ removeChild(el, el.firstChild); }
-			}
+			else
+				{ clearChildren(donor); }
 		}
 	}
 	else {
 		// "" | null => []
 		if (newIsArr) {
 		//	console.log('"" => []', obody, nbody);	// hydrate new here?
-			el.firstChild && el.removeChild(el.firstChild);
+			clearChildren(donor);
 			hydrateBody(vnode);
 		}
 		// "" | null => "" | null
@@ -1012,7 +1031,18 @@ function sortByKey(a, b) {
 
 // [] => []
 function patchChildren(vnode, donor, isRedrawRoot) {
-	if (vnode.flags & KEYED_LIST) {
+	var nbody = vnode.body,
+		nlen = nbody.length,
+		domSync = donor.type === ELEMENT && (donor.flags & FIXED_BODY) === 0;
+
+	if (domSync && nlen === 0) {
+		clearChildren(donor);
+		return;
+	}
+
+	var isList = (donor.flags & KEYED_LIST) === KEYED_LIST;
+
+	if (isList) {
 		var list = donor.body.slice();
 		list.sort(sortByKey);
 		var find = findListDonor;
@@ -1023,10 +1053,9 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 	}
 
 	var donor2,
-		fromIdx = 0,				// first unrecycled node (search head)
-		nbody = vnode.body;
+		fromIdx = 0;				// first unrecycled node (search head)
 
-	for (var i = 0; i < nbody.length; i++) {
+	for (var i = 0; i < nlen; i++) {
 		var node2 = nbody[i];
 		var type2 = node2.type;
 
@@ -1035,7 +1064,7 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 			if (donor2 = find(node2, list, fromIdx))
 				{ patch(node2, donor2); }
 		}
-		else if (type2 == VVIEW) {
+		else if (type2 === VVIEW) {
 			if (donor2 = find(node2, list, fromIdx))		// update/moveTo
 				{ var vm = donor2.vm._update(node2.model, vnode, i); }		// withDOM
 			else
@@ -1043,19 +1072,19 @@ function patchChildren(vnode, donor, isRedrawRoot) {
 
 			type2 = vm.node.type;
 		}
-		else if (type2 == VMODEL) {
+		else if (type2 === VMODEL) {
 			var vm = node2.vm._update(node2.model, vnode, i);
 			type2 = vm.node.type;
 		}
 
 		// to keep search space small, if donation is non-contig, move node fwd?
 		// re-establish contigindex
-		if (!vnode.list && donor2 != null && donor2.idx == fromIdx)
+		if (!isList && donor2 != null && donor2.idx === fromIdx)
 			{ fromIdx++; }
 	}
 
-	if (vnode.type == ELEMENT && !(vnode.flags & FIXED_BODY))
-		{ syncChildren(vnode, donor); }
+
+	domSync && syncChildren(vnode, donor);
 }
 
 function defineText(body) {
@@ -1077,7 +1106,7 @@ function setDeepRemove(node) {
 
 // vnew, vold
 function preProc(vnew, parent, idx, ownVm) {
-	if (vnew.type == VMODEL || vnew.type == VVIEW)
+	if (vnew.type === VMODEL || vnew.type === VVIEW)
 		{ return; }
 
 	vnew.parent = parent;
@@ -1107,12 +1136,12 @@ function preProc(vnew, parent, idx, ownVm) {
 				if (node2.type == null)
 					{ body[i] = node2 = defineText(""+node2); }
 
-				if (node2.type == TEXT) {
+				if (node2.type === TEXT) {
 					// remove empty text nodes
-					if (node2.body == null || node2.body == "")
+					if (node2.body == null || node2.body === "")
 						{ body.splice(i--, 1); }
 					// merge with previous text node
-					else if (i > 0 && body[i-1].type == TEXT) {
+					else if (i > 0 && body[i-1].type === TEXT) {
 						body[i-1].body += node2.body;
 						body.splice(i--, 1);
 					}
@@ -1153,7 +1182,7 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	//	handle .diff re-definiton
 		var vdiff = vm.diff;
 
-		if (vdiff != null && vdiff != ViewModelProto.diff) {
+		if (vdiff != null && vdiff !== ViewModelProto.diff) {
 			vm.diff = ViewModelProto.diff.bind(vm);
 			vm.diff(vdiff);
 		}
@@ -1265,13 +1294,12 @@ function mount(el, isRoot) {		// , asSub, refEl
 	var vm = this;
 
 	if (isRoot) {
-		while (el.firstChild)
-			{ el.removeChild(el.firstChild); }
+		clearChildren({el: el, flags: 0});
 
 		vm._redraw(null, null, false);
 
 		// if placeholder node doesnt match root tag
-		if (el.nodeName.toLowerCase() != vm.node.tag) {
+		if (el.nodeName.toLowerCase() !== vm.node.tag) {
 			hydrate(vm.node);
 			insertBefore(el.parentNode, vm.node.el, el);
 			el.parentNode.removeChild(el);
@@ -1336,7 +1364,8 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
 
-	if (vm.key !== false)
+	// always assign vm key to root vnode (this is a de-opt)
+	if (vm.key !== false && vm.key != null && vnew.key !== vm.key)
 		{ vnew.key = vm.key; }
 
 //	console.log(vm.key);

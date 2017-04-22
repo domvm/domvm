@@ -197,7 +197,7 @@ QUnit.module("Imperative VMs");
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><div>A0</div></div>';
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 2 });
 	});
 
 	QUnit.test("Replace root node during sub-vm swapping", function(assert) {
@@ -256,6 +256,6 @@ QUnit.module("Imperative VMs");
 		var callCounts = instr.end();
 
 		var expcHtml = '<div class="one"><div class="two">View 2</div></div>';
-		evalOut(assert, app.vm.node.el, app.vm.html(), expcHtml, callCounts, { className: 1, createElement: 1, insertBefore: 1, removeChild: 1, textContent: 1 });
+		evalOut(assert, app.vm.node.el, app.vm.html(), expcHtml, callCounts, { className: 1, createElement: 1, insertBefore: 1, textContent: 2 });
 	});
 })();

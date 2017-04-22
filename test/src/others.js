@@ -147,7 +147,7 @@ QUnit.module("Various Others");
 		vm = domvm.createView(SomeView3).mount(em, true);
 		var callCounts = instr.end();
 
-		evalOut(assert, em, vm.html(), expcHtml, callCounts, { textContent: 1, removeChild: 1, insertBefore: 1 });
+		evalOut(assert, em, vm.html(), expcHtml, callCounts, { textContent: 2, insertBefore: 1 });
 	});
 
 	QUnit.test('Raw HTML as body', function(assert) {
@@ -204,6 +204,51 @@ QUnit.module("Various Others");
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { insertBefore: 1 });
+	});
+
+	QUnit.test('Externally inserted element', function(assert) {
+		var ins = false;
+
+		function View6(vm) {
+			return function() {
+				return el("div", [
+					el("span", "a"),
+					ins ? el("i", "me") : null,
+					el("em", "b"),
+				]);
+			};
+		}
+
+		var expcHtml = '<div><span>a</span><em>b</em></div>';
+
+		instr.start();
+		vm = domvm.createView(View6).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 3, textContent: 2, insertBefore: 3 });
+
+		var el2 = document.createElement("strong");
+		el2.textContent = "cow";
+
+		vm.node.el.insertBefore(el2, vm.node.el.lastChild);
+
+		var expcHtml = '<div><span>a</span><strong>cow</strong><em>b</em></div>';
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html().replace("</span><em>","</span><strong>cow</strong><em>"), expcHtml, callCounts, { });
+
+		ins = true;
+
+		var expcHtml = "<div><span>a</span><strong>cow</strong><i>me</i><em>b</em></div>";
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html().replace("</span><i>","</span><strong>cow</strong><i>"), expcHtml, callCounts, { createElement: 1, textContent: 1, insertBefore: 1});
 	});
 
 	QUnit.test('Remove/clean child of sub-view', function(assert) {

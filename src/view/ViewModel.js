@@ -3,7 +3,7 @@ import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
 import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, raft } from "../utils";
 import { repaint, getVm } from "./utils";
-import { insertBefore, removeChild, nextSib } from "./dom";
+import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { didQueue, fireHooks } from "./hooks";
 
 export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
@@ -31,7 +31,7 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	//	handle .diff re-definiton
 		var vdiff = vm.diff;
 
-		if (vdiff != null && vdiff != ViewModelProto.diff) {
+		if (vdiff != null && vdiff !== ViewModelProto.diff) {
 			vm.diff = ViewModelProto.diff.bind(vm);
 			vm.diff(vdiff);
 		}
@@ -143,13 +143,12 @@ function mount(el, isRoot) {		// , asSub, refEl
 	var vm = this;
 
 	if (isRoot) {
-		while (el.firstChild)
-			el.removeChild(el.firstChild);
+		clearChildren({el: el, flags: 0});
 
 		vm._redraw(null, null, false);
 
 		// if placeholder node doesnt match root tag
-		if (el.nodeName.toLowerCase() != vm.node.tag) {
+		if (el.nodeName.toLowerCase() !== vm.node.tag) {
 			hydrate(vm.node);
 			insertBefore(el.parentNode, vm.node.el, el);
 			el.parentNode.removeChild(el);
@@ -214,7 +213,8 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
 
-	if (vm.key !== false)
+	// always assign vm key to root vnode (this is a de-opt)
+	if (vm.key !== false && vm.key != null && vnew.key !== vm.key)
 		vnew.key = vm.key;
 
 //	console.log(vm.key);
