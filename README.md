@@ -30,6 +30,7 @@ Learn either by browsing code: [Demos & Benchmarks](/demos) or reading the docs 
 - [Installation](#usage)
 - [Templates](#templates)
 - [Views](#views)
+- [DOM Recycling](#dom-recycling)
 - [Events](#events)
 - [Hello World++](#hello-world)
 - [DOM Refs](#dom-refs)
@@ -327,6 +328,53 @@ var modelA = {
 };
 
 var vmA = domvm.createView(ViewA, modelA).mount(document.body);
+```
+
+---
+### DOM Recycling
+
+How models/states are passed into sub-views has implications for DOM recycling & view destruction:
+
+- The signature for using sub-views within other templates is `domvm.defineView(viewFn, model, key, opts)`.
+- If `key` is `null` or absent, domvm will default to using `model` as the key. Thus, `vw(View, model)` is implicitly `vw(View, model, model)`.
+- Sub-views will persist & recycle their DOM only if their `key` is stable across redraws.
+
+Depending on your background and app architecture (OO or FP), this implicit by-model view keying behavior can be the most surprising aspect of domvm. However, this allows users to avoid explicitly keying in architectures where models are persistent. For immutable stores where model identities change as a result of mutation, or when using ad-hoc model wrappers and deserializing JSON structures, you should take care to explicitly key any sub-views.
+
+This example will destroy and recreate `SubView` [and its DOM] on every redraw of `View`:
+
+```js
+function View() {
+    return function() {
+        return el("#app", [
+            vw(SubView, {id: 123, foo: "bar"})        // ad-hoc model/state
+        ]);
+    };
+}
+```
+
+To ensure `SubView` persistence and DOM recycling, you should use a stable model or provide an explicit, stable key.
+
+```js
+function View() {
+    var model = {id: 123, foo: "bar"};                // stable model identity
+
+    return function() {
+        return el("#app", [
+            vw(SubView, model)
+        ]);
+    };
+}
+
+// OR
+
+function View() {
+    return function() {
+        return el("#app", [
+            vw(SubView, {id: 123, foo: "bar"}, 123)   // explicit, stable key
+        ]);
+    };
+}
 ```
 
 ---
