@@ -245,9 +245,13 @@ function MyView(vm, model, key, opts) {
 }
 ```
 
-Here, `vm` is this views's `ViewModel`; it's the created instance of `MyView` and serves the same purpose as `this` within an ES6 React component.
-The `vm` provides the control surface/API to this view and can also expose a user-defined API for external view manipulation.
-`render` has the same signature as the view closure (more on "why" later).
+Below is an explanation for each parameter:
+- `vm` is this views's `ViewModel`; it's the created instance of `MyView` and serves the same purpose as `this` within an ES6 React component. The `vm` provides the control surface/API to this view and can also expose a user-defined API for external view manipulation.
+- `model` refers to the data passed in by a parent view.
+- `key` refers to the key of the virtual DOM node. See the DOM Recycling section for important details about this.
+- `opts` can be used to pass data that you may not want to put inside `model`. If `opts.diff` is defined, then it will be used as a `diff` function for the `ViewModel`. If `opts.hook` is defined, then `domvm` will automatically call `vm.hook(opts.hook)` in the `ViewModel`. For more on hooks, see the lifecycle hooks section.
+
+Note the `render` function has the same signature as the view closure (more on "why" later).
 
 <!--
 Why does `render` have the same signature as the view closure?
