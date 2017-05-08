@@ -8,6 +8,17 @@ function bindEv(el, type, fn) {
 	el[type] = fn;
 }
 
+function compatibleEvent(e) {
+	if (!e) {  // IE8 compatibility
+		e = {};
+		for (var k in window.event) e[k] = window.event[k];
+		e.target = window.event.srcElement;
+	} else if (!e.target) {
+		e.target = e.srcElement;
+	}
+	return e;
+}
+
 function handle(e, fn, args) {
 	var node = closestVNode(e.target);
 	var vm = getVm(node);
@@ -15,8 +26,15 @@ function handle(e, fn, args) {
 	globalCfg.onevent.apply(null, [e, node, vm].concat(args));
 
 	if (out === false) {
-		e.preventDefault();
-		e.stopPropagation();
+		if (e.preventDefault === void 0)
+			e.returnValue = false;  // IE8 compatibility
+		else 
+			e.preventDefault(); 
+
+                if (e.stopPropagation === void 0)
+                	e.cancelBubble = true;  // IE8 compatibility
+                else 
+                	e.stopPropagation(); 
 	}
 }
 
@@ -24,7 +42,7 @@ function wrapHandler(fn, args) {
 //	console.log("wrapHandler");
 
 	return function wrap(e) {
-		handle(e, fn, args);
+		handle(compatibleEvent(e), fn, args);
 	};
 }
 
@@ -33,6 +51,7 @@ function wrapHandlers(hash) {
 //	console.log("wrapHandlers");
 
 	return function wrap(e) {
+		e = compatibleEvent(e);
 		for (var sel in hash) {
 			if (e.target.matches(sel)) {
 				var hnd = hash[sel];

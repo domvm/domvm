@@ -92,7 +92,8 @@ export function patch(vnode, donor, isRedrawRoot) {
 				if (vnode.raw)
 					el.innerHTML = nbody;
 				else
-					el.textContent = nbody;
+					//el.textContent = nbody;
+					el.innerText = nbody;
 			}
 			else
 				clearChildren(donor);
@@ -114,7 +115,8 @@ export function patch(vnode, donor, isRedrawRoot) {
 			else if (el.firstChild)
 				el.firstChild.nodeValue = nbody;
 			else
-				el.textContent = nbody;
+				//el.textContent = nbody;
+				el.innerText = nbody;
 		}
 	}
 

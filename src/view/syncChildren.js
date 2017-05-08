@@ -103,7 +103,7 @@ export function syncChildren(node, donor) {
 			// remove any non-recycled sibs whose el.node has the old parent
 			if (lftSib) {
 				// skip dom elements not created by domvm
-				if ((lsNode = lftSib._node) == null) {
+				if ((lsNode = lftSib._node) === void 0) {
 					lftSib = nextSib(lftSib);
 					continue;
 				}
@@ -136,7 +136,7 @@ export function syncChildren(node, donor) {
 		//		break converge;
 
 			if (rgtSib) {
-				if ((rsNode = rgtSib._node) == null) {
+				if ((rsNode = rgtSib._node) === void 0) {
 					rgtSib = prevSib(rgtSib);
 					continue;
 				}

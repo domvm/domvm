@@ -30,6 +30,18 @@ var ENV_DOM = typeof window !== "undefined";
 var win = ENV_DOM ? window : {};
 var rAF = win.requestAnimationFrame;
 
+// http://tanalin.com/en/articles/ie-version-js/
+// =============================================
+// IE versions	Condition to check for
+// ------------------------------------
+// 10 or older	document.all
+// 9 or older	document.all && !window.atob
+// 8 or older	document.all && !document.addEventListener
+// 7 or older	document.all && !document.querySelector
+// 6 or older	document.all && !window.XMLHttpRequest
+// 5.x	document.all && !document.compatMode
+var isIE8 = document.all && !document.addEventListener;
+
 var emptyObj = {};
 
 function noop() {}
@@ -392,15 +404,15 @@ function initElementNode(tag, attrs, body, flags) {
 
 	node.tag = parsed.tag;
 
-	if (parsed.id || parsed.class || parsed.attrs) {
+	if (parsed.id || parsed['class'] || parsed.attrs) {
 		var p = node.attrs || {};
 
 		if (parsed.id && !isSet(p.id))
 			{ p.id = parsed.id; }
 
-		if (parsed.class) {
-			node._class = parsed.class;		// static class
-			p.class = parsed.class + (isSet(p.class) ? (" " + p.class) : "");
+		if (parsed['class']) {
+			node._class = parsed['class'];		// static class
+			p['class'] = parsed['class'] + (isSet(p['class']) ? (" " + p['class']) : "");
 		}
 		if (parsed.attrs) {
 			for (var key in parsed.attrs)
@@ -421,7 +433,7 @@ function initElementNode(tag, attrs, body, flags) {
 var doc = ENV_DOM ? document : null;
 
 function closestVNode(el) {
-	while (el._node == null)
+	while (el._node === void 0)
 		{ el = el.parentNode; }
 	return el._node;
 }
@@ -497,9 +509,10 @@ function removeChild(parEl, el) {
 function clearChildren(parent) {
 	var parEl = parent.el;
 
-	if ((parent.flags & DEEP_REMOVE) === 0)
-		{ parEl.textContent = null; }
-	else {
+	if ((parent.flags & DEEP_REMOVE) === 0) {
+		if (isIE8 === true) { parEl.innerText = ''; }  // IE8 compatibility
+		else { parEl.textContent = null; }
+	} else {
 		while (parEl.firstChild)
 			{ removeChild(parEl, parEl.firstChild); }
 	}
@@ -515,7 +528,12 @@ function insertBefore(parEl, el, refEl) {
 	vm && vm.hooks && fireHooks("willMount", vm);
 
 	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
-	parEl.insertBefore(el, refEl);
+
+	if (!refEl)  // IE8 compatibility
+		{ parEl.appendChild(el); }
+	else 
+		{ parEl.insertBefore(el, refEl); }
+
 	hooks && fireHooks(inDom ? "didReinsert" : "didInsert", node);
 
 	vm && vm.hooks && fireHooks("didMount", vm);
@@ -538,6 +556,17 @@ function bindEv(el, type, fn) {
 	el[type] = fn;
 }
 
+function compatibleEvent(e) {
+	if (!e) {  // IE8 compatibility
+		e = {};
+		for (var k in window.event) { e[k] = window.event[k]; }
+		e.target = window.event.srcElement;
+	} else if (!e.target) {
+		e.target = e.srcElement;
+	}
+	return e;
+}
+
 function handle(e, fn, args) {
 	var node = closestVNode(e.target);
 	var vm = getVm(node);
@@ -545,8 +574,15 @@ function handle(e, fn, args) {
 	globalCfg.onevent.apply(null, [e, node, vm].concat(args));
 
 	if (out === false) {
-		e.preventDefault();
-		e.stopPropagation();
+		if (e.preventDefault === void 0)
+			{ e.returnValue = false; }  // IE8 compatibility
+		else 
+			{ e.preventDefault(); } 
+
+                if (e.stopPropagation === void 0)
+                	{ e.cancelBubble = true; }  // IE8 compatibility
+                else 
+                	{ e.stopPropagation(); } 
 	}
 }
 
@@ -554,7 +590,7 @@ function wrapHandler(fn, args) {
 //	console.log("wrapHandler");
 
 	return function wrap(e) {
-		handle(e, fn, args);
+		handle(compatibleEvent(e), fn, args);
 	};
 }
 
@@ -563,6 +599,7 @@ function wrapHandlers(hash) {
 //	console.log("wrapHandlers");
 
 	return function wrap(e) {
+		e = compatibleEvent(e);
 		for (var sel in hash) {
 			if (e.target.matches(sel)) {
 				var hnd = hash[sel];
@@ -729,7 +766,8 @@ function hydrate(vnode, withEl) {
 				if (vnode.raw)
 					{ vnode.el.innerHTML = vnode.body; }
 				else
-					{ vnode.el.textContent = vnode.body; }
+					//vnode.el.textContent = vnode.body;
+					{ vnode.el.innerText = vnode.body; }  // IE8 compatibility
 			}
 		}
 		else if (vnode.type === TEXT)
@@ -840,7 +878,7 @@ function syncChildren(node, donor) {
 			// remove any non-recycled sibs whose el.node has the old parent
 			if (lftSib) {
 				// skip dom elements not created by domvm
-				if ((lsNode = lftSib._node) == null) {
+				if ((lsNode = lftSib._node) === void 0) {
 					lftSib = nextSib(lftSib);
 					continue;
 				}
@@ -873,7 +911,7 @@ function syncChildren(node, donor) {
 		//		break converge;
 
 			if (rgtSib) {
-				if ((rsNode = rgtSib._node) == null) {
+				if ((rsNode = rgtSib._node) === void 0) {
 					rgtSib = prevSib(rgtSib);
 					continue;
 				}
@@ -996,7 +1034,8 @@ function patch(vnode, donor, isRedrawRoot) {
 				if (vnode.raw)
 					{ el.innerHTML = nbody; }
 				else
-					{ el.textContent = nbody; }
+					//el.textContent = nbody;
+					{ el.innerText = nbody; }
 			}
 			else
 				{ clearChildren(donor); }
@@ -1018,7 +1057,8 @@ function patch(vnode, donor, isRedrawRoot) {
 			else if (el.firstChild)
 				{ el.firstChild.nodeValue = nbody; }
 			else
-				{ el.textContent = nbody; }
+				//el.textContent = nbody;
+				{ el.innerText = nbody; }
 		}
 	}
 
