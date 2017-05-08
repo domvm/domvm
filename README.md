@@ -31,6 +31,7 @@ Learn either by browsing code: [Demos & Benchmarks](/demos) or reading the docs 
 - [Templates](#templates)
 - [Views](#views)
 - [DOM Recycling](#dom-recycling)
+- [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
 - [Events](#events)
 - [Hello World++](#hello-world)
 - [DOM Refs](#dom-refs)
@@ -376,6 +377,29 @@ function View() {
     };
 }
 ```
+
+
+---
+### Sub-views vs Sub-templates
+
+A core benefit of template composition is code reusability (DRY, component architecture). In domvm composition can be realized using either sub-views or sub-templates, often interchangeably. Sub-templates should generally be preferred over sub-views for the purposes of code reuse, keeping in mind that like sub-views, normal vnodes:
+
+- Can be keyed to prevent undesirable DOM reuse
+- Can subscribe to numerous lifecycle hooks
+- Can hold data, which can then be accessed from event handlers
+
+Sub-views carry a bit of performance overhead and should be used when the following are needed:
+
+- Large building blocks
+- Complex private state
+- Numerous specific helper functions
+- Isolated redraw (as a perf optimization)
+- Synchronized redraw of disjoint views
+
+As an example, the distinction can be discussed in terms of the [calendar demo](/demos/calendar.html). Its implementation is a single monolithic view with internal sub-template generating functions. Some may prefer to split up the months into a sub-view called MonthView, which would bring the total view count to 13. Others may be tempted to split each day into a DayView, but this would be a mistake as it would create 504 + 12 + 1 views, each incuring a slight performance hit for no reason.
+
+The general advice is, restrict your views to complex, building-block-level, stateful components and use sub-template generators for readability and DRY purposes; a button should not be a view.
+
 
 ---
 ### Hello World++
