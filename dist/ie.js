@@ -4,6 +4,39 @@ if (typeof(console) === 'undefined') console = { 'log': function () {} };
 
 Text.prototype._node = void 0;  // IE8 doesn't allow to use _node in Text
 
+if (!('textContent' in Element.prototype)) {
+	Object.defineProperty(Element.prototype, 'textContent', {
+		get: function() {
+			return this.innerText;
+		},
+		set: function(value) {
+			this.innerText = (value === null ? '' : value);
+		}
+	});
+}
+
+// http://tanalin.com/en/articles/ie-version-js/
+// =============================================
+// IE versions	| Condition to check for
+// ------------------------------------
+// 10 or older	| document.all
+// 9 or older	| document.all && !window.atob
+// 8 or older	| document.all && !document.addEventListener
+// 7 or older	| document.all && !document.querySelector
+// 6 or older	| document.all && !window.XMLHttpRequest
+// 5.x	     	| document.all && !document.compatMode
+if (document.all && !document.addEventListener) {  // IE8
+	(function () {
+		var origInsertBefore = Element.prototype.insertBefore;
+		Element.prototype.insertBefore = function (newEl, refEl) {
+			if (!refEl)
+				this.appendChild(newEl);
+			else
+				origInsertBefore.call(this, newEl, refEl);
+		}
+	})();
+}
+
 if (!Array.isArray) {
   Array.isArray = function(arg) {
     return Object.prototype.toString.call(arg) === '[object Array]';
@@ -263,4 +296,45 @@ if (!Element.prototype.matches) {
             return e === th;
           });
         }
+}
+
+if (!Object.keys) {
+  Object.keys = (function() {
+    'use strict';
+    var hasOwnProperty = Object.prototype.hasOwnProperty,
+        hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString'),
+        dontEnums = [
+          'toString',
+          'toLocaleString',
+          'valueOf',
+          'hasOwnProperty',
+          'isPrototypeOf',
+          'propertyIsEnumerable',
+          'constructor'
+        ],
+        dontEnumsLength = dontEnums.length;
+
+    return function(obj) {
+      if (typeof obj !== 'function' && (typeof obj !== 'object' || obj === null)) {
+        throw new TypeError('Object.keys called on non-object');
+      }
+
+      var result = [], prop, i;
+
+      for (prop in obj) {
+        if (hasOwnProperty.call(obj, prop)) {
+          result.push(prop);
+        }
+      }
+
+      if (hasDontEnumBug) {
+        for (i = 0; i < dontEnumsLength; i++) {
+          if (hasOwnProperty.call(obj, dontEnums[i])) {
+            result.push(dontEnums[i]);
+          }
+        }
+      }
+      return result;
+    };
+  }());
 }

@@ -70,8 +70,7 @@ export function hydrate(vnode, withEl) {
 				if (vnode.raw)
 					vnode.el.innerHTML = vnode.body;
 				else
-					//vnode.el.textContent = vnode.body;
-					vnode.el.innerText = vnode.body;  // IE8 compatibility
+					vnode.el.textContent = vnode.body;
 			}
 		}
 		else if (vnode.type === TEXT)

@@ -8,13 +8,17 @@ function bindEv(el, type, fn) {
 	el[type] = fn;
 }
 
-function compatibleEvent(e) {
-	if (!e) {  // IE8 compatibility
-		e = {};
+function eventPreventDefault() { this.returnValue = false }
+function eventStopPropagation() { this.cancelBubble = true }
+
+function compatibleEvent(e) {  // IE8 compatibility
+	if (!e) {
+		e = { 
+			preventDefault: eventPreventDefault,
+			stopPropagation: eventStopPropagation 
+		};
 		for (var k in window.event) e[k] = window.event[k];
 		e.target = window.event.srcElement;
-	} else if (!e.target) {
-		e.target = e.srcElement;
 	}
 	return e;
 }
@@ -26,15 +30,8 @@ function handle(e, fn, args) {
 	globalCfg.onevent.apply(null, [e, node, vm].concat(args));
 
 	if (out === false) {
-		if (e.preventDefault === void 0)
-			e.returnValue = false;  // IE8 compatibility
-		else 
-			e.preventDefault(); 
-
-                if (e.stopPropagation === void 0)
-                	e.cancelBubble = true;  // IE8 compatibility
-                else 
-                	e.stopPropagation(); 
+		e.preventDefault(); 
+               	e.stopPropagation(); 
 	}
 }
 

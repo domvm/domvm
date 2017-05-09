@@ -1,4 +1,4 @@
-import { ENV_DOM, isArr, isProm, curry, isIE8 } from '../utils';
+import { ENV_DOM, isArr, isProm, curry } from '../utils';
 import { fireHooks } from './hooks';
 import { FIXED_BODY, DEEP_REMOVE } from './initElementNode';
 
@@ -81,10 +81,9 @@ export function removeChild(parEl, el) {
 export function clearChildren(parent) {
 	var parEl = parent.el;
 
-	if ((parent.flags & DEEP_REMOVE) === 0) {
-		if (isIE8 === true) parEl.innerText = '';  // IE8 compatibility
-		else parEl.textContent = null;
-	} else {
+	if ((parent.flags & DEEP_REMOVE) === 0)
+		parEl.textContent = null;
+	else {
 		while (parEl.firstChild)
 			removeChild(parEl, parEl.firstChild);
 	}
@@ -100,12 +99,7 @@ export function insertBefore(parEl, el, refEl) {
 	vm && vm.hooks && fireHooks("willMount", vm);
 
 	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
-
-	if (!refEl)  // IE8 compatibility
-		parEl.appendChild(el);
-	else 
-		parEl.insertBefore(el, refEl);
-
+	parEl.insertBefore(el, refEl);
 	hooks && fireHooks(inDom ? "didReinsert" : "didInsert", node);
 
 	vm && vm.hooks && fireHooks("didMount", vm);

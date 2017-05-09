@@ -30,18 +30,6 @@ var TRUE = true;
 var win = ENV_DOM ? window : {};
 var rAF = win.requestAnimationFrame;
 
-// http://tanalin.com/en/articles/ie-version-js/
-// =============================================
-// IE versions	Condition to check for
-// ------------------------------------
-// 10 or older	document.all
-// 9 or older	document.all && !window.atob
-// 8 or older	document.all && !document.addEventListener
-// 7 or older	document.all && !document.querySelector
-// 6 or older	document.all && !window.XMLHttpRequest
-// 5.x	document.all && !document.compatMode
-var isIE8 = document.all && !document.addEventListener;
-
 var emptyObj = {};
 
 function noop() {}
@@ -608,10 +596,9 @@ function removeChild(parEl, el) {
 function clearChildren(parent) {
 	var parEl = parent.el;
 
-	if ((parent.flags & DEEP_REMOVE) === 0) {
-		if (isIE8 === true) { parEl.innerText = ''; }  // IE8 compatibility
-		else { parEl.textContent = null; }
-	} else {
+	if ((parent.flags & DEEP_REMOVE) === 0)
+		{ parEl.textContent = null; }
+	else {
 		while (parEl.firstChild)
 			{ removeChild(parEl, parEl.firstChild); }
 	}
@@ -627,12 +614,7 @@ function insertBefore(parEl, el, refEl) {
 	vm && vm.hooks && fireHooks("willMount", vm);
 
 	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
-
-	if (!refEl)  // IE8 compatibility
-		{ parEl.appendChild(el); }
-	else 
-		{ parEl.insertBefore(el, refEl); }
-
+	parEl.insertBefore(el, refEl);
 	hooks && fireHooks(inDom ? "didReinsert" : "didInsert", node);
 
 	vm && vm.hooks && fireHooks("didMount", vm);
@@ -655,13 +637,17 @@ function bindEv(el, type, fn) {
 	el[type] = fn;
 }
 
-function compatibleEvent(e) {
-	if (!e) {  // IE8 compatibility
-		e = {};
+function eventPreventDefault() { this.returnValue = false; }
+function eventStopPropagation() { this.cancelBubble = true; }
+
+function compatibleEvent(e) {  // IE8 compatibility
+	if (!e) {
+		e = { 
+			preventDefault: eventPreventDefault,
+			stopPropagation: eventStopPropagation 
+		};
 		for (var k in window.event) { e[k] = window.event[k]; }
 		e.target = window.event.srcElement;
-	} else if (!e.target) {
-		e.target = e.srcElement;
 	}
 	return e;
 }
@@ -673,15 +659,8 @@ function handle(e, fn, args) {
 	globalCfg.onevent.apply(null, [e, node, vm].concat(args));
 
 	if (out === false) {
-		if (e.preventDefault === void 0)
-			{ e.returnValue = false; }  // IE8 compatibility
-		else 
-			{ e.preventDefault(); } 
-
-                if (e.stopPropagation === void 0)
-                	{ e.cancelBubble = true; }  // IE8 compatibility
-                else 
-                	{ e.stopPropagation(); } 
+		e.preventDefault(); 
+               	e.stopPropagation(); 
 	}
 }
 
@@ -865,8 +844,7 @@ function hydrate(vnode, withEl) {
 				if (vnode.raw)
 					{ vnode.el.innerHTML = vnode.body; }
 				else
-					//vnode.el.textContent = vnode.body;
-					{ vnode.el.innerText = vnode.body; }  // IE8 compatibility
+					{ vnode.el.textContent = vnode.body; }
 			}
 		}
 		else if (vnode.type === TEXT)
@@ -1133,8 +1111,7 @@ function patch(vnode, donor, isRedrawRoot) {
 				if (vnode.raw)
 					{ el.innerHTML = nbody; }
 				else
-					//el.textContent = nbody;
-					{ el.innerText = nbody; }
+					{ el.textContent = nbody; }
 			}
 			else
 				{ clearChildren(donor); }
@@ -1156,8 +1133,7 @@ function patch(vnode, donor, isRedrawRoot) {
 			else if (el.firstChild)
 				{ el.firstChild.nodeValue = nbody; }
 			else
-				//el.textContent = nbody;
-				{ el.innerText = nbody; }
+				{ el.textContent = nbody; }
 		}
 	}
 
