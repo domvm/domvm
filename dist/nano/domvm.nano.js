@@ -423,36 +423,7 @@ function initElementNode(tag, attrs, body, flags) {
 	if (isSet(flags))
 		{ node.flags = flags; }
 
-	if (isSet(attrs)) {
-		if (isSet(attrs._key))
-			{ node.key = attrs._key; }
-
-		if (isSet(attrs._ref))
-			{ node.ref = attrs._ref; }
-
-		if (isSet(attrs._hooks))
-			{ node.hooks = attrs._hooks; }
-
-		if (isSet(attrs._raw))
-			{ node.raw = attrs._raw; }
-
-		if (isSet(attrs._data))
-			{ node.data = attrs._data; }
-
-		if (isSet(attrs._flags))
-			{ node.flags = attrs._flags; }
-
-		if (!isSet(node.key)) {
-			if (isSet(node.ref))
-				{ node.key = node.ref; }
-			else if (isSet(attrs.id))
-				{ node.key = attrs.id; }
-			else if (isSet(attrs.name))
-				{ node.key = attrs.name; }
-		}
-
-		node.attrs = attrs;
-	}
+	node.attrs = attrs;
 
 	var parsed = cssTag(tag);
 
@@ -477,6 +448,37 @@ function initElementNode(tag, attrs, body, flags) {
 
 //		if (node.attrs !== p)
 			node.attrs = p;
+	}
+
+	var mergedAttrs = node.attrs;
+
+	if (isSet(mergedAttrs)) {
+		if (isSet(mergedAttrs._key))
+			{ node.key = mergedAttrs._key; }
+
+		if (isSet(mergedAttrs._ref))
+			{ node.ref = mergedAttrs._ref; }
+
+		if (isSet(mergedAttrs._hooks))
+			{ node.hooks = mergedAttrs._hooks; }
+
+		if (isSet(mergedAttrs._raw))
+			{ node.raw = mergedAttrs._raw; }
+
+		if (isSet(mergedAttrs._data))
+			{ node.data = mergedAttrs._data; }
+
+		if (isSet(mergedAttrs._flags))
+			{ node.flags = mergedAttrs._flags; }
+
+		if (!isSet(node.key)) {
+			if (isSet(node.ref))
+				{ node.key = node.ref; }
+			else if (isSet(mergedAttrs.id))
+				{ node.key = mergedAttrs.id; }
+			else if (isSet(mergedAttrs.name))
+				{ node.key = mergedAttrs.name; }
+		}
 	}
 
 	if (body != null)
