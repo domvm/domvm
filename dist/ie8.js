@@ -49,12 +49,12 @@ if (document.all && !document.addEventListener) {  // IE8
 }
 
 // --------8<--------------------------------------------------------------
-// Array.isArray, Function.prototype.bind, String.prototype.trim,
-// Array.prototype.some (used by matches), Element.prototype.matches
+// Array.isArray, Function.prototype.bind,
+// String.prototype.trim, Element.prototype.matches
 
 if (!Array.isArray) {
   Array.isArray = function(arg) {
-    return Object.prototype.toString.call(arg) === '[object Array]';
+    return arg instanceof Array;
   };
 }
 
@@ -179,40 +179,12 @@ if (!String.prototype.trim) {
   };
 }
 
-// used by Element.prototype.matches
-if (!Array.prototype.some) {
-  Array.prototype.some = function(fun/*, thisArg*/) {
-    'use strict';
-
-    if (this == null) {
-      throw new TypeError('Array.prototype.some called on null or undefined');
-    }
-
-    if (typeof fun !== 'function') {
-      throw new TypeError();
-    }
-
-    var t = Object(this);
-    var len = t.length >>> 0;
-
-    var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
-    for (var i = 0; i < len; i++) {
-      if (i in t && fun.call(thisArg, t[i], i, t)) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-}
-
 if (!Element.prototype.matches) {
     Element.prototype.matches = Element.prototype.matchesSelector ||
-        Element.prototype.mozMatchesSelector || Element.prototype.msMatchesSelector ||
-        Element.prototype.oMatchesSelector || Element.prototype.webkitMatchesSelector || function (selector) {
-          var matches = document.querySelectorAll(selector), th = this;
-          return Array.prototype.some.call(matches, function (e) {
-            return e === th;
-          });
-        }
+      Element.prototype.msMatchesSelector || function (selector) {
+        var matches = document.querySelectorAll(selector);
+        for (var i = 0, len = matches.length; i < len; i++)
+          if (matches[i] === this) return true;
+        return false;
+      }
 }
