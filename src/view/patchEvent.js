@@ -16,7 +16,7 @@ function handle(e, fn, args) {
 
 	if (out === false) {
 		e.preventDefault();
-               	e.stopPropagation();
+		e.stopPropagation();
 	}
 }
 
