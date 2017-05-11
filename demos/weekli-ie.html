@@ -4,8 +4,9 @@
 	<meta charset="utf-8">
 	<title>weekli-domvm</title>
 
-	<script src="../dist/ie.js"></script>
-	<script src="../dist/nano/domvm.nano.js"></script>
+	<script src="../dist/ie8.js"></script>
+	<script src="../dist/full/domvm.full.js"></script>
+	<script src="ie.js"></script>
 
 	<script>
 		var el = domvm.defineElement,
@@ -136,7 +137,7 @@
 				"*":		function(e, node) { mouseIsDown = true; },
 				".day":		function(e, node) { toggleDay(node.data); },
 				".hour":	function(e, node) { toggleHour(node.data); },
-				".dayhour":	function(e, node) { setDayHour.apply(null, node.data); setSelected = node.attrs.class.indexOf("sel") == -1; },
+				".dayhour":	function(e, node) { setDayHour.apply(null, node.data); setSelected = node.attrs['class'].indexOf("sel") == -1; },
 			};
 
 			var onMouseup = {
@@ -161,7 +162,7 @@
 							el("th.hour", {_data: hour}, hourRange(hour)),
 							days.map(function(day, i) {
 								var key = i + ":" + hour;
-								return el("td.dayhour", {class: selected[key] ? "sel" : null, _data: [i, hour]});
+								return el("td.dayhour", {'class': selected[key] ? "sel" : null, _data: [i, hour]});
 							})
 						]);
 					})

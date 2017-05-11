@@ -273,7 +273,7 @@ function cssTag(raw) {
 		tagCache[raw] = cached = {
 			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
 			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
-			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
+			'class':	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
 			attrs:	null,
 		};
 
@@ -458,15 +458,15 @@ function initElementNode(tag, attrs, body, flags) {
 
 	node.tag = parsed.tag;
 
-	if (parsed.id || parsed.class || parsed.attrs) {
+	if (parsed.id || parsed['class'] || parsed.attrs) {
 		var p = node.attrs || {};
 
 		if (parsed.id && !isSet(p.id))
 			{ p.id = parsed.id; }
 
-		if (parsed.class) {
-			node._class = parsed.class;		// static class
-			p.class = parsed.class + (isSet(p.class) ? (" " + p.class) : "");
+		if (parsed['class']) {
+			node._class = parsed['class'];		// static class
+			p['class'] = parsed['class'] + (isSet(p['class']) ? (" " + p['class']) : "");
 		}
 		if (parsed.attrs) {
 			for (var key in parsed.attrs)
@@ -487,7 +487,7 @@ function initElementNode(tag, attrs, body, flags) {
 var doc = ENV_DOM ? document : null;
 
 function closestVNode(el) {
-	while (el._node == null)
+	while (el._node === void 0)
 		{ el = el.parentNode; }
 	return el._node;
 }
@@ -612,7 +612,7 @@ function handle(e, fn, args) {
 
 	if (out === false) {
 		e.preventDefault();
-		e.stopPropagation();
+               	e.stopPropagation();
 	}
 }
 
@@ -620,7 +620,7 @@ function wrapHandler(fn, args) {
 //	console.log("wrapHandler");
 
 	return function wrap(e) {
-		handle(e, fn, args);
+		handle(e || window.event, fn, args);
 	};
 }
 
@@ -629,6 +629,7 @@ function wrapHandlers(hash) {
 //	console.log("wrapHandlers");
 
 	return function wrap(e) {
+		e = e || window.event;
 		for (var sel in hash) {
 			if (e.target.matches(sel)) {
 				var hnd = hash[sel];
@@ -906,7 +907,7 @@ function syncChildren(node, donor) {
 			// remove any non-recycled sibs whose el.node has the old parent
 			if (lftSib) {
 				// skip dom elements not created by domvm
-				if ((lsNode = lftSib._node) == null) {
+				if ((lsNode = lftSib._node) === void 0) {
 					lftSib = nextSib(lftSib);
 					continue;
 				}
@@ -939,7 +940,7 @@ function syncChildren(node, donor) {
 		//		break converge;
 
 			if (rgtSib) {
-				if ((rsNode = rgtSib._node) == null) {
+				if ((rsNode = rgtSib._node) === void 0) {
 					rgtSib = prevSib(rgtSib);
 					continue;
 				}
@@ -1684,8 +1685,8 @@ function patch$1(o, n) {
 		var oattrs = assignObj(o.attrs, n);
 		// prepend any fixed shorthand class
 		if (o._class != null) {
-			var aclass = oattrs.class;
-			oattrs.class = aclass != null && aclass !== "" ? o._class + " " + aclass : o._class;
+			var aclass = oattrs['class'];
+			oattrs['class'] = aclass != null && aclass !== "" ? o._class + " " + aclass : o._class;
 		}
 
 		patchAttrs(o, donor);

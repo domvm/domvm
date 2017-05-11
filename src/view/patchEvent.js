@@ -16,7 +16,7 @@ function handle(e, fn, args) {
 
 	if (out === false) {
 		e.preventDefault();
-		e.stopPropagation();
+               	e.stopPropagation();
 	}
 }
 
@@ -24,7 +24,7 @@ function wrapHandler(fn, args) {
 //	console.log("wrapHandler");
 
 	return function wrap(e) {
-		handle(e, fn, args);
+		handle(e || window.event, fn, args);
 	};
 }
 
@@ -33,6 +33,7 @@ function wrapHandlers(hash) {
 //	console.log("wrapHandlers");
 
 	return function wrap(e) {
+		e = e || window.event;
 		for (var sel in hash) {
 			if (e.target.matches(sel)) {
 				var hnd = hash[sel];
