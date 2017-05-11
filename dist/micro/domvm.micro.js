@@ -463,6 +463,7 @@ function initElementNode(tag, attrs, body, flags) {
 
 	node.tag = parsed.tag;
 
+	// meh, weak assertion, will fail for id=0, etc.
 	if (parsed.id || parsed.class || parsed.attrs) {
 		var p = node.attrs || {};
 
