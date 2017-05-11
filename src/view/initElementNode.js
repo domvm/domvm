@@ -81,5 +81,14 @@ export function initElementNode(tag, attrs, body, flags) {
 	if (body != null)
 		node.body = body;
 
+	if (DEVMODE) {
+		setTimeout(function() {
+			if (node.tag === "svg" && node.ns == null)
+				console.warn("<svg> defined using domvm.defineElement: Use domvm.defineSvgElement for <svg> & child nodes", node);
+			else if (node.tag === "input" && node.key == null)
+				console.warn("Unkeyed <input>: Consider adding a name, id, _key, or _ref attr to avoid accidental DOM recycling between different <input> types.", node);
+		}, 100);
+	}
+
 	return node;
 }

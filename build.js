@@ -1,4 +1,5 @@
 const rollup = require('rollup').rollup;
+const replace = require('rollup-plugin-replace');
 const buble = require('rollup-plugin-buble');
 const fs = require('fs');
 const exec = require('child_process').exec;
@@ -40,7 +41,12 @@ function getBuilds() {
 		{
 			build: "full",
 			contents: "`mini`<br> + `attach`<br> + `html`<br>",
-			descr: "everything (for tests/debug)",
+			descr: "everything (for tests)",
+		},
+		{
+			build: "dev",
+			contents: "`full`<br> + warnings",
+			descr: "use this build for development; it contains detection of some anti-patterns that may cause slowness, confusion, errors or undesirable behavior",
 		}
 	];
 }
@@ -80,7 +86,12 @@ function compile(buildName) {
 
 	rollup({
 		entry: entry,
-		plugins: [ buble() ],
+		plugins: [
+			replace({
+				DEVMODE: buildName === "dev" ? true : false
+			}),
+			buble(),
+		],
 	})
 	.then(function(bundle) {
 		var pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));

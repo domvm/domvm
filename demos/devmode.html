@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+	<title>domvm - devmode</title>
+</head>
+<body>
+	<script src="../dist/dev/domvm.dev.js"></script>
+
+	<script>
+		var el = domvm.defineElement,
+			vw = domvm.define,
+			sv = domvm.defineSvgElement;
+
+		function View(vm) {
+			return function() {
+				return el("div", [
+					el("input"),
+					el("input[name=x]"),
+					el("svg"),
+					sv("svg"),
+				]);
+			}
+		}
+
+		function View2() {
+		}
+
+		var vm = domvm.createView(View).mount(document.body);
+	</script>
+</body>
+</html>
