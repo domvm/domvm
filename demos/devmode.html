@@ -8,8 +8,10 @@
 
 	<script>
 		var el = domvm.defineElement,
-			vw = domvm.define,
+			vw = domvm.defineView,
 			sv = domvm.defineSvgElement;
+
+		var subView3 = true;
 
 		function View(vm) {
 			return function() {
@@ -18,14 +20,33 @@
 					el("input[name=x]"),
 					el("svg"),
 					sv("svg"),
+					vw(View2, {}),
+					vw(View2, {}, 'mooKey'),
+					subView3 ? vw(View3) : null,
 				]);
 			}
 		}
 
 		function View2() {
+			return function() {
+				return el("strong", "View2");
+			}
+		}
+
+		function View3(vm) {
+			setTimeout(function() {
+				subView3 = false;
+				vm.root().redraw();
+				vm.redraw();
+			}, 500);
+
+			return function() {
+				return el("em", "View3");
+			}
 		}
 
 		var vm = domvm.createView(View).mount(document.body);
+
 	</script>
 </body>
 </html>
