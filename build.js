@@ -139,7 +139,7 @@ function minify(buildName, start) {
 //	var dstMap = "dist/" + buildName + "/" + mapName;
 
 	let cmd = [
-		"java -jar compiler.jar --language_in=ECMASCRIPT6_STRICT --language_out=ECMASCRIPT5_STRICT",
+		"java -jar compiler.jar --language_in=ECMASCRIPT5_STRICT --language_out=ECMASCRIPT5_STRICT",
 		"--js             " + src,
 		"--js_output_file " + dst,
 	//	"--create_source_map " + dstMap,
