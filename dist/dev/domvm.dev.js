@@ -511,13 +511,6 @@ function initElementNode(tag, attrs, body, flags) {
 				{ node.key = mergedAttrs.id; }
 			else if (isSet(mergedAttrs.name))
 				{ node.key = mergedAttrs.name; }
-
-			{
-				setTimeout(function() {
-					if (isSet(node.key))
-						{ console.info("VNode was auto-keyed by _ref, id or name attr", node); }
-				}, 100);
-			}
 		}
 	}
 

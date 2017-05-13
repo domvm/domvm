@@ -478,8 +478,6 @@ function initElementNode(tag, attrs, body, flags) {
 				{ node.key = mergedAttrs.id; }
 			else if (isSet(mergedAttrs.name))
 				{ node.key = mergedAttrs.name; }
-
-			
 		}
 	}
 
