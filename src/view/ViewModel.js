@@ -5,6 +5,7 @@ import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, ra
 import { repaint, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { didQueue, fireHooks } from "./hooks";
+import { devNotify } from "./addons/devmode";
 
 export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	var vm = this;
@@ -13,15 +14,9 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key == null ? model : key;
 
-	if (DEVMODE) {
-		if (model != null && model === key) {
-			setTimeout(function() {
-				var msg = "A view has been auto-keyed by a provided model's identity: If this model is replaced between redraws,"
-					+ " this view will unmount, its internal state and DOM will be destroyed and recreated."
-					+ " Consider providing a fixed key to this view to ensure its persistence & fast DOM recycling.";
-				console.warn(msg, vm, model);
-			}, 100);
-		}
+	if (_DEVMODE) {
+		if (model != null && model === key)
+			devNotify("AUTOKEYED_VIEW", [vm, model]);
 	}
 
 	if (!view.prototype._isClass) {
@@ -203,13 +198,10 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vm = this;
 	var isMounted = vm.node && vm.node.el && vm.node.el.parentNode;
 
-	if (DEVMODE) {
+	if (_DEVMODE) {
 		// was mounted (has node and el), but el no longer has parent (unmounted)
-		if (isRedrawRoot && vm.node && vm.node.el && !vm.node.el.parentNode) {
-			setTimeout(function() {
-				console.warn("Cannot manually .redraw() an unmounted view!", vm);
-			}, 100);
-		}
+		if (isRedrawRoot && vm.node && vm.node.el && !vm.node.el.parentNode)
+			devNotify("UNMOUNTED_REDRAW", [vm]);
 	}
 
 	var vold = vm.node;

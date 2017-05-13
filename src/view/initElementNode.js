@@ -2,6 +2,7 @@ import { ELEMENT } from './VTYPES';
 import { VNode } from './VNode';
 import { cssTag } from './addons/stubs';
 import { isSet, isPlainObj } from '../utils';
+import { devNotify } from "./addons/devmode";
 
 // (de)optimization flags
 
@@ -81,13 +82,14 @@ export function initElementNode(tag, attrs, body, flags) {
 	if (body != null)
 		node.body = body;
 
-	if (DEVMODE) {
-		setTimeout(function() {
-			if (node.tag === "svg" && node.ns == null)
-				console.warn("<svg> defined using domvm.defineElement: Use domvm.defineSvgElement for <svg> & child nodes", node);
-			else if (node.tag === "input" && node.key == null)
-				console.warn("Unkeyed <input>: Consider adding a name, id, _key, or _ref attr to avoid accidental DOM recycling between different <input> types.", node);
-		}, 100);
+	if (_DEVMODE) {
+		if (node.tag === "svg") {
+			setTimeout(function() {
+				node.ns == null && devNotify("SVG_WRONG_FACTORY", [node]);
+			}, 16);
+		}
+		else if (node.tag === "input" && node.key == null)
+			devNotify("UNKEYED_INPUT", [node]);
 	}
 
 	return node;

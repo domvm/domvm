@@ -439,6 +439,51 @@ var VNodeProto = VNode.prototype = {
 	*/
 };
 
+var DEVMODE = {
+	enabled: true,
+
+	verbose: true,
+
+	AUTOKEYED_VIEW: function(vm, model) {
+		var msg = "A view has been auto-keyed by a provided model's identity: If this model is replaced between redraws,"
+		+ " this view will unmount, its internal state and DOM will be destroyed and recreated."
+		+ " Consider providing a fixed key to this view to ensure its persistence & fast DOM recycling.";
+
+		return [msg, vm, model];
+	},
+
+	UNKEYED_INPUT: function(vnode) {
+		return ["Unkeyed <input>: Consider adding a name, id, _key, or _ref attr to avoid accidental DOM recycling between different <input> types.", vnode];
+	},
+
+	UNMOUNTED_REDRAW: function(vm) {
+		return ["Cannot manually .redraw() an unmounted view!", vm];
+	},
+
+	INLINE_HANDLER: function(vnode, oval, nval) {
+		return ["Anonymous event handlers get re-bound on each redraw, consider defining them outside of templates for better reuse.", vnode, oval, nval];
+	},
+
+	MISMATCHED_HANDLER: function(vnode, oval, nval) {
+		return ["Unable to patch differing event handler definition styles.", vnode, oval, nval];
+	},
+
+	SVG_WRONG_FACTORY: function(vnode) {
+		return ["<svg> defined using domvm.defineElement: Use domvm.defineSvgElement for <svg> & child nodes", vnode];
+	},
+};
+
+function devNotify(key, args) {
+	if (DEVMODE.enabled) {
+		var msgArgs = DEVMODE[key].apply(null, args);
+
+		if (msgArgs) {
+			msgArgs[0] = key + ": " + (DEVMODE.verbose ? msgArgs[0] : "");
+			console.warn.apply(null, msgArgs);
+		}
+	}
+}
+
 // (de)optimization flags
 
 // prevents inserting/removing/reordering of children
@@ -518,12 +563,13 @@ function initElementNode(tag, attrs, body, flags) {
 		{ node.body = body; }
 
 	{
-		setTimeout(function() {
-			if (node.tag === "svg" && node.ns == null)
-				{ console.warn("<svg> defined using domvm.defineElement: Use domvm.defineSvgElement for <svg> & child nodes", node); }
-			else if (node.tag === "input" && node.key == null)
-				{ console.warn("Unkeyed <input>: Consider adding a name, id, _key, or _ref attr to avoid accidental DOM recycling between different <input> types.", node); }
-		}, 100);
+		if (node.tag === "svg") {
+			setTimeout(function() {
+				node.ns == null && devNotify("SVG_WRONG_FACTORY", [node]);
+			}, 16);
+		}
+		else if (node.tag === "input" && node.key == null)
+			{ devNotify("UNKEYED_INPUT", [node]); }
 	}
 
 	return node;
@@ -695,7 +741,7 @@ function patchEvent(node, name, nval, oval) {
 
 	{
 		if (isFunc(nval) && isFunc(oval) && oval.name == nval.name)
-			{ console.warn("Anonymous event handlers get re-bound on each redraw, consider defining them outside of templates for better reuse.", node, oval, nval); }
+			{ devNotify("INLINE_HANDLER", [node, oval, nval]); }
 	}
 
 	var el = node.el;
@@ -704,7 +750,7 @@ function patchEvent(node, name, nval, oval) {
 	if (isArr(nval)) {
 		{
 			if (oval != null && !isArr(oval))
-				{ console.warn("Unable to patch differing event handler definition styles.", node, oval, nval); }
+				{ devNotify("MISMATCHED_HANDLER", [node, oval, nval]); }
 		}
 		var diff = oval == null || !cmpArr(nval, oval);
 		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
@@ -713,7 +759,7 @@ function patchEvent(node, name, nval, oval) {
 	else if (isFunc(nval) && nval !== oval) {
 		{
 			if (oval != null && !isFunc(oval))
-				{ console.warn("Unable to patch differing event handler definition styles.", node, oval, nval); }
+				{ devNotify("MISMATCHED_HANDLER", [node, oval, nval]); }
 		}
 		bindEv(el, name, wrapHandler(nval, []));
 	}
@@ -1290,14 +1336,8 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.key = key == null ? model : key;
 
 	{
-		if (model != null && model === key) {
-			setTimeout(function() {
-				var msg = "A view has been auto-keyed by a provided model's identity: If this model is replaced between redraws,"
-					+ " this view will unmount, its internal state and DOM will be destroyed and recreated."
-					+ " Consider providing a fixed key to this view to ensure its persistence & fast DOM recycling.";
-				console.warn(msg, vm, model);
-			}, 100);
-		}
+		if (model != null && model === key)
+			{ devNotify("AUTOKEYED_VIEW", [vm, model]); }
 	}
 
 	if (!view.prototype._isClass) {
@@ -1481,11 +1521,8 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	{
 		// was mounted (has node and el), but el no longer has parent (unmounted)
-		if (isRedrawRoot && vm.node && vm.node.el && !vm.node.el.parentNode) {
-			setTimeout(function() {
-				console.warn("Cannot manually .redraw() an unmounted view!", vm);
-			}, 100);
-		}
+		if (isRedrawRoot && vm.node && vm.node.el && !vm.node.el.parentNode)
+			{ devNotify("UNMOUNTED_REDRAW", [vm]); }
 	}
 
 	var vold = vm.node;
@@ -2057,6 +2094,8 @@ function html(node, dynProps) {
 // #destub: cssTag,autoPx,isStream,hookStream
 
 // #destub: cssTag,autoPx,isStream,hookStream
+
+nano.DEVMODE = DEVMODE;
 
 return nano;
 

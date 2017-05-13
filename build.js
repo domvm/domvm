@@ -88,7 +88,7 @@ function compile(buildName) {
 		entry: entry,
 		plugins: [
 			replace({
-				DEVMODE: buildName === "dev" ? true : false
+				_DEVMODE: buildName === "dev" ? true : false
 			}),
 			buble(),
 		],
