@@ -14,10 +14,15 @@
 		var subView3 = true;
 
 		function View(vm) {
+			function onclick() { var x = 1; }
+
 			return function() {
 				return el("div", [
 					el("input"),
 					el("input[name=x]"),
+					el("div", {onmousedown: function() {}}, "Click me!"),
+					el("div", {onclick: onclick}, "Click me 2!"),
+					el("div", {onclick: subView3 ? onclick : [onclick]}, "Click me 3!"),
 					el("svg"),
 					sv("svg"),
 					vw(View2, {}),

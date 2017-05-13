@@ -52,16 +52,30 @@ export function patchEvent(node, name, nval, oval) {
 	if (nval === oval)
 		return;
 
+	if (DEVMODE) {
+		if (isFunc(nval) && isFunc(oval) && oval.name == nval.name)
+			console.warn("Anonymous event handlers get re-bound on each redraw, consider defining them outside of templates for better reuse.", node, oval, nval);
+	}
+
 	var el = node.el;
 
 	// param'd eg onclick: [myFn, 1, 2, 3...]
 	if (isArr(nval)) {
+		if (DEVMODE) {
+			if (oval != null && !isArr(oval))
+				console.warn("Unable to patch differing event handler definition styles.", node, oval, nval);
+		}
 		var diff = oval == null || !cmpArr(nval, oval);
 		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
 	}
 	// basic onclick: myFn (or extracted)
-	else if (isFunc(nval) && nval !== oval)
+	else if (isFunc(nval) && nval !== oval) {
+		if (DEVMODE) {
+			if (oval != null && !isFunc(oval))
+				console.warn("Unable to patch differing event handler definition styles.", node, oval, nval);
+		}
 		bindEv(el, name, wrapHandler(nval, []));
+	}
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
 	else		// isPlainObj, TODO:, diff with old/clean
 		bindEv(el, name, wrapHandlers(nval));
