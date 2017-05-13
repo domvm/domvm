@@ -28,6 +28,7 @@ Learn either by browsing code: [Demos & Benchmarks](/demos) or reading the docs 
 - [What's Missing?](#whats-missing)
 - [Builds](#builds)
 - [Installation](#usage)
+- [DEVMODE](#devmode)
 - [Templates](#templates)
 - [Views](#views)
 - [DOM Recycling](#dom-recycling)
@@ -364,7 +365,7 @@ This example will destroy and recreate `SubView` [and its DOM] on every redraw o
 function View() {
     return function() {
         return el("#app", [
-            vw(SubView, {id: 123, foo: "bar"})        // ad-hoc model/state
+            vw(SubView, {foo: "bar"})        // ad-hoc model/state
         ]);
     };
 }
@@ -374,7 +375,7 @@ To ensure `SubView` persistence and DOM recycling, you should use a stable model
 
 ```js
 function View() {
-    var model = {id: 123, foo: "bar"};                // stable model identity
+    var model = {foo: "bar"};                // stable model identity
 
     return function() {
         return el("#app", [
@@ -388,7 +389,7 @@ function View() {
 function View() {
     return function() {
         return el("#app", [
-            vw(SubView, {id: 123, foo: "bar"}, 123)   // explicit, stable key
+            vw(SubView, {foo: "bar"}, 123)   // explicit, stable key
         ]);
     };
 }
