@@ -96,6 +96,11 @@ var domvm = require("domvm");   // the "full" build
 ```
 
 ---
+### DEVMODE
+
+If you're new to domvm, the [dev build](/dist/dev/domvm.dev.js) is recommended for development & learning to avoid common mistakes; watch the console for warnings and advice.
+
+---
 ### Templates
 
 Most of your domvm code will consist of templates for creating virtual-dom trees, which in turn are used to render and redraw the DOM.
