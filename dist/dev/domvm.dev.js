@@ -445,19 +445,19 @@ var DEVMODE = {
 	verbose: true,
 
 	AUTOKEYED_VIEW: function(vm, model) {
-		var msg = "A view has been auto-keyed by a provided model's identity: If this model is replaced between redraws,"
+		var msg = "A view has been auto-keyed by its model's identity. If this model is replaced between redraws,"
 		+ " this view will unmount, its internal state and DOM will be destroyed and recreated."
-		+ " Consider providing a fixed key to this view to ensure its persistence & fast DOM recycling.";
+		+ " Consider providing a fixed key to this view to ensure its persistence & DOM recycling. See https://github.com/leeoniya/domvm#dom-recycling.";
 
 		return [msg, vm, model];
 	},
 
 	UNKEYED_INPUT: function(vnode) {
-		return ["Unkeyed <input>: Consider adding a name, id, _key, or _ref attr to avoid accidental DOM recycling between different <input> types.", vnode];
+		return ["Unkeyed <input> detected. Consider adding a name, id, _key, or _ref attr to avoid accidental DOM recycling between different <input> types.", vnode];
 	},
 
 	UNMOUNTED_REDRAW: function(vm) {
-		return ["Cannot manually .redraw() an unmounted view!", vm];
+		return ["Invoking redraw() of an unmounted (sub)view may result in errors.", vm];
 	},
 
 	INLINE_HANDLER: function(vnode, oval, nval) {
@@ -465,11 +465,15 @@ var DEVMODE = {
 	},
 
 	MISMATCHED_HANDLER: function(vnode, oval, nval) {
-		return ["Unable to patch differing event handler definition styles.", vnode, oval, nval];
+		return ["Patching of different event handler styles is not fully supported for performance reasons. Ensure that handlers are defined using the same style.", vnode, oval, nval];
 	},
 
 	SVG_WRONG_FACTORY: function(vnode) {
-		return ["<svg> defined using domvm.defineElement: Use domvm.defineSvgElement for <svg> & child nodes", vnode];
+		return ["<svg> defined using domvm.defineElement. Use domvm.defineSvgElement for <svg> & child nodes.", vnode];
+	},
+
+	FOREIGN_ELEMENT: function(el) {
+		return ["domvm stumbled upon an element in its DOM that it didn't create, which may be problematic. You can inject external elements into the vtree using domvm.injectElement.", el];
 	},
 };
 
@@ -1012,6 +1016,8 @@ function syncChildren(node, donor) {
 			if (lftSib) {
 				// skip dom elements not created by domvm
 				if ((lsNode = lftSib._node) == null) {
+					{ devNotify("FOREIGN_ELEMENT", [lftSib]); }
+
 					lftSib = nextSib(lftSib);
 					continue;
 				}
@@ -1045,6 +1051,8 @@ function syncChildren(node, donor) {
 
 			if (rgtSib) {
 				if ((rsNode = rgtSib._node) == null) {
+					{ devNotify("FOREIGN_ELEMENT", [rgtSib]); }
+
 					rgtSib = prevSib(rgtSib);
 					continue;
 				}
