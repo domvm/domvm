@@ -35,6 +35,8 @@ Learn either by browsing code: [Demos & Benchmarks](/demos) or reading the docs 
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
 - [Events](#events)
 - [Hello World++](#hello-world)
+- [Parents & Roots](#parents--roots)
+- [Autoredraw](#autoredraw)
 - [DOM Refs](#dom-refs)
 - [VNode Data](#vnode-data)
 - [Lifecycle Hooks](#lifecycle-hooks)
@@ -514,6 +516,35 @@ var it = setInterval(function() {
 
     if (i++ == 20) clearInterval(it);
 }, 250);
+```
+
+---
+### Parents & Roots
+
+You can access any view's parent view via `vm.parent()` and the great granddaddy of the view hierarchy via `vm.root()` shortcut.
+So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().redraw()`.
+
+
+---
+### Autoredraw
+
+Is calling `vm.redraw()` everywhere a nuisance to you? Well, there is no autoredraw!
+
+However, there *is* an easy way to add it yourself using `domvm.config.onevent` which, if present, will fire after any event handler.
+You can get as creative as you want, including adding your own semantics to prevent redraw on a case-by-case basis by setting and checking for `e.redraw = false`.
+Or maybe having a Promise piggyback on `e.redraw = new Promise(...)` that will resolve upon deep data being fetched.
+You can maybe implement filtering by event type so that a flood of `mousemove` events, doesnt result in a redraw flood. Etc..
+
+`onevent`'s arguments always represent the origin of the event in the vtree.
+
+The [onevent demo](/demos/global-onevent.html) configs a basic full app autoredraw:
+
+```js
+domvm.config({
+    onevent: function(e, node, vm, arg1, arg2) {
+        rootVm.redraw();
+    }
+});
 ```
 
 ---
