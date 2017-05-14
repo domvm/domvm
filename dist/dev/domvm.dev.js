@@ -4,7 +4,7 @@
 *
 * domvm.full.js - DOM ViewModel
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (v2.1.4, server)
+* @preserve https://github.com/leeoniya/domvm (2.x-dev, dev)
 */
 
 (function (global, factory) {
@@ -439,6 +439,55 @@ var VNodeProto = VNode.prototype = {
 	*/
 };
 
+var DEVMODE = {
+	enabled: true,
+
+	verbose: true,
+
+	AUTOKEYED_VIEW: function(vm, model) {
+		var msg = "A view has been auto-keyed by its model's identity. If this model is replaced between redraws,"
+		+ " this view will unmount, its internal state and DOM will be destroyed and recreated."
+		+ " Consider providing a fixed key to this view to ensure its persistence & DOM recycling. See https://github.com/leeoniya/domvm#dom-recycling.";
+
+		return [msg, vm, model];
+	},
+
+	UNKEYED_INPUT: function(vnode) {
+		return ["Unkeyed <input> detected. Consider adding a name, id, _key, or _ref attr to avoid accidental DOM recycling between different <input> types.", vnode];
+	},
+
+	UNMOUNTED_REDRAW: function(vm) {
+		return ["Invoking redraw() of an unmounted (sub)view may result in errors.", vm];
+	},
+
+	INLINE_HANDLER: function(vnode, oval, nval) {
+		return ["Anonymous event handlers get re-bound on each redraw, consider defining them outside of templates for better reuse.", vnode, oval, nval];
+	},
+
+	MISMATCHED_HANDLER: function(vnode, oval, nval) {
+		return ["Patching of different event handler styles is not fully supported for performance reasons. Ensure that handlers are defined using the same style.", vnode, oval, nval];
+	},
+
+	SVG_WRONG_FACTORY: function(vnode) {
+		return ["<svg> defined using domvm.defineElement. Use domvm.defineSvgElement for <svg> & child nodes.", vnode];
+	},
+
+	FOREIGN_ELEMENT: function(el) {
+		return ["domvm stumbled upon an element in its DOM that it didn't create, which may be problematic. You can inject external elements into the vtree using domvm.injectElement.", el];
+	},
+};
+
+function devNotify(key, args) {
+	if (DEVMODE.enabled) {
+		var msgArgs = DEVMODE[key].apply(null, args);
+
+		if (msgArgs) {
+			msgArgs[0] = key + ": " + (DEVMODE.verbose ? msgArgs[0] : "");
+			console.warn.apply(null, msgArgs);
+		}
+	}
+}
+
 // (de)optimization flags
 
 // prevents inserting/removing/reordering of children
@@ -516,6 +565,16 @@ function initElementNode(tag, attrs, body, flags) {
 
 	if (body != null)
 		{ node.body = body; }
+
+	{
+		if (node.tag === "svg") {
+			setTimeout(function() {
+				node.ns == null && devNotify("SVG_WRONG_FACTORY", [node]);
+			}, 16);
+		}
+		else if (node.tag === "input" && node.key == null)
+			{ devNotify("UNKEYED_INPUT", [node]); }
+	}
 
 	return node;
 }
@@ -684,15 +743,28 @@ function patchEvent(node, name, nval, oval) {
 	if (nval === oval)
 		{ return; }
 
+	{
+		if (isFunc(nval) && isFunc(oval) && oval.name == nval.name)
+			{ devNotify("INLINE_HANDLER", [node, oval, nval]); }
+	}
+
 	var el = node.el;
 
 	// param'd eg onclick: [myFn, 1, 2, 3...]
 	if (isArr(nval)) {
+		{
+			if (oval != null && !isArr(oval))
+				{ devNotify("MISMATCHED_HANDLER", [node, oval, nval]); }
+		}
 		var diff = oval == null || !cmpArr(nval, oval);
 		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
 	}
 	// basic onclick: myFn (or extracted)
 	else if (isFunc(nval) && nval !== oval) {
+		{
+			if (oval != null && !isFunc(oval))
+				{ devNotify("MISMATCHED_HANDLER", [node, oval, nval]); }
+		}
 		bindEv(el, name, wrapHandler(nval, []));
 	}
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
@@ -944,6 +1016,8 @@ function syncChildren(node, donor) {
 			if (lftSib) {
 				// skip dom elements not created by domvm
 				if ((lsNode = lftSib._node) == null) {
+					{ devNotify("FOREIGN_ELEMENT", [lftSib]); }
+
 					lftSib = nextSib(lftSib);
 					continue;
 				}
@@ -977,6 +1051,8 @@ function syncChildren(node, donor) {
 
 			if (rgtSib) {
 				if ((rsNode = rgtSib._node) == null) {
+					{ devNotify("FOREIGN_ELEMENT", [rgtSib]); }
+
 					rgtSib = prevSib(rgtSib);
 					continue;
 				}
@@ -1267,6 +1343,11 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key == null ? model : key;
 
+	{
+		if (model != null && model === key)
+			{ devNotify("AUTOKEYED_VIEW", [vm, model]); }
+	}
+
 	if (!view.prototype._isClass) {
 		var out = view.call(vm, vm, model, key, opts);
 
@@ -1445,6 +1526,12 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var isRedrawRoot = newParent == null;
 	var vm = this;
 	var isMounted = vm.node && vm.node.el && vm.node.el.parentNode;
+
+	{
+		// was mounted (has node and el), but el no longer has parent (unmounted)
+		if (isRedrawRoot && vm.node && vm.node.el && !vm.node.el.parentNode)
+			{ devNotify("UNMOUNTED_REDRAW", [vm]); }
+	}
 
 	var vold = vm.node;
 
@@ -1813,6 +1900,49 @@ nano.streamCfg = streamCfg;
 
 nano.prop = prop;
 
+ViewModelProto.attach = function(el) {
+	var vm = this;
+	if (vm.node == null)
+		{ vm._redraw(null, null, false); }
+
+	attach(vm.node, el);
+
+	return vm;
+};
+
+// very similar to hydrate, TODO: dry
+function attach(vnode, withEl) {
+	vnode.el = withEl;
+	withEl._node = vnode;
+
+	var nattrs = vnode.attrs;
+
+	for (var key in nattrs) {
+		var nval = nattrs[key];
+		var isDyn = isDynProp(vnode.tag, key);
+
+		if (isStyleProp(key) || isSplProp(key)) {}
+		else if (isEvProp(key))
+			{ patchEvent(vnode, key, nval); }
+		else if (nval != null && isDyn)
+			{ setAttr(vnode, key, nval, isDyn); }
+	}
+
+	if (isArr(vnode.body)) {
+		var c = withEl.firstChild;
+		var i = 0;
+		var v = vnode.body[i];
+		do {
+			if (v.type === VVIEW)
+				{ v = createView(v.view, v.model, v.key, v.opts)._redraw(vnode, i, false).node; }
+			else if (v.type === VMODEL)
+				{ v = v.node || v._redraw(vnode, i, false).node; }
+
+			attach(v, c);
+		} while ((c = c.nextSibling) && (v = vnode.body[++i]))
+	}
+}
+
 ViewModelProto.html = function(dynProps) {
 	var vm = this;
 
@@ -1971,7 +2101,11 @@ function html(node, dynProps) {
 
 // #destub: cssTag,autoPx,isStream,hookStream
 
+// #destub: cssTag,autoPx,isStream,hookStream
+
+nano.DEVMODE = DEVMODE;
+
 return nano;
 
 })));
-//# sourceMappingURL=domvm.server.js.map
+//# sourceMappingURL=domvm.dev.js.map

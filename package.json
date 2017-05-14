@@ -15,6 +15,7 @@
     "watch:client": "node watch.js client",
     "watch:server": "node watch.js server",
     "watch:full": "node watch.js full",
+    "watch:dev": "node watch.js dev",
 
     "build:pico": "node build.js pico",
     "build:nano": "node build.js nano",
@@ -22,7 +23,8 @@
     "build:mini": "node build.js mini",
     "build:client": "node build.js client",
     "build:server": "node build.js server",
-    "build:full": "node build.js full"
+    "build:full": "node build.js full",
+    "build:dev": "node build.js dev"
   },
   "repository": {
     "type": "git",
@@ -32,6 +34,7 @@
     "node-watch": "*",
     "rollup": "*",
     "buble": "*",
+    "rollup-plugin-replace": "*",
     "rollup-plugin-buble": "*"
   },
   "bugs": {

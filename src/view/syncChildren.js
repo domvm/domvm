@@ -1,6 +1,7 @@
 import { emptyObj } from '../utils';
 import { hydrate } from './hydrate';
 import { prevSib, nextSib, insertBefore, insertAfter, removeChild } from './dom';
+import { devNotify } from "./addons/devmode";
 
 function nextNode(node, body) {
 	return body[node.idx + 1];
@@ -104,6 +105,9 @@ export function syncChildren(node, donor) {
 			if (lftSib) {
 				// skip dom elements not created by domvm
 				if ((lsNode = lftSib._node) == null) {
+					if (_DEVMODE)
+						devNotify("FOREIGN_ELEMENT", [lftSib]);
+
 					lftSib = nextSib(lftSib);
 					continue;
 				}
@@ -137,6 +141,9 @@ export function syncChildren(node, donor) {
 
 			if (rgtSib) {
 				if ((rsNode = rgtSib._node) == null) {
+					if (_DEVMODE)
+						devNotify("FOREIGN_ELEMENT", [rgtSib]);
+
 					rgtSib = prevSib(rgtSib);
 					continue;
 				}

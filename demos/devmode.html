@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+	<title>domvm - devmode</title>
+</head>
+<body>
+	<script src="../dist/dev/domvm.dev.js"></script>
+
+	<script>
+	//	domvm.DEVMODE.enabled = false;
+	//	domvm.DEVMODE.verbose = false;
+
+		var el = domvm.defineElement,
+			vw = domvm.defineView,
+			sv = domvm.defineSvgElement;
+
+		var subView3 = true;
+
+		function View(vm) {
+			function onclick() { var x = 1; }
+
+			return function() {
+				return el("div", [
+					el("input"),
+					el("input[name=x]"),
+					el("div", {onmousedown: function() {}}, "Click me!"),
+					el("div", {onclick: onclick}, "Click me 2!"),
+					el("div", {onclick: subView3 ? onclick : [onclick]}, "Click me 3!"),
+					el("svg"),
+					sv("svg"),
+					vw(View2, {}),
+					vw(View2, {}, 'mooKey'),
+					subView3 ? vw(View3) : null,
+				]);
+			}
+		}
+
+		function View2() {
+			return function() {
+				return el("strong", "View2");
+			}
+		}
+
+		function View3(vm) {
+			setTimeout(function() {
+				subView3 = false;
+				vm.root().redraw();
+				vm.redraw();
+			}, 500);
+
+			return function() {
+				return el("em", "View3");
+			}
+		}
+
+		var vm = domvm.createView(View).mount(document.body);
+
+	</script>
+</body>
+</html>

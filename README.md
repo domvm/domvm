@@ -28,8 +28,11 @@ Learn either by browsing code: [Demos & Benchmarks](/demos) or reading the docs 
 - [What's Missing?](#whats-missing)
 - [Builds](#builds)
 - [Installation](#usage)
+- [DEVMODE](#devmode)
 - [Templates](#templates)
 - [Views](#views)
+- [DOM Recycling](#dom-recycling)
+- [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
 - [Events](#events)
 - [Hello World++](#hello-world)
 - [DOM Refs](#dom-refs)
@@ -92,6 +95,19 @@ domvm comes in [several builds](/dist) of increasing size and features. The `nan
 ```js
 var domvm = require("domvm");   // the "full" build
 ```
+
+---
+### DEVMODE
+
+If you're new to domvm, the [dev build](/dist/dev/domvm.dev.js) is recommended for development & learning to avoid common mistakes; watch the console for warnings and advice.
+
+There are a couple config options:
+
+- `domvm.DEVMODE.enabled = false` will disable all warnings.
+- `domvm.DEVMODE.verbose = false` will suppress the explanations, but still leave the error names & object info.
+- `domvm.DEVMODE.UNKEYED_INPUT = false` will disable only these warnings. The full list can be found in [devmode.js](/src/view/addons/devmode.js).
+
+Due to the runtime nature of DEVMODE heuristics, some warnings may be false positives (where the observed behavior is intentional). If you feel an error message can be improved, open an issue!
 
 ---
 ### Templates
@@ -243,9 +259,12 @@ function MyView(vm, model, key, opts) {
 }
 ```
 
-Here, `vm` is this views's `ViewModel`; it's the created instance of `MyView` and serves the same purpose as `this` within an ES6 React component.
-The `vm` provides the control surface/API to this view and can also expose a user-defined API for external view manipulation.
-`render` has the same signature as the view closure (more on "why" later).
+- `vm` is this views's `ViewModel`; it's the created instance of `MyView` and serves the same purpose as `this` within an ES6 React component. The `vm` provides the control surface/API to this view and can also expose a user-defined API for external view manipulation.
+- `model` is the data passed in by a parent view.
+- `key` may be defined by a parent view and is also copied down to this view's root VNode. Also see [DOM Recycling](#dom-recycling).
+- `opts` can be used to pass in data that you may not want to put inside `model`. `opts.diff` and `opts.hooks` can be used to externally define lifecycle hooks and redraw optimizations.
+
+Note the `render` function has the same signature as the view closure (more on "why" below).
 
 <!--
 Why does `render` have the same signature as the view closure?
@@ -328,6 +347,76 @@ var modelA = {
 
 var vmA = domvm.createView(ViewA, modelA).mount(document.body);
 ```
+
+---
+### DOM Recycling
+
+How models/states are passed into sub-views has implications for DOM recycling & view destruction:
+
+- The signature for using sub-views within other templates is `domvm.defineView(viewFn, model, key, opts)`.
+- If `key` is `null` or absent, domvm will default to using `model` as the key. Thus, `vw(View, model)` is implicitly `vw(View, model, model)`.
+- Sub-views will persist & recycle their DOM only if their `key` is stable across redraws.
+
+Depending on your background and app architecture (OO or FP), this implicit by-model view keying behavior can be the most surprising aspect of domvm. However, this allows users to avoid explicitly keying in architectures where models are persistent. For immutable stores where model identities change as a result of mutation, or when using ad-hoc model wrappers and deserializing JSON structures, you should take care to explicitly key any sub-views.
+
+This example will destroy and recreate `SubView` [and its DOM] on every redraw of `View`:
+
+```js
+function View() {
+    return function() {
+        return el("#app", [
+            vw(SubView, {foo: "bar"})        // ad-hoc model/state
+        ]);
+    };
+}
+```
+
+To ensure `SubView` persistence and DOM recycling, you should use a stable model or provide an explicit, stable key.
+
+```js
+function View() {
+    var model = {foo: "bar"};                // stable model identity
+
+    return function() {
+        return el("#app", [
+            vw(SubView, model)
+        ]);
+    };
+}
+
+// OR
+
+function View() {
+    return function() {
+        return el("#app", [
+            vw(SubView, {foo: "bar"}, 123)   // explicit, stable key
+        ]);
+    };
+}
+```
+
+
+---
+### Sub-views vs Sub-templates
+
+A core benefit of template composition is code reusability (DRY, component architecture). In domvm composition can be realized using either sub-views or sub-templates, often interchangeably. Sub-templates should generally be preferred over sub-views for the purposes of code reuse, keeping in mind that like sub-views, normal vnodes:
+
+- Can be keyed to prevent undesirable DOM reuse
+- Can subscribe to numerous lifecycle hooks
+- Can hold data, which can then be accessed from event handlers
+
+Sub-views carry a bit of performance overhead and should be used when the following are needed:
+
+- Large building blocks
+- Complex private state
+- Numerous specific helper functions
+- Isolated redraw (as a perf optimization)
+- Synchronized redraw of disjoint views
+
+As an example, the distinction can be discussed in terms of the [calendar demo](/demos/calendar.html). Its implementation is a single monolithic view with internal sub-template generating functions. Some may prefer to split up the months into a sub-view called MonthView, which would bring the total view count to 13. Others may be tempted to split each day into a DayView, but this would be a mistake as it would create 504 + 12 + 1 views, each incuring a slight performance hit for no reason.
+
+The general advice is, restrict your views to complex, building-block-level, stateful components and use sub-template generators for readability and DRY purposes; a button should not be a view.
+
 
 ---
 ### Hello World++
