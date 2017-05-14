@@ -9,11 +9,11 @@
 | [full][7]   | 15.2k / 6.0k | `mini`<br> + `attach`<br> + `html`<br>                                                                                                                                             | everything (for tests)                                                                                                                                                                                           |
 | [dev][8]    | 17.2k / 6.9k | `full`<br> + warnings                                                                                                                                                              | use this build for development; it contains detection of some anti-patterns that may cause slowness, confusion, errors or undesirable behavior                                                                   |
 
-[1]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/pico/domvm.pico.min.js
-[2]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/nano/domvm.nano.min.js
-[3]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/micro/domvm.micro.min.js
-[4]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/mini/domvm.mini.min.js
-[5]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/client/domvm.client.min.js
-[6]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/server/domvm.server.min.js
-[7]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/full/domvm.full.min.js
-[8]: https://github.com/leeoniya/domvm/blob/2.x-dev/dist/dev/domvm.dev.min.js
+[1]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/pico/domvm.pico.min.js
+[2]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/nano/domvm.nano.min.js
+[3]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/micro/domvm.micro.min.js
+[4]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/mini/domvm.mini.min.js
+[5]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/client/domvm.client.min.js
+[6]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/server/domvm.server.min.js
+[7]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/full/domvm.full.min.js
+[8]: https://github.com/leeoniya/domvm/blob/2.x-stable/dist/dev/domvm.dev.min.js
