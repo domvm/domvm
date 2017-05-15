@@ -2,6 +2,7 @@ import { isArr, isFunc, cmpArr } from '../utils';
 import { closestVNode } from './dom';
 import { getVm } from './utils';
 import { globalCfg } from './config';
+import { devNotify } from "./addons/devmode";
 
 function bindEv(el, type, fn) {
 //	DEBUG && console.log("addEventListener");
@@ -53,16 +54,30 @@ export function patchEvent(node, name, nval, oval) {
 	if (nval === oval)
 		return;
 
+	if (_DEVMODE) {
+		if (isFunc(nval) && isFunc(oval) && oval.name == nval.name)
+			devNotify("INLINE_HANDLER", [node, oval, nval]);
+	}
+
 	var el = node.el;
 
 	// param'd eg onclick: [myFn, 1, 2, 3...]
 	if (isArr(nval)) {
+		if (_DEVMODE) {
+			if (oval != null && !isArr(oval))
+				devNotify("MISMATCHED_HANDLER", [node, oval, nval]);
+		}
 		var diff = oval == null || !cmpArr(nval, oval);
 		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
 	}
 	// basic onclick: myFn (or extracted)
-	else if (isFunc(nval) && nval !== oval)
+	else if (isFunc(nval) && nval !== oval) {
+		if (_DEVMODE) {
+			if (oval != null && !isFunc(oval))
+				devNotify("MISMATCHED_HANDLER", [node, oval, nval]);
+		}
 		bindEv(el, name, wrapHandler(nval, []));
+	}
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
 	else		// isPlainObj, TODO:, diff with old/clean
 		bindEv(el, name, wrapHandlers(nval));
