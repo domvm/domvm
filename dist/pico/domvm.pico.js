@@ -357,50 +357,22 @@ function initElementNode(tag, attrs, body, flags) {
 	if (isSet(flags))
 		{ node.flags = flags; }
 
-	if (isSet(attrs)) {
-		if (isSet(attrs._key))
-			{ node.key = attrs._key; }
-
-		if (isSet(attrs._ref))
-			{ node.ref = attrs._ref; }
-
-		if (isSet(attrs._hooks))
-			{ node.hooks = attrs._hooks; }
-
-		if (isSet(attrs._raw))
-			{ node.raw = attrs._raw; }
-
-		if (isSet(attrs._data))
-			{ node.data = attrs._data; }
-
-		if (isSet(attrs._flags))
-			{ node.flags = attrs._flags; }
-
-		if (!isSet(node.key)) {
-			if (isSet(node.ref))
-				{ node.key = node.ref; }
-			else if (isSet(attrs.id))
-				{ node.key = attrs.id; }
-			else if (isSet(attrs.name))
-				{ node.key = attrs.name; }
-		}
-
-		node.attrs = attrs;
-	}
+	node.attrs = attrs;
 
 	var parsed = cssTagStub(tag);
 
 	node.tag = parsed.tag;
 
-	if (parsed.id || parsed['class'] || parsed.attrs) {
+	// meh, weak assertion, will fail for id=0, etc.
+	if (parsed.id || parsed.class || parsed.attrs) {
 		var p = node.attrs || {};
 
 		if (parsed.id && !isSet(p.id))
 			{ p.id = parsed.id; }
 
-		if (parsed['class']) {
-			node._class = parsed['class'];		// static class
-			p['class'] = parsed['class'] + (isSet(p['class']) ? (" " + p['class']) : "");
+		if (parsed.class) {
+			node._class = parsed.class;		// static class
+			p.class = parsed.class + (isSet(p.class) ? (" " + p.class) : "");
 		}
 		if (parsed.attrs) {
 			for (var key in parsed.attrs)
@@ -412,6 +384,37 @@ function initElementNode(tag, attrs, body, flags) {
 			node.attrs = p;
 	}
 
+	var mergedAttrs = node.attrs;
+
+	if (isSet(mergedAttrs)) {
+		if (isSet(mergedAttrs._key))
+			{ node.key = mergedAttrs._key; }
+
+		if (isSet(mergedAttrs._ref))
+			{ node.ref = mergedAttrs._ref; }
+
+		if (isSet(mergedAttrs._hooks))
+			{ node.hooks = mergedAttrs._hooks; }
+
+		if (isSet(mergedAttrs._raw))
+			{ node.raw = mergedAttrs._raw; }
+
+		if (isSet(mergedAttrs._data))
+			{ node.data = mergedAttrs._data; }
+
+		if (isSet(mergedAttrs._flags))
+			{ node.flags = mergedAttrs._flags; }
+
+		if (!isSet(node.key)) {
+			if (isSet(node.ref))
+				{ node.key = node.ref; }
+			else if (isSet(mergedAttrs.id))
+				{ node.key = mergedAttrs.id; }
+			else if (isSet(mergedAttrs.name))
+				{ node.key = mergedAttrs.name; }
+		}
+	}
+
 	if (body != null)
 		{ node.body = body; }
 
@@ -421,7 +424,7 @@ function initElementNode(tag, attrs, body, flags) {
 var doc = ENV_DOM ? document : null;
 
 function closestVNode(el) {
-	while (el._node === void 0)
+	while (el._node == null)
 		{ el = el.parentNode; }
 	return el._node;
 }
@@ -546,7 +549,7 @@ function handle(e, fn, args) {
 
 	if (out === false) {
 		e.preventDefault();
-               	e.stopPropagation();
+		e.stopPropagation();
 	}
 }
 
@@ -554,7 +557,7 @@ function wrapHandler(fn, args) {
 //	console.log("wrapHandler");
 
 	return function wrap(e) {
-		handle(e || window.event, fn, args);
+		handle(e, fn, args);
 	};
 }
 
@@ -563,7 +566,6 @@ function wrapHandlers(hash) {
 //	console.log("wrapHandlers");
 
 	return function wrap(e) {
-		e = e || window.event;
 		for (var sel in hash) {
 			if (e.target.matches(sel)) {
 				var hnd = hash[sel];
@@ -591,8 +593,9 @@ function patchEvent(node, name, nval, oval) {
 		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
 	}
 	// basic onclick: myFn (or extracted)
-	else if (isFunc(nval) && nval !== oval)
-		{ bindEv(el, name, wrapHandler(nval, [])); }
+	else if (isFunc(nval) && nval !== oval) {
+		bindEv(el, name, wrapHandler(nval, []));
+	}
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
 	else		// isPlainObj, TODO:, diff with old/clean
 		{ bindEv(el, name, wrapHandlers(nval)); }
@@ -841,7 +844,7 @@ function syncChildren(node, donor) {
 			// remove any non-recycled sibs whose el.node has the old parent
 			if (lftSib) {
 				// skip dom elements not created by domvm
-				if ((lsNode = lftSib._node) === void 0) {
+				if ((lsNode = lftSib._node) == null) {
 					lftSib = nextSib(lftSib);
 					continue;
 				}
@@ -874,7 +877,7 @@ function syncChildren(node, donor) {
 		//		break converge;
 
 			if (rgtSib) {
-				if ((rsNode = rgtSib._node) === void 0) {
+				if ((rsNode = rgtSib._node) == null) {
 					rgtSib = prevSib(rgtSib);
 					continue;
 				}

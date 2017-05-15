@@ -193,12 +193,13 @@ if (typeof Object.create !== 'function') {
   Object.create = function(o, props) {
     function F() {}
     F.prototype = o;
+    var result = new F();
 
-    if (typeof(props) === "object")
+    if (typeof props === "object")
       for (var prop in props)
-        if (props.hasOwnProperty((prop)))
-          F[prop] = props[prop];
+        if (props.hasOwnProperty(prop))
+          result[prop] = props[prop].value;
 
-    return new F();
+    return result;
   }
 }

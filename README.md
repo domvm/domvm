@@ -28,12 +28,15 @@ Learn either by browsing code: [Demos & Benchmarks](/demos) or reading the docs 
 - [What's Missing?](#whats-missing)
 - [Builds](#builds)
 - [Installation](#usage)
+- [DEVMODE](#devmode)
 - [Templates](#templates)
 - [Views](#views)
 - [DOM Recycling](#dom-recycling)
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
 - [Events](#events)
 - [Hello World++](#hello-world)
+- [Parents & Roots](#parents--roots)
+- [Autoredraw](#autoredraw)
 - [DOM Refs](#dom-refs)
 - [VNode Data](#vnode-data)
 - [Lifecycle Hooks](#lifecycle-hooks)
@@ -66,7 +69,8 @@ Some minimalist libs that work well:
 - Routing: [domvm-router](https://github.com/leeoniya/domvm-router), [riot/route](https://github.com/riot/route), [rlite](https://github.com/chrisdavies/rlite), [navigo](https://github.com/krasimir/navigo)
 - Ajax/fetch/XHR: [xr](https://github.com/radiosilence/xr), [alite](https://github.com/chrisdavies/alite)
 - Streams: [flyd](https://github.com/paldepind/flyd), [xstream](https://github.com/staltz/xstream)
-- Immutabile Stores: [Freezer](https://github.com/arqex/freezer), [MobX](https://github.com/mobxjs/mobx)
+- Immutable Stores: [Freezer](https://github.com/arqex/freezer), [MobX](https://github.com/mobxjs/mobx)
+- CSS-in-JS: [stylis.js](https://github.com/thysultan/stylis.js), [j2c](https://github.com/j2css/j2c), [oh boy...](https://github.com/MicheleBertoli/css-in-js)
 
 Many [/demos](/demos) are examples of how to use these libs in your apps.
 
@@ -94,6 +98,19 @@ domvm comes in [several builds](/dist) of increasing size and features. The `nan
 ```js
 var domvm = require("domvm");   // the "full" build
 ```
+
+---
+### DEVMODE
+
+If you're new to domvm, the [dev build](/dist/dev/domvm.dev.js) is recommended for development & learning to avoid common mistakes; watch the console for warnings and advice.
+
+There are a couple config options:
+
+- `domvm.DEVMODE.enabled = false` will disable all warnings.
+- `domvm.DEVMODE.verbose = false` will suppress the explanations, but still leave the error names & object info.
+- `domvm.DEVMODE.UNKEYED_INPUT = false` will disable only these warnings. The full list can be found in [devmode.js](/src/view/addons/devmode.js).
+
+Due to the runtime nature of DEVMODE heuristics, some warnings may be false positives (where the observed behavior is intentional). If you feel an error message can be improved, open an issue!
 
 ---
 ### Templates
@@ -245,9 +262,12 @@ function MyView(vm, model, key, opts) {
 }
 ```
 
-Here, `vm` is this views's `ViewModel`; it's the created instance of `MyView` and serves the same purpose as `this` within an ES6 React component.
-The `vm` provides the control surface/API to this view and can also expose a user-defined API for external view manipulation.
-`render` has the same signature as the view closure (more on "why" later).
+- `vm` is this views's `ViewModel`; it's the created instance of `MyView` and serves the same purpose as `this` within an ES6 React component. The `vm` provides the control surface/API to this view and can also expose a user-defined API for external view manipulation.
+- `model` is the data passed in by a parent view.
+- `key` may be defined by a parent view and is also copied down to this view's root VNode. Also see [DOM Recycling](#dom-recycling).
+- `opts` can be used to pass in data that you may not want to put inside `model`. `opts.diff` and `opts.hooks` can be used to externally define lifecycle hooks and redraw optimizations.
+
+Note the `render` function has the same signature as the view closure (more on "why" below).
 
 <!--
 Why does `render` have the same signature as the view closure?
@@ -348,7 +368,7 @@ This example will destroy and recreate `SubView` [and its DOM] on every redraw o
 function View() {
     return function() {
         return el("#app", [
-            vw(SubView, {id: 123, foo: "bar"})        // ad-hoc model/state
+            vw(SubView, {foo: "bar"})        // ad-hoc model/state
         ]);
     };
 }
@@ -358,7 +378,7 @@ To ensure `SubView` persistence and DOM recycling, you should use a stable model
 
 ```js
 function View() {
-    var model = {id: 123, foo: "bar"};                // stable model identity
+    var model = {foo: "bar"};                // stable model identity
 
     return function() {
         return el("#app", [
@@ -372,7 +392,7 @@ function View() {
 function View() {
     return function() {
         return el("#app", [
-            vw(SubView, {id: 123, foo: "bar"}, 123)   // explicit, stable key
+            vw(SubView, {foo: "bar"}, 123)   // explicit, stable key
         ]);
     };
 }
@@ -496,6 +516,35 @@ var it = setInterval(function() {
 
     if (i++ == 20) clearInterval(it);
 }, 250);
+```
+
+---
+### Parents & Roots
+
+You can access any view's parent view via `vm.parent()` and the great granddaddy of the view hierarchy via `vm.root()` shortcut.
+So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().redraw()`.
+
+
+---
+### Autoredraw
+
+Is calling `vm.redraw()` everywhere a nuisance to you? Well, there is no autoredraw!
+
+However, there *is* an easy way to add it yourself using `domvm.config.onevent` which, if present, will fire after any event handler.
+You can get as creative as you want, including adding your own semantics to prevent redraw on a case-by-case basis by setting and checking for `e.redraw = false`.
+Or maybe having a Promise piggyback on `e.redraw = new Promise(...)` that will resolve upon deep data being fetched.
+You can maybe implement filtering by event type so that a flood of `mousemove` events, doesnt result in a redraw flood. Etc..
+
+`onevent`'s arguments always represent the origin of the event in the vtree.
+
+The [onevent demo](/demos/global-onevent.html) configs a basic full app autoredraw:
+
+```js
+domvm.config({
+    onevent: function(e, node, vm, arg1, arg2) {
+        rootVm.redraw();
+    }
+});
 ```
 
 ---
