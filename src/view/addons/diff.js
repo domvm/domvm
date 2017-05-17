@@ -24,7 +24,7 @@ ViewModelProto.diff = function(cfg) {
 
 	vm._diff = function() {
 		var newVals = getVals.call(vm, vm, vm.model, vm.key, vm.opts);
-		var isSame = cmpFn(oldVals, newVals);
+		var isSame = oldVals === newVals || cmpFn(oldVals, newVals);
 
 		if (!isSame) {
 			// thenFn must return false to prevent redraw
