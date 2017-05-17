@@ -34,6 +34,10 @@ export const DEVMODE = {
 	FOREIGN_ELEMENT: function(el) {
 		return ["domvm stumbled upon an element in its DOM that it didn't create, which may be problematic. You can inject external elements into the vtree using domvm.injectElement.", el];
 	},
+
+	REUSED_ATTRS: function(vnode) {
+		return ["Attrs objects may only be reused if they are truly static, as a perf optimization. Mutating & reusing them will have no effect on the DOM due to 0 diff.", vnode];
+	}
 }
 
 export function devNotify(key, args) {

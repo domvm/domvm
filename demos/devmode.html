@@ -19,6 +19,11 @@
 		function View(vm) {
 			function onclick() { var x = 1; }
 
+			var attrs = {
+				type: "text",
+				value: "moo",
+			};
+
 			return function() {
 				return el("div", [
 					el("input"),
@@ -31,6 +36,7 @@
 					vw(View2, {}),
 					vw(View2, {}, 'mooKey'),
 					subView3 ? vw(View3) : null,
+					el("input", attrs),
 				]);
 			}
 		}

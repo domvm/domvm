@@ -3,6 +3,7 @@ import { isFunc, emptyObj } from '../utils';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
 import { isStream, hookStream } from './addons/stubs';
+import { devNotify } from "./addons/devmode";
 
 export function remAttr(node, name, asProp) {
 	if (asProp)
@@ -34,29 +35,35 @@ export function patchAttrs(vnode, donor) {
 	const nattrs = vnode.attrs || emptyObj;
 	const oattrs = donor.attrs || emptyObj;
 
-	for (var key in nattrs) {
-		var nval = nattrs[key];
-		var isDyn = isDynProp(vnode.tag, key);
-		var oval = isDyn ? vnode.el[key] : oattrs[key];
-
-		if (isStream(nval))
-			nattrs[key] = nval = hookStream(nval, getVm(vnode));
-
-		if (nval === oval) {}
-		else if (isStyleProp(key))
-			patchStyle(vnode, donor);
-		else if (isSplProp(key)) {}
-		else if (isEvProp(key))
-			patchEvent(vnode, key, nval, oval);
-		else
-			setAttr(vnode, key, nval, isDyn);
+	if (nattrs === oattrs) {
+		if (_DEVMODE)
+			devNotify("REUSED_ATTRS", [vnode]);
 	}
+	else {
+		for (var key in nattrs) {
+			var nval = nattrs[key];
+			var isDyn = isDynProp(vnode.tag, key);
+			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
-	// TODO: handle key[0] === "."
-	// should bench style.cssText = "" vs removeAttribute("style")
-	for (var key in oattrs) {
-		!(key in nattrs) &&
-		!isSplProp(key) &&
-		remAttr(vnode, key, isDynProp(vnode.tag, key) || isEvProp(key));
+			if (isStream(nval))
+				nattrs[key] = nval = hookStream(nval, getVm(vnode));
+
+			if (nval === oval) {}
+			else if (isStyleProp(key))
+				patchStyle(vnode, donor);
+			else if (isSplProp(key)) {}
+			else if (isEvProp(key))
+				patchEvent(vnode, key, nval, oval);
+			else
+				setAttr(vnode, key, nval, isDyn);
+		}
+
+		// TODO: handle key[0] === "."
+		// should bench style.cssText = "" vs removeAttribute("style")
+		for (var key in oattrs) {
+			!(key in nattrs) &&
+			!isSplProp(key) &&
+			remAttr(vnode, key, isDynProp(vnode.tag, key) || isEvProp(key));
+		}
 	}
 }

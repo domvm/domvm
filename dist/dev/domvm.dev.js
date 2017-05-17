@@ -475,6 +475,10 @@ var DEVMODE = {
 	FOREIGN_ELEMENT: function(el) {
 		return ["domvm stumbled upon an element in its DOM that it didn't create, which may be problematic. You can inject external elements into the vtree using domvm.injectElement.", el];
 	},
+
+	REUSED_ATTRS: function(vnode) {
+		return ["Attrs objects may only be reused if they are truly static, as a perf optimization. Mutating & reusing them will have no effect on the DOM due to 0 diff.", vnode];
+	}
 };
 
 function devNotify(key, args) {
@@ -802,30 +806,35 @@ function patchAttrs(vnode, donor) {
 	var nattrs = vnode.attrs || emptyObj;
 	var oattrs = donor.attrs || emptyObj;
 
-	for (var key in nattrs) {
-		var nval = nattrs[key];
-		var isDyn = isDynProp(vnode.tag, key);
-		var oval = isDyn ? vnode.el[key] : oattrs[key];
-
-		if (isStream(nval))
-			{ nattrs[key] = nval = hookStream(nval, getVm(vnode)); }
-
-		if (nval === oval) {}
-		else if (isStyleProp(key))
-			{ patchStyle(vnode, donor); }
-		else if (isSplProp(key)) {}
-		else if (isEvProp(key))
-			{ patchEvent(vnode, key, nval, oval); }
-		else
-			{ setAttr(vnode, key, nval, isDyn); }
+	if (nattrs === oattrs) {
+		{ devNotify("REUSED_ATTRS", [vnode]); }
 	}
+	else {
+		for (var key in nattrs) {
+			var nval = nattrs[key];
+			var isDyn = isDynProp(vnode.tag, key);
+			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
-	// TODO: handle key[0] === "."
-	// should bench style.cssText = "" vs removeAttribute("style")
-	for (var key in oattrs) {
-		!(key in nattrs) &&
-		!isSplProp(key) &&
-		remAttr(vnode, key, isDynProp(vnode.tag, key) || isEvProp(key));
+			if (isStream(nval))
+				{ nattrs[key] = nval = hookStream(nval, getVm(vnode)); }
+
+			if (nval === oval) {}
+			else if (isStyleProp(key))
+				{ patchStyle(vnode, donor); }
+			else if (isSplProp(key)) {}
+			else if (isEvProp(key))
+				{ patchEvent(vnode, key, nval, oval); }
+			else
+				{ setAttr(vnode, key, nval, isDyn); }
+		}
+
+		// TODO: handle key[0] === "."
+		// should bench style.cssText = "" vs removeAttribute("style")
+		for (var key in oattrs) {
+			!(key in nattrs) &&
+			!isSplProp(key) &&
+			remAttr(vnode, key, isDynProp(vnode.tag, key) || isEvProp(key));
+		}
 	}
 }
 
