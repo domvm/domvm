@@ -111,6 +111,8 @@ export function patch(vnode, donor, isRedrawRoot) {
 
 			if (vnode.raw)
 				el.innerHTML = nbody;
+			else if (donor.raw)
+				el.textContent = nbody;
 			else if (el.firstChild)
 				el.firstChild.nodeValue = nbody;
 			else

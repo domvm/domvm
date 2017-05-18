@@ -164,6 +164,35 @@ QUnit.module("Various Others");
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, innerHTML: 1, insertBefore: 1 });
+
+		var tab = 1;
+
+		function View51() {
+			return function() {
+				return el('div', [
+					tab === 2 && el('span', 'foo'),
+					el('span', { _raw: true }, 'bar <b>baz</b>')
+				]);
+			};
+		}
+
+		var expcHtml = '<div><span>bar <b>baz</b></span></div>';
+
+		instr.start();
+		vm = domvm.createView(View51).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, innerHTML: 1, insertBefore: 2 });
+
+		tab = 2;
+
+		var expcHtml = '<div><span>foo</span><span>bar <b>baz</b></span></div>';
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, textContent: 1, innerHTML: 1, insertBefore: 1 });
 	});
 
 	QUnit.test('Existing DOM element as child', function(assert) {
