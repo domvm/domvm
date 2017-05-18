@@ -64,29 +64,24 @@ function getCurBranch() {
 function compile(buildName) {
 	var start = +new Date;
 
-	var entry = './src/builds/' + buildName + '.js';
-	var stubs = './src/view/addons/stubs.js';
+	var buildFile = './src/builds/' + buildName + '.js';
 
-	// will hold contents of orig stubs.js
-	var stubsOrig, stubsNew;
+	var destub = /#destub: ([\w,]+)/gm.exec(fs.readFileSync(buildFile, 'utf8'));
 
-	var entryData = fs.readFileSync(entry, 'utf8');
-
-	var destub = /#destub: ([\w,]+)/gm.exec(entryData);
+	var replaceCfg = {
+		include: './src/view/addons/stubs.js',
+	};
 
 	if (destub) {
-		stubsOrig = stubsNew = fs.readFileSync(stubs, 'utf8');
-
 		destub[1].split(",").forEach(function(fnName) {
-			stubsNew = stubsNew.replace(fnName + "Stub as ", "");
+			replaceCfg[fnName + "Stub as "] = "";
 		});
-
-		fs.writeFileSync(stubs, stubsNew, 'utf8');
 	}
 
 	rollup({
-		entry: entry,
+		entry: buildFile,
 		plugins: [
+			replace(replaceCfg),
 			replace({
 				_DEVMODE: buildName === "dev" ? true : false
 			}),
@@ -117,16 +112,11 @@ function compile(buildName) {
 			dest: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		});
 
-		if (destub)
-			fs.writeFileSync(stubs, stubsOrig, 'utf8');
-
 		console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
 
 		minify(buildName, start);
 	}).catch(function(err) {
 		console.log(err);
-		if (destub)
-			fs.writeFileSync(stubs, stubsOrig, 'utf8');
 	})
 }
 
