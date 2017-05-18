@@ -1,5 +1,3 @@
-// #destub: cssTag,autoPx
-
 import { default as micro } from "./nano";
 
 import "../view/addons/emit";

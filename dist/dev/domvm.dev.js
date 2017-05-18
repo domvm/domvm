@@ -1827,8 +1827,6 @@ function patch$1(o, n) {
 	}
 }
 
-// #destub: cssTag,autoPx
-
 ViewModelProto.events = null;
 ViewModelProto.emit = emit;
 ViewModelProto.on = on;
@@ -1894,8 +1892,6 @@ function nextSubVms(n, accum) {
 	return accum;
 }
 
-// #destub: cssTag,autoPx
-
 if (typeof flyd !== "undefined") {
 	streamCfg({
 		is:		function (s) { return flyd.isStream(s); },
@@ -1904,8 +1900,6 @@ if (typeof flyd !== "undefined") {
 		unsub:	function (s) { return s.end(true); },
 	});
 }
-
-// #destub: cssTag,autoPx,isStream,hookStream
 
 nano.streamCfg = streamCfg;
 
@@ -2109,10 +2103,6 @@ function html(node, dynProps) {
 
 	return out;
 }
-
-// #destub: cssTag,autoPx,isStream,hookStream
-
-// #destub: cssTag,autoPx,isStream,hookStream
 
 nano.DEVMODE = DEVMODE;
 

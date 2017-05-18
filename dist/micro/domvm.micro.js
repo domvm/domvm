@@ -1708,8 +1708,6 @@ function patch$1(o, n) {
 	}
 }
 
-// #destub: cssTag,autoPx
-
 ViewModelProto.events = null;
 ViewModelProto.emit = emit;
 ViewModelProto.on = on;
@@ -1774,8 +1772,6 @@ function nextSubVms(n, accum) {
 
 	return accum;
 }
-
-// #destub: cssTag,autoPx
 
 return nano;
 

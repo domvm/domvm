@@ -1,5 +1,3 @@
-// #destub: cssTag,autoPx,isStream,hookStream
-
 import { default as full } from "./mini";
 
 import "../view/addons/attach";

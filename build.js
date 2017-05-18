@@ -6,49 +6,57 @@ const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
 const zlib = require('zlib');
 
-function getBuilds() {
+function getBuilds(name) {
 	return [
 		{
 			build: "pico",
 			contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>element injection<br>raw html<br>vnode refs<br>css objects<br>svg<br>global onevent",
 			descr: "view core<br><br>**This build is unstable by design; features that get decoupled<br>can move to nano+ builds at any commit!**",
+			destub: [],
 		},
 		{
 			build: "nano",
 			contents: "+ `selectorTag`<br> + `autoPx`<br> + `diff`<br> + `patch`<br>",
 			descr: "tpl conveniences:<br>`\"input[type=checkbox].some-class\"`<br>`{style: {width: 20}}`<br>`el(\"div\", el(\"span\", \"foo\")...)`<br><br>optims:<br>`vnode.patch({class: ..., style...})`<br>`vm.diff({vals:...then:...})`",
+			destub: ["cssTag","autoPx"],
 		},
 		{
 			build: "micro",
 			contents: "+ `emit`<br> + `body`<br>",
 			descr: "subview-to-parent events:<br>`vm.emit('myNotif', arg1, arg2...)`<br><br>get child views:<br>`vm.body()` ",
+			destub: ["cssTag","autoPx"],
 		},
 		{
 			build: "mini",
 			contents: "+ `streamCfg`<br> + `streamFlyd`<br> + `prop`<br>",
 			descr: "view reactivity (reduce need for explicit `redraw()`)",
+			destub: ["cssTag","autoPx","isStream","hookStream"],
 		},
 		{
 			build: "client",
 			contents: "`mini`<br> + `attach`<br>",
 			descr: "SSR hydration",
+			destub: ["cssTag","autoPx","isStream","hookStream"],
 		},
 		{
 			build: "server",
 			contents: "`mini`<br> + `html`<br>",
 			descr: "SSR rendering",
+			destub: ["cssTag","autoPx","isStream","hookStream"],
 		},
 		{
 			build: "full",
 			contents: "`mini`<br> + `attach`<br> + `html`<br>",
 			descr: "everything (for tests)",
+			destub: ["cssTag","autoPx","isStream","hookStream"],
 		},
 		{
 			build: "dev",
 			contents: "`full`<br> + warnings",
 			descr: "use this build for development; it contains detection of some anti-patterns that may cause slowness, confusion, errors or undesirable behavior",
+			destub: ["cssTag","autoPx","isStream","hookStream"],
 		}
-	];
+	].filter(b => name != null ? b.build === name : true);
 }
 
 var args = process.argv.slice(2);
@@ -66,22 +74,16 @@ function compile(buildName) {
 
 	var buildFile = './src/builds/' + buildName + '.js';
 
-	var destub = /#destub: ([\w,]+)/gm.exec(fs.readFileSync(buildFile, 'utf8'));
+	var buildCfg = getBuilds(buildName)[0];
 
-	var replaceCfg = {
-		include: './src/view/addons/stubs.js',
-	};
+	var destubCfg = {include: './src/view/addons/stubs.js'};
 
-	if (destub) {
-		destub[1].split(",").forEach(function(fnName) {
-			replaceCfg[fnName + "Stub as "] = "";
-		});
-	}
+	buildCfg.destub.forEach(fnName => { destubCfg[fnName + "Stub as "] = "" });
 
 	rollup({
 		entry: buildFile,
 		plugins: [
-			replace(replaceCfg),
+			replace(destubCfg),
 			replace({
 				_DEVMODE: buildName === "dev" ? true : false
 			}),
@@ -143,7 +145,7 @@ function minify(buildName, start) {
 	//	fs.writeFileSync(dst, fs.readFileSync(dst, 'utf8') + "//# sourceMappingURL="+mapName, 'utf8');
 	//	fs.writeFileSync(dstMap, fs.readFileSync(dstMap, 'utf8').replace(/dist\/nano\//g, ""), 'utf8');
 
-		// remove "window.moo = moo;" patterns inserted to prevent gcc inlining.
+		// remove "window.moo = moo;" patterns inserted to prevent Closure Compiler from inlining.
 		fs.writeFileSync(dst, fs.readFileSync(dst, 'utf8').replace(/window\.\w+\s*=\s*\w+;/gmi, ""), 'utf8');
 
 		buildDistTable();

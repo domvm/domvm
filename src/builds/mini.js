@@ -1,5 +1,3 @@
-// #destub: cssTag,autoPx,isStream,hookStream
-
 import { default as mini } from "./micro";
 
 import { streamCfg } from "../view/addons/streamCfg";

@@ -1,5 +1,3 @@
-// #destub: cssTag,autoPx
-
 import { default as nano } from "./pico";
 
 import "../view/addons/diff";

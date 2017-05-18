@@ -1703,8 +1703,6 @@ function patch$1(o, n) {
 	}
 }
 
-// #destub: cssTag,autoPx
-
 return nano$1;
 
 })));
