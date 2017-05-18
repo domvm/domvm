@@ -487,7 +487,7 @@ function devNotify(key, args) {
 
 		if (msgArgs) {
 			msgArgs[0] = key + ": " + (DEVMODE.verbose ? msgArgs[0] : "");
-			console.warn.apply(null, msgArgs);
+			console.warn.apply(console, msgArgs);
 		}
 	}
 }
