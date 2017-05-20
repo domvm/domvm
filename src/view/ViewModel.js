@@ -287,6 +287,9 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 
 	if (newModel != null) {		// && vm.key !== vm.model
 		if (vm.model !== newModel) {
+			if (_DEVMODE) {
+				devNotify("MODEL_REPLACED", [vm, vm.model, newModel]);
+			}
 			vm.hooks && fireHooks("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
 			vm.model = newModel;
 		//	vm.hooks && fireHooks("didUpdate", vm, newModel);		// should this fire at al?

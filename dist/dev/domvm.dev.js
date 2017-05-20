@@ -452,6 +452,11 @@ var DEVMODE = {
 		return [msg, vm, model];
 	},
 
+	MODEL_REPLACED: function(vm, oldModel, newModel) {
+		var msg = "A view's model was replaced. The model originally passed to the view closure during init is now stale. You probably want to rely only on the model passed to render() or vm.model.";
+		return [msg, vm, oldModel, newModel];
+	},
+
 	UNKEYED_INPUT: function(vnode) {
 		return ["Unkeyed <input> detected. Consider adding a name, id, _key, or _ref attr to avoid accidental DOM recycling between different <input> types.", vnode];
 	},
@@ -1629,6 +1634,9 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 
 	if (newModel != null) {		// && vm.key !== vm.model
 		if (vm.model !== newModel) {
+			{
+				devNotify("MODEL_REPLACED", [vm, vm.model, newModel]);
+			}
 			vm.hooks && fireHooks("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
 			vm.model = newModel;
 		//	vm.hooks && fireHooks("didUpdate", vm, newModel);		// should this fire at al?
