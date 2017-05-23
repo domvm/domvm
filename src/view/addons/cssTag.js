@@ -12,7 +12,7 @@ export function cssTag(raw) {
 		tagCache[raw] = cached = {
 			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
 			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
-			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
+			'class':	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
 			attrs:	null,
 		};
 
