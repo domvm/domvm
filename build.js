@@ -94,7 +94,7 @@ function compile(buildName) {
 			DEVBUILD ? {} : uglify({
 				output: {
 					comments: function(node, comment) {
-						return /@preserve|@license|@cc_on/i.test(comment.value);
+						return comment.value.indexOf("https://github.com/leeoniya/domvm") >= 0;
 					}
 				}
 			}),
@@ -115,7 +115,7 @@ function compile(buildName) {
 				"* domvm.full.js - DOM ViewModel",
 				"* A thin, fast, dependency-free vdom view layer",
 				"*/",
-				"// @preserve https://github.com/leeoniya/domvm (" + ver + ", " + buildName + ")",
+				"// https://github.com/leeoniya/domvm (" + ver + ", " + buildName + ")",
 				"",
 			].join("\n"),
 			moduleName: "domvm",

@@ -5,7 +5,7 @@
 * domvm.full.js - DOM ViewModel
 * A thin, fast, dependency-free vdom view layer
 */
-// @preserve https://github.com/leeoniya/domvm (2.x-dev, dev)
+// https://github.com/leeoniya/domvm (2.x-dev, dev)
 
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
