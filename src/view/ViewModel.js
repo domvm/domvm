@@ -265,7 +265,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 				vnew.vm = vm;
 			}
 			else
-				patch(vnew, vold, isRedrawRoot);
+				patch(vnew, vold);
 		}
 		else
 			hydrate(vnew);

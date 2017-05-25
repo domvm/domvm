@@ -1147,7 +1147,7 @@ function findListDonor(n, list) {
 
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists
-function patch(vnode, donor, isRedrawRoot) {
+function patch(vnode, donor) {
 	donor.hooks && fireHooks("willRecycle", donor, vnode);
 
 	var el = vnode.el = donor.el;
@@ -1178,7 +1178,7 @@ function patch(vnode, donor, isRedrawRoot) {
 		if (newIsArr) {
 		//	console.log('[] => []', obody, nbody);
 			// graft children
-			patchChildren(vnode, donor, isRedrawRoot);
+			patchChildren(vnode, donor);
 		}
 		// [] => "" | null
 		else if (nbody !== obody) {
@@ -1225,7 +1225,7 @@ function sortByKey(a, b) {
 }
 
 // [] => []
-function patchChildren(vnode, donor, isRedrawRoot) {
+function patchChildren(vnode, donor) {
 	var nbody = vnode.body,
 		nlen = nbody.length,
 		domSync = donor.type === ELEMENT && (donor.flags & FIXED_BODY) === 0;
@@ -1612,7 +1612,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 				vnew.vm = vm;
 			}
 			else
-				{ patch(vnew, vold, isRedrawRoot); }
+				{ patch(vnew, vold); }
 		}
 		else
 			{ hydrate(vnew); }
