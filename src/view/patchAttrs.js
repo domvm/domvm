@@ -14,11 +14,11 @@ export function remAttr(node, name, asProp) {
 
 // setAttr
 // diff, ".", "on*", bool vals, skip _*, value/checked/selected selectedIndex
-export function setAttr(node, name, val, asProp) {
+export function setAttr(node, name, val, asProp, initial) {
 	var el = node.el;
 
 	if (val == null)
-		remAttr(node, name);		//, asProp?  // will also removeAttr of style: null
+		!initial && remAttr(node, name);		//, asProp?  // will also removeAttr of style: null
 	else if (node.ns != null)
 		el.setAttribute(name, val);
 	else if (name === "class")
@@ -31,7 +31,7 @@ export function setAttr(node, name, val, asProp) {
 		el.setAttribute(name, val);
 }
 
-export function patchAttrs(vnode, donor) {
+export function patchAttrs(vnode, donor, initial) {
 	const nattrs = vnode.attrs || emptyObj;
 	const oattrs = donor.attrs || emptyObj;
 
@@ -55,7 +55,7 @@ export function patchAttrs(vnode, donor) {
 			else if (isEvProp(key))
 				patchEvent(vnode, key, nval, oval);
 			else
-				setAttr(vnode, key, nval, isDyn);
+				setAttr(vnode, key, nval, isDyn, initial);
 		}
 
 		// TODO: handle key[0] === "."

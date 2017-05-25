@@ -790,11 +790,11 @@ function remAttr(node, name, asProp) {
 
 // setAttr
 // diff, ".", "on*", bool vals, skip _*, value/checked/selected selectedIndex
-function setAttr(node, name, val, asProp) {
+function setAttr(node, name, val, asProp, initial) {
 	var el = node.el;
 
 	if (val == null)
-		{ remAttr(node, name); }		//, asProp?  // will also removeAttr of style: null
+		{ !initial && remAttr(node, name); }		//, asProp?  // will also removeAttr of style: null
 	else if (node.ns != null)
 		{ el.setAttribute(name, val); }
 	else if (name === "class")
@@ -807,7 +807,7 @@ function setAttr(node, name, val, asProp) {
 		{ el.setAttribute(name, val); }
 }
 
-function patchAttrs(vnode, donor) {
+function patchAttrs(vnode, donor, initial) {
 	var nattrs = vnode.attrs || emptyObj;
 	var oattrs = donor.attrs || emptyObj;
 
@@ -830,7 +830,7 @@ function patchAttrs(vnode, donor) {
 			else if (isEvProp(key))
 				{ patchEvent(vnode, key, nval, oval); }
 			else
-				{ setAttr(vnode, key, nval, isDyn); }
+				{ setAttr(vnode, key, nval, isDyn, initial); }
 		}
 
 		// TODO: handle key[0] === "."
@@ -857,27 +857,6 @@ function createView(view, model, key, opts) {
 }
 
 //import { XML_NS, XLINK_NS } from './defineSvgElement';
-// TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT
-function patchAttrs2(vnode) {
-	var nattrs = vnode.attrs;
-
-	for (var key in nattrs) {
-		var nval = nattrs[key];
-		var isDyn = isDynProp(vnode.tag, key);
-
-		if (isStream(nval))
-			{ nattrs[key] = nval = hookStream(nval, getVm(vnode)); }
-
-		if (isStyleProp(key))
-			{ patchStyle(vnode); }
-		else if (isSplProp(key)) {}
-		else if (isEvProp(key))
-			{ patchEvent(vnode, key, nval); }
-		else if (nval != null)
-			{ setAttr(vnode, key, nval, isDyn); }
-	}
-}
-
 function hydrateBody(vnode) {
 	for (var i = 0; i < vnode.body.length; i++) {
 		var vnode2 = vnode.body[i];
@@ -910,7 +889,7 @@ function hydrate(vnode, withEl) {
 		//		vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS);
 
 			if (vnode.attrs != null)
-				{ patchAttrs2(vnode); }
+				{ patchAttrs(vnode, emptyObj, true); }
 
 			if (isArr(vnode.body))
 				{ hydrateBody(vnode); }

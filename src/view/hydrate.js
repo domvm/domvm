@@ -1,34 +1,9 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
-import { isArr } from '../utils';
-import { isStyleProp, isSplProp, isEvProp, isDynProp, getVm } from './utils';
-import { isStream, hookStream } from './addons/stubs';
-import { setAttr } from './patchAttrs';
-import { patchStyle } from './patchStyle';
-import { patchEvent } from './patchEvent';
+import { isArr, emptyObj } from '../utils';
+import { patchAttrs } from './patchAttrs';
 import { createView } from './createView';
 //import { XML_NS, XLINK_NS } from './defineSvgElement';
 import { createElement, createTextNode, createComment, insertBefore } from './dom';
-
-// TODO: DRY this out. reusing normal patchAttrs here negatively affects V8's JIT
-function patchAttrs2(vnode) {
-	var nattrs = vnode.attrs;
-
-	for (var key in nattrs) {
-		var nval = nattrs[key];
-		var isDyn = isDynProp(vnode.tag, key);
-
-		if (isStream(nval))
-			nattrs[key] = nval = hookStream(nval, getVm(vnode));
-
-		if (isStyleProp(key))
-			patchStyle(vnode);
-		else if (isSplProp(key)) {}
-		else if (isEvProp(key))
-			patchEvent(vnode, key, nval);
-		else if (nval != null)
-			setAttr(vnode, key, nval, isDyn);
-	}
-}
 
 export function hydrateBody(vnode) {
 	for (var i = 0; i < vnode.body.length; i++) {
@@ -62,7 +37,7 @@ export function hydrate(vnode, withEl) {
 		//		vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS);
 
 			if (vnode.attrs != null)
-				patchAttrs2(vnode);
+				patchAttrs(vnode, emptyObj, true);
 
 			if (isArr(vnode.body))
 				hydrateBody(vnode);

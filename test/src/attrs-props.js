@@ -67,7 +67,7 @@ QUnit.module("Attrs/props");
 		var checkEl = document.getElementById(check1.id);
 
 		var expcHtml = '<input type="checkbox" id="check1">';
-		evalOut(assert, checkEl, check1.vm.html(false), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, setAttribute: 1, checked: 1 }, {checked: checkEl.checked}, {checked: false});
+		evalOut(assert, checkEl, check1.vm.html(false), expcHtml, callCounts, { id: 1, createElement: 1, insertBefore: 1, setAttribute: 1 }, {checked: checkEl.checked}, {checked: false});
 	});
 
 	QUnit.test("Bool attr toggle true", function(assert) {
