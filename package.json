@@ -35,7 +35,8 @@
     "rollup": "*",
     "buble": "*",
     "rollup-plugin-replace": "*",
-    "rollup-plugin-buble": "*"
+    "rollup-plugin-buble": "*",
+    "rollup-plugin-uglify": "*"
   },
   "bugs": {
     "url": "https://github.com/leeoniya/domvm/issues"
