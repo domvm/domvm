@@ -1,7 +1,8 @@
 import { ViewModelProto } from '../ViewModel';
+import { VNodeProto } from '../VNode';
 import { isArr, isFunc, cmpArr, cmpObj } from '../../utils';
 
-ViewModelProto._diff = null;
+ViewModelProto._diff = VNodeProto._diff = null;
 
 // @vals should be a callback that returns an array or object of values to shallow-compare
 //   if the returned values are the same on subsequent redraw calls, then redraw() is prevented

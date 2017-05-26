@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+	<head>
+		<title>lazy-body</title>
+
+		<script src="../dist/dev/domvm.dev.js"></script>
+	</head>
+	<body>
+		<script>
+			var el = domvm.defineElement;
+
+			function View(vm, store) {
+				return () => {
+					var items = domvm.lazyBody(store.items, {
+						key:  item => item.id,
+						diff: item => [store.selected === item.id, item.text],
+					});
+
+					return el("div", {_flags: domvm.KEYED_LIST | domvm.LAZY_BODY}, items.map(item =>
+						el("p", {_flags: domvm.FIXED_BODY, class: store.selected === item.id ? 'selected' : null, _key: item.id}, [		// items.key(item)
+							el("em", item.text),
+						])
+					));
+				}
+			}
+
+			var store = {
+				selected: "b",
+				items: [
+					{id: "a", text: "A"},
+					{id: "b", text: "B"},
+					{id: "c", text: "C"},
+				]
+			};
+
+			var vm = domvm.createView(View, store).mount(document.body);
+
+		//	setTimeout(function() {
+		//		vm.redraw();
+		//	}, 1000);
+
+			setTimeout(function() {
+			//	store.items[1] = {id: "x", text: "X"};
+				store.items[3] = {id: "x", text: "X"};
+				vm.redraw(true);
+			}, 2000)
+		</script>
+	</body>
+</html>

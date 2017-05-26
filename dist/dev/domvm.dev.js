@@ -194,6 +194,55 @@ function binaryKeySearch(list, item) {
     return -1;
 }
 
+function VNode() {}
+
+var VNodeProto = VNode.prototype = {
+	constructor: VNode,
+
+	type:	null,
+
+	vm:		null,
+
+	// all this stuff can just live in attrs (as defined) just have getters here for it
+	key:	null,
+	ref:	null,
+	data:	null,
+	hooks:	null,
+	raw:	false,
+	ns:		null,
+
+	el:		null,
+
+	tag:	null,
+	attrs:	null,
+	body:	null,
+
+	flags:	0,
+
+	_class:	null,
+
+	idx:	null,
+	parent:	null,
+
+	/*
+	// break out into optional fluent module
+	key:	function(val) { this.key	= val; return this; },
+	ref:	function(val) { this.ref	= val; return this; },		// deep refs
+	data:	function(val) { this.data	= val; return this; },
+	hooks:	function(val) { this.hooks	= val; return this; },		// h("div").hooks()
+	html:	function(val) { this.html	= true; return this.body(val); },
+
+	body:	function(val) { this.body	= val; return this; },
+	*/
+};
+
+function defineText(body) {
+	var node = new VNode;
+	node.type = TEXT;
+	node.body = body;
+	return node;
+}
+
 function isEvProp(name) {
 	return name[0] === "o" && name[1] === "n";
 }
@@ -338,107 +387,6 @@ function hookStream(s, vm) {
 	return streamVal(s);
 }
 
-// assumes if styles exist both are objects or both are strings
-function patchStyle(n, o) {
-	var ns =     (n.attrs || emptyObj).style;
-	var os = o ? (o.attrs || emptyObj).style : null;
-
-	// replace or remove in full
-	if (ns == null || isVal(ns))
-		{ n.el.style.cssText = ns; }
-	else {
-		for (var nn in ns) {
-			var nv = ns[nn];
-
-			if (isStream(nv))
-				{ nv = hookStream(nv, getVm(n)); }
-
-			if (os == null || nv != null && nv !== os[nn])
-				{ n.el.style[nn] = autoPx(nn, nv); }
-		}
-
-		// clean old
-		if (os) {
-			for (var on in os) {
-				if (ns[on] == null)
-					{ n.el.style[on] = ""; }
-			}
-		}
-	}
-}
-
-var didQueue = [];
-
-function fireHook(did, fn, o, n, immediate) {
-	if (did) {	// did*
-		//	console.log(name + " should queue till repaint", o, n);
-		immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
-	}
-	else {		// will*
-		//	console.log(name + " may delay by promise", o, n);
-		return fn(o, n);		// or pass  done() resolver
-	}
-}
-
-function fireHooks(name, o, n, immediate) {
-	var hook = o.hooks[name];
-
-	if (hook) {
-		var did = name[0] === "d" && name[1] === "i" && name[2] === "d";
-
-		if (isArr(hook)) {
-			// TODO: promise.all() this?
-			return hook.map(function(hook2) {
-				return fireHook(did, hook2, o, n);
-			});
-		}
-		else
-			{ return fireHook(did, hook, o, n, immediate); }
-	}
-}
-
-function VNode() {}
-
-var VNodeProto = VNode.prototype = {
-	constructor: VNode,
-
-	type:	null,
-
-	vm:		null,
-
-	// all this stuff can just live in attrs (as defined) just have getters here for it
-	key:	null,
-	ref:	null,
-	data:	null,
-	hooks:	null,
-	raw:	false,
-	ns:		null,
-
-	el:		null,
-
-	tag:	null,
-	attrs:	null,
-	body:	null,
-
-	flags:	0,
-
-	_class:	null,
-
-	idx:	null,
-	parent:	null,
-
-	/*
-	// break out into optional fluent module
-	key:	function(val) { this.key	= val; return this; },
-	ref:	function(val) { this.ref	= val; return this; },		// deep refs
-	data:	function(val) { this.data	= val; return this; },
-	hooks:	function(val) { this.hooks	= val; return this; },		// h("div").hooks()
-	html:	function(val) { this.html	= true; return this.body(val); },
-
-	body:	function(val) { this.body	= val; return this; },
-	*/
-};
-
 var DEVMODE = {
 	enabled: true,
 
@@ -505,6 +453,8 @@ var FIXED_BODY = 1;
 var DEEP_REMOVE = 2;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
 var KEYED_LIST = 4;
+// indicated an old vnode recycler function for body
+var LAZY_BODY = 8;
 
 function initElementNode(tag, attrs, body, flags) {
 	var node = new VNode;
@@ -586,6 +536,130 @@ function initElementNode(tag, attrs, body, flags) {
 	}
 
 	return node;
+}
+
+function setRef(vm, name, node) {
+	var path = ["refs"].concat(name.split("."));
+	deepSet(vm, path, node);
+}
+
+function setDeepRemove(node) {
+	while (node = node.parent)
+		{ node.flags |= DEEP_REMOVE; }
+}
+
+// vnew, vold
+function preProc(vnew, parent, idx, ownVm) {
+	if (vnew.type === VMODEL || vnew.type === VVIEW)
+		{ return; }
+
+	vnew.parent = parent;
+	vnew.idx = idx;
+	vnew.vm = ownVm;
+
+	if (vnew.ref != null)
+		{ setRef(getVm(vnew), vnew.ref, vnew); }
+
+	if (vnew.hooks && vnew.hooks.willRemove || ownVm && ownVm.hooks && ownVm.hooks.willUnmount)
+		{ setDeepRemove(vnew); }
+
+	if (isArr(vnew.body))
+		{ preProcBody(vnew); }
+	else if (isStream(vnew.body))
+		{ vnew.body = hookStream(vnew.body, getVm(vnew)); }
+}
+
+function preProcBody(vnew) {
+	var body = vnew.body;
+
+	for (var i = 0; i < body.length; i++) {
+		var node2 = body[i];
+
+		// remove false/null/undefined
+		if (node2 === false || node2 == null)
+			{ body.splice(i--, 1); }
+		// flatten arrays
+		else if (isArr(node2))
+			{ insertArr(body, node2, i--, 1); }
+		else {
+			if (node2.type == null)
+				{ body[i] = node2 = defineText(""+node2); }
+
+			if (node2.type === TEXT) {
+				// remove empty text nodes
+				if (node2.body == null || node2.body === "")
+					{ body.splice(i--, 1); }
+				// merge with previous text node
+				else if (i > 0 && body[i-1].type === TEXT) {
+					body[i-1].body += node2.body;
+					body.splice(i--, 1);
+				}
+				else
+					{ preProc(node2, vnew, i, null); }
+			}
+			else
+				{ preProc(node2, vnew, i, null); }
+		}
+	}
+}
+
+// assumes if styles exist both are objects or both are strings
+function patchStyle(n, o) {
+	var ns =     (n.attrs || emptyObj).style;
+	var os = o ? (o.attrs || emptyObj).style : null;
+
+	// replace or remove in full
+	if (ns == null || isVal(ns))
+		{ n.el.style.cssText = ns; }
+	else {
+		for (var nn in ns) {
+			var nv = ns[nn];
+
+			if (isStream(nv))
+				{ nv = hookStream(nv, getVm(n)); }
+
+			if (os == null || nv != null && nv !== os[nn])
+				{ n.el.style[nn] = autoPx(nn, nv); }
+		}
+
+		// clean old
+		if (os) {
+			for (var on in os) {
+				if (ns[on] == null)
+					{ n.el.style[on] = ""; }
+			}
+		}
+	}
+}
+
+var didQueue = [];
+
+function fireHook(did, fn, o, n, immediate) {
+	if (did) {	// did*
+		//	console.log(name + " should queue till repaint", o, n);
+		immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
+	}
+	else {		// will*
+		//	console.log(name + " may delay by promise", o, n);
+		return fn(o, n);		// or pass  done() resolver
+	}
+}
+
+function fireHooks(name, o, n, immediate) {
+	var hook = o.hooks[name];
+
+	if (hook) {
+		var did = name[0] === "d" && name[1] === "i" && name[2] === "d";
+
+		if (isArr(hook)) {
+			// TODO: promise.all() this?
+			return hook.map(function(hook2) {
+				return fireHook(did, hook2, o, n);
+			});
+		}
+		else
+			{ return fireHook(did, hook, o, n, immediate); }
+	}
 }
 
 var doc = ENV_DOM ? document : null;
@@ -891,6 +965,9 @@ function hydrate(vnode, withEl) {
 			if (vnode.attrs != null)
 				{ patchAttrs(vnode, emptyObj, true); }
 
+			if ((vnode.flags & LAZY_BODY) === LAZY_BODY)	// vnode.body instanceof LazyBody
+				{ vnode.body.body(vnode); }
+
 			if (isArr(vnode.body))
 				{ hydrateBody(vnode); }
 			else if (vnode.body != null && vnode.body !== "") {
@@ -1084,6 +1161,67 @@ function syncChildren(node, donor) {
 	}
 }
 
+function lazyBody(items, cfg) {
+	return new LazyBody(items, cfg.key, cfg.diff, cfg.tpl);
+}
+
+function LazyBody(items, key, diff, tpl) {
+	this.items = items;
+	this.length = items.length;
+	this.key = function(i) {
+		return key(items[i], i);
+	};
+	this.diff = function(i, donor) {
+		var newVals = diff(items[i], i);
+		if (donor == null)
+			{ return newVals; }
+		var oldVals = donor._diff;
+		var same = newVals === oldVals || isArr(oldVals) ? cmpArr(newVals, oldVals) : cmpObj(newVals, oldVals);
+		return same || newVals;
+	};
+	this.map(tpl);
+}
+
+LazyBody.prototype = {
+	constructor: LazyBody,
+
+	items: null,
+	length: null,
+	key: null,		// defaults to returning item identity (or position?)
+	diff: null,		// returns 0
+	tpl: null,		// or return some error tpl
+	map: function(tpl) {
+		this.tpl = function(i) {
+			return tpl(this.items[i]);
+		};
+		return this;
+	},
+	body: function(vnode) {
+		var this$1 = this;
+
+		var items = this.items;
+
+		var nbody = Array(items.length);
+
+		for (var i = 0; i < items.length; i++) {
+			var vnode2 = this$1.tpl(i);
+
+		//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
+		//		vnode2.key = getKey(item);
+
+			vnode2._diff = this$1.diff(i);			// holds oldVals for cmp
+
+			nbody[i] = vnode2;
+
+			// run preproc pass (should this be just preProc in above loop?) bench
+			preProc(vnode2, vnode, i);
+		}
+
+		// replace List with generated body
+		vnode.body = nbody;
+	}
+};
+
 function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
@@ -1124,6 +1262,17 @@ function findListDonor(n, list) {
 	return idx > -1 ? list[idx] : null;
 }
 
+function findDonor2(n, obody, fromIdx) {
+	for (; fromIdx < obody.length; fromIdx++) {
+		var o = obody[fromIdx];
+
+		if (o.key === n.key)
+			{ return o; }
+	}
+
+	return null;
+}
+
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists
 function patch(vnode, donor) {
@@ -1154,7 +1303,7 @@ function patch(vnode, donor) {
 
 	if (oldIsArr) {
 		// [] => []
-		if (newIsArr) {
+		if (newIsArr || (vnode.flags & LAZY_BODY) === LAZY_BODY) {		// nbody instanceof LazyBody
 		//	console.log('[] => []', obody, nbody);
 			// graft children
 			patchChildren(vnode, donor);
@@ -1203,11 +1352,17 @@ function sortByKey(a, b) {
 	return a.key > b.key ? 1 : a.key < b.key ? -1 : 0;
 }
 
+// larger qtys of KEYED_LIST children will use binary search
+var SEQ_SEARCH_MAX = 100;
+
 // [] => []
 function patchChildren(vnode, donor) {
 	var nbody = vnode.body,
 		nlen = nbody.length,
-		domSync = donor.type === ELEMENT && (donor.flags & FIXED_BODY) === 0;
+		obody = donor.body,
+		olen = obody.length,
+		fixedBody = (donor.flags & FIXED_BODY) === FIXED_BODY,
+		domSync = donor.type === ELEMENT && !fixedBody;
 
 	if (domSync && nlen === 0) {
 		clearChildren(donor);
@@ -1216,7 +1371,8 @@ function patchChildren(vnode, donor) {
 
 	var isList = (donor.flags & KEYED_LIST) === KEYED_LIST;
 
-	if (isList) {
+	// use binary search for non-static keyed lists of large length
+	if (isList && !fixedBody && olen > SEQ_SEARCH_MAX) {
 		var list = donor.body.slice();
 		list.sort(sortByKey);
 		var find = findListDonor;
@@ -1227,110 +1383,99 @@ function patchChildren(vnode, donor) {
 	}
 
 	var donor2,
+		node2,
+		diffRes,
+		remake,
+		type2,
 		fromIdx = 0;				// first unrecycled node (search head)
 
-	for (var i = 0; i < nlen; i++) {
-		var node2 = nbody[i];
-		var type2 = node2.type;
+	if (isList && (donor.flags & LAZY_BODY) === LAZY_BODY) {		// 		// nbody instanceof LazyBody, list should always be keyed, but FIXED_BODY prevents binary search sorting
+		find = findDonor2;
 
-		// ELEMENT,TEXT,COMMENT
-		if (type2 <= COMMENT) {
-			if (donor2 = find(node2, list, fromIdx))
-				{ patch(node2, donor2); }
-		}
-		else if (type2 === VVIEW) {
-			if (donor2 = find(node2, list, fromIdx))		// update/moveTo
-				{ var vm = donor2.vm._update(node2.model, vnode, i); }		// withDOM
-			else
-				{ var vm = createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
+		var fnode2 = {key: null};
 
-			type2 = vm.node.type;
-		}
-		else if (type2 === VMODEL) {
-			var vm = node2.vm._update(node2.model, vnode, i);
-			type2 = vm.node.type;
-		}
+		var nbodyNew = Array(nbody.length);
 
-		// to keep search space small, if donation is non-contig, move node fwd?
-		// re-establish contigindex
-		if (!isList && donor2 != null && donor2.idx === fromIdx)
-			{ fromIdx++; }
-	}
+		for (var i = 0; i < nlen; i++) {
+			remake = false;
+			diffRes = null;
 
+			fnode2.key = nbody.key(i);
+			donor2 = find(fnode2, list, fromIdx);
 
-	domSync && syncChildren(vnode, donor);
-}
+			if (donor2 != null) {
+				diffRes = nbody.diff(i, donor2);
 
-function defineText(body) {
-	var node = new VNode;
-	node.type = TEXT;
-	node.body = body;
-	return node;
-}
-
-function setRef(vm, name, node) {
-	var path = ["refs"].concat(name.split("."));
-	deepSet(vm, path, node);
-}
-
-function setDeepRemove(node) {
-	while (node = node.parent)
-		{ node.flags |= DEEP_REMOVE; }
-}
-
-// vnew, vold
-function preProc(vnew, parent, idx, ownVm) {
-	if (vnew.type === VMODEL || vnew.type === VVIEW)
-		{ return; }
-
-	vnew.parent = parent;
-	vnew.idx = idx;
-	vnew.vm = ownVm;
-
-	if (vnew.ref != null)
-		{ setRef(getVm(vnew), vnew.ref, vnew); }
-
-	if (vnew.hooks && vnew.hooks.willRemove || ownVm && ownVm.hooks && ownVm.hooks.willUnmount)
-		{ setDeepRemove(vnew); }
-
-	if (isArr(vnew.body))
-		{ preProcBody(vnew); }
-	else if (isStream(vnew.body))
-		{ vnew.body = hookStream(vnew.body, getVm(vnew)); }
-}
-
-function preProcBody(vnew) {
-	var body = vnew.body;
-
-	for (var i = 0; i < body.length; i++) {
-		var node2 = body[i];
-
-		// remove false/null/undefined
-		if (node2 === false || node2 == null)
-			{ body.splice(i--, 1); }
-		// flatten arrays
-		else if (isArr(node2))
-			{ insertArr(body, node2, i--, 1); }
-		else {
-			if (node2.type == null)
-				{ body[i] = node2 = defineText(""+node2); }
-
-			if (node2.type === TEXT) {
-				// remove empty text nodes
-				if (node2.body == null || node2.body === "")
-					{ body.splice(i--, 1); }
-				// merge with previous text node
-				else if (i > 0 && body[i-1].type === TEXT) {
-					body[i-1].body += node2.body;
-					body.splice(i--, 1);
+				// diff returns same, so cheaply adopt vnode without patching
+				if (diffRes === true) {
+					node2 = donor2;
+					node2.parent = vnode;
+					node2.idx = i;
 				}
+				// diff returns new diffVals, so generate new vnode & patch
 				else
-					{ preProc(node2, vnew, i, null); }
+					{ remake = true; }
 			}
 			else
-				{ preProc(node2, vnew, i, null); }
+				{ remake = true; }
+
+			if (remake) {
+				node2 = nbody.tpl(i);
+				preProc(node2, vnode, i);
+
+				node2._diff = diffRes != null ? diffRes : nbody.diff(i);
+
+				if (donor2 != null)
+					{ patch(node2, donor2); }
+			}
+			else {
+				// TODO: flag tmp FIXED_BODY on unchanged nodes?
+
+				// domSync = true;		if any idx changes or new nodes added/removed
+			}
+
+			nbodyNew[i] = node2;
+
+			// to keep search space small, if donation is non-contig, move node fwd?
+			// re-establish contigindex
+			if (find !== findListDonor && donor2 != null && donor2.idx === fromIdx)
+				{ fromIdx++; }
+		}
+
+		// replace List w/ new body
+		vnode.body = nbodyNew;
+	}
+	else {
+		for (var i = 0; i < nlen; i++) {
+			var node2 = nbody[i];
+			var type2 = node2.type;
+
+			// ELEMENT,TEXT,COMMENT
+			if (type2 <= COMMENT) {
+				if (donor2 = find(node2, list, fromIdx))
+					{ patch(node2, donor2); }
+			}
+			else if (type2 === VVIEW) {
+				if (donor2 = find(node2, list, fromIdx))		// update/moveTo
+					{ var vm = donor2.vm._update(node2.model, vnode, i); }		// withDOM
+				else
+					{ var vm = createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
+
+				type2 = vm.node.type;
+			}
+			else if (type2 === VMODEL) {
+				var vm = node2.vm._update(node2.model, vnode, i);
+				type2 = vm.node.type;
+			}
+
+			// to keep search space small, if donation is non-contig, move node fwd?
+			// re-establish contigindex
+			if (find !== findListDonor && donor2 != null && donor2.idx === fromIdx)
+				{ fromIdx++; }
 		}
 	}
+
+	domSync && syncChildren(vnode, donor);
 }
 
 function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
@@ -1734,12 +1879,15 @@ var nano = {
 	injectView: injectView,
 	injectElement: injectElement,
 
+	lazyBody: lazyBody,
+
 	FIXED_BODY: FIXED_BODY,
 	DEEP_REMOVE: DEEP_REMOVE,
 	KEYED_LIST: KEYED_LIST,
+	LAZY_BODY: LAZY_BODY,
 };
 
-ViewModelProto._diff = null;
+ViewModelProto._diff = VNodeProto._diff = null;
 
 // @vals should be a callback that returns an array or object of values to shallow-compare
 //   if the returned values are the same on subsequent redraw calls, then redraw() is prevented
