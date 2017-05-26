@@ -7,8 +7,8 @@ import { syncChildren } from './syncChildren';
 import { fireHooks } from './hooks';
 import { patchAttrs } from './patchAttrs';
 import { createView } from './createView';
-import { LazyBody } from './addons/lazyBody';
-import { FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_BODY } from './initElementNode';
+import { LazyList } from './addons/lazyList';
+import { FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST } from './initElementNode';
 
 function findDonor(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	for (; fromIdx < obody.length; fromIdx++) {
@@ -91,7 +91,7 @@ export function patch(vnode, donor) {
 
 	if (oldIsArr) {
 		// [] => []
-		if (newIsArr || (vnode.flags & LAZY_BODY) === LAZY_BODY) {		// nbody instanceof LazyBody
+		if (newIsArr || (vnode.flags & LAZY_LIST) === LAZY_LIST) {		// nbody instanceof LazyList
 		//	console.log('[] => []', obody, nbody);
 			// graft children
 			patchChildren(vnode, donor);
@@ -178,15 +178,15 @@ function patchChildren(vnode, donor) {
 
 	if (domSync && nlen === 0) {
 		clearChildren(donor);
-		if ((vnode.flags & LAZY_BODY) === LAZY_BODY)
+		if ((vnode.flags & LAZY_LIST) === LAZY_LIST)
 			vnode.body = [];    // nbody.tpl(all);
 		return;
 	}
 
-	var isList = (donor.flags & KEYED_LIST) === KEYED_LIST;
+	var keyedList = (donor.flags & KEYED_LIST) === KEYED_LIST;
 
 	// use binary search for non-static keyed lists of large length
-	if (isList && !fixedBody && olen > SEQ_SEARCH_MAX) {
+	if (keyedList && !fixedBody && olen > SEQ_SEARCH_MAX) {
 		var list = donor.body.slice();
 		list.sort(sortByKey);
 		var find = findListDonor;
@@ -203,7 +203,8 @@ function patchChildren(vnode, donor) {
 		type2,
 		fromIdx = 0;				// first unrecycled node (search head)
 
-	if (isList && (donor.flags & LAZY_BODY) === LAZY_BODY) {		// 		// nbody instanceof LazyBody, list should always be keyed, but FIXED_BODY prevents binary search sorting
+	// list should always be keyed, but FIXED_BODY prevents binary search sorting
+	if (keyedList && (donor.flags & LAZY_LIST) === LAZY_LIST) {
 		find = findDonor2;
 
 		var fnode2 = {key: null};

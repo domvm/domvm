@@ -12,8 +12,8 @@ export const FIXED_BODY = 1;
 export const DEEP_REMOVE = 2;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
 export const KEYED_LIST = 4;
-// indicated an old vnode recycler function for body
-export const LAZY_BODY = 8;
+// indicates an vnode match/diff/recycler function for body
+export const LAZY_LIST = 8;
 
 export function initElementNode(tag, attrs, body, flags) {
 	let node = new VNode;

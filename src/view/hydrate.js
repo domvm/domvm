@@ -2,7 +2,7 @@ import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr, emptyObj } from '../utils';
 import { patchAttrs } from './patchAttrs';
 import { createView } from './createView';
-import { LAZY_BODY } from './initElementNode';
+import { LAZY_LIST } from './initElementNode';
 //import { XML_NS, XLINK_NS } from './defineSvgElement';
 import { createElement, createTextNode, createComment, insertBefore } from './dom';
 
@@ -40,7 +40,7 @@ export function hydrate(vnode, withEl) {
 			if (vnode.attrs != null)
 				patchAttrs(vnode, emptyObj, true);
 
-			if ((vnode.flags & LAZY_BODY) === LAZY_BODY)	// vnode.body instanceof LazyBody
+			if ((vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList
 				vnode.body.body(vnode);
 
 			if (isArr(vnode.body))

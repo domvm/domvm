@@ -454,8 +454,8 @@ var FIXED_BODY = 1;
 var DEEP_REMOVE = 2;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
 var KEYED_LIST = 4;
-// indicated an old vnode recycler function for body
-var LAZY_BODY = 8;
+// indicates an vnode match/diff/recycler function for body
+var LAZY_LIST = 8;
 
 function initElementNode(tag, attrs, body, flags) {
 	var node = new VNode;
@@ -966,7 +966,7 @@ function hydrate(vnode, withEl) {
 			if (vnode.attrs != null)
 				{ patchAttrs(vnode, emptyObj, true); }
 
-			if ((vnode.flags & LAZY_BODY) === LAZY_BODY)	// vnode.body instanceof LazyBody
+			if ((vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList
 				{ vnode.body.body(vnode); }
 
 			if (isArr(vnode.body))
@@ -1162,11 +1162,11 @@ function syncChildren(node, donor) {
 	}
 }
 
-function lazyBody(items, cfg) {
-	return new LazyBody(items, cfg.key, cfg.diff, cfg.tpl);
+function lazyList(items, cfg) {
+	return new LazyList(items, cfg.key, cfg.diff, cfg.tpl);
 }
 
-function LazyBody(items, key, diff, tpl) {
+function LazyList(items, key, diff, tpl) {
 	this.items = items;
 	this.length = items.length;
 	this.key = function(i) {
@@ -1183,8 +1183,8 @@ function LazyBody(items, key, diff, tpl) {
 	this.map(tpl);
 }
 
-LazyBody.prototype = {
-	constructor: LazyBody,
+LazyList.prototype = {
+	constructor: LazyList,
 
 	items: null,
 	length: null,
@@ -1304,7 +1304,7 @@ function patch(vnode, donor) {
 
 	if (oldIsArr) {
 		// [] => []
-		if (newIsArr || (vnode.flags & LAZY_BODY) === LAZY_BODY) {		// nbody instanceof LazyBody
+		if (newIsArr || (vnode.flags & LAZY_LIST) === LAZY_LIST) {		// nbody instanceof LazyList
 		//	console.log('[] => []', obody, nbody);
 			// graft children
 			patchChildren(vnode, donor);
@@ -1367,15 +1367,15 @@ function patchChildren(vnode, donor) {
 
 	if (domSync && nlen === 0) {
 		clearChildren(donor);
-		if ((vnode.flags & LAZY_BODY) === LAZY_BODY)
+		if ((vnode.flags & LAZY_LIST) === LAZY_LIST)
 			{ vnode.body = []; }    // nbody.tpl(all);
 		return;
 	}
 
-	var isList = (donor.flags & KEYED_LIST) === KEYED_LIST;
+	var keyedList = (donor.flags & KEYED_LIST) === KEYED_LIST;
 
 	// use binary search for non-static keyed lists of large length
-	if (isList && !fixedBody && olen > SEQ_SEARCH_MAX) {
+	if (keyedList && !fixedBody && olen > SEQ_SEARCH_MAX) {
 		var list = donor.body.slice();
 		list.sort(sortByKey);
 		var find = findListDonor;
@@ -1392,7 +1392,8 @@ function patchChildren(vnode, donor) {
 		type2,
 		fromIdx = 0;				// first unrecycled node (search head)
 
-	if (isList && (donor.flags & LAZY_BODY) === LAZY_BODY) {		// 		// nbody instanceof LazyBody, list should always be keyed, but FIXED_BODY prevents binary search sorting
+	// list should always be keyed, but FIXED_BODY prevents binary search sorting
+	if (keyedList && (donor.flags & LAZY_LIST) === LAZY_LIST) {
 		find = findDonor2;
 
 		var fnode2 = {key: null};
@@ -1882,12 +1883,12 @@ var nano = {
 	injectView: injectView,
 	injectElement: injectElement,
 
-	lazyBody: lazyBody,
+	lazyList: lazyList,
 
 	FIXED_BODY: FIXED_BODY,
 	DEEP_REMOVE: DEEP_REMOVE,
 	KEYED_LIST: KEYED_LIST,
-	LAZY_BODY: LAZY_BODY,
+	LAZY_LIST: LAZY_LIST,
 };
 
 ViewModelProto._diff = null;

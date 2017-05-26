@@ -2,11 +2,11 @@ import { noop, isArr, cmpArr, cmpObj } from '../../utils';
 import { preProc } from '../preProc';
 import { KEYED_LIST } from '../initElementNode';
 
-export function lazyBody(items, cfg) {
-	return new LazyBody(items, cfg.key, cfg.diff, cfg.tpl);
+export function lazyList(items, cfg) {
+	return new LazyList(items, cfg.key, cfg.diff, cfg.tpl);
 }
 
-export function LazyBody(items, key, diff, tpl) {
+export function LazyList(items, key, diff, tpl) {
 	this.items = items;
 	this.length = items.length;
 	this.key = function(i) {
@@ -23,8 +23,8 @@ export function LazyBody(items, key, diff, tpl) {
 	this.map(tpl);
 }
 
-LazyBody.prototype = {
-	constructor: LazyBody,
+LazyList.prototype = {
+	constructor: LazyList,
 
 	items: null,
 	length: null,
