@@ -1367,6 +1367,8 @@ function patchChildren(vnode, donor) {
 
 	if (domSync && nlen === 0) {
 		clearChildren(donor);
+		if ((vnode.flags & LAZY_BODY) === LAZY_BODY)
+			{ vnode.body = []; }    // nbody.tpl(all);
 		return;
 	}
 

@@ -35,15 +35,33 @@
 
 			var vm = domvm.createView(View, store).mount(document.body);
 
-		//	setTimeout(function() {
-		//		vm.redraw();
-		//	}, 1000);
+			setTimeout(function() {
+				vm.redraw(true);
+			}, 1000);
 
 			setTimeout(function() {
-			//	store.items[1] = {id: "x", text: "X"};
+				store.items = [];
+				vm.redraw(true);
+			}, 2000);
+
+			setTimeout(function() {
+				store.items = [
+					{id: "a", text: "A"},
+					{id: "b", text: "B"},
+					{id: "c", text: "C"},
+				];
+				vm.redraw(true);
+			}, 3000);
+
+			setTimeout(function() {
 				store.items[3] = {id: "x", text: "X"};
 				vm.redraw(true);
-			}, 2000)
+			}, 4000);
+
+			setTimeout(function() {
+				store.items[1] = {id: "y", text: "Y"};
+				vm.redraw(true);
+			}, 5000);
 		</script>
 	</body>
 </html>
