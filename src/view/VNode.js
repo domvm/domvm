@@ -24,6 +24,7 @@ export const VNodeProto = VNode.prototype = {
 	flags:	0,
 
 	_class:	null,
+	_diff:	null,
 
 	idx:	null,
 	parent:	null,

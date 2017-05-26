@@ -220,6 +220,7 @@ var VNodeProto = VNode.prototype = {
 	flags:	0,
 
 	_class:	null,
+	_diff:	null,
 
 	idx:	null,
 	parent:	null,
@@ -1887,7 +1888,7 @@ var nano = {
 	LAZY_BODY: LAZY_BODY,
 };
 
-ViewModelProto._diff = VNodeProto._diff = null;
+ViewModelProto._diff = null;
 
 // @vals should be a callback that returns an array or object of values to shallow-compare
 //   if the returned values are the same on subsequent redraw calls, then redraw() is prevented
