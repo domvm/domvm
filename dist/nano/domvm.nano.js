@@ -4,7 +4,7 @@
 *
 * domvm.full.js - DOM ViewModel
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (2.x-dev, dev)
+* @preserve https://github.com/leeoniya/domvm (2.x-dev, nano)
 */
 
 (function (global, factory) {
@@ -99,12 +99,7 @@ export function deepUnset(targ, path) {
 }
 */
 
-function sliceArgs(args, offs) {
-	var arr = [];
-	for (var i = offs; i < args.length; i++)
-		{ arr.push(args[i]); }
-	return arr;
-}
+
 
 function cmpObj(a, b) {
 	for (var i in a)
@@ -153,16 +148,7 @@ function curry(fn, args, ctx) {
 	};
 }
 
-function prop(val, cb, ctx, args) {
-	return function(newVal, execCb) {
-		if (newVal !== undefined && newVal !== val) {
-			val = newVal;
-			execCb !== false && isFunc(cb) && cb.apply(ctx, args);
-		}
 
-		return val;
-	};
-}
 
 // adapted from https://github.com/Olical/binary-search
 function binaryKeySearch(list, item) {
@@ -351,12 +337,6 @@ function cssTag(raw) {
 	return cached;
 }
 
-var isStream = function() { return false };
-
-var streamVal = null;
-var subStream = null;
-var unsubStream = null;
-
 /* example flyd adapter:
 {
 	is:		s => flyd.isStream(s),
@@ -365,86 +345,15 @@ var unsubStream = null;
 	unsub:	s => s.end(),
 }
 */
-function streamCfg(cfg) {
-	isStream	= cfg.is;
-	streamVal	= cfg.val;
-	subStream	= cfg.sub;
-	unsubStream	= cfg.unsub;
-}
+
 
 // creates a one-shot self-ending stream that redraws target vm
 // TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
-function hookStream(s, vm) {
-	var redrawStream = subStream(s, function (val) {
-		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
-		if (redrawStream) {
-			// if vm fully is formed (or mounted vm.node.el?)
-			if (vm.node != null)
-				{ vm.redraw(); }
-			unsubStream(redrawStream);
-		}
-	});
 
-	return streamVal(s);
-}
+// stubs for optional addons that still exist in code so need lightweight impls to run
+function isStreamStub() { return false; }
 
-var DEVMODE = {
-	enabled: true,
-
-	verbose: true,
-
-	AUTOKEYED_VIEW: function(vm, model) {
-		var msg = "A view has been auto-keyed by its model's identity. If this model is replaced between redraws,"
-		+ " this view will unmount, its internal state and DOM will be destroyed and recreated."
-		+ " Consider providing a fixed key to this view to ensure its persistence & DOM recycling. See https://github.com/leeoniya/domvm#dom-recycling.";
-
-		return [msg, vm, model];
-	},
-
-	MODEL_REPLACED: function(vm, oldModel, newModel) {
-		var msg = "A view's model was replaced. The model originally passed to the view closure during init is now stale. You probably want to rely only on the model passed to render() or vm.model.";
-		return [msg, vm, oldModel, newModel];
-	},
-
-	UNKEYED_INPUT: function(vnode) {
-		return ["Unkeyed <input> detected. Consider adding a name, id, _key, or _ref attr to avoid accidental DOM recycling between different <input> types.", vnode];
-	},
-
-	UNMOUNTED_REDRAW: function(vm) {
-		return ["Invoking redraw() of an unmounted (sub)view may result in errors.", vm];
-	},
-
-	INLINE_HANDLER: function(vnode, oval, nval) {
-		return ["Anonymous event handlers get re-bound on each redraw, consider defining them outside of templates for better reuse.", vnode, oval, nval];
-	},
-
-	MISMATCHED_HANDLER: function(vnode, oval, nval) {
-		return ["Patching of different event handler styles is not fully supported for performance reasons. Ensure that handlers are defined using the same style.", vnode, oval, nval];
-	},
-
-	SVG_WRONG_FACTORY: function(vnode) {
-		return ["<svg> defined using domvm.defineElement. Use domvm.defineSvgElement for <svg> & child nodes.", vnode];
-	},
-
-	FOREIGN_ELEMENT: function(el) {
-		return ["domvm stumbled upon an element in its DOM that it didn't create, which may be problematic. You can inject external elements into the vtree using domvm.injectElement.", el];
-	},
-
-	REUSED_ATTRS: function(vnode) {
-		return ["Attrs objects may only be reused if they are truly static, as a perf optimization. Mutating & reusing them will have no effect on the DOM due to 0 diff.", vnode];
-	}
-};
-
-function devNotify(key, args) {
-	if (DEVMODE.enabled) {
-		var msgArgs = DEVMODE[key].apply(null, args);
-
-		if (msgArgs) {
-			msgArgs[0] = key + ": " + (DEVMODE.verbose ? msgArgs[0] : "");
-			console.warn.apply(console, msgArgs);
-		}
-	}
-}
+var hookStreamStub = noop;
 
 // (de)optimization flags
 
@@ -526,16 +435,6 @@ function initElementNode(tag, attrs, body, flags) {
 	if (body != null)
 		{ node.body = body; }
 
-	{
-		if (node.tag === "svg") {
-			setTimeout(function() {
-				node.ns == null && devNotify("SVG_WRONG_FACTORY", [node]);
-			}, 16);
-		}
-		else if (node.tag === "input" && node.key == null)
-			{ devNotify("UNKEYED_INPUT", [node]); }
-	}
-
 	return node;
 }
 
@@ -566,8 +465,8 @@ function preProc(vnew, parent, idx, ownVm) {
 
 	if (isArr(vnew.body))
 		{ preProcBody(vnew); }
-	else if (isStream(vnew.body))
-		{ vnew.body = hookStream(vnew.body, getVm(vnew)); }
+	else if (isStreamStub(vnew.body))
+		{ vnew.body = hookStreamStub(vnew.body, getVm(vnew)); }
 }
 
 function preProcBody(vnew) {
@@ -616,8 +515,8 @@ function patchStyle(n, o) {
 		for (var nn in ns) {
 			var nv = ns[nn];
 
-			if (isStream(nv))
-				{ nv = hookStream(nv, getVm(n)); }
+			if (isStreamStub(nv))
+				{ nv = hookStreamStub(nv, getVm(n)); }
 
 			if (os == null || nv != null && nv !== os[nn])
 				{ n.el.style[nn] = autoPx(nn, nv); }
@@ -827,28 +726,15 @@ function patchEvent(node, name, nval, oval) {
 	if (nval === oval)
 		{ return; }
 
-	{
-		if (isFunc(nval) && isFunc(oval) && oval.name == nval.name)
-			{ devNotify("INLINE_HANDLER", [node, oval, nval]); }
-	}
-
 	var el = node.el;
 
 	// param'd eg onclick: [myFn, 1, 2, 3...]
 	if (isArr(nval)) {
-		{
-			if (oval != null && !isArr(oval))
-				{ devNotify("MISMATCHED_HANDLER", [node, oval, nval]); }
-		}
 		var diff = oval == null || !cmpArr(nval, oval);
 		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
 	}
 	// basic onclick: myFn (or extracted)
 	else if (isFunc(nval) && nval !== oval) {
-		{
-			if (oval != null && !isFunc(oval))
-				{ devNotify("MISMATCHED_HANDLER", [node, oval, nval]); }
-		}
 		bindEv(el, name, wrapHandler(nval, []));
 	}
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
@@ -887,7 +773,7 @@ function patchAttrs(vnode, donor, initial) {
 	var oattrs = donor.attrs || emptyObj;
 
 	if (nattrs === oattrs) {
-		{ devNotify("REUSED_ATTRS", [vnode]); }
+		
 	}
 	else {
 		for (var key in nattrs) {
@@ -895,8 +781,8 @@ function patchAttrs(vnode, donor, initial) {
 			var isDyn = isDynProp(vnode.tag, key);
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
-			if (isStream(nval))
-				{ nattrs[key] = nval = hookStream(nval, getVm(vnode)); }
+			if (isStreamStub(nval))
+				{ nattrs[key] = nval = hookStreamStub(nval, getVm(vnode)); }
 
 			if (nval === oval) {}
 			else if (isStyleProp(key))
@@ -1087,8 +973,6 @@ function syncChildren(node, donor) {
 			if (lftSib) {
 				// skip dom elements not created by domvm
 				if ((lsNode = lftSib._node) == null) {
-					{ devNotify("FOREIGN_ELEMENT", [lftSib]); }
-
 					lftSib = nextSib(lftSib);
 					continue;
 				}
@@ -1122,8 +1006,6 @@ function syncChildren(node, donor) {
 
 			if (rgtSib) {
 				if ((rsNode = rgtSib._node) == null) {
-					{ devNotify("FOREIGN_ELEMENT", [rgtSib]); }
-
 					rgtSib = prevSib(rgtSib);
 					continue;
 				}
@@ -1433,11 +1315,6 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key == null ? model : key;
 
-	{
-		if (model != null && model === key)
-			{ devNotify("AUTOKEYED_VIEW", [vm, model]); }
-	}
-
 	if (!view.prototype._isClass) {
 		var out = view.call(vm, vm, model, key, opts);
 
@@ -1617,12 +1494,6 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vm = this;
 	var isMounted = vm.node && vm.node.el && vm.node.el.parentNode;
 
-	{
-		// was mounted (has node and el), but el no longer has parent (unmounted)
-		if (isRedrawRoot && vm.node && vm.node.el && !vm.node.el.parentNode)
-			{ devNotify("UNMOUNTED_REDRAW", [vm]); }
-	}
-
 	var vold = vm.node;
 
 	// no diff, just re-parent old
@@ -1706,9 +1577,6 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 
 	if (newModel != null) {		// && vm.key !== vm.model
 		if (vm.model !== newModel) {
-			{
-				devNotify("MODEL_REPLACED", [vm, vm.model, newModel]);
-			}
 			vm.hooks && fireHooks("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
 			vm.model = newModel;
 		//	vm.hooks && fireHooks("didUpdate", vm, newModel);		// should this fire at al?
@@ -1864,7 +1732,7 @@ function lazyList(items, cfg) {
 // prevent GCC from inlining some large funcs (which negatively affects Chrome's JIT)
 window.syncChildren = syncChildren;
 
-var nano = {
+var nano$1 = {
 	config: config,
 
 	ViewModel: ViewModel,
@@ -1963,286 +1831,7 @@ function patch$1(o, n) {
 	}
 }
 
-ViewModelProto.events = null;
-ViewModelProto.emit = emit;
-ViewModelProto.on = on;
-
-function emit(evName) {
-	var arguments$1 = arguments;
-
-	var targ = this;
-
-	do {
-		var evs = targ.events;
-		var fn = evs ? evs[evName] : null;
-
-		if (fn) {
-			fn.apply(null, sliceArgs(arguments$1, 1));
-			break;
-		}
-
-	} while (targ = targ.parent());
-}
-
-function on(evName, fn) {
-	var t = this;
-
-	if (t.events == null)
-		{ t.events = {}; }
-
-	if (isVal(evName))
-		{ t.events[evName] = fn; }
-	else {
-		var evs = evName;
-		for (var evName in evs)
-			{ t.on(evName, evs[evName]); }
-	}
-}
-
-/*
-defProp(ViewModelProto, 'body', {
-	get: function() {
-		return nextSubVms(this.node, []);
-	}
-});
-*/
-
-ViewModelProto.body = function() {
-	return nextSubVms(this.node, []);
-};
-
-function nextSubVms(n, accum) {
-	var body = n.body;
-
-	if (isArr(body)) {
-		for (var i = 0; i < body.length; i++) {
-			var n2 = body[i];
-
-			if (n2.vm != null)
-				{ accum.push(n2.vm); }
-			else
-				{ nextSubVms(n2, accum); }
-		}
-	}
-
-	return accum;
-}
-
-if (typeof flyd !== "undefined") {
-	streamCfg({
-		is:		function (s) { return flyd.isStream(s); },
-		val:	function (s) { return s(); },
-		sub:	function (s, fn) { return flyd.on(fn, s); },
-		unsub:	function (s) { return s.end(true); },
-	});
-}
-
-nano.streamCfg = streamCfg;
-
-nano.prop = prop;
-
-ViewModelProto.attach = function(el) {
-	var vm = this;
-	if (vm.node == null)
-		{ vm._redraw(null, null, false); }
-
-	attach(vm.node, el);
-
-	return vm;
-};
-
-// very similar to hydrate, TODO: dry
-function attach(vnode, withEl) {
-	vnode.el = withEl;
-	withEl._node = vnode;
-
-	var nattrs = vnode.attrs;
-
-	for (var key in nattrs) {
-		var nval = nattrs[key];
-		var isDyn = isDynProp(vnode.tag, key);
-
-		if (isStyleProp(key) || isSplProp(key)) {}
-		else if (isEvProp(key))
-			{ patchEvent(vnode, key, nval); }
-		else if (nval != null && isDyn)
-			{ setAttr(vnode, key, nval, isDyn); }
-	}
-
-	if (isArr(vnode.body)) {
-		var c = withEl.firstChild;
-		var i = 0;
-		var v = vnode.body[i];
-		do {
-			if (v.type === VVIEW)
-				{ v = createView(v.view, v.model, v.key, v.opts)._redraw(vnode, i, false).node; }
-			else if (v.type === VMODEL)
-				{ v = v.node || v._redraw(vnode, i, false).node; }
-
-			attach(v, c);
-		} while ((c = c.nextSibling) && (v = vnode.body[++i]))
-	}
-}
-
-ViewModelProto.html = function(dynProps) {
-	var vm = this;
-
-	if (vm.node == null)
-		{ vm._redraw(null, null, false); }
-
-	return html(vm.node, dynProps);
-};
-
-VNodeProto.html = function(dynProps) {
-	return html(this, dynProps);
-};
-
-
-function camelDash(val) {
-	return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-}
-
-function styleStr(css) {
-	var style = "";
-
-	for (var pname in css) {
-		if (css[pname] != null)
-			{ style += camelDash(pname) + ": " + autoPx(pname, css[pname]) + '; '; }
-	}
-
-	return style;
-}
-
-function toStr(val) {
-	return val == null ? '' : ''+val;
-}
-
-var voidTags = {
-    area: TRUE,
-    base: TRUE,
-    br: TRUE,
-    col: TRUE,
-    command: TRUE,
-    embed: TRUE,
-    hr: TRUE,
-    img: TRUE,
-    input: TRUE,
-    keygen: TRUE,
-    link: TRUE,
-    meta: TRUE,
-    param: TRUE,
-    source: TRUE,
-    track: TRUE,
-	wbr: TRUE
-};
-
-function escHtml(s) {
-	s = toStr(s);
-
-	for (var i = 0, out = ''; i < s.length; i++) {
-		switch (s[i]) {
-			case '&': out += '&amp;';  break;
-			case '<': out += '&lt;';   break;
-			case '>': out += '&gt;';   break;
-		//	case '"': out += '&quot;'; break;
-		//	case "'": out += '&#039;'; break;
-		//	case '/': out += '&#x2f;'; break;
-			default:  out += s[i];
-		}
-	}
-
-	return out;
-}
-
-function escQuotes(s) {
-	s = toStr(s);
-
-	for (var i = 0, out = ''; i < s.length; i++)
-		{ out += s[i] === '"' ? '&quot;' : s[i]; }		// also &?
-
-	return out;
-}
-
-function eachHtml(arr, dynProps) {
-	var buf = '';
-	for (var i = 0; i < arr.length; i++)
-		{ buf += html(arr[i], dynProps); }
-	return buf;
-}
-
-function html(node, dynProps) {
-	var out, style;
-
-	switch (node.type) {
-		case VVIEW:
-			out = createView(node.view, node.model, node.key, node.opts).html(dynProps);
-			break;
-		case VMODEL:
-			out = node.vm.html();
-			break;
-		case ELEMENT:
-			if (node.el != null && node.tag == null) {
-				out = node.el.outerHTML;		// pre-existing dom elements (does not currently account for any props applied to them)
-				break;
-			}
-
-			var buf = "";
-
-			buf += "<" + node.tag;
-
-			if (node.attrs != null) {
-				for (var pname in node.attrs) {
-					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_" || dynProps === false && isDynProp(node.tag, pname))
-						{ continue; }
-
-					var val = node.attrs[pname];
-
-					if (pname === "style" && val != null) {
-						style = typeof val === "object" ? styleStr(val) : val;
-						continue;
-					}
-
-					if (val === true)
-						{ buf += " " + escHtml(pname) + '=""'; }
-					else if (val === false) {}
-					else if (val != null)
-						{ buf += " " + escHtml(pname) + '="' + escQuotes(val) + '"'; }
-				}
-
-				if (style != null)
-					{ buf += ' style="' + escQuotes(style.trim()) + '"'; }
-			}
-
-			// if body-less svg node, auto-close & return
-			if (node.body == null && node.ns != null && node.tag !== "svg")
-				{ return buf + "/>"; }
-			else
-				{ buf += ">"; }
-
-			if (!voidTags[node.tag]) {
-				if (isArr(node.body))
-					{ buf += eachHtml(node.body, dynProps); }
-				else
-					{ buf += node.raw ? node.body : escHtml(node.body); }
-
-				buf += "</" + node.tag + ">";
-			}
-			out = buf;
-			break;
-		case TEXT:
-			out = escHtml(node.body);
-			break;
-		case COMMENT:
-			out = "<!--" + escHtml(node.body) + "-->";
-			break;
-	}
-
-	return out;
-}
-
-nano.DEVMODE = DEVMODE;
-
-return nano;
+return nano$1;
 
 })));
-//# sourceMappingURL=domvm.dev.js.map
+//# sourceMappingURL=domvm.nano.js.map

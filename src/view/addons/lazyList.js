@@ -1,62 +1,53 @@
 import { noop, isArr, cmpArr, cmpObj } from '../../utils';
 import { preProc } from '../preProc';
-import { KEYED_LIST } from '../initElementNode';
 
 export function lazyList(items, cfg) {
-	return new LazyList(items, cfg.key, cfg.diff, cfg.tpl);
-}
+	var len = items.length;
 
-export function LazyList(items, key, diff, tpl) {
-	this.items = items;
-	this.length = items.length;
-	this.key = function(i) {
-		return key(items[i], i);
-	};
-	this.diff = function(i, donor) {
-		var newVals = diff(items[i], i);
-		if (donor == null)
-			return newVals;
-		var oldVals = donor._diff;
-		var same = newVals === oldVals || isArr(oldVals) ? cmpArr(newVals, oldVals) : cmpObj(newVals, oldVals);
-		return same || newVals;
-	};
-	this.map(tpl);
-}
+	var self = {
+		items: items,
+		length: len,
+		// defaults to returning item identity (or position?)
+		key: function(i) {
+			return cfg.key(items[i], i);
+		},
+		// default returns 0?
+		diff: function(i, donor) {
+			var newVals = cfg.diff(items[i], i);
+			if (donor == null)
+				return newVals;
+			var oldVals = donor._diff;
+			var same = newVals === oldVals || isArr(oldVals) ? cmpArr(newVals, oldVals) : cmpObj(newVals, oldVals);
+			return same || newVals;
+		},
+		tpl: function(i) {
+			return cfg.tpl(items[i], i);
+		},
+		map: function(tpl) {
+			cfg.tpl = tpl;
+			return self;
+		},
+		body: function(vnode) {
+			var nbody = Array(len);
 
-LazyList.prototype = {
-	constructor: LazyList,
+			for (var i = 0; i < len; i++) {
+				var vnode2 = self.tpl(i);
 
-	items: null,
-	length: null,
-	key: null,		// defaults to returning item identity (or position?)
-	diff: null,		// returns 0
-	tpl: null,		// or return some error tpl
-	map: function(tpl) {
-		this.tpl = function(i) {
-			return tpl(this.items[i]);
-		};
-		return this;
-	},
-	body: function(vnode) {
-		var items = this.items;
+			//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
+			//		vnode2.key = getKey(item);
 
-		var nbody = Array(items.length);
+				vnode2._diff = self.diff(i);			// holds oldVals for cmp
 
-		for (var i = 0; i < items.length; i++) {
-			var vnode2 = this.tpl(i);
+				nbody[i] = vnode2;
 
-		//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
-		//		vnode2.key = getKey(item);
+				// run preproc pass (should this be just preProc in above loop?) bench
+				preProc(vnode2, vnode, i);
+			}
 
-			vnode2._diff = this.diff(i);			// holds oldVals for cmp
-
-			nbody[i] = vnode2;
-
-			// run preproc pass (should this be just preProc in above loop?) bench
-			preProc(vnode2, vnode, i);
+			// replace List with generated body
+			vnode.body = nbody;
 		}
+	};
 
-		// replace List with generated body
-		vnode.body = nbody;
-	}
-};
+	return self;
+}
