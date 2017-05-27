@@ -1,7 +1,6 @@
 const rollup = require('rollup').rollup;
 const replace = require('rollup-plugin-replace');
 const buble = require('rollup-plugin-buble');
-const uglify = require('rollup-plugin-uglify');
 const fs = require('fs');
 const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
@@ -73,8 +72,6 @@ function getCurBranch() {
 function compile(buildName) {
 	var start = +new Date;
 
-	var DEVBUILD = buildName === "dev";
-
 	var buildFile = './src/builds/' + buildName + '.js';
 
 	var buildCfg = getBuilds(buildName)[0];
@@ -88,16 +85,9 @@ function compile(buildName) {
 		plugins: [
 			replace(destubCfg),
 			replace({
-				_DEVMODE: DEVBUILD
+				_DEVMODE: buildName === "dev" ? true : false
 			}),
 			buble(),
-			DEVBUILD ? {} : uglify({
-				output: {
-					comments: function(node, comment) {
-						return comment.value.indexOf("https://github.com/leeoniya/domvm") >= 0;
-					}
-				}
-			}),
 		],
 	})
 	.then(function(bundle) {
@@ -114,22 +104,61 @@ function compile(buildName) {
 				"*",
 				"* domvm.full.js - DOM ViewModel",
 				"* A thin, fast, dependency-free vdom view layer",
+				"* @preserve https://github.com/leeoniya/domvm (" + ver + ", " + buildName + ")",
 				"*/",
-				"// https://github.com/leeoniya/domvm (" + ver + ", " + buildName + ")",
 				"",
 			].join("\n"),
 			moduleName: "domvm",
 			format: "umd",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
 			sourceMap: true,
-			dest: "./dist/" + buildName + "/domvm." + buildName + (DEVBUILD ? "" : ".min") + ".js",
+			dest: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		});
 
-		console.log((+new Date - start) + "ms: Rollup + Buble + Uglify done (build: " + buildName + ")");
+		console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
 
-		buildDistTable();
+		minify(buildName, start);
 	}).catch(function(err) {
 		console.log(err);
 	})
+}
+
+function minify(buildName, start) {
+	// --souce_map_input dist/domvm.full.js.map	// --create_source_map dist/domvm.full.min.js.map
+
+	var src = "dist/" + buildName + "/domvm." + buildName + ".js";
+	var dst = "dist/" + buildName + "/domvm." + buildName + ".min.js";
+//	var mapName = "domvm." + buildName + ".min.js.map";
+//	var dstMap = "dist/" + buildName + "/" + mapName;
+
+	let cmd = [
+		"java -jar compiler.jar --language_in=ECMASCRIPT5_STRICT --language_out=ECMASCRIPT5_STRICT",
+		"--js             " + src,
+		"--js_output_file " + dst,
+	//	"--create_source_map " + dstMap,
+	//	"--source_map_include_content",
+	//	'--output_wrapper "%output%\n//# sourceMappingURL=' + mapName + '"',
+	].join(" ");
+
+	exec(cmd, function(error, stdout, stderr) {
+		console.log((+new Date - start) + "ms: Closure done (build: " + buildName + ")");
+
+	//	fs.writeFileSync(dst, fs.readFileSync(dst, 'utf8') + "//# sourceMappingURL="+mapName, 'utf8');
+	//	fs.writeFileSync(dstMap, fs.readFileSync(dstMap, 'utf8').replace(/dist\/nano\//g, ""), 'utf8');
+
+		// remove "window.moo = moo;" patterns inserted to prevent Closure Compiler from inlining.
+		fs.writeFileSync(dst, fs.readFileSync(dst, 'utf8').replace(/window\.\w+\s*=\s*\w+;/gmi, ""), 'utf8');
+
+		buildDistTable();
+
+		/*
+		console.log('stdout: ' + stdout);
+		console.log('stderr: ' + stderr);
+		if (error !== null) {
+			console.log('exec error: ' + error);
+		}
+	//	fs.writeFileSync('/tmp/fs.tmp', '');
+		*/
+	});
 }
 
 function padRight(str, padStr, len) {
@@ -154,9 +183,7 @@ function buildDistTable() {
 	builds.forEach(function(build, i) {
 		var buildName = build.build;
 
-		var DEVBUILD = buildName === "dev";
-
-		var path = "dist/" + buildName + "/domvm." + buildName + (DEVBUILD ? "" : ".min") + ".js";
+		var path = "dist/" + buildName + "/domvm." + buildName + ".min.js";
 
 		appendix.push("["+(i+1)+"]: https://github.com/leeoniya/domvm/blob/" + branch + "/" + path);
 

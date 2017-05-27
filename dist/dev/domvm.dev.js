@@ -4,8 +4,8 @@
 *
 * domvm.full.js - DOM ViewModel
 * A thin, fast, dependency-free vdom view layer
+* @preserve https://github.com/leeoniya/domvm (2.x-dev, dev)
 */
-// https://github.com/leeoniya/domvm (2.x-dev, dev)
 
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -1865,6 +1865,9 @@ function injectElement(el) {
 	node.el = node.key = el;
 	return node;
 }
+
+// prevent GCC from inlining some large funcs (which negatively affects Chrome's JIT)
+window.syncChildren = syncChildren;
 
 var nano = {
 	config: config,
