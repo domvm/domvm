@@ -2080,6 +2080,10 @@ function html(node, dynProps) {
 			if (!voidTags[node.tag]) {
 				if (isArr(node.body))
 					{ buf += eachHtml(node.body, dynProps); }
+				else if ((node.flags & LAZY_LIST) === LAZY_LIST) {
+					node.body.body(node);
+					buf += eachHtml(node.body, dynProps);
+				}
 				else
 					{ buf += node.raw ? node.body : escHtml(node.body); }
 

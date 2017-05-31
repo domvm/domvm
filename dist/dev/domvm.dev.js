@@ -2069,6 +2069,9 @@ function attach(vnode, withEl) {
 			{ setAttr(vnode, key, nval, isDyn); }
 	}
 
+	if ((vnode.flags & LAZY_LIST) === LAZY_LIST)
+		{ vnode.body.body(vnode); }
+
 	if (isArr(vnode.body)) {
 		var c = withEl.firstChild;
 		var i = 0;
@@ -2222,6 +2225,10 @@ function html(node, dynProps) {
 			if (!voidTags[node.tag]) {
 				if (isArr(node.body))
 					{ buf += eachHtml(node.body, dynProps); }
+				else if ((node.flags & LAZY_LIST) === LAZY_LIST) {
+					node.body.body(node);
+					buf += eachHtml(node.body, dynProps);
+				}
 				else
 					{ buf += node.raw ? node.body : escHtml(node.body); }
 

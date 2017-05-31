@@ -4,6 +4,7 @@ import { isArr } from '../../utils';
 import { isStyleProp, isSplProp, isEvProp, isDynProp } from '../utils';
 import { patchEvent } from '../patchEvent';
 import { setAttr } from '../patchAttrs';
+import { LAZY_LIST } from '../initElementNode';
 
 import { ViewModelProto } from '../ViewModel';
 
@@ -34,6 +35,9 @@ export function attach(vnode, withEl) {
 		else if (nval != null && isDyn)
 			setAttr(vnode, key, nval, isDyn);
 	}
+
+	if ((vnode.flags & LAZY_LIST) === LAZY_LIST)
+		vnode.body.body(vnode);
 
 	if (isArr(vnode.body)) {
 		var c = withEl.firstChild;

@@ -1970,6 +1970,9 @@ function attach(vnode, withEl) {
 			{ setAttr(vnode, key, nval, isDyn); }
 	}
 
+	if ((vnode.flags & LAZY_LIST) === LAZY_LIST)
+		{ vnode.body.body(vnode); }
+
 	if (isArr(vnode.body)) {
 		var c = withEl.firstChild;
 		var i = 0;

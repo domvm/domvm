@@ -3,6 +3,7 @@ import { createView } from '../createView';
 import { isArr, isPlainObj, isVal, isFunc, TRUE, ENV_DOM } from '../../utils';
 import { isEvProp, isDynProp } from '../utils';
 import { autoPx } from './stubs';
+import { LAZY_LIST } from '../initElementNode';
 
 import { ViewModelProto } from '../ViewModel';
 import { VNodeProto } from '../VNode';
@@ -145,6 +146,10 @@ export function html(node, dynProps) {
 			if (!voidTags[node.tag]) {
 				if (isArr(node.body))
 					buf += eachHtml(node.body, dynProps);
+				else if ((node.flags & LAZY_LIST) === LAZY_LIST) {
+					node.body.body(node);
+					buf += eachHtml(node.body, dynProps);
+				}
 				else
 					buf += node.raw ? node.body : escHtml(node.body);
 
