@@ -23,11 +23,13 @@
 			constructor() {
 				super();
 				this.state = {i: 0};
-				this.hook({
-					didMount: function() {	// creates new fn every instance, not shared
-						console.log("mounted!");
+				this.config({
+					hooks: {
+						didMount: function() {	// creates new fn every instance, not shared
+							console.log("mounted!");
+						}
 					}
-				})
+				});
 			}
 
 			render() {
@@ -36,10 +38,12 @@
 					vw(MyView2),
 				]);
 			}
-		//	diff() {
-		//		return [0];
-		//	}
-			// hooks:		// :(, must use this.hook() in constructor since ES6 classes can only contain methods
+/*
+			diff() {
+				return [0];
+			}
+*/
+//			hooks:		// :(, must use this.config({hooks: }) in constructor since ES6 classes can only contain methods
 		}
 
 		class MyView2 extends MyView {

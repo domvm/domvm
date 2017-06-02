@@ -19,7 +19,7 @@ QUnit.module("Lifecycle hooks");
 		var didUnmount = -1;
 
 		function A(vm) {
-			vm.hook({
+			vm.config({hooks: {
 				willMount: function(vm) {
 					willMount = i++;
 				},
@@ -32,7 +32,7 @@ QUnit.module("Lifecycle hooks");
 				didUnmount: function(vm) {
 					didUnmount = i++;
 				}
-			});
+			}});
 
 			return function() {
 				var hooks = {
@@ -76,11 +76,11 @@ QUnit.module("Lifecycle hooks");
 
 	QUnit.test('willUpdate (root/explicit)', function(assert) {
 		function A(vm, model) {
-			vm.hook({
+			vm.config({hooks: {
 				willUpdate: function(vm, newModel) {
 					model = newModel;
 				}
-			});
+			}});
 
 			return function() {
 				return el("div", model.text);
@@ -106,11 +106,11 @@ QUnit.module("Lifecycle hooks");
 
 	QUnit.test('willUpdate (sub-view/implicit)', function(assert) {
 		function B(vm, model) {
-			vm.hook({
+			vm.config({hooks: {
 				willUpdate: function(vm, newModel) {
 					model = newModel;
 				}
-			});
+			}});
 
 			return function() {
 				return el("div", [
@@ -120,11 +120,11 @@ QUnit.module("Lifecycle hooks");
 		}
 
 		function C(vm, model) {
-			vm.hook({
+			vm.config({hooks: {
 				willUpdate: function(vm, newModel) {
 					model = newModel;
 				}
-			});
+			}});
 
 			return function() {
 				return el("strong", model.text);

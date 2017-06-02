@@ -14,38 +14,20 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key;
 
+	if (opts) {
+		vm.opts = opts;
+		vm.config(opts);
+	}
+
 	if (!view.prototype._isClass) {
 		var out = view.call(vm, vm, model, key, opts);
 
 		if (isFunc(out))
 			vm.render = out;
 		else {
-			if (out.diff) {
-				vm.diff(out.diff);
-				delete out.diff;
-			}
-
-			assignObj(vm, out);
+			vm.render = out.render;
+			vm.config(out);
 		}
-	}
-	else {
-	//	handle .diff re-definiton
-		var vdiff = vm.diff;
-
-		if (vdiff != null && vdiff !== ViewModelProto.diff) {
-			vm.diff = ViewModelProto.diff.bind(vm);
-			vm.diff(vdiff);
-		}
-	}
-
-	// remove this?
-	if (opts) {
-		vm.opts = opts;
-
-		if (opts.hooks)
-			vm.hook(opts.hooks);
-		if (opts.diff)
-			vm.diff(opts.diff);
 	}
 
 	// these must be created here since debounced per view
@@ -75,10 +57,18 @@ export const ViewModelProto = ViewModel.prototype = {
 	model: null,
 	opts: null,
 	node: null,
-//	diff: null,
-//	diffLast: null,	// prior array of diff values
 	hooks: null,
 	render: null,
+
+	// diff cache
+	_diff: null,
+
+	config: function(opts) {
+		if (opts.diff)
+			this.diff = opts.diff;
+		if (opts.hooks)
+			this.hooks = assignObj(this.hooks || {}, opts.hooks);	// maybe invert assignment order?
+	},
 
 //	_setRef: function() {},
 
@@ -115,10 +105,6 @@ export const ViewModelProto = ViewModel.prototype = {
 	_redraw: redrawSync,	// non-coalesced / synchronous
 	_redrawAsync: null,		// this is set in constructor per view
 	_updateAsync: null,
-
-	hook: function(hooks) {
-		this.hooks = this.hooks || assignObj({}, this.hooks, hooks);
-	},
 };
 
 
@@ -185,6 +171,15 @@ function unmount(asSub) {
 		drainDidHooks(vm);
 }
 
+function reParent(vm, vold, newParent, newIdx) {
+	if (newParent != null) {
+		newParent.body[newIdx] = vold;
+		vold.idx = newIdx;
+		vold.parent = newParent;
+	}
+	return vm;
+}
+
 // level, isRoot?
 // newParent, newIdx
 // ancest by ref, by key
@@ -199,26 +194,33 @@ function redrawSync(newParent, newIdx, withDOM) {
 			devNotify("UNMOUNTED_REDRAW", [vm]);
 	}
 
-	var vold = vm.node;
+	var vold = vm.node, oldVals, newVals;
 
 	// no diff, just re-parent old
-	// TODO: allow returning vm.node as no-change indicator
-	if (isMounted && vm._diff != null && vm._diff()) {
-		// will doing this outside of preproc cause de-opt, add shallow opt to preproc?
-		if (vold && newParent) {
-			newParent.body[newIdx] = vold;
-			vold.idx = newIdx;
-			vold.parent = newParent;
+	if (vm.diff != null) {
+		oldVals = vm._diff;
+		vm._diff = newVals = vm.diff(vm, vm.model, oldVals);
+
+		if (vold != null) {
+			var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
+			var isSame = oldVals === newVals || cmpFn(oldVals, newVals);
+
+			if (isSame)
+				return reParent(vm, vold, newParent, newIdx);
 		}
-		return vm;
 	}
 
 	isMounted && vm.hooks && fireHooks("willRedraw", vm);
 
+	// TODO: allow returning vm.node as no-change indicator
+	var vnew = vm.render.call(vm, vm, vm.model, vm.key, vm.opts, oldVals, newVals);
+
+	// isSame
+	if (vnew === vold)
+		return reParent(vm, vold, newParent, newIdx);
+
 	// todo: test result of willRedraw hooks before clearing refs
 	vm.refs = null;
-
-	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
 
 	// always assign vm key to root vnode (this is a de-opt)
 	if (vm.key != null && vnew.key !== vm.key)

@@ -164,7 +164,7 @@ QUnit.module("flags/DEEP_REMOVE");
 		}
 
 		function ViewB(vm) {
-			vm.hook(hooks);
+			vm.config({hooks: hooks});
 
 			return function() {
 				return el("div", [

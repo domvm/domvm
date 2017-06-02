@@ -7,14 +7,14 @@ QUnit.module("refs & didRedraw()");
 		var done = assert.async();
 
 		function MyView(vm) {
-			vm.hook({
+			vm.config({hooks: {
 				didRedraw: function() {
 					assert.ok(true, "Self didredraw(true)");
 					assert.ok(vm.refs.mySpan3.el === document.getElementById("zzz"), "Self ref");
 				//	console.log(vm.refs);
 					done();
 				}
-			});
+			}});
 
 			return function() {
 				return el("span#zzz", {_ref: "mySpan3"}, "foo");
@@ -33,14 +33,14 @@ QUnit.module("refs & didRedraw()");
 		var done2 = assert.async();
 
 		function MyView(vm) {
-			vm.hook({
+			vm.config({hooks: {
 				didRedraw: function() {
 					assert.ok(true, "Parent didredraw(true)");
 					assert.ok(vm.refs.mySpan1.el === document.getElementById("xxx"), "Parent ref");
 				//	console.log(vm.refs);
 					done2();
 				}
-			});
+			}});
 
 			return function() {
 				return el("span#xxx", {_ref: "mySpan1"}, [
@@ -50,14 +50,14 @@ QUnit.module("refs & didRedraw()");
 		}
 
 		function MyView2(vm) {
-			vm.hook({
+			vm.config({hooks: {
 				didRedraw: function() {
 					assert.ok(true, "Child after()");
 					assert.ok(vm.refs.mySpan2.el === document.getElementById("yyy"), "Child ref");
 				//	console.log(vm.refs);
 					done1();
 				}
-			});
+			}});
 
 			return function() {
 				return el("span#yyy", {_ref: "mySpan2"}, "foo");

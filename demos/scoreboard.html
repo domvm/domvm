@@ -65,14 +65,14 @@
 				lastPos = new WeakMap(),
 				curPos = new WeakMap();
 
-			vm.hook({
+			vm.config({hooks: {
 				didRedraw: function() {
 					for (var i in vm.refs.player) {
 						var ref = vm.refs.player[i];
 						ref.patch({style: calcPlayerStyle(ref.data, true)});
 					}
 				}
-			});
+			}});
 
 			return function() {
 				sorted.forEach(function(p,i) { lastPos.set(p, i); });

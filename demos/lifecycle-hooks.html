@@ -133,14 +133,14 @@
 		}
 
 		function View2(vm) {
-			vm.hook({
+			vm.config({hooks: {
 				willRedraw:	function() { /*console.log("willRedraw", vm);		*/},
 				didRedraw:	function() { /*console.log("didRedraw", vm);		*/},
 				willMount:	function() { /*console.log("willMount", vm);		*/},
 				didMount:	function() { /*console.log("didMount", vm);			*/},
 				willUnmount:function() { /*console.log("willUnmount", vm);		*/},
 				didUnmount:	function() { /*console.log("didUnmount", vm);		*/},
-			});
+			}});
 
 			return function() {
 				return el("p.view2", "Hello World");
@@ -155,7 +155,7 @@
 		var vm = domvm.createView(View1, data);
 
 		// view-level hooks
-		vm.hook({
+		vm.config({hooks: {
 			willRedraw: function(vm) {
 			//	console.log("willRedraw", vm);
 			},
@@ -186,7 +186,7 @@
 			didUnmount: function(vm) {
 			//	console.log("didUnmount", vm);
 			},
-		});
+		}});
 
 		vm.mount(document.body);
 

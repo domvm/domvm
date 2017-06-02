@@ -1320,38 +1320,20 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	vm.model = model;
 	vm.key = key;
 
+	if (opts) {
+		vm.opts = opts;
+		vm.config(opts);
+	}
+
 	if (!view.prototype._isClass) {
 		var out = view.call(vm, vm, model, key, opts);
 
 		if (isFunc(out))
 			{ vm.render = out; }
 		else {
-			if (out.diff) {
-				vm.diff(out.diff);
-				delete out.diff;
-			}
-
-			assignObj(vm, out);
+			vm.render = out.render;
+			vm.config(out);
 		}
-	}
-	else {
-	//	handle .diff re-definiton
-		var vdiff = vm.diff;
-
-		if (vdiff != null && vdiff !== ViewModelProto.diff) {
-			vm.diff = ViewModelProto.diff.bind(vm);
-			vm.diff(vdiff);
-		}
-	}
-
-	// remove this?
-	if (opts) {
-		vm.opts = opts;
-
-		if (opts.hooks)
-			{ vm.hook(opts.hooks); }
-		if (opts.diff)
-			{ vm.diff(opts.diff); }
 	}
 
 	// these must be created here since debounced per view
@@ -1381,10 +1363,18 @@ var ViewModelProto = ViewModel.prototype = {
 	model: null,
 	opts: null,
 	node: null,
-//	diff: null,
-//	diffLast: null,	// prior array of diff values
 	hooks: null,
 	render: null,
+
+	// diff cache
+	_diff: null,
+
+	config: function(opts) {
+		if (opts.diff)
+			{ this.diff = opts.diff; }
+		if (opts.hooks)
+			{ this.hooks = assignObj(this.hooks || {}, opts.hooks); }	// maybe invert assignment order?
+	},
 
 //	_setRef: function() {},
 
@@ -1421,10 +1411,6 @@ var ViewModelProto = ViewModel.prototype = {
 	_redraw: redrawSync,	// non-coalesced / synchronous
 	_redrawAsync: null,		// this is set in constructor per view
 	_updateAsync: null,
-
-	hook: function(hooks) {
-		this.hooks = this.hooks || assignObj({}, this.hooks, hooks);
-	},
 };
 
 
@@ -1491,6 +1477,15 @@ function unmount(asSub) {
 		{ drainDidHooks(vm); }
 }
 
+function reParent(vm, vold, newParent, newIdx) {
+	if (newParent != null) {
+		newParent.body[newIdx] = vold;
+		vold.idx = newIdx;
+		vold.parent = newParent;
+	}
+	return vm;
+}
+
 // level, isRoot?
 // newParent, newIdx
 // ancest by ref, by key
@@ -1499,26 +1494,33 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vm = this;
 	var isMounted = vm.node && vm.node.el && vm.node.el.parentNode;
 
-	var vold = vm.node;
+	var vold = vm.node, oldVals, newVals;
 
 	// no diff, just re-parent old
-	// TODO: allow returning vm.node as no-change indicator
-	if (isMounted && vm._diff != null && vm._diff()) {
-		// will doing this outside of preproc cause de-opt, add shallow opt to preproc?
-		if (vold && newParent) {
-			newParent.body[newIdx] = vold;
-			vold.idx = newIdx;
-			vold.parent = newParent;
+	if (vm.diff != null) {
+		oldVals = vm._diff;
+		vm._diff = newVals = vm.diff(vm, vm.model, oldVals);
+
+		if (vold != null) {
+			var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
+			var isSame = oldVals === newVals || cmpFn(oldVals, newVals);
+
+			if (isSame)
+				{ return reParent(vm, vold, newParent, newIdx); }
 		}
-		return vm;
 	}
 
 	isMounted && vm.hooks && fireHooks("willRedraw", vm);
 
+	// TODO: allow returning vm.node as no-change indicator
+	var vnew = vm.render.call(vm, vm, vm.model, vm.key, vm.opts, oldVals, newVals);
+
+	// isSame
+	if (vnew === vold)
+		{ return reParent(vm, vold, newParent, newIdx); }
+
 	// todo: test result of willRedraw hooks before clearing refs
 	vm.refs = null;
-
-	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
 
 	// always assign vm key to root vnode (this is a de-opt)
 	if (vm.key != null && vnew.key !== vm.key)
@@ -1762,43 +1764,6 @@ var nano = {
 	LAZY_LIST: LAZY_LIST,
 };
 
-ViewModelProto._diff = null;
-
-// @vals should be a callback that returns an array or object of values to shallow-compare
-//   if the returned values are the same on subsequent redraw calls, then redraw() is prevented
-// @then may be a callback that will run if arrays dont match and receives the old & new arrays which
-//   it can then use to shallow-patch the top-level vnode if needed (like apply {display: none}) and
-//   return `false` to prevent further redraw()
-// if @cfg is a function, it's assumed to be @vals
-ViewModelProto.diff = function(cfg) {
-	var vm = this;
-
-	if (isFunc(cfg))
-		{ var getVals = cfg; }
-	else {
-		var getVals = cfg.vals;
-		var thenFn = cfg.then;
-	}
-
-	var oldVals = getVals.call(vm, vm, vm.model, vm.key, vm.opts);
-	var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
-
-	vm._diff = function() {
-		var newVals = getVals.call(vm, vm, vm.model, vm.key, vm.opts);
-		var isSame = oldVals === newVals || cmpFn(oldVals, newVals);
-
-		if (!isSame) {
-			// thenFn must return false to prevent redraw
-			if (thenFn != null && thenFn.call(vm, vm, oldVals, newVals) === false)
-				{ isSame = true; }
-
-			oldVals = newVals;
-		}
-
-		return isSame;
-	};
-};
-
 VNodeProto.patch = function(n) {
 	return patch$1(this, n);
 };
@@ -1835,6 +1800,8 @@ function patch$1(o, n) {
 		patchAttrs(o, donor);
 	}
 }
+
+//import "../view/addons/diff";
 
 ViewModelProto.events = null;
 ViewModelProto.emit = emit;

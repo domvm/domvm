@@ -8,14 +8,14 @@ QUnit.module("Model-view persistence, vm init, DOM reuse");
 	function ViewA(vm) {
 		vmA = vm;
 /*
-		vm.hook({
+		vm.config({hooks: {
 			willUnmount: function() {
 				console.log("willUnmount");
 			},
 			didUnmount: function() {
 				console.log("willUnmount");
 			}
-		});
+		}});
 */
 		return function(vm, model) {
 			return el("div", [
