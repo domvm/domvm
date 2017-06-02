@@ -4,7 +4,7 @@
 *
 * domvm.full.js - DOM ViewModel
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (2.x-dev, server)
+* @preserve https://github.com/leeoniya/domvm (3.x-dev, server)
 */
 
 (function (global, factory) {
@@ -1346,7 +1346,7 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 	vm.view = view;
 	vm.model = model;
-	vm.key = key == null ? model : key;
+	vm.key = key;
 
 	if (!view.prototype._isClass) {
 		var out = view.call(vm, vm, model, key, opts);
@@ -1549,7 +1549,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
 
 	// always assign vm key to root vnode (this is a de-opt)
-	if (vm.key !== false && vm.key != null && vnew.key !== vm.key)
+	if (vm.key != null && vnew.key !== vm.key)
 		{ vnew.key = vm.key; }
 
 //	console.log(vm.key);
@@ -1665,7 +1665,7 @@ function defineComment(body) {
 function VView(view, model, key, opts) {
 	this.view = view;
 	this.model = model;
-	this.key = key == null ? model : key;	// same logic as ViewModel
+	this.key = key;
 	this.opts = opts;
 }
 

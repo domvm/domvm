@@ -4,7 +4,7 @@
 *
 * domvm.full.js - DOM ViewModel
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (2.x-dev, dev)
+* @preserve https://github.com/leeoniya/domvm (3.x-dev, dev)
 */
 
 (function (global, factory) {
@@ -392,14 +392,6 @@ var DEVMODE = {
 	enabled: true,
 
 	verbose: true,
-
-	AUTOKEYED_VIEW: function(vm, model) {
-		var msg = "A view has been auto-keyed by its model's identity. If this model is replaced between redraws,"
-		+ " this view will unmount, its internal state and DOM will be destroyed and recreated."
-		+ " Consider providing a fixed key to this view to ensure its persistence & DOM recycling. See https://github.com/leeoniya/domvm#dom-recycling.";
-
-		return [msg, vm, model];
-	},
 
 	MODEL_REPLACED: function(vm, oldModel, newModel) {
 		var msg = "A view's model was replaced. The model originally passed to the view closure during init is now stale. You probably want to rely only on the model passed to render() or vm.model.";
@@ -1431,12 +1423,7 @@ function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 	vm.view = view;
 	vm.model = model;
-	vm.key = key == null ? model : key;
-
-	{
-		if (model != null && model === key)
-			{ devNotify("AUTOKEYED_VIEW", [vm, model]); }
-	}
+	vm.key = key;
 
 	if (!view.prototype._isClass) {
 		var out = view.call(vm, vm, model, key, opts);
@@ -1645,7 +1632,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vnew = vm.render.call(vm, vm, vm.model, vm.key);		// vm.opts
 
 	// always assign vm key to root vnode (this is a de-opt)
-	if (vm.key !== false && vm.key != null && vnew.key !== vm.key)
+	if (vm.key != null && vnew.key !== vm.key)
 		{ vnew.key = vm.key; }
 
 //	console.log(vm.key);
@@ -1764,7 +1751,7 @@ function defineComment(body) {
 function VView(view, model, key, opts) {
 	this.view = view;
 	this.model = model;
-	this.key = key == null ? model : key;	// same logic as ViewModel
+	this.key = key;
 	this.opts = opts;
 }
 

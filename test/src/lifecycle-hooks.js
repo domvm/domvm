@@ -88,7 +88,7 @@ QUnit.module("Lifecycle hooks");
 		}
 
 		instr.start();
-		vm = domvm.createView(A, {text: "abc"}, false).mount(testyDiv);
+		vm = domvm.createView(A, {text: "abc"}).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div>abc</div>';
@@ -114,7 +114,7 @@ QUnit.module("Lifecycle hooks");
 
 			return function() {
 				return el("div", [
-					vw(C, model, false)
+					vw(C, model)
 				]);
 			};
 		}
@@ -132,7 +132,7 @@ QUnit.module("Lifecycle hooks");
 		}
 
 		instr.start();
-		vm = domvm.createView(B, {text: "abc"}, false).mount(testyDiv);
+		vm = domvm.createView(B, {text: "abc"}).mount(testyDiv);
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><strong>abc</strong></div>';

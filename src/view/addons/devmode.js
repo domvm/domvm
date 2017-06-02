@@ -3,14 +3,6 @@ export const DEVMODE = {
 
 	verbose: true,
 
-	AUTOKEYED_VIEW: function(vm, model) {
-		var msg = "A view has been auto-keyed by its model's identity. If this model is replaced between redraws,"
-		+ " this view will unmount, its internal state and DOM will be destroyed and recreated."
-		+ " Consider providing a fixed key to this view to ensure its persistence & DOM recycling. See https://github.com/leeoniya/domvm#dom-recycling.";
-
-		return [msg, vm, model];
-	},
-
 	MODEL_REPLACED: function(vm, oldModel, newModel) {
 		var msg = "A view's model was replaced. The model originally passed to the view closure during init is now stale. You probably want to rely only on the model passed to render() or vm.model.";
 		return [msg, vm, oldModel, newModel];

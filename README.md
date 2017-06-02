@@ -31,7 +31,6 @@ Learn either by browsing code: [Demos & Benchmarks](/demos) or reading the docs 
 - [DEVMODE](#devmode)
 - [Templates](#templates)
 - [Views](#views)
-- [DOM Recycling](#dom-recycling)
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
 - [Events](#events)
 - [Hello World++](#hello-world)
@@ -264,7 +263,7 @@ function MyView(vm, model, key, opts) {
 
 - `vm` is this views's `ViewModel`; it's the created instance of `MyView` and serves the same purpose as `this` within an ES6 React component. The `vm` provides the control surface/API to this view and can also expose a user-defined API for external view manipulation.
 - `model` is the data passed in by a parent view.
-- `key` may be defined by a parent view and is also copied down to this view's root VNode. Also see [DOM Recycling](#dom-recycling).
+- `key` may be defined by a parent view and is also copied down to this view's root VNode.
 - `opts` can be used to pass in data that you may not want to put inside `model`. `opts.diff` and `opts.hooks` can be used to externally define lifecycle hooks and redraw optimizations.
 
 Note the `render` function has the same signature as the view closure (more on "why" below).
@@ -350,54 +349,6 @@ var modelA = {
 
 var vmA = domvm.createView(ViewA, modelA).mount(document.body);
 ```
-
----
-### DOM Recycling
-
-How models/states are passed into sub-views has implications for DOM recycling & view destruction:
-
-- The signature for using sub-views within other templates is `domvm.defineView(viewFn, model, key, opts)`.
-- If `key` is `null` or absent, domvm will default to using `model` as the key. Thus, `vw(View, model)` is implicitly `vw(View, model, model)`.
-- Sub-views will persist & recycle their DOM only if their `key` is stable across redraws.
-
-Depending on your background and app architecture (OO or FP), this implicit by-model view keying behavior can be the most surprising aspect of domvm. However, this allows users to avoid explicitly keying in architectures where models are persistent. For immutable stores where model identities change as a result of mutation, or when using ad-hoc model wrappers and deserializing JSON structures, you should take care to explicitly key any sub-views.
-
-This example will destroy and recreate `SubView` [and its DOM] on every redraw of `View`:
-
-```js
-function View() {
-    return function() {
-        return el("#app", [
-            vw(SubView, {foo: "bar"})        // ad-hoc model/state
-        ]);
-    };
-}
-```
-
-To ensure `SubView` persistence and DOM recycling, you should use a stable model or provide an explicit, stable key.
-
-```js
-function View() {
-    var model = {foo: "bar"};                // stable model identity
-
-    return function() {
-        return el("#app", [
-            vw(SubView, model)
-        ]);
-    };
-}
-
-// OR
-
-function View() {
-    return function() {
-        return el("#app", [
-            vw(SubView, {foo: "bar"}, 123)   // explicit, stable key
-        ]);
-    };
-}
-```
-
 
 ---
 ### Sub-views vs Sub-templates

@@ -18,7 +18,7 @@
 					}
 				},
 				vw = function(viewFn, model, key, opts) {
-					return domvm.defineView(viewFn, model, key == null ? false : key, {diff: diff, hooks: hooks});		// merge opts/diff
+					return domvm.defineView(viewFn, model, key, {diff: diff, hooks: hooks});		// merge opts/diff
 				};
 
 			var freezer = new Freezer({
@@ -53,7 +53,7 @@
 				};
 			}
 
-			var rootVm = domvm.createView(ViewA, freezer.get(), false, {hooks: hooks, diff: diff}).mount(document.body);
+			var rootVm = domvm.createView(ViewA, freezer.get(), null, {hooks: hooks, diff: diff}).mount(document.body);
 
 			freezer.on('update', function(currentState, prevState) {
 				rootVm.update(currentState);

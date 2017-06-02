@@ -111,16 +111,16 @@ var dbs		= null,
 	start;
 
 function mount(appEl, dbs) {
-	vm = domvm.createView(DBMonView, dbs, false);
+	vm = domvm.createView(DBMonView, dbs);
 	vm.mount(appEl);
 }
 
 function attach(appEl, dbs) {
 	// isomorphic test
-	var vw0 = domvm.createView(DBMonView, dbs, false);
+	var vw0 = domvm.createView(DBMonView, dbs);
 	appEl.innerHTML = vw0.html();
 
-	vm = domvm.createView(DBMonView, dbs, false);
+	vm = domvm.createView(DBMonView, dbs);
 	vm.attach(appEl.firstChild);
 }
 

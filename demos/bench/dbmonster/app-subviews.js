@@ -18,7 +18,7 @@ function DBMonView() {
 		el("div", [
 			el("table.table.table-striped.latest-data", [
 				el("tbody", dbs.map(db =>
-					vw(DB, db, false)
+					vw(DB, db)
 				))
 			])
 		])
@@ -38,7 +38,7 @@ function DB(vm) {
 				el("span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries)
 			]),
 		].concat(db.lastSample.topFiveQueries.map(query =>
-			vw(Query, query, false)
+			vw(Query, query)
 		)));
 }
 
@@ -68,16 +68,16 @@ var dbs		= null,
 	start;
 
 function mount(appEl, dbs) {
-	vm = domvm.createView(DBMonView, dbs, false);
+	vm = domvm.createView(DBMonView, dbs);
 	vm.mount(appEl);
 }
 
 function attach(appEl, dbs) {
 	// isomorphic test
-	var vw0 = domvm.createView(DBMonView, dbs, false);
+	var vw0 = domvm.createView(DBMonView, dbs);
 	appEl.innerHTML = vw0.html();
 
-	vm = domvm.createView(DBMonView, dbs, false);
+	vm = domvm.createView(DBMonView, dbs);
 	vm.attach(appEl.firstChild);
 }
 

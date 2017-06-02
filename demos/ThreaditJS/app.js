@@ -149,9 +149,9 @@ function ThreadBranchView(vm) {
 		: data.comment == null ? statusTpl("Loading comments of thread #" + data.threadId)
 		: el(".comment", [
 			el("p", {_raw: true}, data.comment.text),
-			vw(CommentReplyView, data.comment, false),
+			vw(CommentReplyView, data.comment),
 			el(".children", data.comment.children.map(comment2 =>
-				vw(ThreadBranchView, {comment: comment2}, false)
+				vw(ThreadBranchView, {comment: comment2})
 			))
 		]);
 	}
@@ -159,7 +159,7 @@ function ThreadBranchView(vm) {
 
 // todo: should optionally set route?
 function setView(view, data) {
-	V2 = vw(view, data, false);
+	V2 = vw(view, data);
 	V && V.redraw();
 }
 
@@ -260,7 +260,7 @@ var R = createRouter({
 			didRedraw: vm => console.timeEnd("redraw vm #" + vm.id),
 		};
 
-		V = domvm.createView(ThreaditView, null, false, {hooks: hooks}).mount(document.body);
+		V = domvm.createView(ThreaditView, null, null, {hooks: hooks}).mount(document.body);
 	},
 	routes: [
 		{

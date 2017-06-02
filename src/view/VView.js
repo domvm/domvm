@@ -4,7 +4,7 @@ import { VVIEW } from './VTYPES';
 export function VView(view, model, key, opts) {
 	this.view = view;
 	this.model = model;
-	this.key = key == null ? model : key;	// same logic as ViewModel
+	this.key = key;
 	this.opts = opts;
 }
 

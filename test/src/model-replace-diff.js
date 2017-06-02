@@ -14,7 +14,7 @@ QUnit.module("Model replace & vm.diff()");
 	function ViewB() {
 		return function(vm, model) {
 			return el("#viewB", [
-				vw(ViewA, model, false)
+				vw(ViewA, model)
 			]);
 		};
 	}
@@ -32,7 +32,7 @@ QUnit.module("Model replace & vm.diff()");
 		var expcHtml = '<div id="viewA">foo<br>bar</div>';
 
 		instr.start();
-		vmA = domvm.createView(ViewA, dataA, false).mount(testyDiv);
+		vmA = domvm.createView(ViewA, dataA).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { id: 1, createElement: 2, insertBefore: 4, createTextNode: 2 });
@@ -52,7 +52,7 @@ QUnit.module("Model replace & vm.diff()");
 		var expcHtml = '<div id="viewB"><div id="viewA">foo<br>bar</div></div>';
 
 		instr.start();
-		vmB = domvm.createView(ViewB, dataA, false).mount(testyDiv);
+		vmB = domvm.createView(ViewB, dataA).mount(testyDiv);
 		var callCounts = instr.end();
 
 		evalOut(assert, vmB.node.el, vmB.html(), expcHtml, callCounts, { id: 2, createElement: 3, insertBefore: 5, createTextNode: 2 });
@@ -166,14 +166,14 @@ QUnit.module("Model replace & vm.diff()");
 		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { nodeValue: 1 });
 	});
 
-	QUnit.test('Ad-hoc model wrapper (explicitly unkeyed)', function(assert) {
+	QUnit.test('Ad-hoc model wrapper (unkeyed)', function(assert) {
 		var vmC = null, vmD = null;
 
 		// wraps model in own impCtx for sub-view, but specs model as persitent
 		function ViewC(vm, model) {
 			return function() {
 				return el("#viewC", [
-					vw(ViewD, {foo: model, addl: myText}, false)
+					vw(ViewD, {foo: model, addl: myText})
 				]);
 			};
 		}
@@ -214,52 +214,8 @@ QUnit.module("Model replace & vm.diff()");
 		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { nodeValue: 1 });
 	});
 
-	QUnit.test('Ad-hoc model wrapper (non-keyed)', function(assert) {
-		var vmC = null, vmD = null;
-
-		// wraps model in own impCtx for sub-view, but specs model as persitent
-		function ViewC(vm, model) {
-			return function() {
-				return el("#viewC", [
-					vw(ViewD, {foo: model, addl: myText})
-				]);
-			};
-		}
-
-		function ViewD() {
-			return function(vm, imp, key) {
-				return el("#viewD", [
-					el("span", imp.foo.text),
-					el("strong", imp.addl),
-				]);
-			};
-		}
-
-		var model = {text: "bleh"};
-		var myText = "bar";
-
-		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>bar</strong></div></div>';
-
-		instr.start();
-		vmC = domvm.createView(ViewC, model).mount(testyDiv);
-		var callCounts = instr.end();
-
-		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { id: 2, createElement: 4, insertBefore: 4, textContent: 2 });
-
-		instr.start();
-		vmC.redraw(true);
-		var callCounts = instr.end();
-
-		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { id: 1, createElement: 3, insertBefore: 3, removeChild: 1, textContent: 2 });
-
-		myText = "cow";
-		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>cow</strong></div></div>';
-
-		instr.start();
-		vmC.redraw(true);
-		var callCounts = instr.end();
-
-		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { id: 1, createElement: 3, insertBefore: 3, removeChild: 1, textContent: 2 });
+	QUnit.skip('diff by object identity', function(assert) {
+		// diff: (vm, model) => model; rather than [model] or {model: model}
 	});
 
 /*
