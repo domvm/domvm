@@ -379,7 +379,7 @@ function hookStream(s, vm) {
 		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
 		if (redrawStream) {
 			// if vm fully is formed (or mounted vm.node.el?)
-			if (vm.node != null)
+			if (vm.node)
 				{ vm.redraw(); }
 			unsubStream(redrawStream);
 		}
@@ -604,7 +604,7 @@ function closestVNode(el) {
 }
 
 function createElement(tag, ns) {
-	if (ns != null)
+	if (ns)
 		{ return doc.createElementNS(ns, tag); }
 	return doc.createElement(tag);
 }
@@ -665,7 +665,7 @@ function removeChild(parEl, el) {
 
 	var res = deepNotifyRemove(node);
 
-	if (res != null && isProm(res))
+	if (res && isProm(res))
 		{ res.then(curry(_removeChild, [parEl, el, true])); }
 	else
 		{ _removeChild(parEl, el); }
@@ -684,7 +684,7 @@ function clearChildren(parent) {
 
 // todo: hooks
 function insertBefore(parEl, el, refEl) {
-	var node = el._node, hooks = node.hooks, inDom = el.parentNode != null;
+	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
 
 	// el === refEl is asserted as a no-op insert called to fire hooks
 	var vm = (el === refEl || !inDom) && node.vm;
@@ -789,7 +789,7 @@ function setAttr(node, name, val, asProp, initial) {
 
 	if (val == null)
 		{ !initial && remAttr(node, name); }		//, asProp?  // will also removeAttr of style: null
-	else if (node.ns != null)
+	else if (node.ns)
 		{ el.setAttribute(name, val); }
 	else if (name === "class")
 		{ el.className = val; }
@@ -882,7 +882,7 @@ function hydrate(vnode, withEl) {
 		//	if (vnode.tag === "svg")
 		//		vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS);
 
-			if (vnode.attrs != null)
+			if (vnode.attrs)
 				{ patchAttrs(vnode, emptyObj, true); }
 
 			if ((vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList
@@ -1012,7 +1012,7 @@ function syncChildren(node, donor) {
 
 				if (parentNode(lsNode) !== node) {
 					tmpSib = nextSib(lftSib);
-					lsNode.vm != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
+					lsNode.vm ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
 					lftSib = tmpSib;
 					continue;
 				}
@@ -1045,7 +1045,7 @@ function syncChildren(node, donor) {
 
 				if (parentNode(rsNode) !== node) {
 					tmpSib = prevSib(rgtSib);
-					rsNode.vm != null ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
+					rsNode.vm ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
 					rgtSib = tmpSib;
 					continue;
 				}
@@ -1081,7 +1081,7 @@ function findSequential(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
 
-		if (n.type === VVIEW && o.vm != null) {			// also ignore recycled/moved?
+		if (n.type === VVIEW && o.vm) {			// also ignore recycled/moved?
 			var ov = o.vm;
 
 			// match by key & viewFn
@@ -1146,7 +1146,7 @@ function patch(vnode, donor) {
 		return;
 	}
 
-	if (vnode.attrs != null || donor.attrs != null)
+	if (vnode.attrs || donor.attrs)
 		{ patchAttrs(vnode, donor); }
 
 	// patch events
@@ -1266,7 +1266,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 			donor2 = find(fnode2, list, fromIdx);
 
-			if (donor2 != null) {
+			if (donor2) {
 				diffRes = nbody.diff(i, donor2);
 
 				// diff returns same, so cheaply adopt vnode without patching
@@ -1288,7 +1288,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 				node2._diff = diffRes != null ? diffRes : nbody.diff(i);
 
-				if (donor2 != null)
+				if (donor2)
 					{ patch(node2, donor2); }
 			}
 			else {
@@ -1301,7 +1301,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 			// to keep search space small, if donation is non-contig, move node fwd?
 			// re-establish contigindex
-			if (find !== findKeyedBinary && donor2 != null && donor2.idx === fromIdx)
+			if (find !== findKeyedBinary && donor2 && donor2.idx === fromIdx)
 				{ fromIdx++; }
 		}
 
@@ -1333,7 +1333,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 			// to keep search space small, if donation is non-contig, move node fwd?
 			// re-establish contigindex
-			if (find !== findKeyedBinary && donor2 != null && donor2.idx === fromIdx)
+			if (find !== findKeyedBinary && donor2 && donor2.idx === fromIdx)
 				{ fromIdx++; }
 		}
 	}
@@ -1506,7 +1506,7 @@ function unmount(asSub) {
 }
 
 function reParent(vm, vold, newParent, newIdx) {
-	if (newParent != null) {
+	if (newParent) {
 		newParent.body[newIdx] = vold;
 		vold.idx = newIdx;
 		vold.parent = newParent;
@@ -1525,11 +1525,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vold = vm.node, oldVals, newVals;
 
 	// no diff, just re-parent old
-	if (vm.diff != null) {
+	if (vm.diff) {
 		oldVals = vm._diff;
 		vm._diff = newVals = vm.diff(vm, vm.model, oldVals);
 
-		if (vold != null) {
+		if (vold) {
 			var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
 			var isSame = oldVals === newVals || cmpFn(oldVals, newVals);
 
@@ -1622,7 +1622,7 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 
 	return vm._redraw(newParent, newIdx, withDOM);
 /*
-	if (parentVm != null) {
+	if (parentVm) {
 		vm.parent = parentVm;
 		parentVm.body.push(vm);
 	}
@@ -1799,9 +1799,9 @@ VNodeProto.patch = function(n) {
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch hooks?
 function patch$1(o, n) {
-	if (n.type != null) {
+	if (n.type) {
 		// no full patching of view roots, just use redraw!
-		if (o.vm != null)
+		if (o.vm)
 			{ return; }
 
 		preProc(n, o.parent, o.idx, null);
@@ -1886,7 +1886,7 @@ function nextSubVms(n, accum) {
 		for (var i = 0; i < body.length; i++) {
 			var n2 = body[i];
 
-			if (n2.vm != null)
+			if (n2.vm)
 				{ accum.push(n2.vm); }
 			else
 				{ nextSubVms(n2, accum); }
@@ -2006,7 +2006,7 @@ function html(node, dynProps) {
 			out = node.vm.html();
 			break;
 		case ELEMENT:
-			if (node.el != null && node.tag == null) {
+			if (node.el && node.tag == null) {
 				out = node.el.outerHTML;		// pre-existing dom elements (does not currently account for any props applied to them)
 				break;
 			}
@@ -2015,7 +2015,7 @@ function html(node, dynProps) {
 
 			buf += "<" + node.tag;
 
-			if (node.attrs != null) {
+			if (node.attrs) {
 				for (var pname in node.attrs) {
 					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_" || dynProps === false && isDynProp(node.tag, pname))
 						{ continue; }
@@ -2039,7 +2039,7 @@ function html(node, dynProps) {
 			}
 
 			// if body-less svg node, auto-close & return
-			if (node.body == null && node.ns != null && node.tag !== "svg")
+			if (node.body == null && node.ns && node.tag !== "svg")
 				{ return buf + "/>"; }
 			else
 				{ buf += ">"; }

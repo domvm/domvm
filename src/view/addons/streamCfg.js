@@ -26,7 +26,7 @@ export function hookStream(s, vm) {
 		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
 		if (redrawStream) {
 			// if vm fully is formed (or mounted vm.node.el?)
-			if (vm.node != null)
+			if (vm.node)
 				vm.redraw();
 			unsubStream(redrawStream);
 		}

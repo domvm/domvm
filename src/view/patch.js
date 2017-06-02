@@ -13,7 +13,7 @@ function findSequential(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
 
-		if (n.type === VVIEW && o.vm != null) {			// also ignore recycled/moved?
+		if (n.type === VVIEW && o.vm) {			// also ignore recycled/moved?
 			var ov = o.vm;
 
 			// match by key & viewFn
@@ -78,7 +78,7 @@ export function patch(vnode, donor) {
 		return;
 	}
 
-	if (vnode.attrs != null || donor.attrs != null)
+	if (vnode.attrs || donor.attrs)
 		patchAttrs(vnode, donor);
 
 	// patch events
@@ -183,7 +183,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 	// list should always be keyed, but FIXED_BODY prevents binary search sorting
 	if (newIsLazy) {
-		find = findKeyedSequential
+		find = findKeyedSequential;
 
 		var fnode2 = {key: null};
 
@@ -198,7 +198,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 			donor2 = find(fnode2, list, fromIdx);
 
-			if (donor2 != null) {
+			if (donor2) {
 				diffRes = nbody.diff(i, donor2);
 
 				// diff returns same, so cheaply adopt vnode without patching
@@ -220,7 +220,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 				node2._diff = diffRes != null ? diffRes : nbody.diff(i);
 
-				if (donor2 != null)
+				if (donor2)
 					patch(node2, donor2);
 			}
 			else {
@@ -233,7 +233,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 			// to keep search space small, if donation is non-contig, move node fwd?
 			// re-establish contigindex
-			if (find !== findKeyedBinary && donor2 != null && donor2.idx === fromIdx)
+			if (find !== findKeyedBinary && donor2 && donor2.idx === fromIdx)
 				fromIdx++;
 		}
 
@@ -265,7 +265,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 			// to keep search space small, if donation is non-contig, move node fwd?
 			// re-establish contigindex
-			if (find !== findKeyedBinary && donor2 != null && donor2.idx === fromIdx)
+			if (find !== findKeyedBinary && donor2 && donor2.idx === fromIdx)
 				fromIdx++;
 		}
 	}

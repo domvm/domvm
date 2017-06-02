@@ -37,7 +37,7 @@ export function hydrate(vnode, withEl) {
 		//	if (vnode.tag === "svg")
 		//		vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS);
 
-			if (vnode.attrs != null)
+			if (vnode.attrs)
 				patchAttrs(vnode, emptyObj, true);
 
 			if ((vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList

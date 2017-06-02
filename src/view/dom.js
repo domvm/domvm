@@ -11,7 +11,7 @@ export function closestVNode(el) {
 }
 
 export function createElement(tag, ns) {
-	if (ns != null)
+	if (ns)
 		return doc.createElementNS(ns, tag);
 	return doc.createElement(tag);
 }
@@ -72,7 +72,7 @@ export function removeChild(parEl, el) {
 
 	var res = deepNotifyRemove(node);
 
-	if (res != null && isProm(res))
+	if (res && isProm(res))
 		res.then(curry(_removeChild, [parEl, el, true]));
 	else
 		_removeChild(parEl, el);
@@ -91,7 +91,7 @@ export function clearChildren(parent) {
 
 // todo: hooks
 export function insertBefore(parEl, el, refEl) {
-	var node = el._node, hooks = node.hooks, inDom = el.parentNode != null;
+	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
 
 	// el === refEl is asserted as a no-op insert called to fire hooks
 	var vm = (el === refEl || !inDom) && node.vm;
