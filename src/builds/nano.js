@@ -1,6 +1,5 @@
 import { default as nano } from "./pico";
 
-//import "../view/addons/diff";
 import "../view/addons/patch";
 
 /*

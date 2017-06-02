@@ -1794,9 +1794,9 @@ function patch$1(o, n) {
 
 		patchAttrs(o, donor);
 	}
-}
 
-//import "../view/addons/diff";
+//	return o;
+}
 
 return nano$1;
 

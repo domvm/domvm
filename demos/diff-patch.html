@@ -13,22 +13,24 @@
 
 		function View(vm) {
 			return {
-				diff: {
-					vals: function(vm) {
-						return {idle: idle};
-					},
-					then: function(vm, o, n) {
-						if (o.idle != n.idle) {
-							if (n.idle)
-								vm.node.patch({class: "yyy", style: "display: none;"});
-							else
-								vm.node.patch({class: "xxx", style: "display: block;"});
-
-							return false;
-						}
+				diff: function(vm) {
+					return {idle: idle};
+				},
+				hooks: {
+					didRedraw: function() {
+						console.log("didRedraw");
 					}
 				},
-				render: function() {
+				render: function(vm, model, key, opts, o, n) {
+					if (o && o.idle != n.idle) {
+						if (n.idle)
+							vm.node.patch({class: "yyy", style: "display: none;"});
+						else
+							vm.node.patch({class: "xxx", style: "display: block;"});
+
+						return vm.node;
+					}
+
 					return el(".moo", "HI");
 				}
 			};
