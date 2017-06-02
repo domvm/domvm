@@ -1,5 +1,5 @@
 import { ENV_DOM, isArr, isProm, curry } from '../utils';
-import { fireHooks } from './hooks';
+import { fireHook } from './hooks';
 import { FIXED_BODY, DEEP_REMOVE } from './initElementNode';
 
 const doc = ENV_DOM ? document : null;
@@ -38,9 +38,9 @@ export function prevSib(sib) {
 function deepNotifyRemove(node) {
 	var hooks = node.hooks, vm = node.vm;
 
-	vm && vm.hooks && fireHooks("willUnmount", vm);
+	vm && vm.hooks && fireHook("willUnmount", vm);
 
-	var res = hooks && fireHooks("willRemove", node);
+	var res = hooks && fireHook("willRemove", node);
 
 	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
 		for (var i = 0; i < node.body.length; i++)
@@ -61,9 +61,9 @@ function _removeChild(parEl, el, immediate) {
 
 	parEl.removeChild(el);
 
-	hooks && fireHooks("didRemove", node, null, immediate);
+	hooks && fireHook("didRemove", node, null, immediate);
 
-	vm && vm.hooks && fireHooks("didUnmount", vm, null, immediate);
+	vm && vm.hooks && fireHook("didUnmount", vm, null, immediate);
 }
 
 // todo: should delay parent unmount() by returning res prom?
@@ -96,13 +96,13 @@ export function insertBefore(parEl, el, refEl) {
 	// el === refEl is asserted as a no-op insert called to fire hooks
 	var vm = (el === refEl || !inDom) && node.vm;
 
-	vm && vm.hooks && fireHooks("willMount", vm);
+	vm && vm.hooks && fireHook("willMount", vm);
 
-	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
+	hooks && fireHook(inDom ? "willReinsert" : "willInsert", node);
 	parEl.insertBefore(el, refEl);
-	hooks && fireHooks(inDom ? "didReinsert" : "didInsert", node);
+	hooks && fireHook(inDom ? "didReinsert" : "didInsert", node);
 
-	vm && vm.hooks && fireHooks("didMount", vm);
+	vm && vm.hooks && fireHook("didMount", vm);
 }
 
 export function insertAfter(parEl, el, refEl) {

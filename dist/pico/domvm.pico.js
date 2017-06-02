@@ -474,31 +474,28 @@ function patchStyle(n, o) {
 
 var didQueue = [];
 
-function fireHook(did, fn, o, n, immediate) {
-	if (did) {	// did*
-		//	console.log(name + " should queue till repaint", o, n);
-		immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
-	}
-	else {		// will*
-		//	console.log(name + " may delay by promise", o, n);
-		return fn(o, n);		// or pass  done() resolver
+function fireHook(name, o, n, immediate) {
+	var fn = o.hooks[name];
+
+	if (fn) {
+		if (name[0] === "d" && name[1] === "i" && name[2] === "d") {	// did*
+			//	console.log(name + " should queue till repaint", o, n);
+			immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
+		}
+		else {		// will*
+			//	console.log(name + " may delay by promise", o, n);
+			return fn(o, n);		// or pass  done() resolver
+		}
 	}
 }
 
-function fireHooks(name, o, n, immediate) {
-	var hook = o.hooks[name];
+function drainDidHooks(vm) {
+	if (didQueue.length) {
+		repaint(vm.node);
 
-	if (hook) {
-		var did = name[0] === "d" && name[1] === "i" && name[2] === "d";
-
-		if (isArr(hook)) {
-			// TODO: promise.all() this?
-			return hook.map(function(hook2) {
-				return fireHook(did, hook2, o, n);
-			});
-		}
-		else
-			{ return fireHook(did, hook, o, n, immediate); }
+		var item;
+		while (item = didQueue.shift())
+			{ item[0](item[1], item[2]); }
 	}
 }
 
@@ -538,9 +535,9 @@ function prevSib(sib) {
 function deepNotifyRemove(node) {
 	var hooks = node.hooks, vm = node.vm;
 
-	vm && vm.hooks && fireHooks("willUnmount", vm);
+	vm && vm.hooks && fireHook("willUnmount", vm);
 
-	var res = hooks && fireHooks("willRemove", node);
+	var res = hooks && fireHook("willRemove", node);
 
 	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
 		for (var i = 0; i < node.body.length; i++)
@@ -561,9 +558,9 @@ function _removeChild(parEl, el, immediate) {
 
 	parEl.removeChild(el);
 
-	hooks && fireHooks("didRemove", node, null, immediate);
+	hooks && fireHook("didRemove", node, null, immediate);
 
-	vm && vm.hooks && fireHooks("didUnmount", vm, null, immediate);
+	vm && vm.hooks && fireHook("didUnmount", vm, null, immediate);
 }
 
 // todo: should delay parent unmount() by returning res prom?
@@ -596,13 +593,13 @@ function insertBefore(parEl, el, refEl) {
 	// el === refEl is asserted as a no-op insert called to fire hooks
 	var vm = (el === refEl || !inDom) && node.vm;
 
-	vm && vm.hooks && fireHooks("willMount", vm);
+	vm && vm.hooks && fireHook("willMount", vm);
 
-	hooks && fireHooks(inDom ? "willReinsert" : "willInsert", node);
+	hooks && fireHook(inDom ? "willReinsert" : "willInsert", node);
 	parEl.insertBefore(el, refEl);
-	hooks && fireHooks(inDom ? "didReinsert" : "didInsert", node);
+	hooks && fireHook(inDom ? "didReinsert" : "didInsert", node);
 
-	vm && vm.hooks && fireHooks("didMount", vm);
+	vm && vm.hooks && fireHook("didMount", vm);
 }
 
 function insertAfter(parEl, el, refEl) {
@@ -1038,7 +1035,7 @@ function findKeyedBinary(n, list) {
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists
 function patch(vnode, donor) {
-	donor.hooks && fireHooks("willRecycle", donor, vnode);
+	donor.hooks && fireHook("willRecycle", donor, vnode);
 
 	var el = vnode.el = donor.el;
 
@@ -1109,7 +1106,7 @@ function patch(vnode, donor) {
 		}
 	}
 
-	donor.hooks && fireHooks("didRecycle", donor, vnode);
+	donor.hooks && fireHook("didRecycle", donor, vnode);
 }
 
 function sortByKey(a, b) {
@@ -1348,17 +1345,6 @@ var ViewModelProto = ViewModel.prototype = {
 	_updateAsync: null,
 };
 
-
-function drainDidHooks(vm) {
-	if (didQueue.length) {
-		repaint(vm.node);
-
-		var item;
-		while (item = didQueue.shift())
-			{ item[0](item[1], item[2]); }
-	}
-}
-
 /*
 function isEmptyObj(o) {
 	for (var k in o)
@@ -1431,7 +1417,6 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	var vold = vm.node, oldVals, newVals;
 
-	// no diff, just re-parent old
 	if (vm.diff) {
 		oldVals = vm._diff;
 		vm._diff = newVals = vm.diff(vm, vm.model, oldVals);
@@ -1445,7 +1430,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		}
 	}
 
-	isMounted && vm.hooks && fireHooks("willRedraw", vm);
+	isMounted && vm.hooks && fireHook("willRedraw", vm);
 
 	// TODO: allow returning vm.node as no-change indicator
 	var vnew = vm.render.call(vm, vm, vm.model, vm.key, vm.opts, oldVals, newVals);
@@ -1503,7 +1488,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 			{ hydrate(vnew); }
 	}
 
-	isMounted && vm.hooks && fireHooks("didRedraw", vm);
+	isMounted && vm.hooks && fireHook("didRedraw", vm);
 
 	if (isRedrawRoot && isMounted)
 		{ drainDidHooks(vm); }
@@ -1519,9 +1504,9 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 
 	if (newModel != null) {		// && vm.key !== vm.model
 		if (vm.model !== newModel) {
-			vm.hooks && fireHooks("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
+			vm.hooks && fireHook("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
 			vm.model = newModel;
-		//	vm.hooks && fireHooks("didUpdate", vm, newModel);		// should this fire at al?
+		//	vm.hooks && fireHook("didUpdate", vm, newModel);		// should this fire at al?
 		}
 	}
 

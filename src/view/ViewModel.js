@@ -4,7 +4,7 @@ import { preProc } from "./preProc";
 import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, raft } from "../utils";
 import { repaint, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
-import { didQueue, fireHooks } from "./hooks";
+import { drainDidHooks, fireHook } from "./hooks";
 import { devNotify } from "./addons/devmode";
 
 export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
@@ -107,17 +107,6 @@ export const ViewModelProto = ViewModel.prototype = {
 	_updateAsync: null,
 };
 
-
-export function drainDidHooks(vm) {
-	if (didQueue.length) {
-		repaint(vm.node);
-
-		var item;
-		while (item = didQueue.shift())
-			item[0](item[1], item[2]);
-	}
-}
-
 /*
 function isEmptyObj(o) {
 	for (var k in o)
@@ -196,7 +185,6 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	var vold = vm.node, oldVals, newVals;
 
-	// no diff, just re-parent old
 	if (vm.diff) {
 		oldVals = vm._diff;
 		vm._diff = newVals = vm.diff(vm, vm.model, oldVals);
@@ -210,7 +198,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		}
 	}
 
-	isMounted && vm.hooks && fireHooks("willRedraw", vm);
+	isMounted && vm.hooks && fireHook("willRedraw", vm);
 
 	// TODO: allow returning vm.node as no-change indicator
 	var vnew = vm.render.call(vm, vm, vm.model, vm.key, vm.opts, oldVals, newVals);
@@ -268,7 +256,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 			hydrate(vnew);
 	}
 
-	isMounted && vm.hooks && fireHooks("didRedraw", vm);
+	isMounted && vm.hooks && fireHook("didRedraw", vm);
 
 	if (isRedrawRoot && isMounted)
 		drainDidHooks(vm);
@@ -287,9 +275,9 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 			if (_DEVMODE) {
 				devNotify("MODEL_REPLACED", [vm, vm.model, newModel]);
 			}
-			vm.hooks && fireHooks("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
+			vm.hooks && fireHook("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
 			vm.model = newModel;
-		//	vm.hooks && fireHooks("didUpdate", vm, newModel);		// should this fire at al?
+		//	vm.hooks && fireHook("didUpdate", vm, newModel);		// should this fire at al?
 		}
 	}
 

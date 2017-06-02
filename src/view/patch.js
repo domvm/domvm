@@ -4,7 +4,7 @@ import { preProc } from './preProc';
 import { hydrateBody } from './hydrate';
 import { clearChildren } from './dom';
 import { syncChildren } from './syncChildren';
-import { fireHooks } from './hooks';
+import { fireHook } from './hooks';
 import { patchAttrs } from './patchAttrs';
 import { createView } from './createView';
 import { FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST } from './initElementNode';
@@ -63,7 +63,7 @@ function findKeyedBinary(n, list) {
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists
 export function patch(vnode, donor) {
-	donor.hooks && fireHooks("willRecycle", donor, vnode);
+	donor.hooks && fireHook("willRecycle", donor, vnode);
 
 	var el = vnode.el = donor.el;
 
@@ -134,7 +134,7 @@ export function patch(vnode, donor) {
 		}
 	}
 
-	donor.hooks && fireHooks("didRecycle", donor, vnode);
+	donor.hooks && fireHook("didRecycle", donor, vnode);
 }
 
 function sortByKey(a, b) {

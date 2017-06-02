@@ -3,30 +3,27 @@ import { repaint } from './utils';
 
 export const didQueue = [];
 
-function fireHook(did, fn, o, n, immediate) {
-	if (did) {	// did*
-		//	console.log(name + " should queue till repaint", o, n);
-		immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
-	}
-	else {		// will*
-		//	console.log(name + " may delay by promise", o, n);
-		return fn(o, n);		// or pass  done() resolver
+export function fireHook(name, o, n, immediate) {
+	var fn = o.hooks[name];
+
+	if (fn) {
+		if (name[0] === "d" && name[1] === "i" && name[2] === "d") {	// did*
+			//	console.log(name + " should queue till repaint", o, n);
+			immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
+		}
+		else {		// will*
+			//	console.log(name + " may delay by promise", o, n);
+			return fn(o, n);		// or pass  done() resolver
+		}
 	}
 }
 
-export function fireHooks(name, o, n, immediate) {
-	var hook = o.hooks[name];
+export function drainDidHooks(vm) {
+	if (didQueue.length) {
+		repaint(vm.node);
 
-	if (hook) {
-		var did = name[0] === "d" && name[1] === "i" && name[2] === "d";
-
-		if (isArr(hook)) {
-			// TODO: promise.all() this?
-			return hook.map(function(hook2) {
-				return fireHook(did, hook2, o, n);
-			});
-		}
-		else
-			return fireHook(did, hook, o, n, immediate);
+		var item;
+		while (item = didQueue.shift())
+			item[0](item[1], item[2]);
 	}
 }

@@ -3,7 +3,7 @@ import { getVm } from '../utils';
 import { patchAttrs } from '../patchAttrs';
 import { preProc } from '../preProc';
 import { patch as fullPatch } from '../patch';
-import { drainDidHooks } from '../ViewModel';
+import { drainDidHooks } from '../hooks';
 
 import { VNodeProto } from '../VNode';
 
