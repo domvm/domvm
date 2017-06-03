@@ -19,7 +19,7 @@ export function setAttr(node, name, val, asProp, initial) {
 
 	if (val == null)
 		!initial && remAttr(node, name);		//, asProp?  // will also removeAttr of style: null
-	else if (node.ns)
+	else if (node.ns != null)
 		el.setAttribute(name, val);
 	else if (name === "class")
 		el.className = val;

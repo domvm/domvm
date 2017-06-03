@@ -161,7 +161,7 @@ function unmount(asSub) {
 }
 
 function reParent(vm, vold, newParent, newIdx) {
-	if (newParent) {
+	if (newParent != null) {
 		newParent.body[newIdx] = vold;
 		vold.idx = newIdx;
 		vold.parent = newParent;
@@ -185,11 +185,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	var vold = vm.node, oldVals, newVals;
 
-	if (vm.diff) {
+	if (vm.diff != null) {
 		oldVals = vm._diff;
 		vm._diff = newVals = vm.diff(vm, vm.model, oldVals);
 
-		if (vold) {
+		if (vold != null) {
 			var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
 			var isSame = oldVals === newVals || cmpFn(oldVals, newVals);
 
@@ -285,7 +285,7 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 
 	return vm._redraw(newParent, newIdx, withDOM);
 /*
-	if (parentVm) {
+	if (parentVm != null) {
 		vm.parent = parentVm;
 		parentVm.body.push(vm);
 	}

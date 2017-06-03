@@ -105,7 +105,7 @@ export function html(node, dynProps) {
 			out = node.vm.html();
 			break;
 		case ELEMENT:
-			if (node.el && node.tag == null) {
+			if (node.el != null && node.tag == null) {
 				out = node.el.outerHTML;		// pre-existing dom elements (does not currently account for any props applied to them)
 				break;
 			}
@@ -114,7 +114,7 @@ export function html(node, dynProps) {
 
 			buf += "<" + node.tag;
 
-			if (node.attrs) {
+			if (node.attrs != null) {
 				for (var pname in node.attrs) {
 					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_" || dynProps === false && isDynProp(node.tag, pname))
 						continue;
@@ -138,7 +138,7 @@ export function html(node, dynProps) {
 			}
 
 			// if body-less svg node, auto-close & return
-			if (node.body == null && node.ns && node.tag !== "svg")
+			if (node.body == null && node.ns != null && node.tag !== "svg")
 				return buf + "/>";
 			else
 				buf += ">";

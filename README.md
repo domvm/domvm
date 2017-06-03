@@ -525,3 +525,21 @@ Usage: `vm.hook({willMount: ...})` or `return {render: ..., hooks: {willMount: .
 - will/didUnmount (dom removal)
 
 View-level `will*` hooks are not yet promise handling, so cannot be used for delay, but you can just rely on the view's root node's hooks to accomplish similar goals.
+
+
+
+
+test render return vm.node
+test new diff w/patch
+
+
+
+lazyList -> lazy?
+
+
+
+conditional features (diff)
+
+hook cleanup & extract
+
+diff, patch, stream

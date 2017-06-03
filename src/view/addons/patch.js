@@ -14,9 +14,9 @@ VNodeProto.patch = function(n) {
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch hooks?
 export function patch(o, n) {
-	if (n.type) {
+	if (n.type != null) {
 		// no full patching of view roots, just use redraw!
-		if (o.vm)
+		if (o.vm != null)
 			return;
 
 		preProc(n, o.parent, o.idx, null);

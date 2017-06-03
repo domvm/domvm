@@ -573,7 +573,7 @@ function closestVNode(el) {
 }
 
 function createElement(tag, ns) {
-	if (ns)
+	if (ns != null)
 		{ return doc.createElementNS(ns, tag); }
 	return doc.createElement(tag);
 }
@@ -634,7 +634,7 @@ function removeChild(parEl, el) {
 
 	var res = deepNotifyRemove(node);
 
-	if (res && isProm(res))
+	if (res != null && isProm(res))
 		{ res.then(curry(_removeChild, [parEl, el, true])); }
 	else
 		{ _removeChild(parEl, el); }
@@ -653,7 +653,7 @@ function clearChildren(parent) {
 
 // todo: hooks
 function insertBefore(parEl, el, refEl) {
-	var node = el._node, hooks = node.hooks, inDom = el.parentNode;
+	var node = el._node, hooks = node.hooks, inDom = el.parentNode != null;
 
 	// el === refEl is asserted as a no-op insert called to fire hooks
 	var vm = (el === refEl || !inDom) && node.vm;
@@ -758,7 +758,7 @@ function setAttr(node, name, val, asProp, initial) {
 
 	if (val == null)
 		{ !initial && remAttr(node, name); }		//, asProp?  // will also removeAttr of style: null
-	else if (node.ns)
+	else if (node.ns != null)
 		{ el.setAttribute(name, val); }
 	else if (name === "class")
 		{ el.className = val; }
@@ -851,7 +851,7 @@ function hydrate(vnode, withEl) {
 		//	if (vnode.tag === "svg")
 		//		vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS);
 
-			if (vnode.attrs)
+			if (vnode.attrs != null)
 				{ patchAttrs(vnode, emptyObj, true); }
 
 			if ((vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList
@@ -981,7 +981,7 @@ function syncChildren(node, donor) {
 
 				if (parentNode(lsNode) !== node) {
 					tmpSib = nextSib(lftSib);
-					lsNode.vm ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
+					lsNode.vm != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
 					lftSib = tmpSib;
 					continue;
 				}
@@ -1014,7 +1014,7 @@ function syncChildren(node, donor) {
 
 				if (parentNode(rsNode) !== node) {
 					tmpSib = prevSib(rgtSib);
-					rsNode.vm ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
+					rsNode.vm != null ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
 					rgtSib = tmpSib;
 					continue;
 				}
@@ -1050,7 +1050,7 @@ function findSequential(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
 
-		if (n.type === VVIEW && o.vm) {			// also ignore recycled/moved?
+		if (n.type === VVIEW && o.vm != null) {			// also ignore recycled/moved?
 			var ov = o.vm;
 
 			// match by key & viewFn
@@ -1115,7 +1115,7 @@ function patch(vnode, donor) {
 		return;
 	}
 
-	if (vnode.attrs || donor.attrs)
+	if (vnode.attrs != null || donor.attrs != null)
 		{ patchAttrs(vnode, donor); }
 
 	// patch events
@@ -1235,7 +1235,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 			donor2 = find(fnode2, list, fromIdx);
 
-			if (donor2) {
+			if (donor2 != null) {
 				diffRes = nbody.diff(i, donor2);
 
 				// diff returns same, so cheaply adopt vnode without patching
@@ -1257,7 +1257,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 				node2._diff = diffRes != null ? diffRes : nbody.diff(i);
 
-				if (donor2)
+				if (donor2 != null)
 					{ patch(node2, donor2); }
 			}
 			else {
@@ -1270,7 +1270,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 			// to keep search space small, if donation is non-contig, move node fwd?
 			// re-establish contigindex
-			if (find !== findKeyedBinary && donor2 && donor2.idx === fromIdx)
+			if (find !== findKeyedBinary && donor2 != null && donor2.idx === fromIdx)
 				{ fromIdx++; }
 		}
 
@@ -1302,7 +1302,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 
 			// to keep search space small, if donation is non-contig, move node fwd?
 			// re-establish contigindex
-			if (find !== findKeyedBinary && donor2 && donor2.idx === fromIdx)
+			if (find !== findKeyedBinary && donor2 != null && donor2.idx === fromIdx)
 				{ fromIdx++; }
 		}
 	}
@@ -1464,7 +1464,7 @@ function unmount(asSub) {
 }
 
 function reParent(vm, vold, newParent, newIdx) {
-	if (newParent) {
+	if (newParent != null) {
 		newParent.body[newIdx] = vold;
 		vold.idx = newIdx;
 		vold.parent = newParent;
@@ -1482,11 +1482,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	var vold = vm.node, oldVals, newVals;
 
-	if (vm.diff) {
+	if (vm.diff != null) {
 		oldVals = vm._diff;
 		vm._diff = newVals = vm.diff(vm, vm.model, oldVals);
 
-		if (vold) {
+		if (vold != null) {
 			var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
 			var isSame = oldVals === newVals || cmpFn(oldVals, newVals);
 
@@ -1579,7 +1579,7 @@ function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
 
 	return vm._redraw(newParent, newIdx, withDOM);
 /*
-	if (parentVm) {
+	if (parentVm != null) {
 		vm.parent = parentVm;
 		parentVm.body.push(vm);
 	}
@@ -1756,9 +1756,9 @@ VNodeProto.patch = function(n) {
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch hooks?
 function patch$1(o, n) {
-	if (n.type) {
+	if (n.type != null) {
 		// no full patching of view roots, just use redraw!
-		if (o.vm)
+		if (o.vm != null)
 			{ return; }
 
 		preProc(n, o.parent, o.idx, null);
@@ -1843,7 +1843,7 @@ function nextSubVms(n, accum) {
 		for (var i = 0; i < body.length; i++) {
 			var n2 = body[i];
 
-			if (n2.vm)
+			if (n2.vm != null)
 				{ accum.push(n2.vm); }
 			else
 				{ nextSubVms(n2, accum); }

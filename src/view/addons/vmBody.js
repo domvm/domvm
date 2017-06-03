@@ -20,7 +20,7 @@ function nextSubVms(n, accum) {
 		for (var i = 0; i < body.length; i++) {
 			var n2 = body[i];
 
-			if (n2.vm)
+			if (n2.vm != null)
 				accum.push(n2.vm);
 			else
 				nextSubVms(n2, accum);

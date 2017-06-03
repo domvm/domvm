@@ -114,7 +114,7 @@ export function syncChildren(node, donor) {
 
 				if (parentNode(lsNode) !== node) {
 					tmpSib = nextSib(lftSib);
-					lsNode.vm ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
+					lsNode.vm != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
 					lftSib = tmpSib;
 					continue;
 				}
@@ -150,7 +150,7 @@ export function syncChildren(node, donor) {
 
 				if (parentNode(rsNode) !== node) {
 					tmpSib = prevSib(rgtSib);
-					rsNode.vm ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
+					rsNode.vm != null ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
 					rgtSib = tmpSib;
 					continue;
 				}
