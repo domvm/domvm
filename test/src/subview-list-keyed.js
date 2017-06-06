@@ -3,7 +3,9 @@ QUnit.module("Subview List w/keys");
 (function() {
 	var list = ["a","b","c"];
 
-	function ListViewKeyed(vm, list) {
+	function ListViewKeyed(vm) {
+		var list = vm.data;
+
 		return function() {
 			return el("ul#list2.test-output", list.map(function(item) {
 				return vw(ListViewItem, item, item);
@@ -11,7 +13,9 @@ QUnit.module("Subview List w/keys");
 		};
 	}
 
-	function ListViewItem(vm, item, key) {
+	function ListViewItem(vm) {
+		var item = vm.data;
+
 		return function() {
 			return el("li", item);		// {_key: item}
 		};

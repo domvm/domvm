@@ -15,7 +15,7 @@ export function hydrateBody(vnode) {
 		if (type2 <= COMMENT)
 			insertBefore(vnode.el, hydrate(vnode2));		// vnode.el.appendChild(hydrate(vnode2))
 		else if (type2 === VVIEW) {
-			var vm = createView(vnode2.view, vnode2.model, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new model updates
+			var vm = createView(vnode2.view, vnode2.data, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new data updates
 			type2 = vm.node.type;
 			insertBefore(vnode.el, hydrate(vm.node));
 		}

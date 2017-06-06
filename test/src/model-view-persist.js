@@ -6,6 +6,8 @@ QUnit.module("Model-view persistence, vm init, DOM reuse");
 		vmA = null;
 
 	function ViewA(vm) {
+		var model = vm.data;
+
 		vmA = vm;
 /*
 		vm.config({hooks: {
@@ -17,7 +19,7 @@ QUnit.module("Model-view persistence, vm init, DOM reuse");
 			}
 		}});
 */
-		return function(vm, model) {
+		return function(vm) {
 			return el("div", [
 				el("span", model.foo),
 				el("br"),
@@ -48,7 +50,9 @@ QUnit.module("Model-view persistence, vm init, DOM reuse");
 	});
 */
 	QUnit.test('Same model/handle, diff sib views', function(assert) {
-		function ViewX(vm, model) {
+		function ViewX(vm) {
+			var model = vm.data;
+
 			return function() {
 				return el("div", [
 					vw(ViewY, model),
@@ -57,13 +61,17 @@ QUnit.module("Model-view persistence, vm init, DOM reuse");
 			};
 		}
 
-		function ViewY(vm, model) {
+		function ViewY(vm) {
+			var model = vm.data;
+
 			return function() {
 				return el("em", model.a);
 			};
 		}
 
-		function ViewZ(vm, model) {
+		function ViewZ(vm) {
+			var model = vm.data;
+
 			return function() {
 				return el("strong", model.b);
 			};

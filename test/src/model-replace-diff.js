@@ -2,7 +2,9 @@ QUnit.module("Model replace & vm.diff()");
 
 (function() {
 	function ViewA() {
-		return function(vm, model) {
+		return function(vm) {
+			var model = vm.data;
+
 			return el("#viewA", [
 				tx(model.foo),
 				el("br"),
@@ -12,7 +14,9 @@ QUnit.module("Model replace & vm.diff()");
 	}
 
 	function ViewB() {
-		return function(vm, model) {
+		return function(vm) {
+			var model = vm.data;
+
 			return el("#viewB", [
 				vw(ViewA, model)
 			]);
@@ -71,9 +75,11 @@ QUnit.module("Model replace & vm.diff()");
 	QUnit.test('vm.diff(getArgs) should reuse view if [arg1, arg2...] is same between redraws', function(assert) {
 		var redraws = 0;
 
-		function ViewA(vm, model) {
+		function ViewA(vm) {
+			var model = vm.data;
+
 			vm.config({
-				diff: function(vm, model) {
+				diff: function(vm) {
 					return [model.class, model.text];
 				}
 			});
@@ -122,7 +128,9 @@ QUnit.module("Model replace & vm.diff()");
 		var vmC = null, vmD = null;
 
 		// wraps model in own impCtx for sub-view, but specs model as persitent
-		function ViewC(vm, model) {
+		function ViewC(vm) {
+			var model = vm.data;
+
 			return function() {
 				return el("#viewC", [
 					vw(ViewD, {foo: model, addl: myText}, model)
@@ -131,7 +139,9 @@ QUnit.module("Model replace & vm.diff()");
 		}
 
 		function ViewD() {
-			return function(vm, imp, key) {
+			return function(vm) {
+				var imp = vm.data;
+
 				return el("#viewD", [
 					el("span", imp.foo.text),
 					el("strong", imp.addl),
@@ -170,7 +180,9 @@ QUnit.module("Model replace & vm.diff()");
 		var vmC = null, vmD = null;
 
 		// wraps model in own impCtx for sub-view, but specs model as persitent
-		function ViewC(vm, model) {
+		function ViewC(vm) {
+			var model = vm.data;
+
 			return function() {
 				return el("#viewC", [
 					vw(ViewD, {foo: model, addl: myText})
@@ -179,7 +191,9 @@ QUnit.module("Model replace & vm.diff()");
 		}
 
 		function ViewD() {
-			return function(vm, imp, key) {
+			return function(vm) {
+				var imp = vm.data;
+
 				return el("#viewD", [
 					el("span", imp.foo.text),
 					el("strong", imp.addl),

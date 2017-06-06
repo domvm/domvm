@@ -293,7 +293,9 @@ QUnit.module("Various Others");
 			};
 		}
 
-		function View7(vm, data2) {
+		function View7(vm) {
+			var data2 = vm.data;
+
 			return function() {
 				return el("ul", data2.map(function(v) {
 					return el("li", v);

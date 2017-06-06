@@ -75,7 +75,9 @@ QUnit.module("Lifecycle hooks");
 	});
 
 	QUnit.test('willUpdate (root/explicit)', function(assert) {
-		function A(vm, model) {
+		function A(vm) {
+			var model = vm.data;
+
 			vm.config({hooks: {
 				willUpdate: function(vm, newModel) {
 					model = newModel;
@@ -105,7 +107,9 @@ QUnit.module("Lifecycle hooks");
 	});
 
 	QUnit.test('willUpdate (sub-view/implicit)', function(assert) {
-		function B(vm, model) {
+		function B(vm) {
+			var model = vm.data;
+
 			vm.config({hooks: {
 				willUpdate: function(vm, newModel) {
 					model = newModel;
@@ -119,7 +123,9 @@ QUnit.module("Lifecycle hooks");
 			};
 		}
 
-		function C(vm, model) {
+		function C(vm) {
+			var model = vm.data;
+
 			vm.config({hooks: {
 				willUpdate: function(vm, newModel) {
 					model = newModel;

@@ -252,14 +252,14 @@ function patchChildren(vnode, donor, newIsLazy) {
 			}
 			else if (type2 === VVIEW) {
 				if (donor2 = find(node2, list, fromIdx))		// update/moveTo
-					var vm = donor2.vm._update(node2.model, vnode, i);		// withDOM
+					var vm = donor2.vm._update(node2.data, vnode, i);		// withDOM
 				else
-					var vm = createView(node2.view, node2.model, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
+					var vm = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
 
 				type2 = vm.node.type;
 			}
 			else if (type2 === VMODEL) {
-				var vm = node2.vm._update(node2.model, vnode, i);
+				var vm = node2.vm._update(node2.data, vnode, i);
 				type2 = vm.node.type;
 			}
 

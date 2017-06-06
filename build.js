@@ -55,6 +55,12 @@ function getBuilds(name) {
 			contents: "`full`<br> + warnings",
 			descr: "use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior",
 			destub: ["cssTag","autoPx","isStream","hookStream"],
+		},
+		{
+			build: "custom",
+			contents: "`pico`<br> + cssTag",
+			descr: "",
+			destub: ["cssTag"],
 		}
 	].filter(b => name != null ? b.build === name : true);
 }

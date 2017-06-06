@@ -7,11 +7,11 @@ import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
 import { devNotify } from "./addons/devmode";
 
-export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
+export function ViewModel(view, data, key, opts) {			// parent, idx, parentVm
 	var vm = this;
 
 	vm.view = view;
-	vm.model = model;
+	vm.data = data;
 	vm.key = key;
 
 	if (opts) {
@@ -20,7 +20,7 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 	}
 
 	if (!view.prototype._isClass) {
-		var out = view.call(vm, vm, model, key, opts);
+		var out = view.call(vm, vm);
 
 		if (isFunc(out))
 			vm.render = out;
@@ -32,18 +32,18 @@ export function ViewModel(view, model, key, opts) {			// parent, idx, parentVm
 
 	// these must be created here since debounced per view
 	vm._redrawAsync = raft(_ => vm._redraw());
-	vm._updateAsync = raft(newModel => vm._update(newModel));
+	vm._updateAsync = raft(newData => vm._update(newData));
 
 	var hooks = vm.hooks;
 
 	if (hooks && hooks.didInit)
-		hooks.didInit.call(vm, vm, model, key, opts);
+		hooks.didInit.call(vm, vm);
 
-//	this.update(model, parent, idx, parentVm, false);
+//	this.update(data, parent, idx, parentVm, false);
 
 	// proc opts, evctx, watch
 
-//	this.update = function(model, withRedraw, parent, idx, parentVm) {};
+//	this.update = function(data, withRedraw, parent, idx, parentVm) {};
 }
 
 export const ViewModelProto = ViewModel.prototype = {
@@ -54,7 +54,7 @@ export const ViewModelProto = ViewModel.prototype = {
 	// view + key serve as the vm's unique identity
 	view: null,
 	key: null,
-	model: null,
+	data: null,
 	opts: null,
 	node: null,
 	hooks: null,
@@ -95,9 +95,9 @@ export const ViewModelProto = ViewModel.prototype = {
 		sync ? vm._redraw() : vm._redrawAsync();
 		return vm;
 	},
-	update: function(newModel, sync) {
+	update: function(newData, sync) {
 		var vm = this;
-		sync ? vm._update(newModel) : vm._updateAsync(newModel);
+		sync ? vm._update(newData) : vm._updateAsync(newData);
 		return vm;
 	},
 
@@ -183,15 +183,15 @@ function redrawSync(newParent, newIdx, withDOM) {
 			devNotify("UNMOUNTED_REDRAW", [vm]);
 	}
 
-	var vold = vm.node, oldVals, newVals;
+	var vold = vm.node, oldDiff, newDiff;
 
 	if (vm.diff != null) {
-		oldVals = vm._diff;
-		vm._diff = newVals = vm.diff(vm, vm.model, oldVals);
+		oldDiff = vm._diff;
+		vm._diff = newDiff = vm.diff(vm);		// , vm.data, oldDiff
 
 		if (vold != null) {
-			var cmpFn = isArr(oldVals) ? cmpArr : cmpObj;
-			var isSame = oldVals === newVals || cmpFn(oldVals, newVals);
+			var cmpFn = isArr(oldDiff) ? cmpArr : cmpObj;
+			var isSame = oldDiff === newDiff || cmpFn(oldDiff, newDiff);
 
 			if (isSame)
 				return reParent(vm, vold, newParent, newIdx);
@@ -201,7 +201,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	isMounted && vm.hooks && fireHook("willRedraw", vm);
 
 	// TODO: allow returning vm.node as no-change indicator
-	var vnew = vm.render.call(vm, vm, vm.model, vm.key, vm.opts, oldVals, newVals);
+	var vnew = vm.render.call(vm, vm, oldDiff);		// , newDiff
 
 	// isSame
 	if (vnew === vold)
@@ -267,17 +267,14 @@ function redrawSync(newParent, newIdx, withDOM) {
 // withRedraw?
 // this doubles as moveTo
 // will/didUpdate
-function updateSync(newModel, newParent, newIdx, withDOM) {			// parentVm
+function updateSync(newData, newParent, newIdx, withDOM) {			// parentVm
 	var vm = this;
 
-	if (newModel != null) {		// && vm.key !== vm.model
-		if (vm.model !== newModel) {
-			if (_DEVMODE) {
-				devNotify("MODEL_REPLACED", [vm, vm.model, newModel]);
-			}
-			vm.hooks && fireHook("willUpdate", vm, newModel);		// willUpdate will be called ahead of willRedraw when model will be replaced
-			vm.model = newModel;
-		//	vm.hooks && fireHook("didUpdate", vm, newModel);		// should this fire at al?
+	if (newData != null) {
+		if (vm.data !== newData) {
+			vm.hooks && fireHook("willUpdate", vm, newData);		// willUpdate will be called ahead of willRedraw when data will be replaced
+			vm.data = newData;
+		//	vm.hooks && fireHook("didUpdate", vm, newData);		// should this fire at al?
 		}
 	}
 

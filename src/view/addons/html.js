@@ -99,7 +99,7 @@ export function html(node, dynProps) {
 
 	switch (node.type) {
 		case VVIEW:
-			out = createView(node.view, node.model, node.key, node.opts).html(dynProps);
+			out = createView(node.view, node.data, node.key, node.opts).html(dynProps);
 			break;
 		case VMODEL:
 			out = node.vm.html();

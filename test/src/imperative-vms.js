@@ -8,7 +8,9 @@ QUnit.module("Imperative VMs");
 
 	var vmA, vmB, vmC, vmD, vmE, vmF;
 
-	function ViewA(vm, model) {
+	function ViewA(vm) {
+		var model = vm.data;
+
 		vmA = vm;
 		vmB = domvm.createView(ViewB, modelB);
 
@@ -21,7 +23,9 @@ QUnit.module("Imperative VMs");
 		};
 	}
 
-	function ViewB(vm, model) {
+	function ViewB(vm) {
+		var model = vm.data;
+
 		vmB = vm;
 
 		return function() {
@@ -29,7 +33,9 @@ QUnit.module("Imperative VMs");
 		};
 	}
 
-	function ViewC(vm, model) {
+	function ViewC(vm) {
+		var model = vm.data;
+
 		vmC = vm;
 		vmD = domvm.createView(ViewD, modelD);
 
@@ -41,7 +47,9 @@ QUnit.module("Imperative VMs");
 		};
 	}
 
-	function ViewD(vm, model) {
+	function ViewD(vm) {
+		var model = vm.data;
+
 		vmD = vm;
 
 		return function() {
@@ -209,7 +217,9 @@ QUnit.module("Imperative VMs");
 			this.vm  = domvm.createView(View, this);
 		}
 
-		function View(vm, app) {
+		function View(vm) {
+			var app = vm.data;
+
 			return function() {
 				if (app.a == null)
 					return el("h3", "Loading 1...");
@@ -222,7 +232,9 @@ QUnit.module("Imperative VMs");
 			};
 		}
 
-		function View2(vm, app) {
+		function View2(vm) {
+			var app = vm.data;
+
 			return function() {
 				if (app.a == null)
 					return el("h3", "Loading 2...");
