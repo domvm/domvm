@@ -1,6 +1,6 @@
 class View {
-	constructor(model, key, opts) {
-		domvm.ViewModel.call(this, this.constructor, model, key, opts);
+	constructor(data, key, opts) {
+		domvm.ViewModel.call(this, this.constructor, data, key, opts);
 	}
 }
 

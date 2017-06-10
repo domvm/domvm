@@ -17,8 +17,8 @@
 						console.log(vm.view.name);
 					}
 				},
-				vw = function(viewFn, model, key, opts) {
-					return domvm.defineView(viewFn, model, key, {diff: diff, hooks: hooks});		// merge opts/diff
+				vw = function(viewFn, data, key, opts) {
+					return domvm.defineView(viewFn, data, key, {diff: diff, hooks: hooks});		// merge opts/diff
 				};
 
 			var freezer = new Freezer({

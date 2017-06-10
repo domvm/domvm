@@ -7,9 +7,7 @@ QUnit.module("Subview redraw(true) Branch Consistency");
 		this.view = vw(ParentView, this, this);
 	}
 
-	function ParentView(vm) {
-		var parent = vm.data;
-
+	function ParentView(vm, parent) {
 		parent.vm = vm;
 
 		return function() {
@@ -25,9 +23,7 @@ QUnit.module("Subview redraw(true) Branch Consistency");
 		this.view = vw(ChildView, this, this);
 	}
 
-	function ChildView(vm) {
-		var child = vm.data;
-
+	function ChildView(vm, child) {
 		child.vm = vm;
 
 		return function() {

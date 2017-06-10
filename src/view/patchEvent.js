@@ -12,8 +12,8 @@ function bindEv(el, type, fn) {
 function handle(e, fn, args) {
 	var node = closestVNode(e.target);
 	var vm = getVm(node);
-	var out = fn.apply(null, args.concat(e, node, vm));
-	globalCfg.onevent.apply(null, [e, node, vm].concat(args));
+	var out = fn.apply(null, args.concat([e, vm, vm.data, node]));
+	globalCfg.onevent.call(null, e, vm, vm.data, node, args);
 
 	if (out === false) {
 		e.preventDefault();

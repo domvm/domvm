@@ -132,18 +132,18 @@
 			var mouseIsDown = false;
 
 			var onMousedown = {
-				"*":		function(e, node) { mouseIsDown = true; },
-				".day":		function(e, node) { toggleDay(node.data); },
-				".hour":	function(e, node) { toggleHour(node.data); },
-				".dayhour":	function(e, node) { setDayHour.apply(null, node.data); setSelected = node.attrs.class.indexOf("sel") == -1; },
+				"*":		function(e, vm, data, node) { mouseIsDown = true; },
+				".day":		function(e, vm, data, node) { toggleDay(node.data); },
+				".hour":	function(e, vm, data, node) { toggleHour(node.data); },
+				".dayhour":	function(e, vm, data, node) { setDayHour.apply(null, node.data); setSelected = node.attrs.class.indexOf("sel") == -1; },
 			};
 
 			var onMouseup = {
-				"*":		function(e, node) { mouseIsDown = false; },
+				"*":		function(e, vm, data, node) { mouseIsDown = false; },
 			};
 
 			var onMouseover = {
-				".dayhour":	function(e, node) { mouseIsDown && setDayHour.apply(null, node.data.concat(setSelected)); }
+				".dayhour":	function(e, vm, data, node) { mouseIsDown && setDayHour.apply(null, node.data.concat(setSelected)); }
 			};
 
 			// template

@@ -1,5 +1,5 @@
 import { isPlainObj, isArr, isVal, sliceArgs } from '../../utils';
-import { initElementNode } from '../initElementNode';
+import { initElementNode, LAZY_LIST } from '../initElementNode';
 
 export function defineElementSpread(tag) {
 	var args = arguments;
@@ -14,7 +14,7 @@ export function defineElementSpread(tag) {
 			bodyIdx = 2;
 		}
 
-		if (len === bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx])))
+		if (len === bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx]) || attrs && (attrs._flags & LAZY_LIST) === LAZY_LIST))
 			body = args[bodyIdx];
 		else
 			body = sliceArgs(args, bodyIdx);

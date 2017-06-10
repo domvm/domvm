@@ -20,7 +20,7 @@ export function ViewModel(view, data, key, opts) {			// parent, idx, parentVm
 	}
 
 	if (!view.prototype._isClass) {
-		var out = view.call(vm, vm);
+		var out = view.call(vm, vm, data, key, opts);
 
 		if (isFunc(out))
 			vm.render = out;
@@ -35,6 +35,8 @@ export function ViewModel(view, data, key, opts) {			// parent, idx, parentVm
 	vm._updateAsync = raft(newData => vm._update(newData));
 
 	var hooks = vm.hooks;
+
+//	vm.init(vm);
 
 	if (hooks && hooks.didInit)
 		hooks.didInit.call(vm, vm);
@@ -55,6 +57,7 @@ export const ViewModelProto = ViewModel.prototype = {
 	view: null,
 	key: null,
 	data: null,
+	init: null,
 	opts: null,
 	node: null,
 	hooks: null,
@@ -64,6 +67,8 @@ export const ViewModelProto = ViewModel.prototype = {
 	_diff: null,
 
 	config: function(opts) {
+	//	if (opts.init)
+	//		this.init = opts.init;
 		if (opts.diff)
 			this.diff = opts.diff;
 		if (opts.hooks)
@@ -187,7 +192,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	if (vm.diff != null) {
 		oldDiff = vm._diff;
-		vm._diff = newDiff = vm.diff(vm);		// , vm.data, oldDiff
+		vm._diff = newDiff = vm.diff(vm, vm.data);
 
 		if (vold != null) {
 			var cmpFn = isArr(oldDiff) ? cmpArr : cmpObj;
@@ -198,10 +203,10 @@ function redrawSync(newParent, newIdx, withDOM) {
 		}
 	}
 
-	isMounted && vm.hooks && fireHook("willRedraw", vm);
+	isMounted && vm.hooks && fireHook("willRedraw", vm, vm.data);
 
 	// TODO: allow returning vm.node as no-change indicator
-	var vnew = vm.render.call(vm, vm, oldDiff);		// , newDiff
+	var vnew = vm.render.call(vm, vm, vm.data, oldDiff, newDiff);
 
 	// isSame
 	if (vnew === vold)
@@ -256,7 +261,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 			hydrate(vnew);
 	}
 
-	isMounted && vm.hooks && fireHook("didRedraw", vm);
+	isMounted && vm.hooks && fireHook("didRedraw", vm, vm.data);
 
 	if (isRedrawRoot && isMounted)
 		drainDidHooks(vm);

@@ -683,7 +683,7 @@ function prevSib(sib) {
 function deepNotifyRemove(node) {
 	var hooks = node.hooks, vm = node.vm;
 
-	vm && vm.hooks && fireHook("willUnmount", vm);
+	vm && vm.hooks && fireHook("willUnmount", vm, vm.data);
 
 	var res = hooks && fireHook("willRemove", node);
 
@@ -708,7 +708,7 @@ function _removeChild(parEl, el, immediate) {
 
 	hooks && fireHook("didRemove", node, null, immediate);
 
-	vm && vm.hooks && fireHook("didUnmount", vm, null, immediate);
+	vm && vm.hooks && fireHook("didUnmount", vm, vm.data, immediate);
 }
 
 // todo: should delay parent unmount() by returning res prom?
@@ -741,13 +741,13 @@ function insertBefore(parEl, el, refEl) {
 	// el === refEl is asserted as a no-op insert called to fire hooks
 	var vm = (el === refEl || !inDom) && node.vm;
 
-	vm && vm.hooks && fireHook("willMount", vm);
+	vm && vm.hooks && fireHook("willMount", vm, vm.data);
 
 	hooks && fireHook(inDom ? "willReinsert" : "willInsert", node);
 	parEl.insertBefore(el, refEl);
 	hooks && fireHook(inDom ? "didReinsert" : "didInsert", node);
 
-	vm && vm.hooks && fireHook("didMount", vm);
+	vm && vm.hooks && fireHook("didMount", vm, vm.data);
 }
 
 function insertAfter(parEl, el, refEl) {
@@ -770,8 +770,8 @@ function bindEv(el, type, fn) {
 function handle(e, fn, args) {
 	var node = closestVNode(e.target);
 	var vm = getVm(node);
-	var out = fn.apply(null, args.concat(e, node, vm));
-	globalCfg.onevent.apply(null, [e, node, vm].concat(args));
+	var out = fn.apply(null, args.concat([e, vm, vm.data, node]));
+	globalCfg.onevent.call(null, e, vm, vm.data, node, args);
 
 	if (out === false) {
 		e.preventDefault();
@@ -1423,7 +1423,7 @@ function ViewModel(view, data, key, opts) {			// parent, idx, parentVm
 	}
 
 	if (!view.prototype._isClass) {
-		var out = view.call(vm, vm);
+		var out = view.call(vm, vm, data, key, opts);
 
 		if (isFunc(out))
 			{ vm.render = out; }
@@ -1438,6 +1438,8 @@ function ViewModel(view, data, key, opts) {			// parent, idx, parentVm
 	vm._updateAsync = raft(function (newData) { return vm._update(newData); });
 
 	var hooks = vm.hooks;
+
+//	vm.init(vm);
 
 	if (hooks && hooks.didInit)
 		{ hooks.didInit.call(vm, vm); }
@@ -1458,6 +1460,7 @@ var ViewModelProto = ViewModel.prototype = {
 	view: null,
 	key: null,
 	data: null,
+	init: null,
 	opts: null,
 	node: null,
 	hooks: null,
@@ -1467,6 +1470,8 @@ var ViewModelProto = ViewModel.prototype = {
 	_diff: null,
 
 	config: function(opts) {
+	//	if (opts.init)
+	//		this.init = opts.init;
 		if (opts.diff)
 			{ this.diff = opts.diff; }
 		if (opts.hooks)
@@ -1590,7 +1595,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	if (vm.diff != null) {
 		oldDiff = vm._diff;
-		vm._diff = newDiff = vm.diff(vm);		// , vm.data, oldDiff
+		vm._diff = newDiff = vm.diff(vm, vm.data);
 
 		if (vold != null) {
 			var cmpFn = isArr(oldDiff) ? cmpArr : cmpObj;
@@ -1601,10 +1606,10 @@ function redrawSync(newParent, newIdx, withDOM) {
 		}
 	}
 
-	isMounted && vm.hooks && fireHook("willRedraw", vm);
+	isMounted && vm.hooks && fireHook("willRedraw", vm, vm.data);
 
 	// TODO: allow returning vm.node as no-change indicator
-	var vnew = vm.render.call(vm, vm, oldDiff);		// , newDiff
+	var vnew = vm.render.call(vm, vm, vm.data, oldDiff, newDiff);
 
 	// isSame
 	if (vnew === vold)
@@ -1659,7 +1664,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 			{ hydrate(vnew); }
 	}
 
-	isMounted && vm.hooks && fireHook("didRedraw", vm);
+	isMounted && vm.hooks && fireHook("didRedraw", vm, vm.data);
 
 	if (isRedrawRoot && isMounted)
 		{ drainDidHooks(vm); }
@@ -1901,14 +1906,15 @@ ViewModelProto.on = on;
 function emit(evName) {
 	var arguments$1 = arguments;
 
-	var targ = this;
+	var targ = this,
+		src = targ;
 
 	do {
 		var evs = targ.events;
 		var fn = evs ? evs[evName] : null;
 
 		if (fn) {
-			fn.apply(null, sliceArgs(arguments$1, 1));
+			fn.apply(null, [src].concat(sliceArgs(arguments$1, 1)));
 			break;
 		}
 

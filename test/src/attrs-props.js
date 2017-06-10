@@ -48,8 +48,7 @@ QUnit.module("Attrs/props");
 	//	this.view = [CheckView, this];
 	}
 
-	function CheckView(vm) {
-		var check = vm.data;
+	function CheckView(vm, check) {
 		check.vm = vm;
 		return function() {
 			return el("input#" + check.id, {type: "checkbox", checked: check.checked});

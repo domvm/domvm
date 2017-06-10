@@ -190,12 +190,12 @@ function CommentReplyView(vm, comment) {
 
 	var tmpComment = domvm.prop("", redraw);
 
-	function toggleReplyMode(e, node) {
+	function toggleReplyMode(e) {
 		status(INTERACTING);
 		return false;
 	}
 
-	function postComment(e, node) {
+	function postComment(e) {
 		status(SUBMITTING);
 
 		// TODO: flatten? dry?
@@ -218,8 +218,8 @@ function CommentReplyView(vm, comment) {
 		return false;
 	}
 
-	function previewReply(e, node) {
-		tmpComment(node.el.value);
+	function previewReply(e) {
+		tmpComment(e.target.value);
 	}
 
 	return function() {

@@ -21,7 +21,7 @@
 						console.log("didRedraw");
 					}
 				},
-				render: function(vm, model, key, opts, o, n) {
+				render: function(vm, model, o, n) {
 					if (o && o.idle != n.idle) {
 						if (n.idle)
 							vm.node.patch({class: "yyy", style: "display: none;"});
