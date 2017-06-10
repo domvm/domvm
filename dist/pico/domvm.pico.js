@@ -622,8 +622,8 @@ function bindEv(el, type, fn) {
 function handle(e, fn, args) {
 	var node = closestVNode(e.target);
 	var vm = getVm(node);
-	var out = fn.apply(null, args.concat([e, vm, vm.data, node]));
-	globalCfg.onevent.call(null, e, vm, vm.data, node, args);
+	var out = fn.apply(null, args.concat([e, node, vm, vm.data]));
+	globalCfg.onevent.call(null, e, node, vm, vm.data, args);
 
 	if (out === false) {
 		e.preventDefault();
@@ -1274,8 +1274,6 @@ function ViewModel(view, data, key, opts) {			// parent, idx, parentVm
 
 	var hooks = vm.hooks;
 
-//	vm.init(vm);
-
 	if (hooks && hooks.didInit)
 		{ hooks.didInit.call(vm, vm); }
 
@@ -1295,7 +1293,6 @@ var ViewModelProto = ViewModel.prototype = {
 	view: null,
 	key: null,
 	data: null,
-	init: null,
 	opts: null,
 	node: null,
 	hooks: null,
@@ -1305,8 +1302,6 @@ var ViewModelProto = ViewModel.prototype = {
 	_diff: null,
 
 	config: function(opts) {
-	//	if (opts.init)
-	//		this.init = opts.init;
 		if (opts.diff)
 			{ this.diff = opts.diff; }
 		if (opts.hooks)

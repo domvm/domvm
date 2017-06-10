@@ -128,7 +128,7 @@
 				}
 			}
 
-			function handleScoreChange(player, e, vm, data, node) {
+			function handleScoreChange(player, e, node) {
 				var score = +node.el.value;
 
 				if (isNaN(+score))
@@ -138,7 +138,7 @@
 				vm.redraw();
 			}
 
-			function handleAddClick(e, vm, data, node) {
+			function handleAddClick(e, node) {
 				var name = vm.refs.name.el.value;
 				var score = +vm.refs.score.el.value;
 

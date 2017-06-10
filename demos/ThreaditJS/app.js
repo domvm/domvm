@@ -218,8 +218,8 @@ function CommentReplyView(vm, comment) {
 		return false;
 	}
 
-	function previewReply(e) {
-		tmpComment(e.target.value);
+	function previewReply(e, node) {
+		tmpComment(node.el.value);
 	}
 
 	return function() {

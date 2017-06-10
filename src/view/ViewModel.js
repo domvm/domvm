@@ -36,8 +36,6 @@ export function ViewModel(view, data, key, opts) {			// parent, idx, parentVm
 
 	var hooks = vm.hooks;
 
-//	vm.init(vm);
-
 	if (hooks && hooks.didInit)
 		hooks.didInit.call(vm, vm);
 
@@ -57,7 +55,6 @@ export const ViewModelProto = ViewModel.prototype = {
 	view: null,
 	key: null,
 	data: null,
-	init: null,
 	opts: null,
 	node: null,
 	hooks: null,
@@ -67,8 +64,6 @@ export const ViewModelProto = ViewModel.prototype = {
 	_diff: null,
 
 	config: function(opts) {
-	//	if (opts.init)
-	//		this.init = opts.init;
 		if (opts.diff)
 			this.diff = opts.diff;
 		if (opts.hooks)

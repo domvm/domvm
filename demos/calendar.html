@@ -114,7 +114,7 @@
 				var prevYear = args.year - 1,
 					nextYear = args.year + 1;
 
-				return el(".year", {onclick: {".day": function(e, vm, data, node) { api.selectDate(node.data); }}}, [
+				return el(".year", {onclick: {".day": function(e, node) { api.selectDate(node.data); }}}, [
 					el("header", [
 						el("button.prev", {onclick: [api.loadYear, prevYear]}, "< " + prevYear),
 						el("strong", {style: {fontSize: "18pt"}}, args.year),
