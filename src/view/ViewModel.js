@@ -7,7 +7,8 @@ import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
 import { devNotify } from "./addons/devmode";
 
-export function ViewModel(view, data, key, opts) {			// parent, idx, parentVm
+// view + key serve as the vm's unique identity
+export function ViewModel(view, data, key, opts) {
 	var vm = this;
 
 	vm.view = view;
@@ -19,39 +20,26 @@ export function ViewModel(view, data, key, opts) {			// parent, idx, parentVm
 		vm.config(opts);
 	}
 
-	if (!view.prototype._isClass) {
-		var out = view.call(vm, vm, data, key, opts);
+	var out = isPlainObj(view) ? view : view.call(vm, vm, data, key, opts);
 
-		if (isFunc(out))
-			vm.render = out;
-		else {
-			vm.render = out.render;
-			vm.config(out);
-		}
+	if (isFunc(out))
+		vm.render = out;
+	else {
+		vm.render = out.render;
+		vm.config(out);
 	}
 
-	// these must be created here since debounced per view
+	// these must be wrapped here since they're debounced per view
 	vm._redrawAsync = raft(_ => vm._redraw());
 	vm._updateAsync = raft(newData => vm._update(newData));
 
-	var hooks = vm.hooks;
-
-	if (hooks && hooks.didInit)
-		hooks.didInit.call(vm, vm);
-
-//	this.update(data, parent, idx, parentVm, false);
-
-	// proc opts, evctx, watch
-
-//	this.update = function(data, withRedraw, parent, idx, parentVm) {};
+	vm.init && vm.init(vm, vm, data, key, opts);
 }
 
 export const ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
 
-	_isClass: false,
-
-	// view + key serve as the vm's unique identity
+	init: null,
 	view: null,
 	key: null,
 	data: null,
@@ -64,6 +52,8 @@ export const ViewModelProto = ViewModel.prototype = {
 	_diff: null,
 
 	config: function(opts) {
+		if (opts.init)
+			this.init = opts.init;
 		if (opts.diff)
 			this.diff = opts.diff;
 		if (opts.hooks)

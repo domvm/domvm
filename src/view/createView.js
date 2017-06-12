@@ -8,8 +8,6 @@ export function createView(view, data, key, opts) {
 		opts	= view.opts;
 		view	= view.view;
 	}
-	else if (view.prototype._isClass)
-		return new view(data, key, opts);
 
 	return new ViewModel(view, data, key, opts);
 }
