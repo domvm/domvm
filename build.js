@@ -10,51 +10,51 @@ function getBuilds(name) {
 	return [
 		{
 			build: "pico",
-			contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>element injection<br>raw html<br>vnode refs<br>css objects<br>svg<br>global onevent",
+			contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>element injection<br>raw html<br>vnode refs<br>css objects<br>svg<br>global onevent<br>diff<br>lazyList",
 			descr: "view core<br><br>**This build is unstable by design; features that get decoupled<br>can move to nano+ builds at any commit!**",
 			destub: [],
 		},
 		{
 			build: "nano",
-			contents: "+ `selectorTag`<br> + `autoPx`<br> + `diff`<br> + `patch`<br>",
-			descr: "tpl conveniences:<br>`\"input[type=checkbox].some-class\"`<br>`{style: {width: 20}}`<br>`el(\"div\", el(\"span\", \"foo\")...)`<br><br>optims:<br>`vnode.patch({class: ..., style...})`<br>`vm.diff({vals:...then:...})`",
-			destub: ["cssTag","autoPx"],
+			contents: "+ `selectorTag`<br> + `diff`<br> + `patch`<br>",
+			descr: "`\"input[type=checkbox].some-class\"`<br>`vnode.patch({class: ..., style...})`",
+			destub: ["cssTag"],
 		},
 		{
 			build: "micro",
 			contents: "+ `emit`<br> + `body`<br>",
-			descr: "subview-to-parent events:<br>`vm.emit('myNotif', arg1, arg2...)`<br><br>get child views:<br>`vm.body()` ",
-			destub: ["cssTag","autoPx"],
+			descr: "`vm.emit('myNotif', arg1, arg2...)`<br>`vm.body()`",
+			destub: ["cssTag"],
 		},
 		{
 			build: "mini",
 			contents: "+ `streamCfg`<br> + `streamFlyd`<br> + `prop`<br>",
 			descr: "view reactivity (reduce need for explicit `redraw()`)",
-			destub: ["cssTag","autoPx","isStream","hookStream"],
+			destub: ["cssTag","isStream","hookStream"],
 		},
 		{
 			build: "client",
 			contents: "`mini`<br> + `attach`<br>",
 			descr: "SSR hydration",
-			destub: ["cssTag","autoPx","isStream","hookStream"],
+			destub: ["cssTag","isStream","hookStream"],
 		},
 		{
 			build: "server",
 			contents: "`mini`<br> + `html`<br>",
 			descr: "SSR rendering",
-			destub: ["cssTag","autoPx","isStream","hookStream"],
+			destub: ["cssTag","isStream","hookStream"],
 		},
 		{
 			build: "full",
 			contents: "`mini`<br> + `attach`<br> + `html`<br>",
 			descr: "everything (for tests)",
-			destub: ["cssTag","autoPx","isStream","hookStream"],
+			destub: ["cssTag","isStream","hookStream"],
 		},
 		{
 			build: "dev",
 			contents: "`full`<br> + warnings",
 			descr: "use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior",
-			destub: ["cssTag","autoPx","isStream","hookStream"],
+			destub: ["cssTag","isStream","hookStream"],
 		}
 	].filter(b => name != null ? b.build === name : true);
 }

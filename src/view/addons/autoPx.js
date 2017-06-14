@@ -1,38 +1,45 @@
-import { TRUE } from '../../utils';
+domvm.config({
+	autoPx: (function(unitless) {
+		return function(name, val) {
+			// typeof val === 'number' is faster but fails for numeric strings
+			return !isNaN(val) && !unitless[name] ? (val + "px") : val;
+		};
+	})({
+		animationIterationCount: true,
+		boxFlex: true,
+		boxFlexGroup: true,
+		boxOrdinalGroup: true,
+		columnCount: true,
+		flex: true,
+		flexGrow: true,
+		flexPositive: true,
+		flexShrink: true,
+		flexNegative: true,
+		flexOrder: true,
+		gridRow: true,
+		gridColumn: true,
+		order: true,
+		lineClamp: true,
 
-const unitlessProps = {
-	animationIterationCount: TRUE,
-	boxFlex: TRUE,
-	boxFlexGroup: TRUE,
-	columnCount: TRUE,
-	counterIncrement: TRUE,
-//	fillOpacity: TRUE,
-	flex: TRUE,
-	flexGrow: TRUE,
-	flexOrder: TRUE,
-	flexPositive: TRUE,
-	flexShrink: TRUE,
-	float: TRUE,
-	fontWeight: TRUE,
-	gridColumn: TRUE,
-	lineHeight: TRUE,
-	lineClamp: TRUE,
-	opacity: TRUE,
-	order: TRUE,
-	orphans: TRUE,
-//	stopOpacity: TRUE,
-//	strokeDashoffset: TRUE,
-//	strokeOpacity: TRUE,
-//	strokeWidth: TRUE,
-	tabSize: TRUE,
-	transform: TRUE,
-	transformOrigin: TRUE,
-	widows: TRUE,
-	zIndex: TRUE,
-	zoom: TRUE,
-};
+		borderImageOutset: true,
+		borderImageSlice: true,
+		borderImageWidth: true,
+		fontWeight: true,
+		lineHeight: true,
+		opacity: true,
+		orphans: true,
+		tabSize: true,
+		widows: true,
+		zIndex: true,
+		zoom: true,
 
-export function autoPx(name, val) {
-	// typeof val === 'number' is faster but fails for numeric strings
-	return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
-}
+		fillOpacity: true,
+		floodOpacity: true,
+		stopOpacity: true,
+		strokeDasharray: true,
+		strokeDashoffset: true,
+		strokeMiterlimit: true,
+		strokeOpacity: true,
+		strokeWidth: true
+	})
+});

@@ -153,7 +153,6 @@ el("ul",     {onclick: {".item": [myFn, arg1, arg2]}}, ...) // delegated & param
 
 el("p",      {style: "font-size: 10pt;"}, "Hello")          // style can be a string
 el("p",      {style: {fontSize: "10pt"}}, "Hello")          // or an object (camelCase only)
-el("div",    {style: {width: 35}},        "Hello")          // "px" will be added when needed
 
 el("h1", [                                                  // attrs object is optional
     el("em", "Important!"),

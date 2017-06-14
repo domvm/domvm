@@ -38,12 +38,12 @@
 			// this is render() and is called on every redraw() to regen the template
 			return function() {
 				var props = {
-					style: {height: windowHeight, overflowY: "scroll"},
+					style: {height: windowHeight+"px", overflowY: "scroll"},
 					onscroll: onscroll,
 				};
 
 				var kids = model.items.map(function(item) {
-					return el("div", {style: {color: item.color, height: itemHeight}}, item.color);
+					return el("div", {style: {color: item.color, height: itemHeight+"px"}}, item.color);
 				});
 
 				return el("#win", props, kids);

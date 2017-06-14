@@ -1,8 +1,8 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
 import { createView } from '../createView';
-import { isArr, isPlainObj, isVal, isFunc, TRUE, ENV_DOM } from '../../utils';
+import { isArr, isPlainObj, isVal, isFunc, ENV_DOM } from '../../utils';
 import { isEvProp, isDynProp } from '../utils';
-import { autoPx } from './stubs';
+import { globalCfg } from '../config';
 import { LAZY_LIST } from '../initElementNode';
 
 import { ViewModelProto } from '../ViewModel';
@@ -31,7 +31,7 @@ function styleStr(css) {
 
 	for (var pname in css) {
 		if (css[pname] != null)
-			style += camelDash(pname) + ": " + autoPx(pname, css[pname]) + '; ';
+			style += camelDash(pname) + ": " + globalCfg.autoPx(pname, css[pname]) + '; ';
 	}
 
 	return style;
@@ -42,22 +42,22 @@ function toStr(val) {
 }
 
 const voidTags = {
-    area: TRUE,
-    base: TRUE,
-    br: TRUE,
-    col: TRUE,
-    command: TRUE,
-    embed: TRUE,
-    hr: TRUE,
-    img: TRUE,
-    input: TRUE,
-    keygen: TRUE,
-    link: TRUE,
-    meta: TRUE,
-    param: TRUE,
-    source: TRUE,
-    track: TRUE,
-	wbr: TRUE
+    area: true,
+    base: true,
+    br: true,
+    col: true,
+    command: true,
+    embed: true,
+    hr: true,
+    img: true,
+    input: true,
+    keygen: true,
+    link: true,
+    meta: true,
+    param: true,
+    source: true,
+    track: true,
+	wbr: true
 };
 
 function escHtml(s) {

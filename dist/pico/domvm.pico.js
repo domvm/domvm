@@ -4,7 +4,7 @@
 *
 * domvm.full.js - DOM ViewModel
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (3.x-dev, pico)
+* @preserve https://github.com/leeoniya/domvm (v3.0.0-dev, pico)
 */
 
 (function (global, factory) {
@@ -26,7 +26,6 @@ var VVIEW		= 4;
 var VMODEL		= 5;
 
 var ENV_DOM = typeof window !== "undefined";
-
 var win = ENV_DOM ? window : {};
 var rAF = win.requestAnimationFrame;
 
@@ -289,7 +288,6 @@ function getVm(n) {
 
 // stubs for optional addons that still exist in code so need lightweight impls to run
 function isStreamStub() { return false; }
-function autoPxStub(name, val) { return val; }
 var hookStreamStub = noop;
 
 var tagObj = {};
@@ -443,6 +441,17 @@ function preProcBody(vnew) {
 	}
 }
 
+var globalCfg = {
+	onevent: noop,
+	autoPx: function(name, val) {
+		return val;
+	},
+};
+
+function config(newCfg) {
+	assignObj(globalCfg, newCfg);
+}
+
 // assumes if styles exist both are objects or both are strings
 function patchStyle(n, o) {
 	var ns =     (n.attrs || emptyObj).style;
@@ -459,7 +468,7 @@ function patchStyle(n, o) {
 				{ nv = hookStreamStub(nv, getVm(n)); }
 
 			if (os == null || nv != null && nv !== os[nn])
-				{ n.el.style[nn] = autoPxStub(nn, nv); }
+				{ n.el.style[nn] = globalCfg.autoPx(nn, nv); }
 		}
 
 		// clean old
@@ -604,14 +613,6 @@ function insertBefore(parEl, el, refEl) {
 
 function insertAfter(parEl, el, refEl) {
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
-}
-
-var globalCfg = {
-	onevent: noop,
-};
-
-function config(newCfg) {
-	assignObj(globalCfg, newCfg);
 }
 
 function bindEv(el, type, fn) {
@@ -1292,13 +1293,12 @@ var ViewModelProto = ViewModel.prototype = {
 			{ this.init = opts.init; }
 		if (opts.diff)
 			{ this.diff = opts.diff; }
+
+		// maybe invert assignment order?
 		if (opts.hooks)
-			{ this.hooks = assignObj(this.hooks || {}, opts.hooks); }	// maybe invert assignment order?
+			{ this.hooks = assignObj(this.hooks || {}, opts.hooks); }
 	},
 
-//	_setRef: function() {},
-
-	// as plugins?
 	parent: function() {
 		return getVm(this.node.parent);
 	},
@@ -1328,20 +1328,12 @@ var ViewModelProto = ViewModel.prototype = {
 	},
 
 	_update: updateSync,
-	_redraw: redrawSync,	// non-coalesced / synchronous
-	_redrawAsync: null,		// this is set in constructor per view
+	_redraw: redrawSync,
+	_redrawAsync: null,
 	_updateAsync: null,
 };
 
-/*
-function isEmptyObj(o) {
-	for (var k in o)
-		return false;
-	return true;
-}
-*/
-
-function mount(el, isRoot) {		// , asSub, refEl
+function mount(el, isRoot) {
 	var vm = this;
 
 	if (isRoot) {
@@ -1362,7 +1354,7 @@ function mount(el, isRoot) {		// , asSub, refEl
 		vm._redraw(null, null);
 
 		if (el)
-			{ insertBefore(el, vm.node.el); }			// el.appendChild(vm.node.el);
+			{ insertBefore(el, vm.node.el); }
 	}
 
 	if (el)
@@ -1371,8 +1363,7 @@ function mount(el, isRoot) {		// , asSub, refEl
 	return vm;
 }
 
-// asSub = true means this was called from a sub-routine, so don't drain did* hook queue
-// immediate = true means did* hook will not be queued (usually cause this is a promise resolution)
+// asSub means this was called from a sub-routine, so don't drain did* hook queue
 function unmount(asSub) {
 	var vm = this;
 
@@ -1395,9 +1386,6 @@ function reParent(vm, vold, newParent, newIdx) {
 	return vm;
 }
 
-// level, isRoot?
-// newParent, newIdx
-// ancest by ref, by key
 function redrawSync(newParent, newIdx, withDOM) {
 	var isRedrawRoot = newParent == null;
 	var vm = this;
@@ -1420,10 +1408,8 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	isMounted && vm.hooks && fireHook("willRedraw", vm, vm.data);
 
-	// TODO: allow returning vm.node as no-change indicator
 	var vnew = vm.render.call(vm, vm, vm.data, oldDiff, newDiff);
 
-	// isSame
 	if (vnew === vold)
 		{ return reParent(vm, vold, newParent, newIdx); }
 
@@ -1434,14 +1420,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 	if (vm.key != null && vnew.key !== vm.key)
 		{ vnew.key = vm.key; }
 
-//	console.log(vm.key);
-
 	vm.node = vnew;
 
 	if (newParent) {
 		preProc(vnew, newParent, newIdx, vm);
 		newParent.body[newIdx] = vnew;
-		// todo: bubble refs, etc?
 	}
 	else if (vold && vold.parent) {
 		preProc(vnew, vold.parent, vold.idx, vm);
@@ -1484,29 +1467,19 @@ function redrawSync(newParent, newIdx, withDOM) {
 	return vm;
 }
 
-// withRedraw?
-// this doubles as moveTo
-// will/didUpdate
-function updateSync(newData, newParent, newIdx, withDOM) {			// parentVm
+// this also doubles as moveTo
+// TODO? @withRedraw (prevent redraw from firing)
+function updateSync(newData, newParent, newIdx, withDOM) {
 	var vm = this;
 
 	if (newData != null) {
 		if (vm.data !== newData) {
-			vm.hooks && fireHook("willUpdate", vm, newData);		// willUpdate will be called ahead of willRedraw when data will be replaced
+			vm.hooks && fireHook("willUpdate", vm, newData);
 			vm.data = newData;
-		//	vm.hooks && fireHook("didUpdate", vm, newData);		// should this fire at al?
 		}
 	}
 
-	// TODO: prevent redraw from firing?
-
 	return vm._redraw(newParent, newIdx, withDOM);
-/*
-	if (parentVm != null) {
-		vm.parent = parentVm;
-		parentVm.body.push(vm);
-	}
-*/
 }
 
 function defineElement(tag, arg1, arg2, flags) {
