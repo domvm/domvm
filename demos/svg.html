@@ -39,9 +39,20 @@
 				};
 			}
 
+			function Use(vm) {
+				return function() {
+					return sv("svg", {viewBox: "0 0 400 100"}, [
+						sv("rect#original-rect", {x: "50", y: "20", width: "50", height: "50", fill: "#29e"}),
+						sv("use", {"xlink:href": "#original-rect", x:"75", y:"10"}),
+					]);
+				}
+			}
+
 			var vm2 = domvm.createView(Icon).mount(document.body);
 
 			var vm = domvm.createView(Scene).mount(document.body);
+
+			var vm3 = domvm.createView(Use).mount(document.body);
 
 			var steps = 0;
 			while (steps++ < 80) {

@@ -4,12 +4,19 @@ import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
 import { isStream, hookStream } from './addons/stubs';
 import { devNotify } from "./addons/devmode";
+import { XLINK_NS } from './defineSvgElement';
+
+const XLINKHREF = "xlink:href";
 
 export function remAttr(node, name, asProp) {
 	if (asProp)
 		node.el[name] = "";
-	else
-		node.el.removeAttribute(name);
+	else {
+		if (name === XLINKHREF)
+			node.el.removeAttributeNS(XLINK_NS, "href");
+		else
+			node.el.removeAttribute(name);
+	}
 }
 
 // setAttr
@@ -18,9 +25,13 @@ export function setAttr(node, name, val, asProp, initial) {
 	var el = node.el;
 
 	if (val == null)
-		!initial && remAttr(node, name);		//, asProp?  // will also removeAttr of style: null
-	else if (node.ns != null)
-		el.setAttribute(name, val);
+		!initial && remAttr(node, name, false);		//, asProp?  // will also removeAttr of style: null
+	else if (node.ns != null) {
+		if (name === XLINKHREF)
+			el.setAttributeNS(XLINK_NS, "href", val);
+		else
+			el.setAttribute(name, val);
+	}
 	else if (name === "class")
 		el.className = val;
 	else if (name === "id" || typeof val === "boolean" || asProp)

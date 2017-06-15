@@ -846,11 +846,44 @@ function patchEvent(node, name, nval, oval) {
 		{ bindEv(el, name, wrapHandlers(nval)); }
 }
 
+function defineElement(tag, arg1, arg2, flags) {
+	var attrs, body;
+
+	if (arg2 == null) {
+		if (isPlainObj(arg1))
+			{ attrs = arg1; }
+		else
+			{ body = arg1; }
+	}
+	else {
+		attrs = arg1;
+		body = arg2;
+	}
+
+	return initElementNode(tag, attrs, body, flags);
+}
+
+//export const XML_NS = "http://www.w3.org/2000/xmlns/";
+var SVG_NS = "http://www.w3.org/2000/svg";
+var XLINK_NS = "http://www.w3.org/1999/xlink";
+
+function defineSvgElement(tag, arg1, arg2, flags) {
+	var n = defineElement(tag, arg1, arg2, flags);
+	n.ns = SVG_NS;
+	return n;
+}
+
+var XLINKHREF = "xlink:href";
+
 function remAttr(node, name, asProp) {
 	if (asProp)
 		{ node.el[name] = ""; }
-	else
-		{ node.el.removeAttribute(name); }
+	else {
+		if (name === XLINKHREF)
+			{ node.el.removeAttributeNS(XLINK_NS, "href"); }
+		else
+			{ node.el.removeAttribute(name); }
+	}
 }
 
 // setAttr
@@ -859,9 +892,13 @@ function setAttr(node, name, val, asProp, initial) {
 	var el = node.el;
 
 	if (val == null)
-		{ !initial && remAttr(node, name); }		//, asProp?  // will also removeAttr of style: null
-	else if (node.ns != null)
-		{ el.setAttribute(name, val); }
+		{ !initial && remAttr(node, name, false); }		//, asProp?  // will also removeAttr of style: null
+	else if (node.ns != null) {
+		if (name === XLINKHREF)
+			{ el.setAttributeNS(XLINK_NS, "href", val); }
+		else
+			{ el.setAttribute(name, val); }
+	}
 	else if (name === "class")
 		{ el.className = val; }
 	else if (name === "id" || typeof val === "boolean" || asProp)
@@ -1656,33 +1693,6 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 	}
 
 	return vm._redraw(newParent, newIdx, withDOM);
-}
-
-function defineElement(tag, arg1, arg2, flags) {
-	var attrs, body;
-
-	if (arg2 == null) {
-		if (isPlainObj(arg1))
-			{ attrs = arg1; }
-		else
-			{ body = arg1; }
-	}
-	else {
-		attrs = arg1;
-		body = arg2;
-	}
-
-	return initElementNode(tag, attrs, body, flags);
-}
-
-//export const XML_NS = "http://www.w3.org/2000/xmlns/";
-var SVG_NS = "http://www.w3.org/2000/svg";
-//export const XLINK_NS = "http://www.w3.org/1999/xlink";
-
-function defineSvgElement(tag, arg1, arg2, flags) {
-	var n = defineElement(tag, arg1, arg2, flags);
-	n.ns = SVG_NS;
-	return n;
 }
 
 function defineComment(body) {
