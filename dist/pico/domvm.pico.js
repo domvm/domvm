@@ -4,7 +4,7 @@
 *
 * domvm.full.js - DOM ViewModel
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (v3.0.0-dev, pico)
+* @preserve https://github.com/leeoniya/domvm (3.x-dev, pico)
 */
 
 (function (global, factory) {
@@ -288,6 +288,7 @@ function getVm(n) {
 
 // stubs for optional addons that still exist in code so need lightweight impls to run
 function isStreamStub() { return false; }
+function autoPxStub(name, val) { return val; }
 var hookStreamStub = noop;
 
 var tagObj = {};
@@ -441,17 +442,6 @@ function preProcBody(vnew) {
 	}
 }
 
-var globalCfg = {
-	onevent: noop,
-	autoPx: function(name, val) {
-		return val;
-	},
-};
-
-function config(newCfg) {
-	assignObj(globalCfg, newCfg);
-}
-
 // assumes if styles exist both are objects or both are strings
 function patchStyle(n, o) {
 	var ns =     (n.attrs || emptyObj).style;
@@ -468,7 +458,7 @@ function patchStyle(n, o) {
 				{ nv = hookStreamStub(nv, getVm(n)); }
 
 			if (os == null || nv != null && nv !== os[nn])
-				{ n.el.style[nn] = globalCfg.autoPx(nn, nv); }
+				{ n.el.style[nn] = autoPxStub(nn, nv); }
 		}
 
 		// clean old
@@ -613,6 +603,14 @@ function insertBefore(parEl, el, refEl) {
 
 function insertAfter(parEl, el, refEl) {
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
+}
+
+var globalCfg = {
+	onevent: noop
+};
+
+function config(newCfg) {
+	assignObj(globalCfg, newCfg);
 }
 
 function bindEv(el, type, fn) {
@@ -1050,7 +1048,7 @@ function patch(vnode, donor) {
 	}
 
 	if (vnode.attrs != null || donor.attrs != null)
-		{ patchAttrs(vnode, donor); }
+		{ patchAttrs(vnode, donor, false); }
 
 	// patch events
 

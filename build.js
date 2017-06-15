@@ -10,51 +10,51 @@ function getBuilds(name) {
 	return [
 		{
 			build: "pico",
-			contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>element injection<br>raw html<br>vnode refs<br>css objects<br>svg<br>global onevent<br>diff<br>lazyList",
+			contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>element injection<br>raw html<br>vnode refs<br>css objects<br>svg<br>global onevent<br>diff<br>lazyList<br>",
 			descr: "view core<br><br>**This build is unstable by design; features that get decoupled<br>can move to nano+ builds at any commit!**",
 			destub: [],
 		},
 		{
 			build: "nano",
-			contents: "+ `selectorTag`<br> + `diff`<br> + `patch`<br>",
+			contents: "+ `selectorTag`<br> + `patch`<br>",
 			descr: "`\"input[type=checkbox].some-class\"`<br>`vnode.patch({class: ..., style...})`",
 			destub: ["cssTag"],
 		},
 		{
 			build: "micro",
-			contents: "+ `emit`<br> + `body`<br>",
-			descr: "`vm.emit('myNotif', arg1, arg2...)`<br>`vm.body()`",
-			destub: ["cssTag"],
+			contents: "+ `emit`<br> + `body`<br> + `autoPx`<br> + `defineElementSpread`<br> + `defineSvgElementSpread`<br>",
+			descr: "`vm.emit('myNotif', arg1, arg2...)`<br>`vm.body()`<br>`{style: {width: 20}}`",
+			destub: ["cssTag","autoPx"],
 		},
 		{
 			build: "mini",
 			contents: "+ `streamCfg`<br> + `streamFlyd`<br> + `prop`<br>",
 			descr: "view reactivity (reduce need for explicit `redraw()`)",
-			destub: ["cssTag","isStream","hookStream"],
+			destub: ["cssTag","autoPx","isStream","hookStream"],
 		},
 		{
 			build: "client",
 			contents: "`mini`<br> + `attach`<br>",
 			descr: "SSR hydration",
-			destub: ["cssTag","isStream","hookStream"],
+			destub: ["cssTag","autoPx","isStream","hookStream"],
 		},
 		{
 			build: "server",
 			contents: "`mini`<br> + `html`<br>",
 			descr: "SSR rendering",
-			destub: ["cssTag","isStream","hookStream"],
+			destub: ["cssTag","autoPx","isStream","hookStream"],
 		},
 		{
 			build: "full",
 			contents: "`mini`<br> + `attach`<br> + `html`<br>",
 			descr: "everything (for tests)",
-			destub: ["cssTag","isStream","hookStream"],
+			destub: ["cssTag","autoPx","isStream","hookStream"],
 		},
 		{
 			build: "dev",
-			contents: "`full`<br> + warnings",
+			contents: "`full`<br> + warnings<br>",
 			descr: "use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior",
-			destub: ["cssTag","isStream","hookStream"],
+			destub: ["cssTag","autoPx","isStream","hookStream"],
 		}
 	].filter(b => name != null ? b.build === name : true);
 }

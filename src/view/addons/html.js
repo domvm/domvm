@@ -2,7 +2,7 @@ import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
 import { createView } from '../createView';
 import { isArr, isPlainObj, isVal, isFunc, ENV_DOM } from '../../utils';
 import { isEvProp, isDynProp } from '../utils';
-import { globalCfg } from '../config';
+import { autoPx } from './stubs';
 import { LAZY_LIST } from '../initElementNode';
 
 import { ViewModelProto } from '../ViewModel';
@@ -31,7 +31,7 @@ function styleStr(css) {
 
 	for (var pname in css) {
 		if (css[pname] != null)
-			style += camelDash(pname) + ": " + globalCfg.autoPx(pname, css[pname]) + '; ';
+			style += camelDash(pname) + ": " + autoPx(pname, css[pname]) + '; ';
 	}
 
 	return style;

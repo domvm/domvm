@@ -4,7 +4,7 @@
 *
 * domvm.full.js - DOM ViewModel
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (v3.0.0-dev, client)
+* @preserve https://github.com/leeoniya/domvm (3.x-dev, client)
 */
 
 (function (global, factory) {
@@ -285,6 +285,50 @@ function getVm(n) {
 	return n.vm;
 }
 
+var unitlessProps = {
+	animationIterationCount: true,
+	boxFlex: true,
+	boxFlexGroup: true,
+	boxOrdinalGroup: true,
+	columnCount: true,
+	flex: true,
+	flexGrow: true,
+	flexPositive: true,
+	flexShrink: true,
+	flexNegative: true,
+	flexOrder: true,
+	gridRow: true,
+	gridColumn: true,
+	order: true,
+	lineClamp: true,
+
+	borderImageOutset: true,
+	borderImageSlice: true,
+	borderImageWidth: true,
+	fontWeight: true,
+	lineHeight: true,
+	opacity: true,
+	orphans: true,
+	tabSize: true,
+	widows: true,
+	zIndex: true,
+	zoom: true,
+
+	fillOpacity: true,
+	floodOpacity: true,
+	stopOpacity: true,
+	strokeDasharray: true,
+	strokeDashoffset: true,
+	strokeMiterlimit: true,
+	strokeOpacity: true,
+	strokeWidth: true
+};
+
+function autoPx(name, val) {
+	// typeof val === 'number' is faster but fails for numeric strings
+	return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
+}
+
 var tagCache = {};
 
 var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
@@ -498,17 +542,6 @@ function preProcBody(vnew) {
 	}
 }
 
-var globalCfg = {
-	onevent: noop,
-	autoPx: function(name, val) {
-		return val;
-	},
-};
-
-function config(newCfg) {
-	assignObj(globalCfg, newCfg);
-}
-
 // assumes if styles exist both are objects or both are strings
 function patchStyle(n, o) {
 	var ns =     (n.attrs || emptyObj).style;
@@ -525,7 +558,7 @@ function patchStyle(n, o) {
 				{ nv = hookStream(nv, getVm(n)); }
 
 			if (os == null || nv != null && nv !== os[nn])
-				{ n.el.style[nn] = globalCfg.autoPx(nn, nv); }
+				{ n.el.style[nn] = autoPx(nn, nv); }
 		}
 
 		// clean old
@@ -670,6 +703,14 @@ function insertBefore(parEl, el, refEl) {
 
 function insertAfter(parEl, el, refEl) {
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
+}
+
+var globalCfg = {
+	onevent: noop
+};
+
+function config(newCfg) {
+	assignObj(globalCfg, newCfg);
 }
 
 function bindEv(el, type, fn) {
@@ -1107,7 +1148,7 @@ function patch(vnode, donor) {
 	}
 
 	if (vnode.attrs != null || donor.attrs != null)
-		{ patchAttrs(vnode, donor); }
+		{ patchAttrs(vnode, donor, false); }
 
 	// patch events
 
@@ -1806,6 +1847,37 @@ function nextSubVms(n, accum) {
 
 	return accum;
 }
+
+function defineElementSpread(tag) {
+	var args = arguments;
+	var len = args.length;
+	var body, attrs;
+
+	if (len > 1) {
+		var bodyIdx = 1;
+
+		if (isPlainObj(args[1])) {
+			attrs = args[1];
+			bodyIdx = 2;
+		}
+
+		if (len === bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx]) || attrs && (attrs._flags & LAZY_LIST) === LAZY_LIST))
+			{ body = args[bodyIdx]; }
+		else
+			{ body = sliceArgs(args, bodyIdx); }
+	}
+
+	return initElementNode(tag, attrs, body);
+}
+
+function defineSvgElementSpread() {
+	var n = defineElementSpread.apply(null, arguments);
+	n.ns = SVG_NS;
+	return n;
+}
+
+nano.defineElementSpread = defineElementSpread;
+nano.defineSvgElementSpread = defineSvgElementSpread;
 
 if (typeof flyd !== "undefined") {
 	streamCfg({

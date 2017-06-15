@@ -1,5 +1,5 @@
-import { noop, isArr, cmpArr, cmpObj } from '../../utils';
-import { preProc } from '../preProc';
+import { noop, isArr, cmpArr, cmpObj } from '../utils';
+import { preProc } from './preProc';
 
 export function lazyList(items, cfg) {
 	var len = items.length;

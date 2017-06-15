@@ -1,7 +1,6 @@
 import { isVal, emptyObj } from '../utils';
 import { getVm } from './utils';
-import { isStream, hookStream } from './addons/stubs';
-import { globalCfg } from './config';
+import { autoPx, isStream, hookStream } from './addons/stubs';
 
 // assumes if styles exist both are objects or both are strings
 export function patchStyle(n, o) {
@@ -19,7 +18,7 @@ export function patchStyle(n, o) {
 				nv = hookStream(nv, getVm(n));
 
 			if (os == null || nv != null && nv !== os[nn])
-				n.el.style[nn] = globalCfg.autoPx(nn, nv);
+				n.el.style[nn] = autoPx(nn, nv);
 		}
 
 		// clean old

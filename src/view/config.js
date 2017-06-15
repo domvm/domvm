@@ -1,10 +1,7 @@
 import { noop, assignObj } from '../utils';
 
 export const globalCfg = {
-	onevent: noop,
-	autoPx: function(name, val) {
-		return val;
-	},
+	onevent: noop
 };
 
 export function config(newCfg) {

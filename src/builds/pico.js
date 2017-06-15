@@ -12,7 +12,7 @@ import { defineView } from "../view/defineView";
 import { injectView } from "../view/injectView";
 import { injectElement } from "../view/injectElement";
 
-import { lazyList } from '../view/addons/lazyList';
+import { lazyList } from '../view/lazyList';
 
 import { FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST } from "../view/initElementNode";
 
