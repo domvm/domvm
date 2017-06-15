@@ -399,6 +399,11 @@ var DEVMODE = {
 
 	verbose: true,
 
+	DATA_REPLACED: function(vm, oldData, newData) {
+		var msg = "A view's data was replaced. The data originally passed to the view closure during init is now stale. You may want to rely only on the data passed to render() or vm.data.";
+		return [msg, vm, oldData, newData];
+	},
+
 	UNKEYED_INPUT: function(vnode) {
 		return ["Unkeyed <input> detected. Consider adding a name, id, _key, or _ref attr to avoid accidental DOM recycling between different <input> types.", vnode];
 	},
@@ -1687,6 +1692,9 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 
 	if (newData != null) {
 		if (vm.data !== newData) {
+			{
+				devNotify("DATA_REPLACED", [vm, vm.data, newData]);
+			}
 			vm.hooks && fireHook("willUpdate", vm, newData);
 			vm.data = newData;
 		}

@@ -243,6 +243,9 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 
 	if (newData != null) {
 		if (vm.data !== newData) {
+			if (_DEVMODE) {
+				devNotify("DATA_REPLACED", [vm, vm.data, newData]);
+			}
 			vm.hooks && fireHook("willUpdate", vm, newData);
 			vm.data = newData;
 		}
