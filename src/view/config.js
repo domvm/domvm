@@ -1,9 +1,13 @@
-import { noop, assignObj } from '../utils';
+import { noop } from '../utils';
+import { streamCfg } from './addons/stream';
 
-export const globalCfg = {
-	onevent: noop
-};
+export let onevent = noop;
 
 export function config(newCfg) {
-	assignObj(globalCfg, newCfg);
+	onevent = newCfg.onevent || onevent;
+
+	if (FEAT_STREAM) {
+		if (newCfg.stream)
+			streamCfg(newCfg.stream);
+	}
 }

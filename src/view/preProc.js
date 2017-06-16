@@ -2,7 +2,7 @@ import { TEXT, VVIEW, VMODEL } from './VTYPES';
 import { defineText } from './defineText';
 import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
 import { getVm } from './utils';
-import { isStream, hookStream } from './addons/stubs';
+import { isStream, hookStream } from './addons/stream';
 import { DEEP_REMOVE } from './initElementNode';
 
 function setRef(vm, name, node) {

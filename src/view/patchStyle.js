@@ -1,6 +1,7 @@
 import { isVal, emptyObj } from '../utils';
 import { getVm } from './utils';
-import { autoPx, isStream, hookStream } from './addons/stubs';
+import { autoPx } from './addons/autoPx';
+import { isStream, hookStream } from './addons/stream';
 
 // assumes if styles exist both are objects or both are strings
 export function patchStyle(n, o) {

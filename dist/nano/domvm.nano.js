@@ -271,33 +271,7 @@ function getVm(n) {
 	return n.vm;
 }
 
-var tagCache = {};
-
-var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
-
-//	function VTag() {}
-function cssTag(raw) {
-	var cached = tagCache[raw];
-
-	if (cached == null) {
-		var tag, id, cls, attr;
-
-		tagCache[raw] = cached = {
-			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
-			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
-			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
-			attrs:	null,
-		};
-
-		while (attr = RE_ATTRS.exec(raw)) {
-			if (cached.attrs == null)
-				{ cached.attrs = {}; }
-			cached.attrs[attr[1]] = attr[2] || "";
-		}
-	}
-
-	return cached;
-}
+var isStream = function() { return false };
 
 /* example flyd adapter:
 {
@@ -311,11 +285,38 @@ function cssTag(raw) {
 
 // creates a one-shot self-ending stream that redraws target vm
 // TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
+function hookStream(s, vm) {
+	
+}
 
-// stubs for optional addons that still exist in code so need lightweight impls to run
-function isStreamStub() { return false; }
-function autoPxStub(name, val) { return val; }
-var hookStreamStub = noop;
+var tagCache = {};
+
+var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
+
+function cssTag(raw) {
+	{
+		var cached = tagCache[raw];
+
+		if (cached == null) {
+			var tag, id, cls, attr;
+
+			tagCache[raw] = cached = {
+				tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
+				id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
+				class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
+				attrs:	null,
+			};
+
+			while (attr = RE_ATTRS.exec(raw)) {
+				if (cached.attrs == null)
+					{ cached.attrs = {}; }
+				cached.attrs[attr[1]] = attr[2] || "";
+			}
+		}
+
+		return cached;
+	}
+}
 
 // (de)optimization flags
 
@@ -427,8 +428,8 @@ function preProc(vnew, parent, idx, ownVm) {
 
 	if (isArr(vnew.body))
 		{ preProcBody(vnew); }
-	else if (isStreamStub(vnew.body))
-		{ vnew.body = hookStreamStub(vnew.body, getVm(vnew)); }
+	else if (isStream(vnew.body))
+		{ vnew.body = hookStream(vnew.body, getVm(vnew)); }
 }
 
 function preProcBody(vnew) {
@@ -465,6 +466,10 @@ function preProcBody(vnew) {
 	}
 }
 
+function autoPx(name, val) {
+	{ return val; }
+}
+
 // assumes if styles exist both are objects or both are strings
 function patchStyle(n, o) {
 	var ns =     (n.attrs || emptyObj).style;
@@ -477,11 +482,11 @@ function patchStyle(n, o) {
 		for (var nn in ns) {
 			var nv = ns[nn];
 
-			if (isStreamStub(nv))
-				{ nv = hookStreamStub(nv, getVm(n)); }
+			if (isStream(nv))
+				{ nv = hookStream(nv, getVm(n)); }
 
 			if (os == null || nv != null && nv !== os[nn])
-				{ n.el.style[nn] = autoPxStub(nn, nv); }
+				{ n.el.style[nn] = autoPx(nn, nv); }
 		}
 
 		// clean old
@@ -628,12 +633,12 @@ function insertAfter(parEl, el, refEl) {
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
 }
 
-var globalCfg = {
-	onevent: noop
-};
+var onevent = noop;
 
 function config(newCfg) {
-	assignObj(globalCfg, newCfg);
+	onevent = newCfg.onevent || onevent;
+
+	
 }
 
 function bindEv(el, type, fn) {
@@ -645,7 +650,7 @@ function handle(e, fn, args) {
 	var node = closestVNode(e.target);
 	var vm = getVm(node);
 	var out = fn.apply(null, args.concat([e, node, vm, vm.data]));
-	globalCfg.onevent.call(null, e, node, vm, vm.data, args);
+	onevent.call(null, e, node, vm, vm.data, args);
 
 	if (out === false) {
 		e.preventDefault();
@@ -777,8 +782,8 @@ function patchAttrs(vnode, donor, initial) {
 			var isDyn = isDynProp(vnode.tag, key);
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
-			if (isStreamStub(nval))
-				{ nattrs[key] = nval = hookStreamStub(nval, getVm(vnode)); }
+			if (isStream(nval))
+				{ nattrs[key] = nval = hookStream(nval, getVm(vnode)); }
 
 			if (nval === oval) {}
 			else if (isStyleProp(key))

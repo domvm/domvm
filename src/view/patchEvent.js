@@ -1,7 +1,7 @@
 import { isArr, isFunc, cmpArr } from '../utils';
 import { closestVNode } from './dom';
 import { getVm } from './utils';
-import { globalCfg } from './config';
+import { onevent } from './config';
 import { devNotify } from "./addons/devmode";
 
 function bindEv(el, type, fn) {
@@ -13,7 +13,7 @@ function handle(e, fn, args) {
 	var node = closestVNode(e.target);
 	var vm = getVm(node);
 	var out = fn.apply(null, args.concat([e, node, vm, vm.data]));
-	globalCfg.onevent.call(null, e, node, vm, vm.data, args);
+	onevent.call(null, e, node, vm, vm.data, args);
 
 	if (out === false) {
 		e.preventDefault();

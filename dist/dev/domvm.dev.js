@@ -285,78 +285,6 @@ function getVm(n) {
 	return n.vm;
 }
 
-var unitlessProps = {
-	animationIterationCount: true,
-	boxFlex: true,
-	boxFlexGroup: true,
-	boxOrdinalGroup: true,
-	columnCount: true,
-	flex: true,
-	flexGrow: true,
-	flexPositive: true,
-	flexShrink: true,
-	flexNegative: true,
-	flexOrder: true,
-	gridRow: true,
-	gridColumn: true,
-	order: true,
-	lineClamp: true,
-
-	borderImageOutset: true,
-	borderImageSlice: true,
-	borderImageWidth: true,
-	fontWeight: true,
-	lineHeight: true,
-	opacity: true,
-	orphans: true,
-	tabSize: true,
-	widows: true,
-	zIndex: true,
-	zoom: true,
-
-	fillOpacity: true,
-	floodOpacity: true,
-	stopOpacity: true,
-	strokeDasharray: true,
-	strokeDashoffset: true,
-	strokeMiterlimit: true,
-	strokeOpacity: true,
-	strokeWidth: true
-};
-
-function autoPx(name, val) {
-	// typeof val === 'number' is faster but fails for numeric strings
-	return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
-}
-
-var tagCache = {};
-
-var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
-
-//	function VTag() {}
-function cssTag(raw) {
-	var cached = tagCache[raw];
-
-	if (cached == null) {
-		var tag, id, cls, attr;
-
-		tagCache[raw] = cached = {
-			tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
-			id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
-			class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
-			attrs:	null,
-		};
-
-		while (attr = RE_ATTRS.exec(raw)) {
-			if (cached.attrs == null)
-				{ cached.attrs = {}; }
-			cached.attrs[attr[1]] = attr[2] || "";
-		}
-	}
-
-	return cached;
-}
-
 var isStream = function() { return false };
 
 var streamVal = null;
@@ -381,17 +309,48 @@ function streamCfg(cfg) {
 // creates a one-shot self-ending stream that redraws target vm
 // TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
 function hookStream(s, vm) {
-	var redrawStream = subStream(s, function (val) {
-		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
-		if (redrawStream) {
-			// if vm fully is formed (or mounted vm.node.el?)
-			if (vm.node != null)
-				{ vm.redraw(); }
-			unsubStream(redrawStream);
-		}
-	});
+	{
+		var redrawStream = subStream(s, function (val) {
+			// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
+			if (redrawStream) {
+				// if vm fully is formed (or mounted vm.node.el?)
+				if (vm.node != null)
+					{ vm.redraw(); }
+				unsubStream(redrawStream);
+			}
+		});
 
-	return streamVal(s);
+		return streamVal(s);
+	}
+}
+
+var tagCache = {};
+
+var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
+
+function cssTag(raw) {
+	{
+		var cached = tagCache[raw];
+
+		if (cached == null) {
+			var tag, id, cls, attr;
+
+			tagCache[raw] = cached = {
+				tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
+				id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
+				class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
+				attrs:	null,
+			};
+
+			while (attr = RE_ATTRS.exec(raw)) {
+				if (cached.attrs == null)
+					{ cached.attrs = {}; }
+				cached.attrs[attr[1]] = attr[2] || "";
+			}
+		}
+
+		return cached;
+	}
 }
 
 var DEVMODE = {
@@ -602,6 +561,52 @@ function preProcBody(vnew) {
 	}
 }
 
+var unitlessProps = {
+	animationIterationCount: true,
+	boxFlex: true,
+	boxFlexGroup: true,
+	boxOrdinalGroup: true,
+	columnCount: true,
+	flex: true,
+	flexGrow: true,
+	flexPositive: true,
+	flexShrink: true,
+	flexNegative: true,
+	flexOrder: true,
+	gridRow: true,
+	gridColumn: true,
+	order: true,
+	lineClamp: true,
+
+	borderImageOutset: true,
+	borderImageSlice: true,
+	borderImageWidth: true,
+	fontWeight: true,
+	lineHeight: true,
+	opacity: true,
+	orphans: true,
+	tabSize: true,
+	widows: true,
+	zIndex: true,
+	zoom: true,
+
+	fillOpacity: true,
+	floodOpacity: true,
+	stopOpacity: true,
+	strokeDasharray: true,
+	strokeDashoffset: true,
+	strokeMiterlimit: true,
+	strokeOpacity: true,
+	strokeWidth: true
+};
+
+function autoPx(name, val) {
+	{
+		// typeof val === 'number' is faster but fails for numeric strings
+		return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
+	}
+}
+
 // assumes if styles exist both are objects or both are strings
 function patchStyle(n, o) {
 	var ns =     (n.attrs || emptyObj).style;
@@ -765,12 +770,15 @@ function insertAfter(parEl, el, refEl) {
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
 }
 
-var globalCfg = {
-	onevent: noop
-};
+var onevent = noop;
 
 function config(newCfg) {
-	assignObj(globalCfg, newCfg);
+	onevent = newCfg.onevent || onevent;
+
+	{
+		if (newCfg.stream)
+			{ streamCfg(newCfg.stream); }
+	}
 }
 
 function bindEv(el, type, fn) {
@@ -782,7 +790,7 @@ function handle(e, fn, args) {
 	var node = closestVNode(e.target);
 	var vm = getVm(node);
 	var out = fn.apply(null, args.concat([e, node, vm, vm.data]));
-	globalCfg.onevent.call(null, e, node, vm, vm.data, args);
+	onevent.call(null, e, node, vm, vm.data, args);
 
 	if (out === false) {
 		e.preventDefault();
@@ -1974,17 +1982,6 @@ function defineSvgElementSpread() {
 
 nano.defineElementSpread = defineElementSpread;
 nano.defineSvgElementSpread = defineSvgElementSpread;
-
-if (typeof flyd !== "undefined") {
-	streamCfg({
-		is:		function (s) { return flyd.isStream(s); },
-		val:	function (s) { return s(); },
-		sub:	function (s, fn) { return flyd.on(fn, s); },
-		unsub:	function (s) { return s.end(true); },
-	});
-}
-
-nano.streamCfg = streamCfg;
 
 nano.prop = prop;
 

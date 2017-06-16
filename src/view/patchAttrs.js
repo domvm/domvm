@@ -2,7 +2,7 @@ import { isStyleProp, isSplProp, isEvProp, isDynProp, getVm } from './utils';
 import { isFunc, emptyObj } from '../utils';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
-import { isStream, hookStream } from './addons/stubs';
+import { isStream, hookStream } from './addons/stream';
 import { devNotify } from "./addons/devmode";
 import { XLINK_NS } from './defineSvgElement';
 

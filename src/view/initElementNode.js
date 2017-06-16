@@ -1,6 +1,6 @@
 import { ELEMENT } from './VTYPES';
 import { VNode } from './VNode';
-import { cssTag } from './addons/stubs';
+import { cssTag } from './addons/cssTag';
 import { isSet, isPlainObj } from '../utils';
 import { devNotify } from "./addons/devmode";
 

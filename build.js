@@ -12,49 +12,49 @@ function getBuilds(name) {
 			build: "pico",
 			contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>element injection<br>raw html<br>vnode refs<br>css objects<br>svg<br>global onevent<br>diff<br>lazyList<br>",
 			descr: "view core<br><br>**This build is unstable by design; features that get decoupled<br>can move to nano+ builds at any commit!**",
-			destub: [],
+			feats: [],
 		},
 		{
 			build: "nano",
 			contents: "+ `selectorTag`<br> + `patch`<br>",
 			descr: "`\"input[type=checkbox].some-class\"`<br>`vnode.patch({class: ..., style...})`",
-			destub: ["cssTag"],
+			feats: ["CSSTAG"],
 		},
 		{
 			build: "micro",
 			contents: "+ `emit`<br> + `body`<br> + `autoPx`<br> + `defineElementSpread`<br> + `defineSvgElementSpread`<br>",
 			descr: "`vm.emit('myNotif', arg1, arg2...)`<br>`vm.body()`<br>`{style: {width: 20}}`",
-			destub: ["cssTag","autoPx"],
+			feats: ["CSSTAG","AUTOPX"],
 		},
 		{
 			build: "mini",
-			contents: "+ `streamCfg`<br> + `streamFlyd`<br> + `prop`<br>",
+			contents: "+ `streamCfg`<br> + `prop`<br>",
 			descr: "view reactivity (reduce need for explicit `redraw()`)",
-			destub: ["cssTag","autoPx","isStream","hookStream"],
+			feats: ["CSSTAG","AUTOPX","STREAM"],
 		},
 		{
 			build: "client",
 			contents: "`mini`<br> + `attach`<br>",
 			descr: "SSR hydration",
-			destub: ["cssTag","autoPx","isStream","hookStream"],
+			feats: ["CSSTAG","AUTOPX","STREAM"],
 		},
 		{
 			build: "server",
 			contents: "`mini`<br> + `html`<br>",
 			descr: "SSR rendering",
-			destub: ["cssTag","autoPx","isStream","hookStream"],
+			feats: ["CSSTAG","AUTOPX","STREAM"],
 		},
 		{
 			build: "full",
 			contents: "`mini`<br> + `attach`<br> + `html`<br>",
 			descr: "everything (for tests)",
-			destub: ["cssTag","autoPx","isStream","hookStream"],
+			feats: ["CSSTAG","AUTOPX","STREAM"],
 		},
 		{
 			build: "dev",
 			contents: "`full`<br> + warnings<br>",
 			descr: "use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior",
-			destub: ["cssTag","autoPx","isStream","hookStream"],
+			feats: ["CSSTAG","AUTOPX","STREAM"],
 		}
 	].filter(b => name != null ? b.build === name : true);
 }
@@ -76,16 +76,16 @@ function compile(buildName) {
 
 	var buildCfg = getBuilds(buildName)[0];
 
-	var destubCfg = {include: './src/view/addons/stubs.js'};
-
-	buildCfg.destub.forEach(fnName => { destubCfg[fnName + "Stub as "] = "" });
+	var feats = buildCfg.feats;
 
 	rollup({
 		entry: buildFile,
 		plugins: [
-			replace(destubCfg),
 			replace({
-				_DEVMODE: buildName === "dev" ? true : false
+				_DEVMODE:    buildName === "dev",
+				FEAT_CSSTAG: feats.indexOf("CSSTAG") != -1,
+				FEAT_AUTOPX: feats.indexOf("AUTOPX") != -1,
+				FEAT_STREAM: feats.indexOf("STREAM") != -1,
 			}),
 			buble(),
 		],

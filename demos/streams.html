@@ -15,6 +15,15 @@
 </head>
 <body>
 	<script>
+		domvm.config({
+			stream: {
+				is:		s => flyd.isStream(s),
+				val:	s => s(),
+				sub:	(s, fn) => flyd.on(fn, s),
+				unsub:	s => s.end(true),
+			}
+		});
+
 		var el = domvm.defineElement;
 
 		function randColor() {
