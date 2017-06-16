@@ -7,19 +7,28 @@ A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 ---
 ### Intro
 
-domvm is a flexible, pure-js view layer for your web apps.
+domvm is a flexible, pure-js view layer for building high performance web applications; it'll happily fit into any existing codebase, whatever the structure.
 
-- It's small: [~5k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code, zero-dependency and tooling-free.
-- Its entire API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious, explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
-- It'll happily fit into any existing codebase - whatever the structure.
-- It's well-suited for building [simple widgets](https://rawgit.com/leeoniya/domvm/2.x-dev/demos/calendar.html) and [complex, fault-tolerant applications](http://rawgit.com/leeoniya/domvm/2.x-dev/demos/ThreaditJS/index.html).
+- It's zero-dependency, no-compilation & tooling-free; a single `<script>` tag and you're ready to go.
+- It's small: [~5.5k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code.
+- Its entire, practical API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
+- It's well-suited for building [simple widgets](https://rawgit.com/leeoniya/domvm/3.x-dev/demos/calendar.html) and [complex, fault-tolerant applications](http://rawgit.com/leeoniya/domvm/3.x-dev/demos/ThreaditJS/index.html).
 
-But beware, domvm will not hold your hand nor will it force your hand; it lets you - not the view layer - dictate your app architecture.
-It makes no attempt to cater to DOM or JavaScript novices; your ability to write your app in plain JS and raw DOM is assumed.
+To use domvm you should be comfortable with JavaScript and the DOM; the following code should be fairly self-explanatory:
 
----
+```js
+var el = domvm.defineElement;
 
-Learn either by browsing code: [Demos & Benchmarks](/demos) or reading the docs below.
+var HelloView = {
+    render: function(vm, data) {
+        return el("h1", {style: "color: red;"}, "Hello " + data.name);
+    }
+};
+
+domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
+```
+
+You can learn by playing with the numerous [Demos & Benchmarks](/demos) and reading the docs below.
 
 ---
 
@@ -74,7 +83,6 @@ Some minimalist libs that work well:
 Many [/demos](/demos) are examples of how to use these libs in your apps.
 
 <!--
-- Auto-redraw
 - CSS-scoped views
 -->
 
@@ -129,12 +137,8 @@ var el = domvm.defineElement,
     ie = domvm.injectElement;
 ```
 
-<!-- TODO
-domvm.defineElementSpread
-Additionally, there's a convenience factory `domvm.h` that can discern `defineElement`, `defineView`, `injectView` and `injectElement` based on the provided arguments.
--->
-
 Using `defineText` isn't strictly necessary since all encountered numbers and strings will be automatically converted into `defineText` vnodes for you.
+Additionally, `micro`+ builds provide slower but cleaner `domvm.defineElementSpread` and `domvm.defineSvgElementSpread` which don't require children to be provided as arrays.
 
 Below is a dense reference of most template semantics. **Pay attention!**, there's a lot of neat stuff in here that won't be covered later!
 
@@ -196,8 +200,8 @@ vw(fn, model, key, opts)
 ### Views
 
 What React calls "components", domvm calls "views".
-A view definition is a named function which gives you an isolated working scope for any internal view state or helper functions.
-This function must return a template-generating `render` function or an object containing the same:
+A view definition can be a plain object or a named closure (for isolated working scope, internal view state or helper functions).
+The closure must return a template-generating `render` function or an object containing the same:
 
 <!--
 However, domvm's views can be initialized both imperatively and declaratively prior to being composed within other views or being rendered to the DOM.
@@ -206,6 +210,12 @@ This opens the door to much more interesting architectural patterns when needed,
 
 ```js
 var el = domvm.defineElement;
+
+var SomeView = {
+    render: function() {
+        return el("div", "Hello World!");
+    }
+};
 
 function MyView() {                                         // named view closure
     return function() {                                         // render()
@@ -222,51 +232,18 @@ function YourView() {
 }
 ```
 
-Object-oriented folks may prefer ES6 class-based views. Simply include the ViewModel class wrapper.
-
-```html
-<script src="src/view/addons/ViewClass.js"></script>
-```
-```js
-var el = domvm.defineElement;
-
-class MyView extends View {
-    constructor() {
-        super();
-        this.state = {i: 0};                                // this === vm
-    }
-
-    render() {
-        return el("div", "Hello World! " + this.state.i);
-    }
-}
-
-var vm = new MyView();
-
-// or...
-
-var vm = domvm.createView(MyView);
-```
-
-See [/demos/es6-class-views.html](/demos/es6-class-views.html) for more details.
-
-
-Views can accept an external `model` to render (often referred to as `external state`, `data` or React's `props`):
+Views can accept external `data` to render (React calls this `props`):
 
 ```js
-function MyView(vm, model, key, opts) {
-    return function(vm, model, key, opts) {
-        return el("div", "Hello " + model.firstName + "!");
+function MyView(vm) {
+    return function(vm, data) {
+        return el("div", "Hello " + data.firstName + "!");
     };
 }
 ```
 
-- `vm` is this views's `ViewModel`; it's the created instance of `MyView` and serves the same purpose as `this` within an ES6 React component. The `vm` provides the control surface/API to this view and can also expose a user-defined API for external view manipulation.
-- `model` is the data passed in by a parent view.
-- `key` may be defined by a parent view and is also copied down to this view's root VNode.
-- `opts` can be used to pass in data that you may not want to put inside `model`. `opts.diff` and `opts.hooks` can be used to externally define lifecycle hooks and redraw optimizations.
-
-Note the `render` function has the same signature as the view closure (more on "why" below).
+`vm` is this views's `ViewModel`; it's the created instance of `MyView` and serves the same purpose as `this` within an ES6 React component.
+The `vm` provides the control surface/API to this view and can expose a user-defined API for external view manipulation.
 
 <!--
 Why does `render` have the same signature as the view closure?
@@ -279,11 +256,11 @@ Relying on `render`'s args is similar to React's functional components, while us
 Rendering a view to the DOM is called mounting. To mount a top-level view, we create it from a view definition:
 
 ```js
-var model = {
+var data = {
     firstName: "Leon"
 };
 
-var vm = domvm.createView(MyView, model);
+var vm = domvm.createView(MyView, data);
 
 vm.mount(document.body);            // appends into target
 ```
@@ -296,58 +273,65 @@ var placeholder = document.getElementById("widget");
 vm.mount(placeholder, true);        // replaces placeholder
 ```
 
-When a model mutates, you can request to redraw the view, optionally passing a boolean `sync` flag to force a synchronous redraw.
+When your data changes, you can request to redraw the view, optionally passing a boolean `sync` flag to force a synchronous redraw.
 
 ```js
 vm.redraw(sync);
 ```
 
-If you need to *replace* a view's model (as with immutable data structures), you can use `vm.update`, which will also redraw.
-If replacing a model, make sure you do not internally use the `model` passed to the view closure, since this cannot be changed.
-Instead, use the `model` argument provided to `render(vm, model, key)` or `vm.model` which will be replaced as needed.
+If you need to *replace* a view's data (as with immutable structures), you can use `vm.update`, which will also redraw.
+
+<!--
+If replacing data, make sure you do not internally use the `data` passed to the view closure, since this cannot be changed.
+Instead, use the `model` argument provided to `render(vm, data, key)` or `vm.data` which is always kept up-to-date.
 
 ```js
-vm.update(newModel, sync);
+vm.update(newData, sync);
 ```
+-->
 
 Of course, you can nest views. This can be done either declaratively or via injection of any already-initialized view:
 
 ```js
-function ViewA(vm, model) {
-    return function() {
+var el = domvm.defineElement,
+    vw = domvm.defineView,
+    iv = domvm.injectView;
+
+function ViewA(vm) {
+    return function(vm, dataA) {
         return el("div", [
-            el("strong", modelA.test),
-            vw(ViewB, modelA.modelB),               // implicit/declarative view
-            iv(model.viewC),                        // injected explicit view
+            el("strong", dataA.test),
+            vw(ViewB, dataA.dataB),               // implicit/declarative view
+            iv(data.viewC),                         // injected explicit view
         ]);
     };
 }
 
-function ViewB(vm, model) {
-    return function() {
-        return el("em", model.test2);
+function ViewB(vm) {
+    return function(vm, dataB) {
+        return el("em", dataB.test2);
     };
 }
 
-function ViewC(vm, model) {
-    return function() {
-        return el("em", model.test3);
+function ViewC(vm) {
+    return function(vm, dataC) {
+        return el("em", dataC.test3);
     };
 }
 
-var modelC = {
+var dataC = {
     test3: 789,
 };
 
-var modelA = {
+var dataA = {
     test: 123,
-    modelB: {
+    dataB: {
         test2: 456,
     },
-    viewC: domvm.createView(ViewC, modelC),
+    viewC: domvm.createView(ViewC, dataC),
 };
 
-var vmA = domvm.createView(ViewA, modelA).mount(document.body);
+var vmA = domvm.createView(ViewA, dataA).mount(document.body);
 ```
 
 ---
@@ -501,7 +485,7 @@ domvm.config({
 ---
 ### Lifecycle Hooks
 
-**Demo:** [lifecycle-hooks](https://rawgit.com/leeoniya/domvm/2.x-dev/demos/lifecycle-hooks.html) different hooks animate in/out with different colors.
+**Demo:** [lifecycle-hooks](https://rawgit.com/leeoniya/domvm/3.x-dev/demos/lifecycle-hooks.html) different hooks animate in/out with different colors.
 
 **Node-level**
 
@@ -518,28 +502,9 @@ Node-level `will*` hooks allow a promise/thennable return and can delay the even
 
 Usage: `vm.hook({willMount: ...})` or `return {render: ..., hooks: {willMount: ...}}`
 
-- didInit (after view's closure/constructor)
 - willUpdate (before views's model is replaced)
 - will/didRedraw
 - will/didMount (dom insertion)
 - will/didUnmount (dom removal)
 
 View-level `will*` hooks are not yet promise handling, so cannot be used for delay, but you can just rely on the view's root node's hooks to accomplish similar goals.
-
-
-
-
-test render return vm.node
-test new diff w/patch
-
-
-
-lazyList -> lazy?
-
-
-
-conditional features (diff)
-
-hook cleanup & extract
-
-diff, patch, stream
