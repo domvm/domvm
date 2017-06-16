@@ -256,8 +256,8 @@ var R = createRouter({
 		if (V != null) return;
 
 		var hooks = {
-			willRedraw: vm => console.time("redraw vm #" + vm.id),
-			didRedraw: vm => console.timeEnd("redraw vm #" + vm.id),
+			willRedraw: vm => console.time("redraw"),
+			didRedraw: vm => console.timeEnd("redraw"),
 		};
 
 		V = domvm.createView(ThreaditView, null, null, {hooks: hooks}).mount(document.body);
