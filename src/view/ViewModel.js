@@ -33,7 +33,7 @@ export function ViewModel(view, data, key, opts) {
 	vm._redrawAsync = raft(_ => vm._redraw());
 	vm._updateAsync = raft(newData => vm._update(newData));
 
-	vm.init && vm.init(vm, vm, data, key, opts);
+	vm.init && vm.init.call(vm, vm, data, key, opts);
 }
 
 export const ViewModelProto = ViewModel.prototype = {
