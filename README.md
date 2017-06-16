@@ -134,11 +134,13 @@ var el = domvm.defineElement,
     sv = domvm.defineSvgElement,
     vw = domvm.defineView,
     iv = domvm.injectView,
-    ie = domvm.injectElement;
+    ie = domvm.injectElement,
+    // micro+ builds only:
+    el2 = domvm.defineElementSpread,
+    sv2 = domvm.defineSvgElementSpread;
 ```
 
 Using `defineText` isn't strictly necessary since all encountered numbers and strings will be automatically converted into `defineText` vnodes for you.
-Additionally, `micro`+ builds provide slower but cleaner `domvm.defineElementSpread` and `domvm.defineSvgElementSpread` which don't require children to be provided as arrays.
 
 Below is a dense reference of most template semantics. **Pay attention!**, there's a lot of neat stuff in here that won't be covered later!
 
