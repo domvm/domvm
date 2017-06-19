@@ -1,13 +1,5 @@
 import { ViewModelProto } from '../ViewModel';
-import { isArr } from '../../utils';		// defProp
-
-/*
-defProp(ViewModelProto, 'body', {
-	get: function() {
-		return nextSubVms(this.node, []);
-	}
-});
-*/
+import { isArr } from '../../utils';
 
 ViewModelProto.body = function() {
 	return nextSubVms(this.node, []);

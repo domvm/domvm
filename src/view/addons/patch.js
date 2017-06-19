@@ -21,7 +21,6 @@ export function patch(o, n) {
 
 		preProc(n, o.parent, o.idx, null);
 		o.parent.body[o.idx] = n;
-//		o.parent = o.el = o.body = null;		// helps gc?
 		fullPatch(n, o);
 		drainDidHooks(getVm(n));
 	}
@@ -42,6 +41,4 @@ export function patch(o, n) {
 
 		patchAttrs(o, donor);
 	}
-
-//	return o;
 }

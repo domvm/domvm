@@ -273,14 +273,6 @@ function getVm(n) {
 
 var isStream = function() { return false };
 
-/* example flyd adapter:
-{
-	is:		s => flyd.isStream(s),
-	val:	s => s(),
-	sub:	(s,fn) => flyd.on(fn, s),
-	unsub:	s => s.end(),
-}
-*/
 
 
 // creates a one-shot self-ending stream that redraws target vm

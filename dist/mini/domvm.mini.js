@@ -291,14 +291,6 @@ var streamVal = null;
 var subStream = null;
 var unsubStream = null;
 
-/* example flyd adapter:
-{
-	is:		s => flyd.isStream(s),
-	val:	s => s(),
-	sub:	(s,fn) => flyd.on(fn, s),
-	unsub:	s => s.end(),
-}
-*/
 function streamCfg(cfg) {
 	isStream	= cfg.is;
 	streamVal	= cfg.val;
@@ -1775,7 +1767,6 @@ function patch$1(o, n) {
 
 		preProc(n, o.parent, o.idx, null);
 		o.parent.body[o.idx] = n;
-//		o.parent = o.el = o.body = null;		// helps gc?
 		patch(n, o);
 		drainDidHooks(getVm(n));
 	}
@@ -1796,8 +1787,6 @@ function patch$1(o, n) {
 
 		patchAttrs(o, donor);
 	}
-
-//	return o;
 }
 
 ViewModelProto.events = null;
@@ -1836,14 +1825,6 @@ function on(evName, fn) {
 			{ t.on(evName, evs[evName]); }
 	}
 }
-
-/*
-defProp(ViewModelProto, 'body', {
-	get: function() {
-		return nextSubVms(this.node, []);
-	}
-});
-*/
 
 ViewModelProto.body = function() {
 	return nextSubVms(this.node, []);
