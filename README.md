@@ -177,8 +177,8 @@ el("h1", [                                                  // attrs object is o
 ])
 
 el("#ui", [
-    vw(NavBarView, navbar),                                 // sub-view w/model
-    vw(PanelView, panel, "panelA"),                         // sub-view w/model & key
+    vw(NavBarView, navbar),                                 // sub-view w/data
+    vw(PanelView, panel, "panelA"),                         // sub-view w/data & key
     iv(someOtherView),                                      // injected external ViewModel
 ])
 
@@ -247,14 +247,6 @@ function MyView(vm) {
 `vm` is this views's `ViewModel`; it's the created instance of `MyView` and serves the same purpose as `this` within an ES6 React component.
 The `vm` provides the control surface/API to this view and can expose a user-defined API for external view manipulation.
 
-<!--
-Why does `render` have the same signature as the view closure?
-In pure stateless views or ones with immutability, `render`'s arguments may change between redraws while the closure's arguments are fixated once at initialization.
-If your view is stateful and permanently bound to a single model (more on this later), the closure's arguments can be used, otherwise they may become stale.
-Which arguments are appropriate to use can be decided on a view-by-view basis and will depend on how the data/model is expected to flow into each view.
-Relying on `render`'s args is similar to React's functional components, while using the closure's args is similar to using React's ES6 class components.
--->
-
 Rendering a view to the DOM is called mounting. To mount a top-level view, we create it from a view definition:
 
 ```js
@@ -281,16 +273,11 @@ When your data changes, you can request to redraw the view, optionally passing a
 vm.redraw(sync);
 ```
 
-If you need to *replace* a view's data (as with immutable structures), you can use `vm.update`, which will also redraw.
-
-<!--
-If replacing data, make sure you do not internally use the `data` passed to the view closure, since this cannot be changed.
-Instead, use the `model` argument provided to `render(vm, data, key)` or `vm.data` which is always kept up-to-date.
+If you need to *replace* a view's data (as with immutable structures), you should use `vm.update`, which will also redraw.
 
 ```js
 vm.update(newData, sync);
 ```
--->
 
 Of course, you can nest views. This can be done either declaratively or via injection of any already-initialized view:
 
