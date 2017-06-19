@@ -1,11 +1,15 @@
+import { isFunc } from '../../utils';
+
 export const DEVMODE = {
 	enabled: true,
 
 	verbose: true,
 
 	DATA_REPLACED: function(vm, oldData, newData) {
-		var msg = "A view's data was replaced. The data originally passed to the view closure during init is now stale. You may want to rely only on the data passed to render() or vm.data.";
-		return [msg, vm, oldData, newData];
+		if (isFunc(vm.view) && vm.view.length > 1) {
+			var msg = "A view's data was replaced. The data originally passed to the view closure during init is now stale. You may want to rely only on the data passed to render() or vm.data.";
+			return [msg, vm, oldData, newData];
+		}
 	},
 
 	UNKEYED_INPUT: function(vnode) {

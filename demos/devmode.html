@@ -36,6 +36,7 @@
 					vw(View2, {}),
 					vw(View2, {}, 'mooKey'),
 					subView3 ? vw(View3) : null,
+					vw(View4, {}),
 					el("input", attrs),
 				]);
 			}
@@ -56,6 +57,12 @@
 
 			return function() {
 				return el("em", "View3");
+			}
+		}
+
+		function View4(vm, data) {
+			return function() {
+				return el("em", "View4");
 			}
 		}
 
