@@ -1378,18 +1378,22 @@ function ViewModel(view, data, key, opts) {
 var ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
 
-	init: null,
-	view: null,
-	key: null,
-	data: null,
-	opts: null,
-	node: null,
-	hooks: null,
-	render: null,
+	_diff:	null,	// diff cache
 
-	// diff cache
-	_diff: null,
+	init:	null,
+	view:	null,
+	key:	null,
+	data:	null,
+	state:	null,
+	api:	null,
+	opts:	null,
+	node:	null,
+	hooks:	null,
+	refs:	null,
+	render:	null,
 
+	mount: mount,
+	unmount: unmount,
 	config: function(opts) {
 		if (opts.init)
 			{ this.init = opts.init; }
@@ -1400,11 +1404,9 @@ var ViewModelProto = ViewModel.prototype = {
 		if (opts.hooks)
 			{ this.hooks = assignObj(this.hooks || {}, opts.hooks); }
 	},
-
 	parent: function() {
 		return getVm(this.node.parent);
 	},
-
 	root: function() {
 		var p = this.node;
 
@@ -1413,11 +1415,6 @@ var ViewModelProto = ViewModel.prototype = {
 
 		return p.vm;
 	},
-
-	api: null,
-	refs: null,
-	mount: mount,
-	unmount: unmount,
 	redraw: function(sync) {
 		var vm = this;
 		sync ? vm._redraw() : vm._redrawAsync();
