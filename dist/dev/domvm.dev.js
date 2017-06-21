@@ -387,7 +387,7 @@ var DEVMODE = {
 };
 
 function devNotify(key, args) {
-	if (DEVMODE.enabled) {
+	if (DEVMODE.enabled && isFunc(DEVMODE[key])) {
 		var msgArgs = DEVMODE[key].apply(null, args);
 
 		if (msgArgs) {
