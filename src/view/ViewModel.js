@@ -5,7 +5,16 @@ import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, ra
 import { repaint, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
-import { devNotify } from "./addons/devmode";
+import { devNotify, DEVMODE } from "./addons/devmode";
+import { DOMInstr } from "./addons/dominstr";
+
+var instr = null;
+
+if (_DEVMODE) {
+	if (DEVMODE.mutations) {
+		instr = new DOMInstr(true);
+	}
+}
 
 // view + key serve as the vm's unique identity
 export function ViewModel(view, data, key, opts) {
@@ -96,6 +105,11 @@ export const ViewModelProto = ViewModel.prototype = {
 function mount(el, isRoot) {
 	var vm = this;
 
+	if (_DEVMODE) {
+		if (DEVMODE.mutations)
+			instr.start();
+	}
+
 	if (isRoot) {
 		clearChildren({el: el, flags: 0});
 
@@ -119,6 +133,11 @@ function mount(el, isRoot) {
 
 	if (el)
 		drainDidHooks(vm);
+
+	if (_DEVMODE) {
+		if (DEVMODE.mutations)
+			console.log(instr.end());
+	}
 
 	return vm;
 }
@@ -155,6 +174,9 @@ function redrawSync(newParent, newIdx, withDOM) {
 		// was mounted (has node and el), but el no longer has parent (unmounted)
 		if (isRedrawRoot && vm.node && vm.node.el && !vm.node.el.parentNode)
 			devNotify("UNMOUNTED_REDRAW", [vm]);
+
+		if (isRedrawRoot && DEVMODE.mutations && isMounted)
+			instr.start();
 	}
 
 	var vold = vm.node, oldDiff, newDiff;
@@ -229,6 +251,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	if (isRedrawRoot && isMounted)
 		drainDidHooks(vm);
+
+	if (_DEVMODE) {
+		if (isRedrawRoot && DEVMODE.mutations && isMounted)
+			console.log(instr.end());
+	}
 
 	return vm;
 }

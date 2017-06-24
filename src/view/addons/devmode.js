@@ -1,9 +1,11 @@
 import { isFunc } from '../../utils';
 
 export const DEVMODE = {
-	enabled: true,
+	warnings: true,
 
 	verbose: true,
+
+	mutations: true,
 
 	DATA_REPLACED: function(vm, oldData, newData) {
 		if (isFunc(vm.view) && vm.view.length > 1) {
@@ -42,7 +44,7 @@ export const DEVMODE = {
 }
 
 export function devNotify(key, args) {
-	if (DEVMODE.enabled && isFunc(DEVMODE[key])) {
+	if (DEVMODE.warnings && isFunc(DEVMODE[key])) {
 		var msgArgs = DEVMODE[key].apply(null, args);
 
 		if (msgArgs) {

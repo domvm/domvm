@@ -1,6 +1,6 @@
 QUnit.config.reorder = false;
 
-domvm.DEVMODE.verbose = false;
+//domvm.DEVMODE.verbose = false;
 
 var	el = domvm.defineElement,
 	tx = domvm.defineText,

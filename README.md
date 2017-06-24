@@ -113,7 +113,8 @@ If you're new to domvm, the [dev build](/dist/dev/domvm.dev.js) is recommended f
 
 There are a couple config options:
 
-- `domvm.DEVMODE.enabled = false` will disable all warnings.
+- `domvm.DEVMODE.mutations = false` will disable DOM mutation logging.
+- `domvm.DEVMODE.warnings = false` will disable all warnings.
 - `domvm.DEVMODE.verbose = false` will suppress the explanations, but still leave the error names & object info.
 - `domvm.DEVMODE.UNKEYED_INPUT = false` will disable only these warnings. The full list can be found in [devmode.js](/src/view/addons/devmode.js).
 
