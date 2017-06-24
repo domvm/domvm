@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "benchmark": "^2.1.4",
+    "cliff": "^0.1.10",
+    "domvm": "git://github.com/leeoniya/domvm.git#4d6e6cbaa3a12587f838316a7532b9a9033d6947",
+    "inferno": "^3.6.1",
+    "inferno-component": "^3.6.1",
+    "inferno-server": "^3.6.1",
+    "preact": "^8.1.0",
+    "preact-render-to-string": "^3.6.3",
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1",
+    "vidom": "^0.9.15",
+    "vue": "^2.3.4",
+    "vue-server-renderer": "^2.3.4"
+  },
+  "scripts": {
+    "start": "SET NODE_ENV=production && node index.js"
+  }
+}
