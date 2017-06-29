@@ -580,8 +580,12 @@ function clearChildren(parent) {
 	if ((parent.flags & DEEP_REMOVE) === 0)
 		{ parEl.textContent = null; }
 	else {
-		while (parEl.firstChild)
-			{ removeChild(parEl, parEl.firstChild); }
+		var el = parEl.firstChild;
+
+		do {
+			var next = nextSib(el);
+			removeChild(parEl, el);
+		} while (el = next);
 	}
 }
 
