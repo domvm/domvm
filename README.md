@@ -28,10 +28,12 @@ var HelloView = {
 domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 ```
 
-You can learn by playing with the numerous [Demos & Benchmarks](http://leeoniya.github.io/domvm/) and reading the docs below.
+---
+### [Demo Playground](http://leeoniya.github.io/domvm/)
+
+![demo playground](/playground.png)
 
 ---
-
 ### Documentation
 
 - [What's Missing?](#whats-missing)
