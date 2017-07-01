@@ -1309,7 +1309,7 @@ function ViewModel(view, data, key, opts) {
 	vm._redrawAsync = raft(function (_) { return vm._redraw(); });
 	vm._updateAsync = raft(function (newData) { return vm._update(newData); });
 
-	vm.init && vm.init.call(vm, vm, data, key, opts);
+	vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
 }
 
 var ViewModelProto = ViewModel.prototype = {
