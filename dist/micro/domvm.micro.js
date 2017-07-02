@@ -388,7 +388,7 @@ function initElementNode(tag, attrs, body, flags) {
 			else if (isSet(mergedAttrs.id))
 				{ node.key = mergedAttrs.id; }
 			else if (isSet(mergedAttrs.name))
-				{ node.key = mergedAttrs.name; }
+				{ node.key = mergedAttrs.name + (mergedAttrs.type == "radio" ? mergedAttrs.value : ""); }
 		}
 	}
 
