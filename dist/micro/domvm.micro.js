@@ -388,7 +388,7 @@ function initElementNode(tag, attrs, body, flags) {
 			else if (isSet(mergedAttrs.id))
 				{ node.key = mergedAttrs.id; }
 			else if (isSet(mergedAttrs.name))
-				{ node.key = mergedAttrs.name; }
+				{ node.key = mergedAttrs.name + (mergedAttrs.type == "radio" ? mergedAttrs.value : ""); }
 		}
 	}
 
@@ -1399,14 +1399,21 @@ var ViewModelProto = ViewModel.prototype = {
 	mount: mount,
 	unmount: unmount,
 	config: function(opts) {
+		var t = this;
+
 		if (opts.init)
-			{ this.init = opts.init; }
+			{ t.init = opts.init; }
 		if (opts.diff)
-			{ this.diff = opts.diff; }
+			{ t.diff = opts.diff; }
 
 		// maybe invert assignment order?
 		if (opts.hooks)
-			{ this.hooks = assignObj(this.hooks || {}, opts.hooks); }
+			{ t.hooks = assignObj(t.hooks || {}, opts.hooks); }
+
+		{
+			if (opts.events)
+				{ t.events = assignObj(t.events || {}, opts.events); }
+		}
 	},
 	parent: function() {
 		return getVm(this.node.parent);
@@ -1759,7 +1766,6 @@ function patch$1(o, n) {
 
 ViewModelProto.events = null;
 ViewModelProto.emit = emit;
-ViewModelProto.on = on;
 
 function emit(evName) {
 	var arguments$1 = arguments;
@@ -1777,21 +1783,6 @@ function emit(evName) {
 		}
 
 	} while (targ = targ.parent());
-}
-
-function on(evName, fn) {
-	var t = this;
-
-	if (t.events == null)
-		{ t.events = {}; }
-
-	if (isVal(evName))
-		{ t.events[evName] = fn; }
-	else {
-		var evs = evName;
-		for (var evName in evs)
-			{ t.on(evName, evs[evName]); }
-	}
 }
 
 ViewModelProto.body = function() {

@@ -1,0 +1,48 @@
+header {
+	text-align: center;
+}
+
+.month {
+	float: left;
+	margin: 10px;
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+.month caption {
+	font-size: 14pt;
+	font-weight: bold;
+	padding-bottom: 10px;
+}
+
+.day {
+	text-align: right;
+}
+
+.day, th {
+	padding: 3px;
+}
+
+.day.sel {
+	background: yellow;
+}
+
+.day:hover {
+	cursor: pointer;
+	outline: 1px solid red;
+}
+
+.day.dim {
+	color: silver;
+	pointer-events: none;
+}
+
+.day.dim:hover {
+	cursor: default;
+	outline: none;
+}
+
+.prev,
+.next {
+	margin: 20px;
+}

@@ -24,37 +24,37 @@ function getBuilds(name) {
 			build: "micro",
 			contents: "+ `emit`<br> + `body`<br> + `autoPx`<br> + `defineElementSpread`<br> + `defineSvgElementSpread`<br>",
 			descr: "`vm.emit('myNotif', arg1, arg2...)`<br>`vm.body()`<br>`{style: {width: 20}}`",
-			feats: ["CSSTAG","AUTOPX"],
+			feats: ["CSSTAG","AUTOPX","EMIT"],
 		},
 		{
 			build: "mini",
 			contents: "+ `stream`<br> + `prop`<br>",
 			descr: "view reactivity (reduce need for explicit `redraw()`)",
-			feats: ["CSSTAG","AUTOPX","STREAM"],
+			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
 		},
 		{
 			build: "client",
 			contents: "`mini`<br> + `attach`<br>",
 			descr: "SSR hydration",
-			feats: ["CSSTAG","AUTOPX","STREAM"],
+			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
 		},
 		{
 			build: "server",
 			contents: "`mini`<br> + `html`<br>",
 			descr: "SSR rendering",
-			feats: ["CSSTAG","AUTOPX","STREAM"],
+			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
 		},
 		{
 			build: "full",
 			contents: "`mini`<br> + `attach`<br> + `html`<br>",
 			descr: "everything (for tests)",
-			feats: ["CSSTAG","AUTOPX","STREAM"],
+			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
 		},
 		{
 			build: "dev",
 			contents: "`full`<br> + warnings<br>",
 			descr: "use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior",
-			feats: ["CSSTAG","AUTOPX","STREAM"],
+			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
 		}
 	].filter(b => name != null ? b.build === name : true);
 }
@@ -82,10 +82,11 @@ function compile(buildName) {
 		entry: buildFile,
 		plugins: [
 			replace({
-				_DEVMODE:    buildName === "dev",
-				FEAT_CSSTAG: feats.indexOf("CSSTAG") != -1,
-				FEAT_AUTOPX: feats.indexOf("AUTOPX") != -1,
-				FEAT_STREAM: feats.indexOf("STREAM") != -1,
+				_DEVMODE:		buildName === "dev",
+				FEAT_CSSTAG:	feats.indexOf("CSSTAG") != -1,
+				FEAT_AUTOPX:	feats.indexOf("AUTOPX") != -1,
+				FEAT_EMIT:		feats.indexOf("EMIT") != -1,
+				FEAT_STREAM:	feats.indexOf("STREAM") != -1,
 			}),
 			buble(),
 		],
