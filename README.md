@@ -12,7 +12,7 @@ domvm is a flexible, pure-js view layer for building high performance web applic
 - It's zero-dependency, no-compilation & tooling-free; a single `<script>` tag and you're ready to go. Supports IE9+.
 - It's small: [~5.5k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code. [52x faster SSR](/demos/bench/ssr) vs React.
 - Its entire, practical API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
-- It's well-suited for building [simple widgets](http://leeoniya.github.io/domvm/playground/#calendar) and [complex, fault-tolerant applications](http://rawgit.com/leeoniya/domvm/3.x-dev/demos/ThreaditJS/index.html).
+- It's well-suited for building [simple widgets](http://leeoniya.github.io/domvm/demos/playground/#calendar) and [complex, fault-tolerant applications](http://leeoniya.github.io/domvm/demos/ThreaditJS).
 
 To use domvm you should be comfortable with JavaScript and the DOM; the following code should be fairly self-explanatory:
 
@@ -29,7 +29,7 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 ```
 
 ---
-### [Demo Playground](http://leeoniya.github.io/domvm/)
+### [Demo Playground](http://leeoniya.github.io/domvm/demos)
 
 ![demo playground](/playground.png)
 
@@ -346,7 +346,7 @@ Sub-views carry a bit of performance overhead and should be used when the follow
 - Isolated redraw (as a perf optimization)
 - Synchronized redraw of disjoint views
 
-As an example, the distinction can be discussed in terms of the [calendar demo](http://leeoniya.github.io/domvm/playground/#calendar). Its implementation is a single monolithic view with internal sub-template generating functions. Some may prefer to split up the months into a sub-view called MonthView, which would bring the total view count to 13. Others may be tempted to split each day into a DayView, but this would be a mistake as it would create 504 + 12 + 1 views, each incuring a slight performance hit for no reason.
+As an example, the distinction can be discussed in terms of the [calendar demo](http://leeoniya.github.io/domvm/demos/playground/#calendar). Its implementation is a single monolithic view with internal sub-template generating functions. Some may prefer to split up the months into a sub-view called MonthView, which would bring the total view count to 13. Others may be tempted to split each day into a DayView, but this would be a mistake as it would create 504 + 12 + 1 views, each incuring a slight performance hit for no reason.
 
 The general advice is, restrict your views to complex, building-block-level, stateful components and use sub-template generators for readability and DRY purposes; a button should not be a view.
 

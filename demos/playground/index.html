@@ -1,0 +1,219 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="x-ua-compatible" content="ie=edge">
+		<title>domvm Playground</title>
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<style>
+			html {
+				box-sizing: border-box;
+			}
+
+			*,
+			*:before,
+			*:after {
+				box-sizing: inherit;
+			}
+
+			body {
+				margin: 0;
+			}
+
+			iframe {
+				border: none;
+			}
+
+			main {
+				position: fixed;
+				height: 100%;
+				width: 100%;
+			}
+
+			main > * {
+				height: 100%;
+				display: inline-block;
+				vertical-align: top;
+			}
+
+			#htmljs {
+				width: 50%;
+			}
+
+			#html {
+				height: 10%;
+			}
+
+			#js {
+				height: 90%;
+			}
+
+			#css  {
+				width: 20%;
+			}
+
+			#result {
+				width: 30%;
+			}
+		</style>
+	</head>
+	<body>
+		<script src="codemirror/lib/codemirror.min.js"></script>
+		<script src="codemirror/addon/edit/matchbrackets.js"></script>
+		<script src="codemirror/addon/scroll/simplescrollbars.js"></script>
+		<script src="codemirror/addon/search/match-highlighter.js"></script>
+
+		<link rel="stylesheet" href="codemirror/lib/codemirror.css">
+		<link rel="stylesheet" href="codemirror/addon/scroll/simplescrollbars.css">
+		<link rel="stylesheet" href="codemirror/theme/dracula.css">
+		<link rel="stylesheet" href="code.css">
+
+		<script src="codemirror/mode/javascript/javascript.js"></script>
+		<script src="codemirror/mode/css/css.js"></script>
+		<script src="codemirror/mode/htmlmixed/htmlmixed.js"></script>
+		<script src="codemirror/mode/xml/xml.js"></script>
+		<script src="codemirror/addon/edit/matchtags.js"></script>
+
+		<script src="../../dist/nano/domvm.nano.min.js"></script>
+
+		<script>
+			// @immediate: leading edge, instead of the trailing
+			function debounce(func, wait, immediate) {
+				var timeout;
+				return function() {
+					var context = this, args = arguments;
+					clearTimeout(timeout);
+					timeout = setTimeout(function() {
+						timeout = null;
+						if (!immediate) func.apply(context, args);
+					}, wait);
+					if (immediate && !timeout) func.apply(context, args);
+				};
+			}
+
+			const CODE = {
+				JS: {value: "/* JS */\n\n"},
+				CSS: {value: "/* CSS */\n\n"},
+				HTML: {value: "<!-- HTML -->\n\n"},
+			};
+
+			var key = location.hash.substr(1);
+
+			var urls = [
+				"demos/" + key + "/" + key + ".html",
+				"demos/" + key + "/" + key + ".css",
+				"demos/" + key + "/" + key + ".js",
+			];
+
+			Promise.all(urls.map(url => {
+				const targ =
+					url.indexOf(".js") > 0 ? CODE.JS :
+					url.indexOf(".css") > 0 ? CODE.CSS :
+					url.indexOf(".html") > 0 ? CODE.HTML :
+					null;
+
+				return fetch(url).then(res => res.text()).then(text => targ.value += text);
+			})).then(boot);
+
+			function boot() {
+				const el = domvm.defineElement,
+					vw = domvm.defineView;
+
+				function codeView(mode, tag, code) {
+					return {
+						hooks: {
+							didMount: vm => {
+								CodeMirror(vm.node.el, {
+									theme: "dracula",
+									lineNumbers: true,
+									lineSeparator: "\n",
+									value: code.value,
+									indentWithTabs: true,
+									indentUnit: 4,
+									tabSize: 4,
+									matchBrackets: true,
+									dragDrop: false,
+									electricChars: false,
+									smartIndent: false,
+									highlightSelectionMatches: true,
+									scrollbarStyle: "simple",
+									mode: mode,
+								}).on("change", debounce(function(cm) {
+									code.value = cm.getValue();
+									vm.root().redraw();
+								}, 500));
+							}
+						},
+						render: () => el(tag),
+					};
+				}
+
+				const HtmlView = codeView("htmlmixed", "#html", CODE.HTML);
+				const CssView = codeView("css", "#css", CODE.CSS);
+				const JsView = codeView({name: "javascript", localVars: true}, "#js", CODE.JS);
+
+				function ResultView(vm) {
+					function setContents() {
+						var buf = [
+							"<!doctype html>",
+							"<html>",
+							"<head>",
+								'<meta charset="utf-8">',
+								'<meta http-equiv="x-ua-compatible" content="ie=edge">',
+								'<title>Test</title>',
+								'<meta name="description" content="">',
+								'<meta name="viewport" content="width=device-width, initial-scale=1">',
+
+								'<link rel="stylesheet" href="iframe.css">',
+								"<style>",
+									CODE.CSS.value,
+								"\x3C/style>",
+								"<script>window.onload = function() {",
+									CODE.JS.value,
+								"}\x3C/script>",
+							"</head>",
+							"<body>",
+								CODE.HTML.value,
+							"</body>",
+							"</html>",
+						].join("");
+
+						var iframeDoc = vm.node.el.contentWindow.document;
+					//	iframeDoc.open();
+						iframeDoc.write(buf);
+						iframeDoc.close();
+					}
+
+					vm.config({
+						hooks:{
+							didMount: setContents,
+							didRedraw: setContents,
+						}
+					});
+
+					return function() {
+						return el("iframe#result");
+					}
+				}
+
+				function AppView() {
+					return function() {
+						return el("main#app", [
+							vw(CssView),
+							el("#htmljs", [
+								vw(HtmlView),
+								vw(JsView),
+							]),
+							vw(ResultView),
+						//	vw(ConsoleView),
+						]);
+					};
+				}
+
+				var vm = domvm.createView(AppView).mount(document.body);
+			}
+		</script>
+	</body>
+</html>

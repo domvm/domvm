@@ -1,0 +1,32 @@
+#scoreboard {
+	max-width: 400px;
+	margin: auto;
+}
+
+.board,
+.admin {
+	padding: 10px;
+}
+
+.board {
+	background: #BCFFBC;
+	margin-bottom: 20px;
+}
+
+.admin {
+	background: #FFE0E6;
+}
+
+.player {
+	display: flex;
+}
+
+.score {
+	margin-left: auto;
+	max-width: 50px;
+}
+
+.player button {
+	width: 40px;
+	text-align: center;
+}

@@ -1,0 +1,14 @@
+.totals {
+	padding: 5px 0;
+}
+
+.item label {
+	cursor: pointer;
+	display: inline-block;
+	width: 200px;
+}
+
+.item.done label {
+	color: silver;
+	text-decoration: line-through;
+}

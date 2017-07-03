@@ -1,0 +1,30 @@
+.game > * {
+	display: inline-block;
+	vertical-align: top;
+	margin-right: 10px;
+}
+
+.board {
+	width: calc(34px * 3);
+	height: calc(34px * 3);
+}
+
+.cell {
+	width: 34px;
+	height: 34px;
+	float: left;
+	background: #fff;
+	border: 1px solid #999;
+	font-size: 24px;
+	font-weight: bold;
+	line-height: 34px;
+	margin-right: -1px;
+	margin-top: -1px;
+	padding: 0;
+	text-align: center;
+}
+
+.active,
+.active a {
+	color: red;
+}

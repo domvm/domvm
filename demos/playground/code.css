@@ -1,0 +1,84 @@
+@font-face {
+  font-family: 'Source Code Pro';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Source Code Pro'), local('SourceCodePro-Regular'),
+       url('source-code-pro-v6-latin-regular.woff2') format('woff2'),
+       url('source-code-pro-v6-latin-regular.woff') format('woff');
+}
+
+html {
+	box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+	box-sizing: inherit;
+}
+
+.CodeMirror {
+	font-family: 'Source Code Pro' !important;
+	font-size: 10pt !important;
+	height: 100% !important;
+}
+
+.syntax-error {
+	background: #b71c1c;
+}
+
+/* brackets, semicolons, periods */
+.cm-s-dracula.mode-text  span {
+	color: #ccc;
+/*	color: #66d9ef;*/
+}
+
+.cm-s-dracula span.cm-string-2 {
+    color: #4DD0E1;
+}
+
+.cm-s-dracula span {
+	color: #2196f3;
+}
+
+/* out-of-scope + global vars */
+.cm-s-dracula span.cm-variable-1 {}
+
+/* known/declared in-scope vars */
+.cm-s-dracula span.cm-variable-2 {
+	color: #cccccc;
+}
+
+.cm-s-dracula span.cm-property {
+	color: #cccccc;
+}
+
+.cm-s-dracula span.cm-function {
+	color: #50fa7b;
+}
+
+.cm-s-dracula span.cm-function-2 {
+	color: #4fc3f7;
+}
+
+.CodeMirror-simplescroll-horizontal {
+	background: none;
+}
+
+.CodeMirror-simplescroll-vertical {
+	background: none;
+}
+
+.cm-matchhighlight {
+	background: rgba(255,255,255,.1);
+}
+
+/*
+.cm-matchhighlight {
+	background-color: lightgreen
+}
+
+.CodeMirror-selection-highlight-scrollbar {
+	background-color: green
+}
+*/

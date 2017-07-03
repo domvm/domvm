@@ -1,0 +1,54 @@
+.view1,
+.view1 li {
+	background: transparent;
+	transition: 1000ms;
+	opacity: 1;
+}
+
+.view1.mounted {
+	background: #20B2AA;
+	transition: none;
+}
+
+.view1.redrawn {
+	background: lightblue;
+	transition: none;
+}
+
+.view1.unmounting {
+	background: pink;
+	transition: none;
+}
+
+.view1.unmounted {
+	opacity: 0;
+}
+
+.view1 .inserted {
+	background: lime;
+	transition: none;
+}
+
+.view1 .removing {
+	background: red;
+	transition: none;
+}
+
+.view1 .removed {
+	opacity: 0;
+}
+
+.view1 .reused.same {
+	background: silver;
+	transition: none;
+}
+
+.view1 .reused.changed {
+	background: orange;
+	transition: none;
+}
+
+.view1 .moved {
+	background: magenta;
+	transition: none;
+}
