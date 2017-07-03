@@ -216,28 +216,31 @@ This opens the door to much more interesting architectural patterns when needed,
 ```js
 var el = domvm.defineElement;
 
-var SomeView = {
-    render: function() {
-        return el("div", "Hello World!");
-    }
-};
-
-function MyView() {                                         // named view closure
+function MyView(vm) {                                       // named view closure
     return function() {                                         // render()
         return el("div", "Hello World!");                           // template
     };
 }
 
-function YourView() {
+function YourView(vm) {
     return {
         render: function() {
             return el("div", "Hello World!");
         }
     };
 }
+
+var SomeView = {
+    init: function(vm) {
+        // ...
+    },
+    render: function() {
+        return el("div", "Hello World!");
+    }
+};
 ```
 
-Views can accept external `data` to render (React calls this `props`):
+Views can accept external `data` to render (à la React's `props`):
 
 ```js
 function MyView(vm) {
