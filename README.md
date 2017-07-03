@@ -354,7 +354,7 @@ The general advice is, restrict your views to complex, building-block-level, sta
 ---
 ### Hello World++
 
-**Try it:** https://jsfiddle.net/csLa6bew/
+**Try it:** http://leeoniya.github.io/domvm/demos/playground/#stepper1
 
 ```js
 var el = domvm.defineElement;                       // element VNode creator
@@ -398,7 +398,7 @@ The end result is a lightly-coupled domain model that:
 
 It is *this* fully capable, view-augmented domain model that domvm's author considers a truely reusable "component".
 
-**Try it:** https://jsfiddle.net/qgyu1g36/
+**Try it:** http://leeoniya.github.io/domvm/demos/playground/#stepper2
 
 ```js
 var el = domvm.defineElement;
@@ -444,7 +444,8 @@ var i = 0;
 var it = setInterval(function() {
     stepper.add(1);
 
-    if (i++ == 20) clearInterval(it);
+    if (i++ == 20)
+        clearInterval(it);
 }, 250);
 ```
 
