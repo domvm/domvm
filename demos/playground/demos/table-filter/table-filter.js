@@ -20,10 +20,12 @@ FilterableProductTable.prototype = {
 };
 
 function FilterableProductTableView(vm, filtTable) {
-	vm.on({
-		filterChange: function() {
-			filtTable.filter();
-			vm.redraw();
+	vm.config({
+		events: {
+			filterChange: function() {
+				filtTable.filter();
+				vm.redraw();
+			}
 		}
 	});
 

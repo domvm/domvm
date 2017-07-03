@@ -11,10 +11,15 @@ QUnit.module("emit()");
 
 	function ViewA(vm) {
 		vmA = vm;
-		vm.on("abc", function() { data.abc += "a"; });
-		vm.on("ab", function() { data.ab += "a"; });
-		vm.on("ac", function() { data.ac += "a"; });
-		vm.on("a", function() { data.a += "a"; });
+
+		vm.config({
+			events: {
+				"abc": function() { data.abc += "a"; },
+				"ab": function() { data.ab += "a"; },
+				"ac": function() { data.ac += "a"; },
+				"a": function() { data.a += "a"; },
+			}
+		});
 
 		return function() {
 			return el("#a", [
@@ -27,10 +32,15 @@ QUnit.module("emit()");
 
 	function ViewB(vm) {
 		vmB = vm;
-		vm.on("abc", function() { data.abc += "b"; });
-		vm.on("ab", function() { data.ab += "b"; });
-		vm.on("bc", function() { data.bc += "b"; });
-		vm.on("b", function() { data.b += "b"; });
+
+		vm.config({
+			events: {
+				"abc": function() { data.abc += "b"; },
+				"ab": function() { data.ab += "b"; },
+				"bc": function() { data.bc += "b"; },
+				"b": function() { data.b += "b"; },
+			}
+		});
 
 		return function() {
 			return el("#b", [
@@ -43,10 +53,15 @@ QUnit.module("emit()");
 
 	function ViewC(vm) {
 		vmC = vm;
-		vm.on("abc", function() { data.abc += "c"; });
-		vm.on("bc", function() { data.bc += "c"; });
-		vm.on("ac", function() { data.ac += "c"; });
-		vm.on("c", function() { data.c += "c"; });
+
+		vm.config({
+			events: {
+				"abc": function() { data.abc += "c"; },
+				"bc": function() { data.bc += "c"; },
+				"ac": function() { data.ac += "c"; },
+				"c": function() { data.c += "c"; },
+			}
+		});
 
 		return function() {
 			return el("#c", "Hello");
@@ -121,10 +136,12 @@ QUnit.module("emit()");
 		}
 
 		function ViewX(vm) {
-			vm.on({
-				testEv: function(srcVm, arg1, arg2) {
-					assert.equal(arg1, "arg1", "Arg1");
-					assert.equal(arg2, "arg2", "Arg2");
+			vm.config({
+				events: {
+					testEv: function(srcVm, arg1, arg2) {
+						assert.equal(arg1, "arg1", "Arg1");
+						assert.equal(arg2, "arg2", "Arg2");
+					}
 				}
 			});
 

@@ -1332,14 +1332,18 @@ var ViewModelProto = ViewModel.prototype = {
 	mount: mount,
 	unmount: unmount,
 	config: function(opts) {
+		var t = this;
+
 		if (opts.init)
-			{ this.init = opts.init; }
+			{ t.init = opts.init; }
 		if (opts.diff)
-			{ this.diff = opts.diff; }
+			{ t.diff = opts.diff; }
 
 		// maybe invert assignment order?
 		if (opts.hooks)
-			{ this.hooks = assignObj(this.hooks || {}, opts.hooks); }
+			{ t.hooks = assignObj(t.hooks || {}, opts.hooks); }
+
+		
 	},
 	parent: function() {
 		return getVm(this.node.parent);
