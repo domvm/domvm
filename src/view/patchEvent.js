@@ -53,12 +53,17 @@ export function patchEvent(node, name, nval, oval) {
 	if (nval === oval)
 		return;
 
+	var el = node.el;
+
+	if (nval._raw) {
+		bindEv(el, name, nval);
+		return;
+	}
+
 	if (_DEVMODE) {
 		if (isFunc(nval) && isFunc(oval) && oval.name == nval.name)
 			devNotify("INLINE_HANDLER", [node, oval, nval]);
 	}
-
-	var el = node.el;
 
 	// param'd eg onclick: [myFn, 1, 2, 3...]
 	if (isArr(nval)) {
@@ -70,7 +75,7 @@ export function patchEvent(node, name, nval, oval) {
 		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
 	}
 	// basic onclick: myFn (or extracted)
-	else if (isFunc(nval) && nval !== oval) {
+	else if (isFunc(nval)) {
 		if (_DEVMODE) {
 			if (oval != null && !isFunc(oval))
 				devNotify("MISMATCHED_HANDLER", [node, oval, nval]);

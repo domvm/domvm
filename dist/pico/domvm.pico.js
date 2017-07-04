@@ -668,13 +668,17 @@ function patchEvent(node, name, nval, oval) {
 
 	var el = node.el;
 
-	// param'd eg onclick: [myFn, 1, 2, 3...]
+	if (nval._raw) {
+		bindEv(el, name, nval);
+		return;
+	}
+
 	if (isArr(nval)) {
 		var diff = oval == null || !cmpArr(nval, oval);
 		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
 	}
 	// basic onclick: myFn (or extracted)
-	else if (isFunc(nval) && nval !== oval) {
+	else if (isFunc(nval)) {
 		bindEv(el, name, wrapHandler(nval, []));
 	}
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
