@@ -50,7 +50,7 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 - [DOM Refs](#dom-refs)
 - [VNode Data](#vnode-data)
 - [Lifecycle Hooks](#lifecycle-hooks)
-- [Isomorphism & SSR](#isomorphism-ssr)
+- [Isomorphism & SSR](#isomorphism--ssr)
 - WIP!
 
 <!--
@@ -455,7 +455,6 @@ var it = setInterval(function() {
 You can access any view's parent view via `vm.parent()` and the great granddaddy of the view hierarchy via `vm.root()` shortcut.
 So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().redraw()`.
 
-
 ---
 ### Autoredraw
 
@@ -472,8 +471,8 @@ The [onevent demo](/demos/global-onevent.html) configs a basic full app autoredr
 
 ```js
 domvm.config({
-    onevent: function(e, node, vm, arg1, arg2) {
-        rootVm.redraw();
+    onevent: function(e, node, vm, data, args) {
+        vm.root().redraw();
     }
 });
 ```
@@ -496,11 +495,39 @@ Node-level `will*` hooks allow a promise/thennable return and can delay the even
 
 **View-level**
 
-Usage: `vm.hook({willMount: ...})` or `return {render: ..., hooks: {willMount: ...}}`
+Usage: `vm.config({hooks: {willMount: ...}})` or `return {render: ..., hooks: {willMount: ...}}`
 
-- willUpdate (before views's model is replaced)
+- willUpdate (before views's data is replaced)
 - will/didRedraw
 - will/didMount (dom insertion)
 - will/didUnmount (dom removal)
 
 View-level `will*` hooks are not yet promise handling, so cannot be used for delay, but you can just rely on the view's root node's hooks to accomplish similar goals.
+
+### Isomorphism & SSR
+
+Like React's `renderToString`, domvm can generate html and then hydrate it on the client.
+In `server` & `full` builds, `vm.html()` can generate html.
+In `client` & `full` builds, `vm.attach(target)` should be used to hydrate the rendered DOM.
+
+```js
+var el = domvm.defineElement;
+
+function View() {
+    function sayHi(e) {
+        alert("Hi!");
+    }
+
+    return function(vm, data) {
+        return el("body", {onclick: sayHi}, "Hello " + data.name);
+    }
+}
+
+var data = {name: "Leon"};
+
+// return this generated <body>Hello Leon</body> from the server
+var html = domvm.createView(View, data).html();
+
+// then hydrate on the client to bind event handlers, etc.
+var vm = domvm.createView(View, data).attach(document.body);
+```
