@@ -43,30 +43,12 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 - [Templates](#templates)
 - [Views](#views)
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
-- [Events](#events)
 - [Hello World++](#hello-world)
 - [Parents & Roots](#parents--roots)
 - [Autoredraw](#autoredraw)
-- [DOM Refs](#dom-refs)
-- [VNode Data](#vnode-data)
 - [Lifecycle Hooks](#lifecycle-hooks)
 - [Isomorphism & SSR](#isomorphism--ssr)
-- WIP!
-
-<!--
-third-party integration, element injection
-vm.api
-vm.diff / sCU
-vnode.patch
-vm.update()
-streams
-immutability
-routing, ajax/fetch/xhr
-internal emit
-svg
-es6 class views
-fragments/component wrappers
--->
+- WIP: https://github.com/leeoniya/domvm/issues/156
 
 ---
 ### What's Missing?
@@ -83,10 +65,6 @@ Some minimalist libs that work well:
 - CSS-in-JS: [stylis.js](https://github.com/thysultan/stylis.js), [j2c](https://github.com/j2css/j2c), [oh boy...](https://github.com/MicheleBertoli/css-in-js)
 
 Many [/demos](/demos) are examples of how to use these libs in your apps.
-
-<!--
-- CSS-scoped views
--->
 
 ---
 ### Builds
@@ -193,13 +171,9 @@ el("p", {_data: {foo: 123}}, "Some text")                   // per-node data (fa
 
 el("p", {_ref: "myParag"}, "Some text")                     // named refs (vm.refs.myParag)
 el("p", {_ref: "pets.james"}, "Some text")                  // namespaced (vm.refs.pets.james)
-```
 
-<!-- TODO
-_flags:
-namespaced/exposed refs
-vw(fn, model, key, opts)
--->
+el("div", {_flags: ...}, "Some text")                       // optimization flags
+```
 
 ---
 ### Views
