@@ -13,6 +13,9 @@ function handle(e, fn, args) {
 	var node = closestVNode(e.target);
 	var vm = getVm(node);
 	var out = fn.apply(null, args.concat([e, node, vm, vm.data]));
+
+	// should these respect out === false?
+	vm.onevent(e, node, vm, vm.data, args);
 	onevent.call(null, e, node, vm, vm.data, args);
 
 	if (out === false) {

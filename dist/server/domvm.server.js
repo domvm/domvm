@@ -726,6 +726,9 @@ function handle(e, fn, args) {
 	var node = closestVNode(e.target);
 	var vm = getVm(node);
 	var out = fn.apply(null, args.concat([e, node, vm, vm.data]));
+
+	// should these respect out === false?
+	vm.onevent(e, node, vm, vm.data, args);
 	onevent.call(null, e, node, vm, vm.data, args);
 
 	if (out === false) {
@@ -1430,6 +1433,7 @@ var ViewModelProto = ViewModel.prototype = {
 	opts:	null,
 	node:	null,
 	hooks:	null,
+	onevent: noop,
 	refs:	null,
 	render:	null,
 
@@ -1442,6 +1446,8 @@ var ViewModelProto = ViewModel.prototype = {
 			{ t.init = opts.init; }
 		if (opts.diff)
 			{ t.diff = opts.diff; }
+		if (opts.onevent)
+			{ t.onevent = opts.onevent; }
 
 		// maybe invert assignment order?
 		if (opts.hooks)
