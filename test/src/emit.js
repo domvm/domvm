@@ -138,7 +138,7 @@ QUnit.module("emit()");
 		function ViewX(vm) {
 			vm.config({
 				onemit: {
-					testEv: function(srcVm, arg1, arg2) {
+					testEv: function(arg1, arg2) {
 						assert.equal(arg1, "arg1", "Arg1");
 						assert.equal(arg2, "arg2", "Arg2");
 					}

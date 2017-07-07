@@ -10,18 +10,18 @@ export function emit(evName) {
 	var targ = this,
 		src = targ;
 
-	var args = [src].concat(sliceArgs(arguments, 1));
+	var args = sliceArgs(arguments, 1).concat(src, src.data);
 
 	do {
 		var evs = targ.onemit;
 		var fn = evs ? evs[evName] : null;
 
 		if (fn) {
-			fn.apply(null, args);
+			fn.apply(targ, args);
 			break;
 		}
 	} while (targ = targ.parent());
 
 	if (onemit[evName])
-		onemit[evName].apply(null, args);
+		onemit[evName].apply(targ, args);
 }
