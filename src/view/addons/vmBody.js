@@ -1,11 +1,7 @@
 import { ViewModelProto } from '../ViewModel';
 import { isArr } from '../../utils';
 
-ViewModelProto.body = function() {
-	return nextSubVms(this.node, []);
-};
-
-function nextSubVms(n, accum) {
+export function nextSubVms(n, accum) {
 	var body = n.body;
 
 	if (isArr(body)) {

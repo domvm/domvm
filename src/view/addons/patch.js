@@ -5,11 +5,9 @@ import { preProc } from '../preProc';
 import { patch as fullPatch } from '../patch';
 import { drainDidHooks } from '../hooks';
 
-import { VNodeProto } from '../VNode';
-
-VNodeProto.patch = function(n) {
+export function protoPatch(n) {
 	return patch(this, n);
-};
+}
 
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch hooks?

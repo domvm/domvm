@@ -1688,9 +1688,9 @@ var nano$1 = {
 	LAZY_LIST: LAZY_LIST,
 };
 
-VNodeProto.patch = function(n) {
+function protoPatch(n) {
 	return patch$1(this, n);
-};
+}
 
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch hooks?
@@ -1723,6 +1723,8 @@ function patch$1(o, n) {
 		patchAttrs(o, donor);
 	}
 }
+
+VNodeProto.patch = protoPatch;
 
 return nano$1;
 

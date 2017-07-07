@@ -80,8 +80,8 @@ export const ViewModelProto = ViewModel.prototype = {
 			t.hooks = assignObj(t.hooks || {}, opts.hooks);
 
 		if (FEAT_EMIT) {
-			if (opts.events)
-				t.events = assignObj(t.events || {}, opts.events);
+			if (opts.onemit)
+				t.onemit = assignObj(t.onemit || {}, opts.onemit);
 		}
 	},
 	parent: function() {

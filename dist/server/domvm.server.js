@@ -706,10 +706,41 @@ function insertAfter(parEl, el, refEl) {
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
 }
 
+var onemit = {};
+
+function emitCfg(cfg) {
+	assignObj(onemit, cfg);
+}
+
+function emit(evName) {
+	var targ = this,
+		src = targ;
+
+	var args = [src].concat(sliceArgs(arguments, 1));
+
+	do {
+		var evs = targ.onemit;
+		var fn = evs ? evs[evName] : null;
+
+		if (fn) {
+			fn.apply(null, args);
+			break;
+		}
+	} while (targ = targ.parent());
+
+	if (onemit[evName])
+		{ onemit[evName].apply(null, args); }
+}
+
 var onevent = noop;
 
 function config(newCfg) {
 	onevent = newCfg.onevent || onevent;
+
+	{
+		if (newCfg.onemit)
+			{ emitCfg(newCfg.onemit); }
+	}
 
 	{
 		if (newCfg.stream)
@@ -1454,8 +1485,8 @@ var ViewModelProto = ViewModel.prototype = {
 			{ t.hooks = assignObj(t.hooks || {}, opts.hooks); }
 
 		{
-			if (opts.events)
-				{ t.events = assignObj(t.events || {}, opts.events); }
+			if (opts.onemit)
+				{ t.onemit = assignObj(t.onemit || {}, opts.onemit); }
 		}
 	},
 	parent: function() {
@@ -1771,9 +1802,9 @@ var nano = {
 	LAZY_LIST: LAZY_LIST,
 };
 
-VNodeProto.patch = function(n) {
+function protoPatch(n) {
 	return patch$1(this, n);
-};
+}
 
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch hooks?
@@ -1807,30 +1838,7 @@ function patch$1(o, n) {
 	}
 }
 
-ViewModelProto.events = null;
-ViewModelProto.emit = emit;
-
-function emit(evName) {
-	var arguments$1 = arguments;
-
-	var targ = this,
-		src = targ;
-
-	do {
-		var evs = targ.events;
-		var fn = evs ? evs[evName] : null;
-
-		if (fn) {
-			fn.apply(null, [src].concat(sliceArgs(arguments$1, 1)));
-			break;
-		}
-
-	} while (targ = targ.parent());
-}
-
-ViewModelProto.body = function() {
-	return nextSubVms(this.node, []);
-};
+VNodeProto.patch = protoPatch;
 
 function nextSubVms(n, accum) {
 	var body = n.body;
@@ -1877,24 +1885,30 @@ function defineSvgElementSpread() {
 	return n;
 }
 
+ViewModelProto.emit = emit;
+ViewModelProto.onemit = null;
+
+ViewModelProto.body = function() {
+	return nextSubVms(this.node, []);
+};
+
 nano.defineElementSpread = defineElementSpread;
 nano.defineSvgElementSpread = defineSvgElementSpread;
 
 nano.prop = prop;
 
-ViewModelProto.html = function(dynProps) {
+function vmProtoHtml(dynProps) {
 	var vm = this;
 
 	if (vm.node == null)
 		{ vm._redraw(null, null, false); }
 
 	return html(vm.node, dynProps);
-};
+}
 
-VNodeProto.html = function(dynProps) {
+function vProtoHtml(dynProps) {
 	return html(this, dynProps);
-};
-
+}
 
 function camelDash(val) {
 	return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
@@ -2041,6 +2055,9 @@ function html(node, dynProps) {
 
 	return out;
 }
+
+ViewModelProto.html = vmProtoHtml;
+VNodeProto.html = vProtoHtml;
 
 return nano;
 
