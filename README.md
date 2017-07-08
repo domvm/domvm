@@ -441,7 +441,7 @@ You can maybe implement filtering by event type so that a flood of `mousemove` e
 
 `onevent`'s arguments always represent the origin of the event in the vtree.
 
-The [onevent demo](/demos/global-onevent.html) configs a basic full app autoredraw:
+The [onevent demo](http://leeoniya.github.io/domvm/demos/playground/#onevent) configs a basic full app autoredraw:
 
 ```js
 domvm.config({
@@ -454,7 +454,7 @@ domvm.config({
 ---
 ### Lifecycle Hooks
 
-**Demo:** [lifecycle-hooks](https://rawgit.com/leeoniya/domvm/3.x-dev/demos/lifecycle-hooks.html) different hooks animate in/out with different colors.
+**Demo:** [lifecycle-hooks](http://leeoniya.github.io/domvm/demos/playground/#lifecycle-hooks) different hooks animate in/out with different colors.
 
 **Node-level**
 
