@@ -207,6 +207,9 @@ var VNodeProto = VNode.prototype = {
 	_class:	null,
 	_diff:	null,
 
+	// pending removal on promise resolution
+	_dead:	false,
+
 	idx:	null,
 	parent:	null,
 
@@ -586,10 +589,15 @@ function _removeChild(parEl, el, immediate) {
 function removeChild(parEl, el) {
 	var node = el._node, hooks = node.hooks;
 
+	// already marked for removal
+	if (node._dead) { return; }
+
 	var res = deepNotifyRemove(node);
 
-	if (res != null && isProm(res))
-		{ res.then(curry(_removeChild, [parEl, el, true])); }
+	if (res != null && isProm(res)) {
+		node._dead = true;
+		res.then(curry(_removeChild, [parEl, el, true]));
+	}
 	else
 		{ _removeChild(parEl, el); }
 }

@@ -70,10 +70,15 @@ function _removeChild(parEl, el, immediate) {
 export function removeChild(parEl, el) {
 	var node = el._node, hooks = node.hooks;
 
+	// already marked for removal
+	if (node._dead) return;
+
 	var res = deepNotifyRemove(node);
 
-	if (res != null && isProm(res))
+	if (res != null && isProm(res)) {
+		node._dead = true;
 		res.then(curry(_removeChild, [parEl, el, true]));
+	}
 	else
 		_removeChild(parEl, el);
 }
