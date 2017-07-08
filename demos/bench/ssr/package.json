@@ -15,6 +15,6 @@
     "vue-server-renderer": "^2.3.4"
   },
   "scripts": {
-    "start": "SET NODE_ENV=production && node index.js"
+    "start": "set NODE_ENV=production&&node index.js"
   }
 }
