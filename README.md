@@ -10,7 +10,7 @@ A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 domvm is a flexible, pure-js view layer for building high performance web applications; it'll happily fit into any existing codebase, whatever the structure.
 
 - It's zero-dependency, no-compilation & tooling-free; a single `<script>` tag and you're ready to go. Supports IE9+.
-- It's small: [~5.5k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code. [52x faster SSR](/demos/bench/ssr) vs React.
+- It's small: [~5.5k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code. [20x faster SSR](/demos/bench/ssr) vs React.
 - Its entire, practical API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
 - It's well-suited for building [simple widgets](http://leeoniya.github.io/domvm/demos/playground/#calendar) and [complex, fault-tolerant applications](http://leeoniya.github.io/domvm/demos/ThreaditJS).
 
@@ -43,30 +43,12 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 - [Templates](#templates)
 - [Views](#views)
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
-- [Events](#events)
 - [Hello World++](#hello-world)
 - [Parents & Roots](#parents--roots)
 - [Autoredraw](#autoredraw)
-- [DOM Refs](#dom-refs)
-- [VNode Data](#vnode-data)
 - [Lifecycle Hooks](#lifecycle-hooks)
-- [Isomorphism & SSR](#isomorphism-ssr)
-- WIP!
-
-<!--
-third-party integration, element injection
-vm.api
-vm.diff / sCU
-vnode.patch
-vm.update()
-streams
-immutability
-routing, ajax/fetch/xhr
-internal emit
-svg
-es6 class views
-fragments/component wrappers
--->
+- [Isomorphism & SSR](#isomorphism--ssr)
+- WIP: https://github.com/leeoniya/domvm/issues/156
 
 ---
 ### What's Missing?
@@ -83,10 +65,6 @@ Some minimalist libs that work well:
 - CSS-in-JS: [stylis.js](https://github.com/thysultan/stylis.js), [j2c](https://github.com/j2css/j2c), [oh boy...](https://github.com/MicheleBertoli/css-in-js)
 
 Many [/demos](/demos) are examples of how to use these libs in your apps.
-
-<!--
-- CSS-scoped views
--->
 
 ---
 ### Builds
@@ -193,13 +171,9 @@ el("p", {_data: {foo: 123}}, "Some text")                   // per-node data (fa
 
 el("p", {_ref: "myParag"}, "Some text")                     // named refs (vm.refs.myParag)
 el("p", {_ref: "pets.james"}, "Some text")                  // namespaced (vm.refs.pets.james)
-```
 
-<!-- TODO
-_flags:
-namespaced/exposed refs
-vw(fn, model, key, opts)
--->
+el("div", {_flags: ...}, "Some text")                       // optimization flags
+```
 
 ---
 ### Views
@@ -455,7 +429,6 @@ var it = setInterval(function() {
 You can access any view's parent view via `vm.parent()` and the great granddaddy of the view hierarchy via `vm.root()` shortcut.
 So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().redraw()`.
 
-
 ---
 ### Autoredraw
 
@@ -468,12 +441,12 @@ You can maybe implement filtering by event type so that a flood of `mousemove` e
 
 `onevent`'s arguments always represent the origin of the event in the vtree.
 
-The [onevent demo](/demos/global-onevent.html) configs a basic full app autoredraw:
+The [onevent demo](http://leeoniya.github.io/domvm/demos/playground/#onevent) configs a basic full app autoredraw:
 
 ```js
 domvm.config({
-    onevent: function(e, node, vm, arg1, arg2) {
-        rootVm.redraw();
+    onevent: function(e, node, vm, data, args) {
+        vm.root().redraw();
     }
 });
 ```
@@ -481,7 +454,7 @@ domvm.config({
 ---
 ### Lifecycle Hooks
 
-**Demo:** [lifecycle-hooks](https://rawgit.com/leeoniya/domvm/3.x-dev/demos/lifecycle-hooks.html) different hooks animate in/out with different colors.
+**Demo:** [lifecycle-hooks](http://leeoniya.github.io/domvm/demos/playground/#lifecycle-hooks) different hooks animate in/out with different colors.
 
 **Node-level**
 
@@ -496,11 +469,39 @@ Node-level `will*` hooks allow a promise/thennable return and can delay the even
 
 **View-level**
 
-Usage: `vm.hook({willMount: ...})` or `return {render: ..., hooks: {willMount: ...}}`
+Usage: `vm.config({hooks: {willMount: ...}})` or `return {render: ..., hooks: {willMount: ...}}`
 
-- willUpdate (before views's model is replaced)
+- willUpdate (before views's data is replaced)
 - will/didRedraw
 - will/didMount (dom insertion)
 - will/didUnmount (dom removal)
 
 View-level `will*` hooks are not yet promise handling, so cannot be used for delay, but you can just rely on the view's root node's hooks to accomplish similar goals.
+
+### Isomorphism & SSR
+
+Like React's `renderToString`, domvm can generate html and then hydrate it on the client.
+In `server` & `full` builds, `vm.html()` can generate html.
+In `client` & `full` builds, `vm.attach(target)` should be used to hydrate the rendered DOM.
+
+```js
+var el = domvm.defineElement;
+
+function View() {
+    function sayHi(e) {
+        alert("Hi!");
+    }
+
+    return function(vm, data) {
+        return el("body", {onclick: sayHi}, "Hello " + data.name);
+    }
+}
+
+var data = {name: "Leon"};
+
+// return this generated <body>Hello Leon</body> from the server
+var html = domvm.createView(View, data).html();
+
+// then hydrate on the client to bind event handlers, etc.
+var vm = domvm.createView(View, data).attach(document.body);
+```

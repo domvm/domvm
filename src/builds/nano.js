@@ -1,6 +1,8 @@
 import { default as nano } from "./pico";
 
-import "../view/addons/patch";
+import { VNodeProto } from '../view/VNode';
+import { protoPatch } from "../view/addons/patch";
+VNodeProto.patch = protoPatch;
 
 /*
 import { h } from "../view/addons/h";

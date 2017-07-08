@@ -13,7 +13,7 @@ QUnit.module("emit()");
 		vmA = vm;
 
 		vm.config({
-			events: {
+			onemit: {
 				"abc": function() { data.abc += "a"; },
 				"ab": function() { data.ab += "a"; },
 				"ac": function() { data.ac += "a"; },
@@ -34,7 +34,7 @@ QUnit.module("emit()");
 		vmB = vm;
 
 		vm.config({
-			events: {
+			onemit: {
 				"abc": function() { data.abc += "b"; },
 				"ab": function() { data.ab += "b"; },
 				"bc": function() { data.bc += "b"; },
@@ -55,7 +55,7 @@ QUnit.module("emit()");
 		vmC = vm;
 
 		vm.config({
-			events: {
+			onemit: {
 				"abc": function() { data.abc += "c"; },
 				"bc": function() { data.bc += "c"; },
 				"ac": function() { data.ac += "c"; },
@@ -137,8 +137,8 @@ QUnit.module("emit()");
 
 		function ViewX(vm) {
 			vm.config({
-				events: {
-					testEv: function(srcVm, arg1, arg2) {
+				onemit: {
+					testEv: function(arg1, arg2) {
 						assert.equal(arg1, "arg1", "Arg1");
 						assert.equal(arg2, "arg2", "Arg2");
 					}

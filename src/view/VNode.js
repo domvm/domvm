@@ -26,6 +26,9 @@ export const VNodeProto = VNode.prototype = {
 	_class:	null,
 	_diff:	null,
 
+	// pending removal on promise resolution
+	_dead:	false,
+
 	idx:	null,
 	parent:	null,
 

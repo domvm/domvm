@@ -5,10 +5,7 @@ import { isEvProp, isDynProp } from '../utils';
 import { autoPx } from './autoPx';
 import { LAZY_LIST } from '../initElementNode';
 
-import { ViewModelProto } from '../ViewModel';
-import { VNodeProto } from '../VNode';
-
-ViewModelProto.html = function(dynProps) {
+export function vmProtoHtml(dynProps) {
 	var vm = this;
 
 	if (vm.node == null)
@@ -17,10 +14,9 @@ ViewModelProto.html = function(dynProps) {
 	return html(vm.node, dynProps);
 };
 
-VNodeProto.html = function(dynProps) {
+export function vProtoHtml(dynProps) {
 	return html(this, dynProps);
 };
-
 
 function camelDash(val) {
 	return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
@@ -94,7 +90,7 @@ function eachHtml(arr, dynProps) {
 	return buf;
 }
 
-export function html(node, dynProps) {
+function html(node, dynProps) {
 	var out, style;
 
 	switch (node.type) {

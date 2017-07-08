@@ -207,6 +207,9 @@ var VNodeProto = VNode.prototype = {
 	_class:	null,
 	_diff:	null,
 
+	// pending removal on promise resolution
+	_dead:	false,
+
 	idx:	null,
 	parent:	null,
 
@@ -566,10 +569,15 @@ function _removeChild(parEl, el, immediate) {
 function removeChild(parEl, el) {
 	var node = el._node, hooks = node.hooks;
 
+	// already marked for removal
+	if (node._dead) { return; }
+
 	var res = deepNotifyRemove(node);
 
-	if (res != null && isProm(res))
-		{ res.then(curry(_removeChild, [parEl, el, true])); }
+	if (res != null && isProm(res)) {
+		node._dead = true;
+		res.then(curry(_removeChild, [parEl, el, true]));
+	}
 	else
 		{ _removeChild(parEl, el); }
 }
@@ -626,6 +634,9 @@ function handle(e, fn, args) {
 	var node = closestVNode(e.target);
 	var vm = getVm(node);
 	var out = fn.apply(null, args.concat([e, node, vm, vm.data]));
+
+	// should these respect out === false?
+	vm.onevent(e, node, vm, vm.data, args);
 	onevent.call(null, e, node, vm, vm.data, args);
 
 	if (out === false) {
@@ -668,13 +679,17 @@ function patchEvent(node, name, nval, oval) {
 
 	var el = node.el;
 
-	// param'd eg onclick: [myFn, 1, 2, 3...]
+	if (nval._raw) {
+		bindEv(el, name, nval);
+		return;
+	}
+
 	if (isArr(nval)) {
 		var diff = oval == null || !cmpArr(nval, oval);
 		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
 	}
 	// basic onclick: myFn (or extracted)
-	else if (isFunc(nval) && nval !== oval) {
+	else if (isFunc(nval)) {
 		bindEv(el, name, wrapHandler(nval, []));
 	}
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
@@ -1326,6 +1341,7 @@ var ViewModelProto = ViewModel.prototype = {
 	opts:	null,
 	node:	null,
 	hooks:	null,
+	onevent: noop,
 	refs:	null,
 	render:	null,
 
@@ -1338,6 +1354,8 @@ var ViewModelProto = ViewModel.prototype = {
 			{ t.init = opts.init; }
 		if (opts.diff)
 			{ t.diff = opts.diff; }
+		if (opts.onevent)
+			{ t.onevent = opts.onevent; }
 
 		// maybe invert assignment order?
 		if (opts.hooks)

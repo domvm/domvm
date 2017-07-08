@@ -2,7 +2,7 @@
   "dependencies": {
     "benchmark": "^2.1.4",
     "cliff": "^0.1.10",
-    "domvm": "git://github.com/leeoniya/domvm.git#4d6e6cbaa3a12587f838316a7532b9a9033d6947",
+    "domvm": "git://github.com/leeoniya/domvm.git#7ef710798b04fd410e73de9541a5e75ed8550cb1",
     "inferno": "^3.6.1",
     "inferno-component": "^3.6.1",
     "inferno-server": "^3.6.1",
@@ -15,6 +15,6 @@
     "vue-server-renderer": "^2.3.4"
   },
   "scripts": {
-    "start": "SET NODE_ENV=production && node index.js"
+    "start": "set NODE_ENV=production&&node index.js"
   }
 }

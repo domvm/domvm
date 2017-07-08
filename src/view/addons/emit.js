@@ -1,21 +1,27 @@
-import { ViewModelProto } from '../ViewModel';
-import { isVal, sliceArgs } from '../../utils';
+import { isVal, sliceArgs, assignObj } from '../../utils';
 
-ViewModelProto.events = null;
-ViewModelProto.emit = emit;
+var onemit = {};
 
-function emit(evName) {
+export function emitCfg(cfg) {
+	assignObj(onemit, cfg);
+}
+
+export function emit(evName) {
 	var targ = this,
 		src = targ;
 
+	var args = sliceArgs(arguments, 1).concat(src, src.data);
+
 	do {
-		var evs = targ.events;
+		var evs = targ.onemit;
 		var fn = evs ? evs[evName] : null;
 
 		if (fn) {
-			fn.apply(null, [src].concat(sliceArgs(arguments, 1)));
+			fn.apply(targ, args);
 			break;
 		}
-
 	} while (targ = targ.parent());
+
+	if (onemit[evName])
+		onemit[evName].apply(targ, args);
 }

@@ -1,7 +1,7 @@
 import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
-import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, raft } from "../utils";
+import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, raft, noop } from "../utils";
 import { repaint, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
@@ -59,6 +59,7 @@ export const ViewModelProto = ViewModel.prototype = {
 	opts:	null,
 	node:	null,
 	hooks:	null,
+	onevent: noop,
 	refs:	null,
 	render:	null,
 
@@ -71,14 +72,16 @@ export const ViewModelProto = ViewModel.prototype = {
 			t.init = opts.init;
 		if (opts.diff)
 			t.diff = opts.diff;
+		if (opts.onevent)
+			t.onevent = opts.onevent;
 
 		// maybe invert assignment order?
 		if (opts.hooks)
 			t.hooks = assignObj(t.hooks || {}, opts.hooks);
 
 		if (FEAT_EMIT) {
-			if (opts.events)
-				t.events = assignObj(t.events || {}, opts.events);
+			if (opts.onemit)
+				t.onemit = assignObj(t.onemit || {}, opts.onemit);
 		}
 	},
 	parent: function() {

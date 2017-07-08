@@ -6,9 +6,7 @@ import { patchEvent } from '../patchEvent';
 import { setAttr } from '../patchAttrs';
 import { LAZY_LIST } from '../initElementNode';
 
-import { ViewModelProto } from '../ViewModel';
-
-ViewModelProto.attach = function(el) {
+export function protoAttach(el) {
 	var vm = this;
 	if (vm.node == null)
 		vm._redraw(null, null, false)
@@ -19,7 +17,7 @@ ViewModelProto.attach = function(el) {
 };
 
 // very similar to hydrate, TODO: dry
-export function attach(vnode, withEl) {
+function attach(vnode, withEl) {
 	vnode.el = withEl;
 	withEl._node = vnode;
 

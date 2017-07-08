@@ -221,6 +221,9 @@ var VNodeProto = VNode.prototype = {
 	_class:	null,
 	_diff:	null,
 
+	// pending removal on promise resolution
+	_dead:	false,
+
 	idx:	null,
 	parent:	null,
 
@@ -663,10 +666,15 @@ function _removeChild(parEl, el, immediate) {
 function removeChild(parEl, el) {
 	var node = el._node, hooks = node.hooks;
 
+	// already marked for removal
+	if (node._dead) { return; }
+
 	var res = deepNotifyRemove(node);
 
-	if (res != null && isProm(res))
-		{ res.then(curry(_removeChild, [parEl, el, true])); }
+	if (res != null && isProm(res)) {
+		node._dead = true;
+		res.then(curry(_removeChild, [parEl, el, true]));
+	}
 	else
 		{ _removeChild(parEl, el); }
 }
@@ -706,10 +714,41 @@ function insertAfter(parEl, el, refEl) {
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
 }
 
+var onemit = {};
+
+function emitCfg(cfg) {
+	assignObj(onemit, cfg);
+}
+
+function emit(evName) {
+	var targ = this,
+		src = targ;
+
+	var args = sliceArgs(arguments, 1).concat(src, src.data);
+
+	do {
+		var evs = targ.onemit;
+		var fn = evs ? evs[evName] : null;
+
+		if (fn) {
+			fn.apply(targ, args);
+			break;
+		}
+	} while (targ = targ.parent());
+
+	if (onemit[evName])
+		{ onemit[evName].apply(targ, args); }
+}
+
 var onevent = noop;
 
 function config(newCfg) {
 	onevent = newCfg.onevent || onevent;
+
+	{
+		if (newCfg.onemit)
+			{ emitCfg(newCfg.onemit); }
+	}
 
 	{
 		if (newCfg.stream)
@@ -726,6 +765,9 @@ function handle(e, fn, args) {
 	var node = closestVNode(e.target);
 	var vm = getVm(node);
 	var out = fn.apply(null, args.concat([e, node, vm, vm.data]));
+
+	// should these respect out === false?
+	vm.onevent(e, node, vm, vm.data, args);
 	onevent.call(null, e, node, vm, vm.data, args);
 
 	if (out === false) {
@@ -768,13 +810,17 @@ function patchEvent(node, name, nval, oval) {
 
 	var el = node.el;
 
-	// param'd eg onclick: [myFn, 1, 2, 3...]
+	if (nval._raw) {
+		bindEv(el, name, nval);
+		return;
+	}
+
 	if (isArr(nval)) {
 		var diff = oval == null || !cmpArr(nval, oval);
 		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
 	}
 	// basic onclick: myFn (or extracted)
-	else if (isFunc(nval) && nval !== oval) {
+	else if (isFunc(nval)) {
 		bindEv(el, name, wrapHandler(nval, []));
 	}
 	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
@@ -1426,6 +1472,7 @@ var ViewModelProto = ViewModel.prototype = {
 	opts:	null,
 	node:	null,
 	hooks:	null,
+	onevent: noop,
 	refs:	null,
 	render:	null,
 
@@ -1438,14 +1485,16 @@ var ViewModelProto = ViewModel.prototype = {
 			{ t.init = opts.init; }
 		if (opts.diff)
 			{ t.diff = opts.diff; }
+		if (opts.onevent)
+			{ t.onevent = opts.onevent; }
 
 		// maybe invert assignment order?
 		if (opts.hooks)
 			{ t.hooks = assignObj(t.hooks || {}, opts.hooks); }
 
 		{
-			if (opts.events)
-				{ t.events = assignObj(t.events || {}, opts.events); }
+			if (opts.onemit)
+				{ t.onemit = assignObj(t.onemit || {}, opts.onemit); }
 		}
 	},
 	parent: function() {
@@ -1761,9 +1810,9 @@ var nano = {
 	LAZY_LIST: LAZY_LIST,
 };
 
-VNodeProto.patch = function(n) {
+function protoPatch(n) {
 	return patch$1(this, n);
-};
+}
 
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch hooks?
@@ -1797,30 +1846,7 @@ function patch$1(o, n) {
 	}
 }
 
-ViewModelProto.events = null;
-ViewModelProto.emit = emit;
-
-function emit(evName) {
-	var arguments$1 = arguments;
-
-	var targ = this,
-		src = targ;
-
-	do {
-		var evs = targ.events;
-		var fn = evs ? evs[evName] : null;
-
-		if (fn) {
-			fn.apply(null, [src].concat(sliceArgs(arguments$1, 1)));
-			break;
-		}
-
-	} while (targ = targ.parent());
-}
-
-ViewModelProto.body = function() {
-	return nextSubVms(this.node, []);
-};
+VNodeProto.patch = protoPatch;
 
 function nextSubVms(n, accum) {
 	var body = n.body;
@@ -1867,24 +1893,30 @@ function defineSvgElementSpread() {
 	return n;
 }
 
+ViewModelProto.emit = emit;
+ViewModelProto.onemit = null;
+
+ViewModelProto.body = function() {
+	return nextSubVms(this.node, []);
+};
+
 nano.defineElementSpread = defineElementSpread;
 nano.defineSvgElementSpread = defineSvgElementSpread;
 
 nano.prop = prop;
 
-ViewModelProto.html = function(dynProps) {
+function vmProtoHtml(dynProps) {
 	var vm = this;
 
 	if (vm.node == null)
 		{ vm._redraw(null, null, false); }
 
 	return html(vm.node, dynProps);
-};
+}
 
-VNodeProto.html = function(dynProps) {
+function vProtoHtml(dynProps) {
 	return html(this, dynProps);
-};
-
+}
 
 function camelDash(val) {
 	return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
@@ -2031,6 +2063,9 @@ function html(node, dynProps) {
 
 	return out;
 }
+
+ViewModelProto.html = vmProtoHtml;
+VNodeProto.html = vProtoHtml;
 
 return nano;
 

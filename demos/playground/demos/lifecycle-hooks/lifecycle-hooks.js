@@ -121,34 +121,32 @@ vm.config({hooks: {
 
 vm.mount(document.body);
 
-var factor = 1.04;		// todo: investigate why exact transitionend
-
 setTimeout(function() {
 	data.pop();
 	vm.redraw();
-}, factor * 1000);
+}, 1000);
 
 setTimeout(function() {
 	data.push("2.foo","3.bar");
 	vm.redraw();
-}, factor * 2000);
+}, 2000);
 
 setTimeout(function() {
 	data.unshift(data.pop());
 	vm.redraw();
-}, factor * 3000);
+}, 3000);
 
 setTimeout(function() {
 	data.splice(2, 0, "4.cookie");
 	data.splice(0, 1, "5.butter");
 	vm.redraw();
-}, factor * 4000);
+}, 4000);
 
 setTimeout(function() {
 	data[0] += "-mod";
 	data[2] += "-mod";
 	vm.redraw();
-}, factor * 5000);
+}, 5000);
 
 /*
 setTimeout(function() {
