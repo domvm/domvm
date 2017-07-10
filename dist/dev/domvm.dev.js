@@ -388,7 +388,15 @@ var DEVMODE = {
 
 	REUSED_ATTRS: function(vnode) {
 		return ["Attrs objects may only be reused if they are truly static, as a perf optimization. Mutating & reusing them will have no effect on the DOM due to 0 diff.", vnode];
-	}
+	},
+
+	ADJACENT_TEXT: function(vnode, text1, text2) {
+		return ["Adjacent text nodes will be merged. Consider concatentating them yourself in the template for improved perf.", vnode, text1, text2];
+	},
+
+	ARRAY_FLATTENED: function(vnode, array) {
+		return ["Arrays within templates will be flattened. When they are leading or trailing, it's easy and more performant to just .concat() them in the template.", vnode, array];
+	},
 };
 
 function devNotify(key, args) {
@@ -536,8 +544,13 @@ function preProcBody(vnew) {
 		if (node2 === false || node2 == null)
 			{ body.splice(i--, 1); }
 		// flatten arrays
-		else if (isArr(node2))
-			{ insertArr(body, node2, i--, 1); }
+		else if (isArr(node2)) {
+			{
+				if (i === 0 || i === body.length - 1)
+					{ devNotify("ARRAY_FLATTENED", [vnew, node2]); }
+			}
+			insertArr(body, node2, i--, 1);
+		}
 		else {
 			if (node2.type == null)
 				{ body[i] = node2 = defineText(""+node2); }
@@ -548,6 +561,9 @@ function preProcBody(vnew) {
 					{ body.splice(i--, 1); }
 				// merge with previous text node
 				else if (i > 0 && body[i-1].type === TEXT) {
+					{
+						devNotify("ADJACENT_TEXT", [vnew, body[i-1].body, node2.body]);
+					}
 					body[i-1].body += node2.body;
 					body.splice(i--, 1);
 				}

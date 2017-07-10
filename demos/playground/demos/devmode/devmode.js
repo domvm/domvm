@@ -30,6 +30,11 @@ function View(vm) {
 			subView3 ? vw(View3) : null,
 			vw(View4, {}),
 			el("input", attrs),
+			[
+				el("div"),
+				"abc",
+				"def",
+			],
 		]);
 	}
 }

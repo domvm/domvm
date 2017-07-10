@@ -40,7 +40,15 @@ export const DEVMODE = {
 
 	REUSED_ATTRS: function(vnode) {
 		return ["Attrs objects may only be reused if they are truly static, as a perf optimization. Mutating & reusing them will have no effect on the DOM due to 0 diff.", vnode];
-	}
+	},
+
+	ADJACENT_TEXT: function(vnode, text1, text2) {
+		return ["Adjacent text nodes will be merged. Consider concatentating them yourself in the template for improved perf.", vnode, text1, text2];
+	},
+
+	ARRAY_FLATTENED: function(vnode, array) {
+		return ["Arrays within templates will be flattened. When they are leading or trailing, it's easy and more performant to just .concat() them in the template.", vnode, array];
+	},
 }
 
 export function devNotify(key, args) {

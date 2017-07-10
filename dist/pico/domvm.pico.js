@@ -417,8 +417,9 @@ function preProcBody(vnew) {
 		if (node2 === false || node2 == null)
 			{ body.splice(i--, 1); }
 		// flatten arrays
-		else if (isArr(node2))
-			{ insertArr(body, node2, i--, 1); }
+		else if (isArr(node2)) {
+			insertArr(body, node2, i--, 1);
+		}
 		else {
 			if (node2.type == null)
 				{ body[i] = node2 = defineText(""+node2); }

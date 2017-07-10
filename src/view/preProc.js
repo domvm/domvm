@@ -4,6 +4,7 @@ import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
 import { getVm } from './utils';
 import { isStream, hookStream } from './addons/stream';
 import { DEEP_REMOVE } from './initElementNode';
+import { devNotify } from "./addons/devmode";
 
 function setRef(vm, name, node) {
 	var path = ["refs"].concat(name.split("."));
@@ -46,8 +47,13 @@ export function preProcBody(vnew) {
 		if (node2 === false || node2 == null)
 			body.splice(i--, 1);
 		// flatten arrays
-		else if (isArr(node2))
+		else if (isArr(node2)) {
+			if (_DEVMODE) {
+				if (i === 0 || i === body.length - 1)
+					devNotify("ARRAY_FLATTENED", [vnew, node2]);
+			}
 			insertArr(body, node2, i--, 1);
+		}
 		else {
 			if (node2.type == null)
 				body[i] = node2 = defineText(""+node2);
@@ -58,6 +64,9 @@ export function preProcBody(vnew) {
 					body.splice(i--, 1);
 				// merge with previous text node
 				else if (i > 0 && body[i-1].type === TEXT) {
+					if (_DEVMODE) {
+						devNotify("ADJACENT_TEXT", [vnew, body[i-1].body, node2.body]);
+					}
 					body[i-1].body += node2.body;
 					body.splice(i--, 1);
 				}
