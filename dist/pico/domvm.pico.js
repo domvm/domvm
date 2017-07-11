@@ -542,16 +542,16 @@ function prevSib(sib) {
 function deepNotifyRemove(node) {
 	var hooks = node.hooks, vm = node.vm;
 
-	vm && vm.hooks && fireHook("willUnmount", vm, vm.data);
+	var wuRes = vm && vm.hooks && fireHook("willUnmount", vm, vm.data);
 
-	var res = hooks && fireHook("willRemove", node);
+	var wrRes = hooks && fireHook("willRemove", node);
 
 	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
 		for (var i = 0; i < node.body.length; i++)
 			{ deepNotifyRemove(node.body[i]); }
 	}
 
-	return res;
+	return wuRes || wrRes;
 }
 
 function _removeChild(parEl, el, immediate) {

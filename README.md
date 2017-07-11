@@ -465,8 +465,6 @@ Usage: `el("div", {_hooks: {...}}, "Hello")`
 - will/didReinsert (detach & move)
 - will/didRemove
 
-Node-level `will*` hooks allow a promise/thennable return and can delay the event until the promise is resolved, allowing you to CSS animate, etc.
-
 **View-level**
 
 Usage: `vm.config({hooks: {willMount: ...}})` or `return {render: ..., hooks: {willMount: ...}}`
@@ -476,7 +474,7 @@ Usage: `vm.config({hooks: {willMount: ...}})` or `return {render: ..., hooks: {w
 - will/didMount (dom insertion)
 - will/didUnmount (dom removal)
 
-View-level `will*` hooks are not yet promise handling, so cannot be used for delay, but you can just rely on the view's root node's hooks to accomplish similar goals.
+`did*` hooks fire after a forced dom repaint. `willRemove` & `willUnmount` hooks can return a Promise to delay the removal/unmounting allowing you to CSS transition, etc.
 
 ### Isomorphism & SSR
 
