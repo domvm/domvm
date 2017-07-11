@@ -418,7 +418,11 @@ function preProc(vnew, parent, idx, ownVm) {
 	if (vnew.ref != null)
 		{ setRef(getVm(vnew), vnew.ref, vnew); }
 
-	if (vnew.hooks && vnew.hooks.willRemove || ownVm && ownVm.hooks && ownVm.hooks.willUnmount)
+	var nh = vnew.hooks,
+		vh = ownVm && ownVm.hooks;
+
+	if (nh && (nh.willRemove || nh.didRemove) ||
+		vh && (vh.willUnmount || vh.didUnmount))
 		{ setDeepRemove(vnew); }
 
 	if (isArr(vnew.body))
