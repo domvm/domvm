@@ -1149,23 +1149,10 @@ function findSequential(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 				{ return o; }
 		}
 
-		if (o.el._node !== o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm)
+		if (o.el._node !== o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm || n.key !== o.key)
 			{ continue; }
 
-		// if n.view
-
-		if (n.key === o.key)		// accounts for matching & both null
-			{ return o; }
-		else {
-			//
-			if (o.key == null) {
-				return o;
-			}
-			// n.key && o.key, ident?
-			else {
-			//	console.log(n.key, o.key);
-			}
-		}
+		return o;
 	}
 
 	return null;

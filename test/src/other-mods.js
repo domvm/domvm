@@ -223,7 +223,7 @@ QUnit.module("Other mods");
 		var callCounts = instr.end();
 
 		// TODO-optim: can be replaceChild instead of removeChild/insertBefore
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 2, createElement: 1, insertBefore: 1, setAttribute: 2 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 3, createElement: 2, insertBefore: 2, setAttribute: 2 });
 	});
 
 	QUnit.test('(body) elem -> textNode', function(assert) {
