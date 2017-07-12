@@ -62,7 +62,7 @@ Some minimalist libs that work well:
 - Ajax/fetch/XHR: [xr](https://github.com/radiosilence/xr), [alite](https://github.com/chrisdavies/alite)
 - Streams: [flyd](https://github.com/paldepind/flyd), [xstream](https://github.com/staltz/xstream)
 - Immutable Stores: [Freezer](https://github.com/arqex/freezer), [MobX](https://github.com/mobxjs/mobx)
-- CSS-in-JS: [stylis.js](https://github.com/thysultan/stylis.js), [j2c](https://github.com/j2css/j2c), [oh boy...](https://github.com/MicheleBertoli/css-in-js)
+- CSS-in-JS: [stylis.js](https://github.com/thysultan/stylis.js), [j2c](https://github.com/j2css/j2c), [emotion](https://github.com/tkh44/emotion), [oh boy...](https://github.com/MicheleBertoli/css-in-js)
 
 Many [/demos](/demos) are examples of how to use these libs in your apps.
 
@@ -458,12 +458,14 @@ domvm.config({
 
 **Node-level**
 
-Usage: `el("div", {_hooks: {...}}, "Hello")`
+Usage: `el("div", {_key: "...", _hooks: {...}}, "Hello")`
 
 - will/didInsert (initial insert)
 - will/didRecycle (reuse & patch)
 - will/didReinsert (detach & move)
 - will/didRemove
+
+While not required, it is strongly advised that your hook-handling vnodes are uniquely keyed as shown above, to ensure deterministic DOM recycling and hook invocation.
 
 **View-level**
 
@@ -474,7 +476,7 @@ Usage: `vm.config({hooks: {willMount: ...}})` or `return {render: ..., hooks: {w
 - will/didMount (dom insertion)
 - will/didUnmount (dom removal)
 
-`did*` hooks fire after a forced dom repaint. `willRemove` & `willUnmount` hooks can return a Promise to delay the removal/unmounting allowing you to CSS transition, etc.
+`did*` hooks fire after a forced DOM repaint. `willRemove` & `willUnmount` hooks can return a Promise to delay the removal/unmounting allowing you to CSS transition, etc.
 
 ### Isomorphism & SSR
 
