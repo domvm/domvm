@@ -2014,7 +2014,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	if (withDOM !== false) {
 		if (vold) {
 			// root node replacement
-			if (vold.tag !== vnew.tag) {
+			if (vold.tag !== vnew.tag || vold.key !== vnew.key) {
 				// hack to prevent the replacement from triggering mount/unmount
 				vold.vm = vnew.vm = null;
 
