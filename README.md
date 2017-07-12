@@ -1,4 +1,4 @@
-<h2>domvm (DOM ViewModel)<img src="domvm.png" alt="domvm logo" height="64" align="right"></h2>
+<h2><a href="https://github.com/leeoniya/domvm">domvm (DOM ViewModel)</a><img src="domvm.png" alt="domvm logo" height="64" align="right"></h2>
 
 A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
