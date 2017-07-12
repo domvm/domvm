@@ -1,7 +1,5 @@
-<img src="domvm.png" alt="domvm logo" style="max-width:100%;" align="right" height="60">
+<h2>domvm (DOM ViewModel)<img src="domvm.png" alt="domvm logo" height="64" align="right"></h2>
 
-domvm (DOM ViewModel)
----------------------
 A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
 ---
