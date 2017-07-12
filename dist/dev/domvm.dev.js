@@ -388,7 +388,15 @@ var DEVMODE = {
 
 	REUSED_ATTRS: function(vnode) {
 		return ["Attrs objects may only be reused if they are truly static, as a perf optimization. Mutating & reusing them will have no effect on the DOM due to 0 diff.", vnode];
-	}
+	},
+
+	ADJACENT_TEXT: function(vnode, text1, text2) {
+		return ["Adjacent text nodes will be merged. Consider concatentating them yourself in the template for improved perf.", vnode, text1, text2];
+	},
+
+	ARRAY_FLATTENED: function(vnode, array) {
+		return ["Arrays within templates will be flattened. When they are leading or trailing, it's easy and more performant to just .concat() them in the template.", vnode, array];
+	},
 };
 
 function devNotify(key, args) {
@@ -517,7 +525,11 @@ function preProc(vnew, parent, idx, ownVm) {
 	if (vnew.ref != null)
 		{ setRef(getVm(vnew), vnew.ref, vnew); }
 
-	if (vnew.hooks && vnew.hooks.willRemove || ownVm && ownVm.hooks && ownVm.hooks.willUnmount)
+	var nh = vnew.hooks,
+		vh = ownVm && ownVm.hooks;
+
+	if (nh && (nh.willRemove || nh.didRemove) ||
+		vh && (vh.willUnmount || vh.didUnmount))
 		{ setDeepRemove(vnew); }
 
 	if (isArr(vnew.body))
@@ -536,8 +548,13 @@ function preProcBody(vnew) {
 		if (node2 === false || node2 == null)
 			{ body.splice(i--, 1); }
 		// flatten arrays
-		else if (isArr(node2))
-			{ insertArr(body, node2, i--, 1); }
+		else if (isArr(node2)) {
+			{
+				if (i === 0 || i === body.length - 1)
+					{ devNotify("ARRAY_FLATTENED", [vnew, node2]); }
+			}
+			insertArr(body, node2, i--, 1);
+		}
 		else {
 			if (node2.type == null)
 				{ body[i] = node2 = defineText(""+node2); }
@@ -548,6 +565,9 @@ function preProcBody(vnew) {
 					{ body.splice(i--, 1); }
 				// merge with previous text node
 				else if (i > 0 && body[i-1].type === TEXT) {
+					{
+						devNotify("ADJACENT_TEXT", [vnew, body[i-1].body, node2.body]);
+					}
 					body[i-1].body += node2.body;
 					body.splice(i--, 1);
 				}
@@ -698,16 +718,16 @@ function prevSib(sib) {
 function deepNotifyRemove(node) {
 	var hooks = node.hooks, vm = node.vm;
 
-	vm && vm.hooks && fireHook("willUnmount", vm, vm.data);
+	var wuRes = vm && vm.hooks && fireHook("willUnmount", vm, vm.data);
 
-	var res = hooks && fireHook("willRemove", node);
+	var wrRes = hooks && fireHook("willRemove", node);
 
 	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
 		for (var i = 0; i < node.body.length; i++)
 			{ deepNotifyRemove(node.body[i]); }
 	}
 
-	return res;
+	return wuRes || wrRes;
 }
 
 function _removeChild(parEl, el, immediate) {
@@ -1259,23 +1279,10 @@ function findSequential(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 				{ return o; }
 		}
 
-		if (o.el._node !== o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm)
+		if (o.el._node !== o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm || n.key !== o.key)
 			{ continue; }
 
-		// if n.view
-
-		if (n.key === o.key)		// accounts for matching & both null
-			{ return o; }
-		else {
-			//
-			if (o.key == null) {
-				return o;
-			}
-			// n.key && o.key, ident?
-			else {
-			//	console.log(n.key, o.key);
-			}
-		}
+		return o;
 	}
 
 	return null;
@@ -1994,7 +2001,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	if (withDOM !== false) {
 		if (vold) {
 			// root node replacement
-			if (vold.tag !== vnew.tag) {
+			if (vold.tag !== vnew.tag || vold.key !== vnew.key) {
 				// hack to prevent the replacement from triggering mount/unmount
 				vold.vm = vnew.vm = null;
 

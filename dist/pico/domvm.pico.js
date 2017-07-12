@@ -398,7 +398,11 @@ function preProc(vnew, parent, idx, ownVm) {
 	if (vnew.ref != null)
 		{ setRef(getVm(vnew), vnew.ref, vnew); }
 
-	if (vnew.hooks && vnew.hooks.willRemove || ownVm && ownVm.hooks && ownVm.hooks.willUnmount)
+	var nh = vnew.hooks,
+		vh = ownVm && ownVm.hooks;
+
+	if (nh && (nh.willRemove || nh.didRemove) ||
+		vh && (vh.willUnmount || vh.didUnmount))
 		{ setDeepRemove(vnew); }
 
 	if (isArr(vnew.body))
@@ -417,8 +421,9 @@ function preProcBody(vnew) {
 		if (node2 === false || node2 == null)
 			{ body.splice(i--, 1); }
 		// flatten arrays
-		else if (isArr(node2))
-			{ insertArr(body, node2, i--, 1); }
+		else if (isArr(node2)) {
+			insertArr(body, node2, i--, 1);
+		}
 		else {
 			if (node2.type == null)
 				{ body[i] = node2 = defineText(""+node2); }
@@ -537,16 +542,16 @@ function prevSib(sib) {
 function deepNotifyRemove(node) {
 	var hooks = node.hooks, vm = node.vm;
 
-	vm && vm.hooks && fireHook("willUnmount", vm, vm.data);
+	var wuRes = vm && vm.hooks && fireHook("willUnmount", vm, vm.data);
 
-	var res = hooks && fireHook("willRemove", node);
+	var wrRes = hooks && fireHook("willRemove", node);
 
 	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
 		for (var i = 0; i < node.body.length; i++)
 			{ deepNotifyRemove(node.body[i]); }
 	}
 
-	return res;
+	return wuRes || wrRes;
 }
 
 function _removeChild(parEl, el, immediate) {
@@ -1046,23 +1051,10 @@ function findSequential(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 				{ return o; }
 		}
 
-		if (o.el._node !== o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm)
+		if (o.el._node !== o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm || n.key !== o.key)
 			{ continue; }
 
-		// if n.view
-
-		if (n.key === o.key)		// accounts for matching & both null
-			{ return o; }
-		else {
-			//
-			if (o.key == null) {
-				return o;
-			}
-			// n.key && o.key, ident?
-			else {
-			//	console.log(n.key, o.key);
-			}
-		}
+		return o;
 	}
 
 	return null;
@@ -1494,7 +1486,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	if (withDOM !== false) {
 		if (vold) {
 			// root node replacement
-			if (vold.tag !== vnew.tag) {
+			if (vold.tag !== vnew.tag || vold.key !== vnew.key) {
 				// hack to prevent the replacement from triggering mount/unmount
 				vold.vm = vnew.vm = null;
 
