@@ -152,7 +152,8 @@ function curry(fn, args, ctx) {
 	};
 }
 
-function prop(val, cb, ctx, args) {
+/*
+export function prop(val, cb, ctx, args) {
 	return function(newVal, execCb) {
 		if (newVal !== undefined && newVal !== val) {
 			val = newVal;
@@ -162,6 +163,7 @@ function prop(val, cb, ctx, args) {
 		return val;
 	};
 }
+*/
 
 // adapted from https://github.com/Olical/binary-search
 function binaryKeySearch(list, item) {
@@ -1894,8 +1896,6 @@ ViewModelProto.body = function() {
 
 nano.defineElementSpread = defineElementSpread;
 nano.defineSvgElementSpread = defineSvgElementSpread;
-
-nano.prop = prop;
 
 return nano;
 

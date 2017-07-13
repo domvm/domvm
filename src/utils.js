@@ -127,6 +127,7 @@ export function curry(fn, args, ctx) {
 	};
 }
 
+/*
 export function prop(val, cb, ctx, args) {
 	return function(newVal, execCb) {
 		if (newVal !== undefined && newVal !== val) {
@@ -137,6 +138,7 @@ export function prop(val, cb, ctx, args) {
 		return val;
 	};
 }
+*/
 
 // adapted from https://github.com/Olical/binary-search
 export function binaryKeySearch(list, item) {
