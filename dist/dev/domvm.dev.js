@@ -292,9 +292,9 @@ function getVm(n) {
 
 var isStream = function() { return false };
 
-var streamVal = null;
-var subStream = null;
-var unsubStream = null;
+var streamVal = noop;
+var subStream = noop;
+var unsubStream = noop;
 
 function streamCfg(cfg) {
 	isStream	= cfg.is;
@@ -306,19 +306,30 @@ function streamCfg(cfg) {
 // creates a one-shot self-ending stream that redraws target vm
 // TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
 function hookStream(s, vm) {
-	{
-		var redrawStream = subStream(s, function (val) {
-			// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
-			if (redrawStream) {
-				// if vm fully is formed (or mounted vm.node.el?)
-				if (vm.node != null)
-					{ vm.redraw(); }
-				unsubStream(redrawStream);
-			}
-		});
+	var redrawStream = subStream(s, function (val) {
+		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
+		if (redrawStream) {
+			// if vm fully is formed (or mounted vm.node.el?)
+			if (vm.node != null)
+				{ vm.redraw(); }
+			unsubStream(redrawStream);
+		}
+	});
 
-		return streamVal(s);
-	}
+	return streamVal(s);
+}
+
+function hookStream2(s, vm) {
+	var redrawStream = subStream(s, function (val) {
+		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
+		if (redrawStream) {
+			// if vm fully is formed (or mounted vm.node.el?)
+			if (vm.node != null)
+				{ vm.redraw(); }
+		}
+	});
+
+	return redrawStream;
 }
 
 var tagCache = {};
@@ -536,8 +547,10 @@ function preProc(vnew, parent, idx, ownVm) {
 
 	if (isArr(vnew.body))
 		{ preProcBody(vnew); }
-	else if (isStream(vnew.body))
-		{ vnew.body = hookStream(vnew.body, getVm(vnew)); }
+	else {
+		if (isStream(vnew.body))
+			{ vnew.body = hookStream(vnew.body, getVm(vnew)); }
+	}
 }
 
 function preProcBody(vnew) {
@@ -640,8 +653,10 @@ function patchStyle(n, o) {
 		for (var nn in ns) {
 			var nv = ns[nn];
 
-			if (isStream(nv))
-				{ nv = hookStream(nv, getVm(n)); }
+			{
+				if (isStream(nv))
+					{ nv = hookStream(nv, getVm(n)); }
+			}
 
 			if (os == null || nv != null && nv !== os[nn])
 				{ n.el.style[nn] = autoPx(nn, nv); }
@@ -1004,8 +1019,10 @@ function patchAttrs(vnode, donor, initial) {
 			var isDyn = isDynProp(vnode.tag, key);
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
-			if (isStream(nval))
-				{ nattrs[key] = nval = hookStream(nval, getVm(vnode)); }
+			{
+				if (isStream(nval))
+					{ nattrs[key] = nval = hookStream(nval, getVm(vnode)); }
+			}
 
 			if (nval === oval) {}
 			else if (isStyleProp(key))
@@ -1793,6 +1810,11 @@ function ViewModel(view, data, key, opts) {
 	vm.data = data;
 	vm.key = key;
 
+	{
+		if (isStream(data))
+			{ vm._stream = hookStream2(data, vm); }
+	}
+
 	if (opts) {
 		vm.opts = opts;
 		vm.config(opts);
@@ -1925,6 +1947,11 @@ function mount(el, isRoot) {
 function unmount(asSub) {
 	var vm = this;
 
+	{
+		if (isStream(vm._stream))
+			{ unsubStream(vm._stream); }
+	}
+
 	var node = vm.node;
 	var parEl = node.el.parentNode;
 
@@ -2051,6 +2078,13 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 			}
 			vm.hooks && fireHook("willUpdate", vm, newData);
 			vm.data = newData;
+
+			{
+				if (isStream(vm._stream))
+					{ unsubStream(vm._stream); }
+				if (isStream(newData))
+					{ vm._stream = hookStream2(newData, vm); }
+			}
 		}
 	}
 
@@ -2285,6 +2319,8 @@ ViewModelProto.body = function() {
 
 nano.defineElementSpread = defineElementSpread;
 nano.defineSvgElementSpread = defineSvgElementSpread;
+
+ViewModelProto._stream = null;
 
 function protoAttach(el) {
 	var vm = this;

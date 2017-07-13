@@ -285,15 +285,8 @@ function getVm(n) {
 	return n.vm;
 }
 
-var isStream = function() { return false };
-
-
-
 // creates a one-shot self-ending stream that redraws target vm
 // TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
-function hookStream(s, vm) {
-	
-}
 
 var tagObj = {};
 
@@ -418,8 +411,7 @@ function preProc(vnew, parent, idx, ownVm) {
 
 	if (isArr(vnew.body))
 		{ preProcBody(vnew); }
-	else if (isStream(vnew.body))
-		{ vnew.body = hookStream(vnew.body, getVm(vnew)); }
+	else {}
 }
 
 function preProcBody(vnew) {
@@ -472,9 +464,6 @@ function patchStyle(n, o) {
 	else {
 		for (var nn in ns) {
 			var nv = ns[nn];
-
-			if (isStream(nv))
-				{ nv = hookStream(nv, getVm(n)); }
 
 			if (os == null || nv != null && nv !== os[nn])
 				{ n.el.style[nn] = autoPx(nn, nv); }
@@ -788,9 +777,6 @@ function patchAttrs(vnode, donor, initial) {
 			var nval = nattrs[key];
 			var isDyn = isDynProp(vnode.tag, key);
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
-
-			if (isStream(nval))
-				{ nattrs[key] = nval = hookStream(nval, getVm(vnode)); }
 
 			if (nval === oval) {}
 			else if (isStyleProp(key))
@@ -1537,6 +1523,8 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 		if (vm.data !== newData) {
 			vm.hooks && fireHook("willUpdate", vm, newData);
 			vm.data = newData;
+
+			
 		}
 	}
 

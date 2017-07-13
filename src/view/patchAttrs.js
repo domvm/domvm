@@ -56,8 +56,10 @@ export function patchAttrs(vnode, donor, initial) {
 			var isDyn = isDynProp(vnode.tag, key);
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
-			if (isStream(nval))
-				nattrs[key] = nval = hookStream(nval, getVm(vnode));
+			if (FEAT_STREAM) {
+				if (isStream(nval))
+					nattrs[key] = nval = hookStream(nval, getVm(vnode));
+			}
 
 			if (nval === oval) {}
 			else if (isStyleProp(key))

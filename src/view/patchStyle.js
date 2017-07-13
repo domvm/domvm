@@ -15,8 +15,10 @@ export function patchStyle(n, o) {
 		for (var nn in ns) {
 			var nv = ns[nn];
 
-			if (isStream(nv))
-				nv = hookStream(nv, getVm(n));
+			if (FEAT_STREAM) {
+				if (isStream(nv))
+					nv = hookStream(nv, getVm(n));
+			}
 
 			if (os == null || nv != null && nv !== os[nn])
 				n.el.style[nn] = autoPx(nn, nv);

@@ -1,8 +1,10 @@
+import { noop } from "../../utils";
+
 export let isStream = function() { return false };
 
-let streamVal = null;
-let subStream = null;
-let unsubStream = null;
+export let streamVal = noop;
+export let subStream = noop;
+export let unsubStream = noop;
 
 export function streamCfg(cfg) {
 	isStream	= cfg.is;
@@ -14,17 +16,28 @@ export function streamCfg(cfg) {
 // creates a one-shot self-ending stream that redraws target vm
 // TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
 export function hookStream(s, vm) {
-	if (FEAT_STREAM) {
-		var redrawStream = subStream(s, val => {
-			// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
-			if (redrawStream) {
-				// if vm fully is formed (or mounted vm.node.el?)
-				if (vm.node != null)
-					vm.redraw();
-				unsubStream(redrawStream);
-			}
-		});
+	var redrawStream = subStream(s, val => {
+		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
+		if (redrawStream) {
+			// if vm fully is formed (or mounted vm.node.el?)
+			if (vm.node != null)
+				vm.redraw();
+			unsubStream(redrawStream);
+		}
+	});
 
-		return streamVal(s);
-	}
+	return streamVal(s);
+}
+
+export function hookStream2(s, vm) {
+	var redrawStream = subStream(s, val => {
+		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
+		if (redrawStream) {
+			// if vm fully is formed (or mounted vm.node.el?)
+			if (vm.node != null)
+				vm.redraw();
+		}
+	});
+
+	return redrawStream;
 }
