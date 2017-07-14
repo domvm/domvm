@@ -509,7 +509,8 @@ function initElementNode(tag, attrs, body, flags) {
 				node.ns == null && devNotify("SVG_WRONG_FACTORY", [node]);
 			}, 16);
 		}
-		else if (node.tag === "input" && node.key == null)
+		// todo: attrs.contenteditable === "true"?
+		else if (/^(?:input|textarea|select|datalist|keygen|output)$/.test(node.tag) && node.key == null)
 			{ devNotify("UNKEYED_INPUT", [node]); }
 	}
 
