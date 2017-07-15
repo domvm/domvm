@@ -1210,6 +1210,7 @@ function findSequential(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	return null;
 }
 
+// this also acts as a linear adopter when all keys are null
 function findKeyedSequential(n, obody, fromIdx) {
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
@@ -1311,6 +1312,8 @@ function sortByKey(a, b) {
 // larger qtys of KEYED_LIST children will use binary search
 var SEQ_SEARCH_MAX = 100;
 
+// todo: FIXED_BODY should always assume matching old vnode by index rather than calling findDonor
+// todo: fall back to binary search only after failing findKeyedSequential (slice off rest of old body)
 // [] => []
 function patchChildren(vnode, donor, newIsLazy) {
 	var nbody		= vnode.body,
@@ -1348,9 +1351,9 @@ function patchChildren(vnode, donor, newIsLazy) {
 		type2,
 		fromIdx = 0;				// first unrecycled node (search head)
 
-	// list should always be keyed, but FIXED_BODY prevents binary search sorting
 	if (newIsLazy) {
-		find = findKeyedSequential;
+		if (!oldIsKeyed)
+			{ find = findKeyedSequential; }
 
 		var fnode2 = {key: null};
 
