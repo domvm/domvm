@@ -1248,22 +1248,22 @@ function patch(vnode, donor) {
 
 	var oldIsArr = isArr(obody);
 	var newIsArr = isArr(nbody);
-	var newIsLazy = (vnode.flags & LAZY_LIST) === LAZY_LIST;
+	var lazyList = (vnode.flags & LAZY_LIST) === LAZY_LIST;
 
 //	var nonEqNewBody = nbody != null && nbody !== obody;
 
 	if (oldIsArr) {
 		// [] => []
-		if (newIsArr || newIsLazy) {
-		//	console.log('[] => []', obody, nbody);
-			// graft children
-			patchChildren(vnode, donor, newIsLazy);
+		if (newIsArr || lazyList) {
+			if (nbody.length === 0) {			// + && !FIXED_BODY
+				lazyList && nbody.body(vnode);
+				clearChildren(donor);
+			}
+			else
+				{ patchChildren(vnode, donor); }
 		}
 		// [] => "" | null
 		else if (nbody !== obody) {
-			// needs cleanup pass?
-		//	console.log('[] => ""', obody, nbody);
-
 			if (nbody != null) {
 				if (vnode.raw)
 					{ el.innerHTML = nbody; }
@@ -1276,16 +1276,12 @@ function patch(vnode, donor) {
 	}
 	else {
 		// "" | null => []
-		if (newIsArr || newIsLazy) {
-		//	console.log('"" => []', obody, nbody);	// hydrate new here?
+		if (newIsArr) {
 			clearChildren(donor);
-			newIsLazy && nbody.body(vnode);
 			hydrateBody(vnode);
 		}
 		// "" | null => "" | null
 		else if (nbody !== obody) {
-		//	console.log('"" => ""', donor, vnode);
-
 			if (vnode.raw)
 				{ el.innerHTML = nbody; }
 			else if (donor.raw)
@@ -1310,27 +1306,28 @@ var SEQ_SEARCH_MAX = 100;
 // todo: FIXED_BODY should always assume matching old vnode by index rather than calling findDonor
 // todo: fall back to binary search only after failing findKeyedSequential (slice off rest of old body)
 // [] => []
-function patchChildren(vnode, donor, newIsLazy) {
+function patchChildren(vnode, donor) {
 	var nbody		= vnode.body,
 		nlen		= nbody.length,
 		obody		= donor.body,
 		olen		= obody.length,
-		oldIsFixed	= (donor.flags & FIXED_BODY) === FIXED_BODY,
-		oldIsKeyed	= (donor.flags & KEYED_LIST) === KEYED_LIST,
-		domSync		= !oldIsFixed && donor.type === ELEMENT,
+		isLazy		= (vnode.flags & LAZY_LIST) === LAZY_LIST,
+		isFixed		= (vnode.flags & FIXED_BODY) === FIXED_BODY,
+		isKeyed		= (vnode.flags & KEYED_LIST) === KEYED_LIST,
+		domSync		= !isFixed && vnode.type === ELEMENT,
 		find		= findSequential,	// default
 		list		= obody;			// default
 
 	if (domSync && nlen === 0) {
 		clearChildren(donor);
-		if (newIsLazy)
-			{ vnode.body = []; }    // nbody.tpl(all);
+		if (isLazy)
+			{ vnode.body = []; }	// nbody.tpl(all);
 		return;
 	}
 
 	// use binary search for non-static keyed lists of large length
-	if (oldIsKeyed) {
-		if (olen > SEQ_SEARCH_MAX && !oldIsFixed) {
+	if (isKeyed) {
+		if (olen > SEQ_SEARCH_MAX && !isFixed) {
 			find = findKeyedBinary;
 			list = obody.slice();
 			list.sort(sortByKey);
@@ -1346,8 +1343,8 @@ function patchChildren(vnode, donor, newIsLazy) {
 		type2,
 		fromIdx = 0;				// first unrecycled node (search head)
 
-	if (newIsLazy) {
-		if (!oldIsKeyed)
+	if (isLazy) {
+		if (!isKeyed)
 			{ find = findKeyedSequential; }
 
 		var fnode2 = {key: null};
@@ -1358,7 +1355,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 			remake = false;
 			diffRes = null;
 
-			if (oldIsKeyed)
+			if (isKeyed)
 				{ fnode2.key = nbody.key(i); }
 
 			donor2 = find(fnode2, list, fromIdx);
