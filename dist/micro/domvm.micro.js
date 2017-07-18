@@ -1199,14 +1199,8 @@ function patch(vnode, donor) {
 
 	if (oldIsArr) {
 		// [] => []
-		if (newIsArr || lazyList) {
-			if (nbody.length === 0) {			// + && !FIXED_BODY
-				lazyList && nbody.body(vnode);
-				clearChildren(donor);
-			}
-			else
-				{ patchChildren(vnode, donor); }
-		}
+		if (newIsArr || lazyList)
+			{ patchChildren(vnode, donor); }
 		// [] => "" | null
 		else if (nbody !== obody) {
 			if (nbody != null) {
@@ -1249,7 +1243,8 @@ function sortByKey(a, b) {
 var SEQ_SEARCH_MAX = 100;
 
 // todo: FIXED_BODY should always assume matching old vnode by index rather than calling findDonor
-// todo: fall back to binary search only after failing findKeyedSequential (slice off rest of old body)
+// todo: fall back to binary search only after failing findKeyedSequential for large lists
+// todo: stop find/patch loop when !binary && fromIdx > obody.length
 // [] => []
 function patchChildren(vnode, donor) {
 	var nbody		= vnode.body,
