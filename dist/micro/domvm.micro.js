@@ -1138,18 +1138,13 @@ function findSequential(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
 
-		if (n.type === VVIEW && o.vm != null) {			// also ignore recycled/moved?
-			var ov = o.vm;
-
-			// match by key & viewFn
-			if (ov.view === n.view && ov.key === n.key)
+		if (o.vm != null) {
+			// match by key & viewFn || vm
+			if (n.type === VVIEW && o.vm.view === n.view && o.vm.key === n.key || n.type === VMODEL && o.vm === n.vm)
 				{ return o; }
 		}
-
-		if (o.el._node !== o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm || n.key !== o.key)
-			{ continue; }
-
-		return o;
+		else if (o.el._node === o && n.tag === o.tag && n.type === o.type && n.key === o.key && n.flags === o.flags)
+			{ return o; }
 	}
 
 	return null;
