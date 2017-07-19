@@ -9,7 +9,11 @@ import { patchAttrs } from './patchAttrs';
 import { createView } from './createView';
 import { FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST } from './initElementNode';
 
-function findSequential(n, obody, fromIdx, toIdx) {		// pre-tested isView?
+function takeSeqIndex(n, obody, fromIdx) {
+	return obody[fromIdx];
+}
+
+function findSeqThorough(n, obody, fromIdx) {		// pre-tested isView?
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
 
@@ -26,7 +30,7 @@ function findSequential(n, obody, fromIdx, toIdx) {		// pre-tested isView?
 }
 
 // this also acts as a linear adopter when all keys are null
-function findKeyedSequential(n, obody, fromIdx) {
+function findSeqKeyed(n, obody, fromIdx) {
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
 
@@ -38,7 +42,7 @@ function findKeyedSequential(n, obody, fromIdx) {
 }
 
 // list must be a sorted list of vnodes by key
-function findKeyedBinary(n, list) {
+function findBinKeyed(n, list) {
 	var idx = binaryKeySearch(list, n.key);
 	return idx > -1 ? list[idx] : null;
 }
@@ -117,9 +121,6 @@ function sortByKey(a, b) {
 // larger qtys of KEYED_LIST children will use binary search
 const SEQ_SEARCH_MAX = 100;
 
-// todo: FIXED_BODY should always assume matching old vnode by index rather than calling findDonor
-// todo: fall back to binary search only after failing findKeyedSequential for large lists
-// todo: stop find/patch loop when !binary && fromIdx > obody.length
 // [] => []
 function patchChildren(vnode, donor) {
 	var nbody		= vnode.body,
@@ -130,7 +131,12 @@ function patchChildren(vnode, donor) {
 		isFixed		= (vnode.flags & FIXED_BODY) === FIXED_BODY,
 		isKeyed		= (vnode.flags & KEYED_LIST) === KEYED_LIST,
 		domSync		= !isFixed && vnode.type === ELEMENT,
-		find		= findSequential,	// default
+		doFind		= true,
+		find		= (
+			isKeyed ? findSeqKeyed :				// keyed lists/lazyLists (falls back to findBinKeyed when > SEQ_SEARCH_MAX)
+			isFixed || isLazy ? takeSeqIndex :		// unkeyed lazyLists and FIXED_BODY
+			findSeqThorough							// more complex stuff
+		),
 		list		= obody;			// default
 
 	if (domSync && nlen === 0) {
@@ -140,40 +146,26 @@ function patchChildren(vnode, donor) {
 		return;
 	}
 
-	// use binary search for non-static keyed lists of large length
-	if (isKeyed) {
-		if (olen > SEQ_SEARCH_MAX && !isFixed) {
-			find = findKeyedBinary;
-			list = obody.slice();
-			list.sort(sortByKey);
-		}
-		else
-			find = findKeyedSequential;
-	}
-
 	var donor2,
 		node2,
-		diffRes,
-		remake,
-		type2,
 		fromIdx = 0;				// first unrecycled node (search head)
 
 	if (isLazy) {
-		if (!isKeyed)
-			find = findKeyedSequential;
-
 		var fnode2 = {key: null};
-
 		var nbodyNew = Array(nlen);
+	}
 
-		for (var i = 0; i < nlen; i++) {
-			remake = false;
-			diffRes = null;
+	for (var i = 0; i < nlen; i++) {
+		if (isLazy) {
+			var remake = false;
+			var diffRes = null;
 
-			if (isKeyed)
-				fnode2.key = nbody.key(i);
+			if (doFind) {
+				if (isKeyed)
+					fnode2.key = nbody.key(i);
 
-			donor2 = find(fnode2, list, fromIdx);
+				donor2 = find(fnode2, list, fromIdx);
+			}
 
 			if (donor2 != null) {
 				diffRes = nbody.diff(i, donor2);
@@ -192,7 +184,7 @@ function patchChildren(vnode, donor) {
 				remake = true;
 
 			if (remake) {
-				node2 = nbody.tpl(i);
+				node2 = nbody.tpl(i);			// what if this is a VVIEW, VMODEL, injected element?
 				preProc(node2, vnode, i);
 
 				node2._diff = diffRes != null ? diffRes : nbody.diff(i);
@@ -207,28 +199,18 @@ function patchChildren(vnode, donor) {
 			}
 
 			nbodyNew[i] = node2;
-
-			// to keep search space small, if donation is non-contig, move node fwd?
-			// re-establish contigindex
-			if (find !== findKeyedBinary && donor2 != null && donor2.idx === fromIdx)
-				fromIdx++;
 		}
-
-		// replace List w/ new body
-		vnode.body = nbodyNew;
-	}
-	else {
-		for (var i = 0; i < nlen; i++) {
+		else {
 			var node2 = nbody[i];
 			var type2 = node2.type;
 
 			// ELEMENT,TEXT,COMMENT
 			if (type2 <= COMMENT) {
-				if (donor2 = find(node2, list, fromIdx))
+				if (donor2 = doFind && find(node2, list, fromIdx))
 					patch(node2, donor2);
 			}
 			else if (type2 === VVIEW) {
-				if (donor2 = find(node2, list, fromIdx))		// update/moveTo
+				if (donor2 = doFind && find(node2, list, fromIdx))		// update/moveTo
 					var vm = donor2.vm._update(node2.data, vnode, i);		// withDOM
 				else
 					var vm = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
@@ -239,13 +221,33 @@ function patchChildren(vnode, donor) {
 				var vm = node2.vm._update(node2.data, vnode, i);
 				type2 = vm.node.type;
 			}
+		}
 
-			// to keep search space small, if donation is non-contig, move node fwd?
-			// re-establish contigindex
-			if (find !== findKeyedBinary && donor2 != null && donor2.idx === fromIdx)
+		// found donor & during a sequential search
+		if (donor2 != null && find !== findBinKeyed) {
+			// ...at search head
+			if (donor2.idx === fromIdx) {
+				// advance head
 				fromIdx++;
+				// if all old vnodes adopted and more exist, stop searching
+				if (fromIdx === olen && nlen > olen) {
+					// short-circuit find, allow loop just create/init rest
+					donor2 = null;
+					doFind = false;
+				}
+			}
+			// ...past search head (fall back to binary search)
+			else if (isKeyed && olen > SEQ_SEARCH_MAX) {
+				find = findBinKeyed;
+				list = obody.slice();			// .slice(fromIdx)?
+				list.sort(sortByKey);
+			}
 		}
 	}
+
+	// replace List w/ new body
+	if (isLazy)
+		vnode.body = nbodyNew;
 
 	domSync && syncChildren(vnode, donor);
 }
