@@ -29,7 +29,6 @@ function findSeqThorough(n, obody, fromIdx) {		// pre-tested isView?
 	return null;
 }
 
-// this also acts as a linear adopter when all keys are null
 function findSeqKeyed(n, obody, fromIdx) {
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
@@ -121,6 +120,9 @@ function sortByKey(a, b) {
 // larger qtys of KEYED_LIST children will use binary search
 const SEQ_SEARCH_MAX = 100;
 
+// TODO: modify vtree matcher to work similar to dom reconciler for keyed from left -> from right -> head/tail -> binary
+// fall back to binary if after failing nri - nli > SEQ_SEARCH_MAX
+// while-advance non-keyed fromIdx
 // [] => []
 function patchChildren(vnode, donor) {
 	var nbody		= vnode.body,
