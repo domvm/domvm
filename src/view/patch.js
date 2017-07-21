@@ -122,7 +122,7 @@ function sortByKey(a, b) {
 }
 
 // larger qtys of KEYED_LIST children will use binary search
-const SEQ_FAILS_MAX = 100;
+//const SEQ_FAILS_MAX = 100;
 
 // TODO: modify vtree matcher to work similar to dom reconciler for keyed from left -> from right -> head/tail -> binary
 // fall back to binary if after failing nri - nli > SEQ_FAILS_MAX
@@ -164,8 +164,6 @@ function patchChildren(vnode, donor) {
 	}
 
 	for (var i = 0; i < nlen; i++) {
-		foundIdx = -1;
-
 		if (isLazy) {
 			var remake = false;
 			var diffRes = null;
@@ -238,25 +236,15 @@ function patchChildren(vnode, donor) {
 			}
 		}
 
-		// found donor & during a sequential search
-		if (donor2 != null && find !== findBinKeyed) {
-			// ...at search head
-			if (foundIdx === fromIdx) {
-			//	seqFails = 0;
-				// advance head
-				while (++fromIdx < olen && alreadyAdopted(obody[fromIdx])) {}
-				// if all old vnodes adopted and more exist, stop searching
-				if (fromIdx === olen && nlen > olen) {
-					// short-circuit find, allow loop just create/init rest
-					donor2 = null;
-					doFind = false;
-				}
-			}
-			// ...past search head (fall back to binary search)
-			else if (isKeyed && ++seqFails > SEQ_FAILS_MAX) {
-				find = findBinKeyed;
-				list = obody.slice();			// .slice(fromIdx)?
-				list.sort(sortByKey);
+		// found donor & during a sequential search ...at search head
+		if (donor2 != null && foundIdx === fromIdx) {
+			// advance head
+			while (++fromIdx < olen && alreadyAdopted(obody[fromIdx])) {}
+			// if all old vnodes adopted and more exist, stop searching
+			if (fromIdx === olen && nlen > olen) {
+				// short-circuit find, allow loop just create/init rest
+				donor2 = null;
+				doFind = false;
 			}
 		}
 	}
