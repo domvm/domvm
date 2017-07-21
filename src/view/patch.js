@@ -9,6 +9,10 @@ import { patchAttrs } from './patchAttrs';
 import { createView } from './createView';
 import { FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST } from './initElementNode';
 
+function alreadyAdopted(vnode) {
+	return vnode.el._node.parent !== vnode.parent;
+}
+
 function takeSeqIndex(n, obody, fromIdx) {
 	return obody[fromIdx];
 }
@@ -22,7 +26,7 @@ function findSeqThorough(n, obody, fromIdx) {		// pre-tested isView?
 			if (n.type === VVIEW && o.vm.view === n.view && o.vm.key === n.key || n.type === VMODEL && o.vm === n.vm)
 				return o;
 		}
-		else if (o.el._node === o && n.tag === o.tag && n.type === o.type && n.key === o.key && n.flags === o.flags)
+		else if (!alreadyAdopted(o) && n.tag === o.tag && n.type === o.type && n.key === o.key && n.flags === o.flags)
 			return o;
 	}
 
@@ -118,10 +122,10 @@ function sortByKey(a, b) {
 }
 
 // larger qtys of KEYED_LIST children will use binary search
-const SEQ_SEARCH_MAX = 100;
+const SEQ_FAILS_MAX = 100;
 
 // TODO: modify vtree matcher to work similar to dom reconciler for keyed from left -> from right -> head/tail -> binary
-// fall back to binary if after failing nri - nli > SEQ_SEARCH_MAX
+// fall back to binary if after failing nri - nli > SEQ_FAILS_MAX
 // while-advance non-keyed fromIdx
 // [] => []
 function patchChildren(vnode, donor) {
@@ -135,7 +139,7 @@ function patchChildren(vnode, donor) {
 		domSync		= !isFixed && vnode.type === ELEMENT,
 		doFind		= true,
 		find		= (
-			isKeyed ? findSeqKeyed :				// keyed lists/lazyLists (falls back to findBinKeyed when > SEQ_SEARCH_MAX)
+			isKeyed ? findSeqKeyed :				// keyed lists/lazyLists (falls back to findBinKeyed when > SEQ_FAILS_MAX)
 			isFixed || isLazy ? takeSeqIndex :		// unkeyed lazyLists and FIXED_BODY
 			findSeqThorough							// more complex stuff
 		),
@@ -150,7 +154,9 @@ function patchChildren(vnode, donor) {
 
 	var donor2,
 		node2,
-		fromIdx = 0;				// first unrecycled node (search head)
+		foundIdx,
+		fromIdx = 0,		// first unrecycled node (search head)
+		seqFails = 0;
 
 	if (isLazy) {
 		var fnode2 = {key: null};
@@ -158,6 +164,8 @@ function patchChildren(vnode, donor) {
 	}
 
 	for (var i = 0; i < nlen; i++) {
+		foundIdx = -1;
+
 		if (isLazy) {
 			var remake = false;
 			var diffRes = null;
@@ -170,6 +178,7 @@ function patchChildren(vnode, donor) {
 			}
 
 			if (donor2 != null) {
+                foundIdx = donor2.idx;
 				diffRes = nbody.diff(i, donor2);
 
 				// diff returns same, so cheaply adopt vnode without patching
@@ -208,12 +217,16 @@ function patchChildren(vnode, donor) {
 
 			// ELEMENT,TEXT,COMMENT
 			if (type2 <= COMMENT) {
-				if (donor2 = doFind && find(node2, list, fromIdx))
+				if (donor2 = doFind && find(node2, list, fromIdx)) {
 					patch(node2, donor2);
+					foundIdx = donor2.idx;
+				}
 			}
 			else if (type2 === VVIEW) {
-				if (donor2 = doFind && find(node2, list, fromIdx))		// update/moveTo
+				if (donor2 = doFind && find(node2, list, fromIdx)) {		// update/moveTo
 					var vm = donor2.vm._update(node2.data, vnode, i);		// withDOM
+					foundIdx = donor2.idx;
+				}
 				else
 					var vm = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
 
@@ -228,9 +241,10 @@ function patchChildren(vnode, donor) {
 		// found donor & during a sequential search
 		if (donor2 != null && find !== findBinKeyed) {
 			// ...at search head
-			if (donor2.idx === fromIdx) {
+			if (foundIdx === fromIdx) {
+			//	seqFails = 0;
 				// advance head
-				fromIdx++;
+				while (++fromIdx < olen && alreadyAdopted(obody[fromIdx])) {}
 				// if all old vnodes adopted and more exist, stop searching
 				if (fromIdx === olen && nlen > olen) {
 					// short-circuit find, allow loop just create/init rest
@@ -239,7 +253,7 @@ function patchChildren(vnode, donor) {
 				}
 			}
 			// ...past search head (fall back to binary search)
-			else if (isKeyed && olen > SEQ_SEARCH_MAX) {
+			else if (isKeyed && ++seqFails > SEQ_FAILS_MAX) {
 				find = findBinKeyed;
 				list = obody.slice();			// .slice(fromIdx)?
 				list.sort(sortByKey);
