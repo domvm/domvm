@@ -296,10 +296,10 @@ function cssTag(raw) {
 
 // (de)optimization flags
 
-// prevents inserting/removing/reordering of children
-var FIXED_BODY = 1;
 // forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
-var DEEP_REMOVE = 2;
+var DEEP_REMOVE = 1;
+// prevents inserting/removing/reordering of children
+var FIXED_BODY = 2;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
 var KEYED_LIST = 4;
 // indicates an vnode match/diff/recycler function for body
@@ -1123,7 +1123,7 @@ function findSeqThorough(n, obody, fromIdx) {		// pre-tested isView?
 			if (n.type === VVIEW && o.vm.view === n.view && o.vm.key === n.key || n.type === VMODEL && o.vm === n.vm)
 				{ return o; }
 		}
-		else if (!alreadyAdopted(o) && n.tag === o.tag && n.type === o.type && n.key === o.key && n.flags === o.flags)
+		else if (!alreadyAdopted(o) && n.tag === o.tag && n.type === o.type && n.key === o.key && (n.flags & ~DEEP_REMOVE) === (o.flags & ~DEEP_REMOVE))
 			{ return o; }
 	}
 

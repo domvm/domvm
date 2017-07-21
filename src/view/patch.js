@@ -26,7 +26,7 @@ function findSeqThorough(n, obody, fromIdx) {		// pre-tested isView?
 			if (n.type === VVIEW && o.vm.view === n.view && o.vm.key === n.key || n.type === VMODEL && o.vm === n.vm)
 				return o;
 		}
-		else if (!alreadyAdopted(o) && n.tag === o.tag && n.type === o.type && n.key === o.key && n.flags === o.flags)
+		else if (!alreadyAdopted(o) && n.tag === o.tag && n.type === o.type && n.key === o.key && (n.flags & ~DEEP_REMOVE) === (o.flags & ~DEEP_REMOVE))
 			return o;
 	}
 

@@ -6,10 +6,10 @@ import { devNotify } from "./addons/devmode";
 
 // (de)optimization flags
 
-// prevents inserting/removing/reordering of children
-export const FIXED_BODY = 1;
 // forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
-export const DEEP_REMOVE = 2;
+export const DEEP_REMOVE = 1;
+// prevents inserting/removing/reordering of children
+export const FIXED_BODY = 2;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
 export const KEYED_LIST = 4;
 // indicates an vnode match/diff/recycler function for body
