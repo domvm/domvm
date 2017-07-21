@@ -37,8 +37,10 @@ export function preProc(vnew, parent, idx, ownVm) {
 
 	if (isArr(vnew.body))
 		preProcBody(vnew);
-	else if (isStream(vnew.body))
-		vnew.body = hookStream(vnew.body, getVm(vnew));
+	else if (FEAT_STREAM) {
+		if (isStream(vnew.body))
+			vnew.body = hookStream(vnew.body, getVm(vnew));
+	}
 }
 
 export function preProcBody(vnew) {

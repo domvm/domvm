@@ -152,37 +152,20 @@ function curry(fn, args, ctx) {
 	};
 }
 
+/*
+export function prop(val, cb, ctx, args) {
+	return function(newVal, execCb) {
+		if (newVal !== undefined && newVal !== val) {
+			val = newVal;
+			execCb !== false && isFunc(cb) && cb.apply(ctx, args);
+		}
 
+		return val;
+	};
+}
+*/
 
 // adapted from https://github.com/Olical/binary-search
-function binaryKeySearch(list, item) {
-    var min = 0;
-    var max = list.length - 1;
-    var guess;
-
-	var bitwise = (max <= 2147483647) ? true : false;
-	if (bitwise) {
-		while (min <= max) {
-			guess = (min + max) >> 1;
-			if (list[guess].key === item) { return guess; }
-			else {
-				if (list[guess].key < item) { min = guess + 1; }
-				else { max = guess - 1; }
-			}
-		}
-	} else {
-		while (min <= max) {
-			guess = Math.floor((min + max) / 2);
-			if (list[guess].key === item) { return guess; }
-			else {
-				if (list[guess].key < item) { min = guess + 1; }
-				else { max = guess - 1; }
-			}
-		}
-	}
-
-    return -1;
-}
 
 function VNode() {}
 
@@ -279,15 +262,8 @@ function getVm(n) {
 	return n.vm;
 }
 
-var isStream = function() { return false };
-
-
-
 // creates a one-shot self-ending stream that redraws target vm
 // TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
-function hookStream(s, vm) {
-	
-}
 
 var tagCache = {};
 
@@ -320,10 +296,10 @@ function cssTag(raw) {
 
 // (de)optimization flags
 
-// prevents inserting/removing/reordering of children
-var FIXED_BODY = 1;
 // forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
-var DEEP_REMOVE = 2;
+var DEEP_REMOVE = 1;
+// prevents inserting/removing/reordering of children
+var FIXED_BODY = 2;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
 var KEYED_LIST = 4;
 // indicates an vnode match/diff/recycler function for body
@@ -391,7 +367,7 @@ function initElementNode(tag, attrs, body, flags) {
 			else if (isSet(mergedAttrs.id))
 				{ node.key = mergedAttrs.id; }
 			else if (isSet(mergedAttrs.name))
-				{ node.key = mergedAttrs.name + (mergedAttrs.type == "radio" ? mergedAttrs.value : ""); }
+				{ node.key = mergedAttrs.name + (mergedAttrs.type === "radio" || mergedAttrs.type === "checkbox" ? mergedAttrs.value : ""); }
 		}
 	}
 
@@ -432,8 +408,7 @@ function preProc(vnew, parent, idx, ownVm) {
 
 	if (isArr(vnew.body))
 		{ preProcBody(vnew); }
-	else if (isStream(vnew.body))
-		{ vnew.body = hookStream(vnew.body, getVm(vnew)); }
+	else {}
 }
 
 function preProcBody(vnew) {
@@ -528,9 +503,6 @@ function patchStyle(n, o) {
 	else {
 		for (var nn in ns) {
 			var nv = ns[nn];
-
-			if (isStream(nv))
-				{ nv = hookStream(nv, getVm(n)); }
 
 			if (os == null || nv != null && nv !== os[nn])
 				{ n.el.style[nn] = autoPx(nn, nv); }
@@ -876,9 +848,6 @@ function patchAttrs(vnode, donor, initial) {
 			var isDyn = isDynProp(vnode.tag, key);
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
-			if (isStream(nval))
-				{ nattrs[key] = nval = hookStream(nval, getVm(vnode)); }
-
 			if (nval === oval) {}
 			else if (isStyleProp(key))
 				{ patchStyle(vnode, donor); }
@@ -1137,28 +1106,31 @@ function syncChildren(node, donor) {
 	}
 }
 
-function findSequential(n, obody, fromIdx, toIdx) {		// pre-tested isView?
+function alreadyAdopted(vnode) {
+	return vnode.el._node.parent !== vnode.parent;
+}
+
+function takeSeqIndex(n, obody, fromIdx) {
+	return obody[fromIdx];
+}
+
+function findSeqThorough(n, obody, fromIdx) {		// pre-tested isView?
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
 
-		if (n.type === VVIEW && o.vm != null) {			// also ignore recycled/moved?
-			var ov = o.vm;
-
-			// match by key & viewFn
-			if (ov.view === n.view && ov.key === n.key)
+		if (o.vm != null) {
+			// match by key & viewFn || vm
+			if (n.type === VVIEW && o.vm.view === n.view && o.vm.key === n.key || n.type === VMODEL && o.vm === n.vm)
 				{ return o; }
 		}
-
-		if (o.el._node !== o || n.tag !== o.tag || n.type !== o.type || n.vm !== o.vm || n.key !== o.key)
-			{ continue; }
-
-		return o;
+		else if (!alreadyAdopted(o) && n.tag === o.tag && n.type === o.type && n.key === o.key && (n.flags & ~DEEP_REMOVE) === (o.flags & ~DEEP_REMOVE))
+			{ return o; }
 	}
 
 	return null;
 }
 
-function findKeyedSequential(n, obody, fromIdx) {
+function findSeqKeyed(n, obody, fromIdx) {
 	for (; fromIdx < obody.length; fromIdx++) {
 		var o = obody[fromIdx];
 
@@ -1167,12 +1139,6 @@ function findKeyedSequential(n, obody, fromIdx) {
 	}
 
 	return null;
-}
-
-// list must be a sorted list of vnodes by key
-function findKeyedBinary(n, list) {
-	var idx = binaryKeySearch(list, n.key);
-	return idx > -1 ? list[idx] : null;
 }
 
 // have it handle initial hydrate? !donor?
@@ -1200,22 +1166,16 @@ function patch(vnode, donor) {
 
 	var oldIsArr = isArr(obody);
 	var newIsArr = isArr(nbody);
-	var newIsLazy = (vnode.flags & LAZY_LIST) === LAZY_LIST;
+	var lazyList = (vnode.flags & LAZY_LIST) === LAZY_LIST;
 
 //	var nonEqNewBody = nbody != null && nbody !== obody;
 
 	if (oldIsArr) {
 		// [] => []
-		if (newIsArr || newIsLazy) {
-		//	console.log('[] => []', obody, nbody);
-			// graft children
-			patchChildren(vnode, donor, newIsLazy);
-		}
+		if (newIsArr || lazyList)
+			{ patchChildren(vnode, donor); }
 		// [] => "" | null
 		else if (nbody !== obody) {
-			// needs cleanup pass?
-		//	console.log('[] => ""', obody, nbody);
-
 			if (nbody != null) {
 				if (vnode.raw)
 					{ el.innerHTML = nbody; }
@@ -1228,16 +1188,12 @@ function patch(vnode, donor) {
 	}
 	else {
 		// "" | null => []
-		if (newIsArr || newIsLazy) {
-		//	console.log('"" => []', obody, nbody);	// hydrate new here?
+		if (newIsArr) {
 			clearChildren(donor);
-			newIsLazy && nbody.body(vnode);
 			hydrateBody(vnode);
 		}
 		// "" | null => "" | null
 		else if (nbody !== obody) {
-		//	console.log('"" => ""', donor, vnode);
-
 			if (vnode.raw)
 				{ el.innerHTML = nbody; }
 			else if (donor.raw)
@@ -1252,68 +1208,62 @@ function patch(vnode, donor) {
 	donor.hooks && fireHook("didRecycle", donor, vnode);
 }
 
-function sortByKey(a, b) {
-	return a.key > b.key ? 1 : a.key < b.key ? -1 : 0;
-}
-
 // larger qtys of KEYED_LIST children will use binary search
-var SEQ_SEARCH_MAX = 100;
+//const SEQ_FAILS_MAX = 100;
 
+// TODO: modify vtree matcher to work similar to dom reconciler for keyed from left -> from right -> head/tail -> binary
+// fall back to binary if after failing nri - nli > SEQ_FAILS_MAX
+// while-advance non-keyed fromIdx
 // [] => []
-function patchChildren(vnode, donor, newIsLazy) {
+function patchChildren(vnode, donor) {
 	var nbody		= vnode.body,
 		nlen		= nbody.length,
 		obody		= donor.body,
 		olen		= obody.length,
-		oldIsFixed	= (donor.flags & FIXED_BODY) === FIXED_BODY,
-		oldIsKeyed	= (donor.flags & KEYED_LIST) === KEYED_LIST,
-		domSync		= !oldIsFixed && donor.type === ELEMENT,
-		find		= findSequential,	// default
+		isLazy		= (vnode.flags & LAZY_LIST) === LAZY_LIST,
+		isFixed		= (vnode.flags & FIXED_BODY) === FIXED_BODY,
+		isKeyed		= (vnode.flags & KEYED_LIST) === KEYED_LIST,
+		domSync		= !isFixed && vnode.type === ELEMENT,
+		doFind		= true,
+		find		= (
+			isKeyed ? findSeqKeyed :				// keyed lists/lazyLists (falls back to findBinKeyed when > SEQ_FAILS_MAX)
+			isFixed || isLazy ? takeSeqIndex :		// unkeyed lazyLists and FIXED_BODY
+			findSeqThorough							// more complex stuff
+		),
 		list		= obody;			// default
 
 	if (domSync && nlen === 0) {
 		clearChildren(donor);
-		if (newIsLazy)
-			{ vnode.body = []; }    // nbody.tpl(all);
+		if (isLazy)
+			{ vnode.body = []; }	// nbody.tpl(all);
 		return;
-	}
-
-	// use binary search for non-static keyed lists of large length
-	if (oldIsKeyed) {
-		if (olen > SEQ_SEARCH_MAX && !oldIsFixed) {
-			find = findKeyedBinary;
-			list = obody.slice();
-			list.sort(sortByKey);
-		}
-		else
-			{ find = findKeyedSequential; }
 	}
 
 	var donor2,
 		node2,
-		diffRes,
-		remake,
-		type2,
-		fromIdx = 0;				// first unrecycled node (search head)
+		foundIdx,
+		fromIdx = 0,		// first unrecycled node (search head)
+		seqFails = 0;
 
-	// list should always be keyed, but FIXED_BODY prevents binary search sorting
-	if (newIsLazy) {
-		find = findKeyedSequential;
-
+	if (isLazy) {
 		var fnode2 = {key: null};
-
 		var nbodyNew = Array(nlen);
+	}
 
-		for (var i = 0; i < nlen; i++) {
-			remake = false;
-			diffRes = null;
+	for (var i = 0; i < nlen; i++) {
+		if (isLazy) {
+			var remake = false;
+			var diffRes = null;
 
-			if (oldIsKeyed)
-				{ fnode2.key = nbody.key(i); }
+			if (doFind) {
+				if (isKeyed)
+					{ fnode2.key = nbody.key(i); }
 
-			donor2 = find(fnode2, list, fromIdx);
+				donor2 = find(fnode2, list, fromIdx);
+			}
 
 			if (donor2 != null) {
+                foundIdx = donor2.idx;
 				diffRes = nbody.diff(i, donor2);
 
 				// diff returns same, so cheaply adopt vnode without patching
@@ -1330,7 +1280,7 @@ function patchChildren(vnode, donor, newIsLazy) {
 				{ remake = true; }
 
 			if (remake) {
-				node2 = nbody.tpl(i);
+				node2 = nbody.tpl(i);			// what if this is a VVIEW, VMODEL, injected element?
 				preProc(node2, vnode, i);
 
 				node2._diff = diffRes != null ? diffRes : nbody.diff(i);
@@ -1345,29 +1295,23 @@ function patchChildren(vnode, donor, newIsLazy) {
 			}
 
 			nbodyNew[i] = node2;
-
-			// to keep search space small, if donation is non-contig, move node fwd?
-			// re-establish contigindex
-			if (find !== findKeyedBinary && donor2 != null && donor2.idx === fromIdx)
-				{ fromIdx++; }
 		}
-
-		// replace List w/ new body
-		vnode.body = nbodyNew;
-	}
-	else {
-		for (var i = 0; i < nlen; i++) {
+		else {
 			var node2 = nbody[i];
 			var type2 = node2.type;
 
 			// ELEMENT,TEXT,COMMENT
 			if (type2 <= COMMENT) {
-				if (donor2 = find(node2, list, fromIdx))
-					{ patch(node2, donor2); }
+				if (donor2 = doFind && find(node2, list, fromIdx)) {
+					patch(node2, donor2);
+					foundIdx = donor2.idx;
+				}
 			}
 			else if (type2 === VVIEW) {
-				if (donor2 = find(node2, list, fromIdx))		// update/moveTo
-					{ var vm = donor2.vm._update(node2.data, vnode, i); }		// withDOM
+				if (donor2 = doFind && find(node2, list, fromIdx)) {		// update/moveTo
+					var vm = donor2.vm._update(node2.data, vnode, i);		// withDOM
+					foundIdx = donor2.idx;
+				}
 				else
 					{ var vm = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
 
@@ -1377,13 +1321,24 @@ function patchChildren(vnode, donor, newIsLazy) {
 				var vm = node2.vm._update(node2.data, vnode, i);
 				type2 = vm.node.type;
 			}
+		}
 
-			// to keep search space small, if donation is non-contig, move node fwd?
-			// re-establish contigindex
-			if (find !== findKeyedBinary && donor2 != null && donor2.idx === fromIdx)
-				{ fromIdx++; }
+		// found donor & during a sequential search ...at search head
+		if (donor2 != null && foundIdx === fromIdx) {
+			// advance head
+			while (++fromIdx < olen && alreadyAdopted(obody[fromIdx])) {}
+			// if all old vnodes adopted and more exist, stop searching
+			if (fromIdx === olen && nlen > olen) {
+				// short-circuit find, allow loop just create/init rest
+				donor2 = null;
+				doFind = false;
+			}
 		}
 	}
+
+	// replace List w/ new body
+	if (isLazy)
+		{ vnode.body = nbodyNew; }
 
 	domSync && syncChildren(vnode, donor);
 }
@@ -1627,6 +1582,8 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 		if (vm.data !== newData) {
 			vm.hooks && fireHook("willUpdate", vm, newData);
 			vm.data = newData;
+
+			
 		}
 	}
 

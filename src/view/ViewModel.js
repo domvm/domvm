@@ -5,6 +5,7 @@ import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, ra
 import { repaint, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
+import { isStream, hookStream2, unsubStream } from './addons/stream';
 import { devNotify, DEVMODE } from "./addons/devmode";
 import { DOMInstr } from "./addons/dominstr";
 
@@ -23,6 +24,11 @@ export function ViewModel(view, data, key, opts) {
 	vm.view = view;
 	vm.data = data;
 	vm.key = key;
+
+	if (FEAT_STREAM) {
+		if (isStream(data))
+			vm._stream = hookStream2(data, vm);
+	}
 
 	if (opts) {
 		vm.opts = opts;
@@ -156,6 +162,11 @@ function mount(el, isRoot) {
 function unmount(asSub) {
 	var vm = this;
 
+	if (FEAT_STREAM) {
+		if (isStream(vm._stream))
+			unsubStream(vm._stream);
+	}
+
 	var node = vm.node;
 	var parEl = node.el.parentNode;
 
@@ -282,6 +293,13 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 			}
 			vm.hooks && fireHook("willUpdate", vm, newData);
 			vm.data = newData;
+
+			if (FEAT_STREAM) {
+				if (isStream(vm._stream))
+					unsubStream(vm._stream);
+				if (isStream(newData))
+					vm._stream = hookStream2(newData, vm);
+			}
 		}
 	}
 

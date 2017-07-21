@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+	<title>domvm • TodoMVC</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="base.css">
+	<link rel="stylesheet" href="index.css">
+	<style>
+		#todo-form {
+			position: relative;
+		}
+
+		#toggle-all {
+			position: absolute;
+			top: auto;
+			left: auto;
+			bottom: 12px;
+			width: 36px;
+			height: 32px;
+			z-index: 100;
+		}
+
+		#toggle-all:before {
+			padding: 0;
+		}
+	</style>
+</head>
+<body>
+	<section class="todoapp"></section>
+
+	<footer id="info">
+		<p>Double-click to edit a todo</p>
+		<p>Written by <a href="https://github.com/leeoniya">Leon Sorokin</a></p>
+		<p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+	</footer>
+
+	<script src="../lib/rlite.min.js"></script>
+	<script src="../../dist/nano/domvm.nano.min.js"></script>
+	<script src="todoview.js"></script>
+	<script src="todoapp.js"></script>
+	<script src="todoroutes.js"></script>
+</body>
+</html>

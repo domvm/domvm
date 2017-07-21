@@ -21,7 +21,7 @@ FilterableProductTable.prototype = {
 
 function FilterableProductTableView(vm, filtTable) {
 	vm.config({
-		events: {
+		onemit: {
 			filterChange: function() {
 				filtTable.filter();
 				vm.redraw();

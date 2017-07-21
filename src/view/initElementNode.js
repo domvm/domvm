@@ -6,10 +6,10 @@ import { devNotify } from "./addons/devmode";
 
 // (de)optimization flags
 
-// prevents inserting/removing/reordering of children
-export const FIXED_BODY = 1;
 // forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
-export const DEEP_REMOVE = 2;
+export const DEEP_REMOVE = 1;
+// prevents inserting/removing/reordering of children
+export const FIXED_BODY = 2;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
 export const KEYED_LIST = 4;
 // indicates an vnode match/diff/recycler function for body
@@ -77,7 +77,7 @@ export function initElementNode(tag, attrs, body, flags) {
 			else if (isSet(mergedAttrs.id))
 				node.key = mergedAttrs.id;
 			else if (isSet(mergedAttrs.name))
-				node.key = mergedAttrs.name + (mergedAttrs.type == "radio" ? mergedAttrs.value : "");
+				node.key = mergedAttrs.name + (mergedAttrs.type === "radio" || mergedAttrs.type === "checkbox" ? mergedAttrs.value : "");
 		}
 	}
 
@@ -90,7 +90,8 @@ export function initElementNode(tag, attrs, body, flags) {
 				node.ns == null && devNotify("SVG_WRONG_FACTORY", [node]);
 			}, 16);
 		}
-		else if (node.tag === "input" && node.key == null)
+		// todo: attrs.contenteditable === "true"?
+		else if (/^(?:input|textarea|select|datalist|keygen|output)$/.test(node.tag) && node.key == null)
 			devNotify("UNKEYED_INPUT", [node]);
 	}
 

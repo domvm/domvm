@@ -20,6 +20,11 @@ function View(vm) {
 		return el("div", [
 			el("input"),
 			el("input[name=x]"),
+			el("textarea"),
+			el("select"),
+			el("keygen"),
+			el("datalist"),
+			el("output"),
 			el("div", {onmousedown: function() {}}, "Click me!"),
 			el("div", {onclick: onclick}, "Click me 2!"),
 			el("div", {onclick: subView3 ? onclick : [onclick]}, "Click me 3!"),
@@ -29,7 +34,7 @@ function View(vm) {
 			vw(View2, {}, 'mooKey'),
 			subView3 ? vw(View3) : null,
 			vw(View4, {}),
-			el("input", attrs),
+			el("div", attrs),
 			[
 				el("div"),
 				"abc",

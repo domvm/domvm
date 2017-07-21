@@ -28,8 +28,8 @@ function getBuilds(name) {
 		},
 		{
 			build: "mini",
-			contents: "+ `stream`<br> + `prop`<br>",
-			descr: "view reactivity (reduce need for explicit `redraw()`)",
+			contents: "+ `stream`<br>",
+			descr: "view reactivity",
 			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
 		},
 		{

@@ -1,18 +1,16 @@
-<img src="domvm.png" alt="domvm logo" style="max-width:100%;" align="right" height="60">
+<h2><a href="https://github.com/leeoniya/domvm">domvm (DOM ViewModel)</a><img src="domvm.png" alt="domvm logo" height="64" align="right"></h2>
 
-domvm (DOM ViewModel)
----------------------
 A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
 ---
 ### Intro
 
 domvm is a flexible, pure-js view layer for building high performance web applications; it'll happily fit into any existing codebase, whatever the structure.
-
-- It's zero-dependency, no-compilation & tooling-free; a single `<script>` tag and you're ready to go. Supports IE9+.
+- It's zero-dependency, no-compilation & tooling-free; a single `<script>` tag and you're ready to go.
 - It's small: [~5.5k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code. [20x faster SSR](/demos/bench/ssr) vs React.
 - Its entire, practical API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
 - It's well-suited for building [simple widgets](http://leeoniya.github.io/domvm/demos/playground/#calendar) and [complex, fault-tolerant applications](http://leeoniya.github.io/domvm/demos/ThreaditJS).
+- Supports down to IE9 with some tiny shims: [Promise](https://github.com/RubenVerborgh/promiscuous), [requestAnimationFrame](https://gist.github.com/paulirish/1579671), [matchesSelector](https://gist.github.com/elijahmanor/6452535).
 
 To use domvm you should be comfortable with JavaScript and the DOM; the following code should be fairly self-explanatory:
 
@@ -62,7 +60,7 @@ Some minimalist libs that work well:
 - Ajax/fetch/XHR: [xr](https://github.com/radiosilence/xr), [alite](https://github.com/chrisdavies/alite)
 - Streams: [flyd](https://github.com/paldepind/flyd), [xstream](https://github.com/staltz/xstream)
 - Immutable Stores: [Freezer](https://github.com/arqex/freezer), [MobX](https://github.com/mobxjs/mobx)
-- CSS-in-JS: [stylis.js](https://github.com/thysultan/stylis.js), [j2c](https://github.com/j2css/j2c), [oh boy...](https://github.com/MicheleBertoli/css-in-js)
+- CSS-in-JS: [stylis.js](https://github.com/thysultan/stylis.js), [j2c](https://github.com/j2css/j2c), [emotion](https://github.com/tkh44/emotion), [oh boy...](https://github.com/MicheleBertoli/css-in-js)
 
 Many [/demos](/demos) are examples of how to use these libs in your apps.
 
@@ -458,12 +456,14 @@ domvm.config({
 
 **Node-level**
 
-Usage: `el("div", {_hooks: {...}}, "Hello")`
+Usage: `el("div", {_key: "...", _hooks: {...}}, "Hello")`
 
 - will/didInsert (initial insert)
 - will/didRecycle (reuse & patch)
 - will/didReinsert (detach & move)
 - will/didRemove
+
+While not required, it is strongly advised that your hook-handling vnodes are uniquely keyed as shown above, to ensure deterministic DOM recycling and hook invocation.
 
 **View-level**
 
@@ -474,7 +474,7 @@ Usage: `vm.config({hooks: {willMount: ...}})` or `return {render: ..., hooks: {w
 - will/didMount (dom insertion)
 - will/didUnmount (dom removal)
 
-`did*` hooks fire after a forced dom repaint. `willRemove` & `willUnmount` hooks can return a Promise to delay the removal/unmounting allowing you to CSS transition, etc.
+`did*` hooks fire after a forced DOM repaint. `willRemove` & `willUnmount` hooks can return a Promise to delay the removal/unmounting allowing you to CSS transition, etc.
 
 ### Isomorphism & SSR
 

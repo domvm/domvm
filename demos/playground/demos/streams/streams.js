@@ -59,6 +59,13 @@ function View7(vm, pers) {
 	}
 }
 
+// todo: the dependent vm._stream discards returned data
+function View8(vm, stream) {
+	return function() {
+		return el("#data-stream", stream().qty);
+	}
+}
+
 function genStyle(p) {
 	return {
 		background: p.background(),
@@ -83,6 +90,9 @@ domvm.createView(View4, pers).mount(document.body);
 domvm.createView(View6, pers).mount(document.body);
 domvm.createView(View7, pers).mount(document.body);
 
+var stream8 = flyd.stream({qty: 0});
+domvm.createView(View8, stream8).mount(document.body);
+
 var factor = 1;
 
 setInterval(function() {
@@ -100,3 +110,7 @@ setInterval(function() {
 setInterval(function() {
 	pers.disabled(!pers.disabled());
 }, factor * 250);
+
+setInterval(function() {
+	stream8({qty: stream8().qty + 1});
+}, factor * 100);
