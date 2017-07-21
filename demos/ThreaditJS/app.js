@@ -12,6 +12,17 @@ Object.defineProperties(Array.prototype, {
     }
 });
 
+function prop(val, cb, ctx, args) {
+	return function(newVal, execCb) {
+		if (newVal !== undefined && newVal !== val) {
+			val = newVal;
+			execCb !== false && typeof cb === "function" && cb.apply(ctx, args);
+		}
+
+		return val;
+	};
+}
+
 function error(msg, data) {
 	return Promise.reject({
 		message: msg,
@@ -105,7 +116,7 @@ const ERROR			= -1,
 	  LOADED		= 4;
 
 function ThreadSubmitView(vm) {
-	var status = domvm.prop(LOADED, vm.redraw.bind(vm));
+	var status = prop(LOADED, vm.redraw.bind(vm));
 	var error;
 
 	function postThread() {
@@ -185,10 +196,10 @@ function loadComments(threadId, soft) {
 // sub-sub view
 function CommentReplyView(vm, comment) {
 	var redraw = vm.redraw.bind(vm);
-	var status = domvm.prop(LOADED, redraw);
+	var status = prop(LOADED, redraw);
 	var error;
 
-	var tmpComment = domvm.prop("", redraw);
+	var tmpComment = prop("", redraw);
 
 	function toggleReplyMode(e) {
 		status(INTERACTING);
