@@ -1382,8 +1382,7 @@ function patchChildren(vnode, donor) {
 			isKeyed ? findSeqKeyed :				// keyed lists/lazyLists (falls back to findBinKeyed when > SEQ_FAILS_MAX)
 			isFixed || isLazy ? takeSeqIndex :		// unkeyed lazyLists and FIXED_BODY
 			findSeqThorough							// more complex stuff
-		),
-		list		= obody;			// default
+		);
 
 	if (domSync && nlen === 0) {
 		clearChildren(donor);
@@ -1395,8 +1394,7 @@ function patchChildren(vnode, donor) {
 	var donor2,
 		node2,
 		foundIdx,
-		fromIdx = 0,		// first unrecycled node (search head)
-		seqFails = 0;
+		fromIdx = 0;		// first unrecycled node (search head)
 
 	if (isLazy) {
 		var fnode2 = {key: null};
@@ -1412,7 +1410,7 @@ function patchChildren(vnode, donor) {
 				if (isKeyed)
 					{ fnode2.key = nbody.key(i); }
 
-				donor2 = find(fnode2, list, fromIdx);
+				donor2 = find(fnode2, obody, fromIdx);
 			}
 
 			if (donor2 != null) {
@@ -1455,13 +1453,13 @@ function patchChildren(vnode, donor) {
 
 			// ELEMENT,TEXT,COMMENT
 			if (type2 <= COMMENT) {
-				if (donor2 = doFind && find(node2, list, fromIdx)) {
+				if (donor2 = doFind && find(node2, obody, fromIdx)) {
 					patch(node2, donor2);
 					foundIdx = donor2.idx;
 				}
 			}
 			else if (type2 === VVIEW) {
-				if (donor2 = doFind && find(node2, list, fromIdx)) {		// update/moveTo
+				if (donor2 = doFind && find(node2, obody, fromIdx)) {		// update/moveTo
 					var vm = donor2.vm._update(node2.data, vnode, i);		// withDOM
 					foundIdx = donor2.idx;
 				}
