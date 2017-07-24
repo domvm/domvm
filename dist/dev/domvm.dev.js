@@ -1394,7 +1394,7 @@ function patchChildren(vnode, donor) {
 	var donor2,
 		node2,
 		foundIdx,
-		patched = 0,
+	//	patched = 0,
 		fromIdx = 0;		// first unrecycled node (search head)
 
 	if (isLazy) {
@@ -1488,9 +1488,9 @@ function patchChildren(vnode, donor) {
 				}
 			}
 
-			if (++patched % 10 === 0)
-				{ while (fromIdx < olen && alreadyAdopted(obody[fromIdx]))
-					{ fromIdx++; } }
+		//	if (++patched % 10 === 0)
+		//		while (fromIdx < olen && alreadyAdopted(obody[fromIdx]))
+		//			fromIdx++;
 		}
 	}
 
