@@ -1296,6 +1296,7 @@ function patchChildren(vnode, donor) {
 	var donor2,
 		node2,
 		foundIdx,
+		patched = 0,
 		fromIdx = 0;		// first unrecycled node (search head)
 
 	if (isLazy) {
@@ -1377,15 +1378,21 @@ function patchChildren(vnode, donor) {
 		}
 
 		// found donor & during a sequential search ...at search head
-		if (donor2 != null && foundIdx === fromIdx) {
-			// advance head
-			while (++fromIdx < olen && alreadyAdopted(obody[fromIdx])) {}
-			// if all old vnodes adopted and more exist, stop searching
-			if (fromIdx === olen && nlen > olen) {
-				// short-circuit find, allow loop just create/init rest
-				donor2 = null;
-				doFind = false;
+		if (donor2 != null) {
+			if (foundIdx === fromIdx) {
+				// advance head
+				fromIdx++;
+				// if all old vnodes adopted and more exist, stop searching
+				if (fromIdx === olen && nlen > olen) {
+					// short-circuit find, allow loop just create/init rest
+					donor2 = null;
+					doFind = false;
+				}
 			}
+
+			if (++patched % 10 === 0)
+				{ while (fromIdx < olen && alreadyAdopted(obody[fromIdx]))
+					{ fromIdx++; } }
 		}
 	}
 
