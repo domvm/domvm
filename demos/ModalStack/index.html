@@ -42,10 +42,8 @@
 
 	<!--IE11-->
 	<script src="element.matches.js"></script>
-	<script src="promise.min.js"></script>
+	<script src="promiscuous-shim.js"></script>
 
-	<script src="cloner.js"></script>
-	<script src="PropCache.js"></script>
 	<script src="ModalStack.js"></script>
 </head>
 <body>
@@ -71,10 +69,12 @@
 				}
 			},
 			content: {
-				body: el(".test1", [
-					el("p", "Do you see any Teletubbies in here? Do you see a slender plastic tag clipped to my shirt with my name printed on it? Do you see a little Asian child with a blank expression on his face sitting outside on a mechanical helicopter that shakes when you put quarters in it? No? Well, that's what you see at a toy store. And you must think you're in a toy store, because you're here shopping for an infant named Jeb."),
-					el("button.dismiss", {onclick: dismiss}, "Dismiss"),
-				]),
+				body: function() {
+					return el(".test1", [
+						el("p", "Do you see any Teletubbies in here? Do you see a slender plastic tag clipped to my shirt with my name printed on it? Do you see a little Asian child with a blank expression on his face sitting outside on a mechanical helicopter that shakes when you put quarters in it? No? Well, that's what you see at a toy store. And you must think you're in a toy store, because you're here shopping for an infant named Jeb."),
+						el("button.dismiss", {onclick: dismiss}, "Dismiss"),
+					]);
+				},
 				onpush: {
 					initial: {style: {height: 300, width: 600}},						// immediate
 				//	delayed: {style: {color: "red", height: 600, transform: "rotateZ(360deg)", transition: "250ms"}},	// nextTick
@@ -99,10 +99,12 @@
 				}
 			},
 			content: {
-				body: el(".test2", [
-				   tx("bar"),
-				   el("button.dismiss", {onclick: dismiss}, "Dismiss"),
-				]),
+				body: function() {
+					return el(".test2", [
+					   tx("bar"),
+					   el("button.dismiss", {onclick: dismiss}, "Dismiss"),
+					])
+				},
 				onpush: {
 					initial: {style: {height: 200, width: 400, transform: "translateX(-180px)"}},
 					delayed: {style: {transform: "translateX(0)", transition: "250ms"}},
@@ -125,10 +127,12 @@
 				}
 			},
 			content: {
-				body: el(".test3", [
-					tx("baz"),
-					el("button.dismiss", {onclick: dismiss}, "Dismiss"),
-				]),
+				body: function() {
+					return el(".test3", [
+						tx("baz"),
+						el("button.dismiss", {onclick: dismiss}, "Dismiss"),
+					])
+				},
 				onpush: {
 					initial: {style: {height: 600, transform: "rotateZ(-180deg)"}},
 					delayed: {style: {color: "blue", height: 200, transform: "none", transition: "250ms"}},
@@ -161,15 +165,15 @@
 /*
 		setTimeout(function() {
 			modals.pop();
-		}, 1500);
+		}, 3000);
 
 		setTimeout(function() {
 			modals.pop();
-		}, 2000);
+		}, 4000);
 
 		setTimeout(function() {
 			modals.pop();
-		}, 2500);
+		}, 5000);
 */
 	</script>
 </body>
