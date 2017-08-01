@@ -84,8 +84,12 @@
 				text-align: center;
 			}
 
-			nav li:hover {
-				cursor: pointer;
+			nav li a {
+				text-decoration: none;
+				color: inherit;
+			}
+
+			nav li:hover a {
 				text-decoration: underline;
 			}
 
@@ -241,16 +245,19 @@
 					function setActive(name) {
 						active = name;
 						vm.redraw();
+						return false;
+					}
+
+					function navItem(name) {
+						return el("li", {class: active === name ? "active" : null}, [
+							el("a", {href: "#", onclick: [setActive, name]}, name),
+						]);
 					}
 
 					return function() {
 						return el("#code", [
 							el("nav", [
-								el("ul", [
-									el("li", {class: active === "HTML" ? "active" : null, onclick: [setActive, "HTML"]}, "HTML"),
-									el("li", {class: active === "CSS" ? "active" : null, onclick: [setActive, "CSS"]}, "CSS"),
-									el("li", {class: active === "JS" ? "active" : null, onclick: [setActive, "JS"]}, "JS"),
-								]),
+								el("ul", ["HTML","CSS","JS"].map(navItem)),
 							]),
 							vw(HtmlView, {active: active === "HTML"}),
 							vw(CssView, {active: active === "CSS"}),
