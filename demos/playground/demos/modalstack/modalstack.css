@@ -1,0 +1,50 @@
+html {
+	box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+	box-sizing: inherit;
+}
+
+body {
+	position: relative;
+	margin: auto;
+	max-width: 800px;
+	padding: 10px;
+}
+
+.dvm-modal-overlay {
+	background: rgba(128,255,255,.5);
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+}
+
+.dvm-modal-content {
+	background: white;
+/*	text-align: center;*/
+	padding: 10px;
+	box-shadow: 0 0 10px #666;
+	border-radius: 5px;
+}
+
+
+
+
+
+.dismiss {
+	display: block;
+	margin-top: 10px;
+}
+
+.dvm-modal-content {
+	width: 300px;
+	height: 300px;
+	left: 150px;
+	top: 70px;
+	position: absolute;
+}
