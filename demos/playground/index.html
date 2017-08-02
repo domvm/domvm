@@ -30,32 +30,72 @@
 				position: fixed;
 				height: 100%;
 				width: 100%;
+				display: flex;
 			}
 
 			main > * {
 				height: 100%;
-				display: inline-block;
-				vertical-align: top;
-			}
-
-			#htmljs {
+				flex: 1;
+				display: flex;
+				flex-direction: column;
 				width: 50%;
+				min-width: 50%;
+				position: relative;
 			}
 
+			@media only screen and (max-width: 1280px) {
+				main {
+					flex-direction: column;
+				}
+
+				main > * {
+					height: 50%;
+					width: 100%;
+				}
+			}
+
+			#js,
+			#css,
 			#html {
-				height: 10%;
+				position: absolute;
+				visibility: hidden;
+				width: 100%;
+				flex: 1;
 			}
 
-			#js {
-				height: 90%;
+			#js.active,
+			#css.active,
+			#html.active {
+				position: static;
+				visibility: visible;
+				overflow: hidden;
 			}
 
-			#css  {
-				width: 20%;
+			nav ul {
+				list-style: none;
+				padding: 0;
+				margin: 0;
 			}
 
-			#result {
-				width: 30%;
+			nav li {
+				display: inline-block;
+				padding: 5px 10px;
+				width: 100px;
+				text-align: center;
+			}
+
+			nav li a {
+				text-decoration: none;
+				color: inherit;
+			}
+
+			nav li:hover a {
+				text-decoration: underline;
+			}
+
+			nav li.active {
+				background: #282a36;
+				color: white;
 			}
 		</style>
 	</head>
@@ -114,7 +154,7 @@
 					url.indexOf(".html") > 0 ? CODE.HTML :
 					null;
 
-				return fetch(url).then(res => res.text()).then(text => targ.value += text);
+				return fetch(url).then(res => res.text()).then(text => targ.value = text);
 			})).then(boot);
 
 			function boot() {
@@ -140,13 +180,14 @@
 									highlightSelectionMatches: true,
 									scrollbarStyle: "simple",
 									mode: mode,
+									tabSize: 2,
 								}).on("change", debounce(function(cm) {
 									code.value = cm.getValue();
 									vm.root().redraw();
 								}, 500));
 							}
 						},
-						render: () => el(tag),
+						render: (vm, data) => el(tag, {class: data.active ? "active" : null}),
 					};
 				}
 
@@ -198,14 +239,37 @@
 					}
 				}
 
-				function AppView() {
+				function CodeView(vm) {
+					var active = "JS";
+
+					function setActive(name) {
+						active = name;
+						vm.redraw();
+						return false;
+					}
+
+					function navItem(name) {
+						return el("li", {class: active === name ? "active" : null}, [
+							el("a", {href: "#", onclick: [setActive, name]}, name),
+						]);
+					}
+
+					return function() {
+						return el("#code", [
+							el("nav", [
+								el("ul", ["HTML","CSS","JS"].map(navItem)),
+							]),
+							vw(HtmlView, {active: active === "HTML"}),
+							vw(CssView, {active: active === "CSS"}),
+							vw(JsView, {active: active === "JS"}),
+						])
+					}
+				}
+
+				function AppView(vm) {
 					return function() {
 						return el("main#app", [
-							vw(CssView),
-							el("#htmljs", [
-								vw(HtmlView),
-								vw(JsView),
-							]),
+							vw(CodeView),
 							vw(ResultView),
 						//	vw(ConsoleView),
 						]);

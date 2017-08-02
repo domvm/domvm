@@ -1,6 +1,8 @@
-var el = domvm.defineElement;						// element VNode creator
+// element VNode creator
+var el = domvm.defineElement;
 
-function StepperView(vm, stepper) {					// view closure (called once during init)
+// view closure (called once during init)
+function StepperView(vm, stepper) {
 	function add(num) {
 		stepper.value += num;
 		vm.redraw();
@@ -10,7 +12,8 @@ function StepperView(vm, stepper) {					// view closure (called once during init
 		stepper.value = +e.target.value;
 	}
 
-	return function() {								// template renderer (called on each redraw)
+	// template renderer (called on each redraw)
+	return function() {
 		return el("#stepper", [
 			el("button", {onclick: [add, -1]}, "-"),
 			el("input[type=number]", {value: stepper.value, oninput: set}),
@@ -19,10 +22,13 @@ function StepperView(vm, stepper) {					// view closure (called once during init
 	};
 }
 
-var stepper = {										// some external model/data/state
+// some external model/data/state
+var stepper = {
 	value: 1
 };
 
-var vm = domvm.createView(StepperView, stepper);	// create ViewModel, passing model
+// create ViewModel, passing model
+var vm = domvm.createView(StepperView, stepper);
 
-vm.mount(document.body);							// mount into document
+// mount into document
+vm.mount(document.body);

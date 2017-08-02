@@ -804,7 +804,7 @@ function patchEvent(node, name, nval, oval) {
 
 	var el = node.el;
 
-	if (nval._raw) {
+	if (nval == null || nval._raw) {
 		bindEv(el, name, nval);
 		return;
 	}
