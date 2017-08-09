@@ -53,13 +53,18 @@ function deepNotifyRemove(node) {
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks, vm = node.vm;
 
-	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
-	//	var parEl = node.el;
-		for (var i = 0; i < node.body.length; i++)
-			_removeChild(el, node.body[i].el);
+	if (isArr(node.body)) {
+		if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE) {
+			for (var i = 0; i < node.body.length; i++)
+				_removeChild(el, node.body[i].el);
+		}
+		else
+			deepUnref(node);
 	}
 
 	parEl.removeChild(el);
+
+	el._node = null;
 
 	hooks && fireHook("didRemove", node, null, immediate);
 
@@ -83,11 +88,23 @@ export function removeChild(parEl, el) {
 		_removeChild(parEl, el);
 }
 
+function deepUnref(node) {
+	var obody = node.body;
+	for (var i = 0; i < obody.length; i++) {
+		var o2 = obody[i];
+		o2.el._node = null;
+		if (isArr(o2.body))
+			deepUnref(o2);
+	}
+}
+
 export function clearChildren(parent) {
 	var parEl = parent.el;
 
-	if ((parent.flags & DEEP_REMOVE) === 0)
+	if ((parent.flags & DEEP_REMOVE) === 0) {
+		isArr(parent.body) && deepUnref(parent);
 		parEl.textContent = null;
+	}
 	else {
 		var el = parEl.firstChild;
 
