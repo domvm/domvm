@@ -605,9 +605,9 @@ function _removeChild(parEl, el, immediate) {
 			{ deepUnref(node); }
 	}
 
-	parEl.removeChild(el);
+	delete el._node;
 
-	el._node = null;
+	parEl.removeChild(el);
 
 	hooks && fireHook("didRemove", node, null, immediate);
 
@@ -635,7 +635,7 @@ function deepUnref(node) {
 	var obody = node.body;
 	for (var i = 0; i < obody.length; i++) {
 		var o2 = obody[i];
-		o2.el._node = null;
+		delete o2.el._node;
 		if (isArr(o2.body))
 			{ deepUnref(o2); }
 	}
