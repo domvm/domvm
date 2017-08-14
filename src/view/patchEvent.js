@@ -1,4 +1,4 @@
-import { isArr, isFunc, cmpArr } from '../utils';
+import { isArr, isFunc, isPlainObj } from '../utils';
 import { closestVNode } from './dom';
 import { getVm } from './utils';
 import { onevent } from './config';
@@ -59,6 +59,14 @@ export function patchEvent(node, name, nval, oval) {
 	if (_DEVMODE) {
 		if (isFunc(nval) && isFunc(oval) && oval.name == nval.name)
 			devNotify("INLINE_HANDLER", [node, oval, nval]);
+
+		if (oval != null && nval != null &&
+			(
+				isArr(oval) != isArr(nval) ||
+				isPlainObj(oval) != isPlainObj(nval) ||
+				isFunc(oval) != isFunc(nval)
+			)
+		) devNotify("MISMATCHED_HANDLER", [node, oval, nval]);
 	}
 
 	var el = node.el;
