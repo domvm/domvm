@@ -26,10 +26,6 @@ export const DEVMODE = {
 		return ["Anonymous event handlers get re-bound on each redraw, consider defining them outside of templates for better reuse.", vnode, oval, nval];
 	},
 
-	MISMATCHED_HANDLER: function(vnode, oval, nval) {
-		return ["Patching of different event handler styles is not fully supported for performance reasons. Ensure that handlers are defined using the same style.", vnode, oval, nval];
-	},
-
 	SVG_WRONG_FACTORY: function(vnode) {
 		return ["<svg> defined using domvm.defineElement. Use domvm.defineSvgElement for <svg> & child nodes.", vnode];
 	},

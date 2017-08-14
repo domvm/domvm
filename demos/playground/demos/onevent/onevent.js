@@ -14,8 +14,8 @@ function View() {
 				height: 100,
 				background: randHex(),
 			},
-			onmouseenter: noop,
-			onmouseleave: noop,
+			onmouseenter: [noop],
+			onmouseleave: [noop],
 		});
 	}
 }
