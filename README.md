@@ -520,6 +520,7 @@ Usage: `vm.config({hooks: {willMount: ...}})` or `return {render: ..., hooks: {w
 
 `did*` hooks fire after a forced DOM repaint. `willRemove` & `willUnmount` hooks can return a Promise to delay the removal/unmounting allowing you to CSS transition, etc.
 
+---
 ### Isomorphism & SSR
 
 Like React's `renderToString`, domvm can generate html and then hydrate it on the client.
