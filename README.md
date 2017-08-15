@@ -363,9 +363,11 @@ function cellClick(foo, bar, e, node, vm, data) {}
 el("table", {onclick: {"td": [cellClick, "foo", "bar"]}}, ...);
 ```
 
-Listeners may return `false` as a shorthand for `e.preventDefault()` + `e.stopPropagation()`.
+Notes:
 
-Fancy listeners will invoke any defined view-level `vm.config({onevent:...})` and global `domvm.config({onevent:...})` callbacks. See [Autoredraw](#autoredraw).
+- Listeners may return `false` as a shorthand for `e.preventDefault()` + `e.stopPropagation()`.
+- Animation & transition listeners cannot be attached via `on*` props, such as `animationend`, `animationiteration`, `animationstart`, `transitionend`. To bind these events use a node-level `willInsert` [Lifecycle Hook](#lifecycle-hooks).
+- Only fancy listeners will invoke view-level `vm.config({onevent:...})` and global `domvm.config({onevent:...})` callbacks (if defined). See [Autoredraw](#autoredraw).
 
 ---
 ### Hello World++
