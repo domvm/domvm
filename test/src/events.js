@@ -18,6 +18,8 @@ QUnit.module("Events");
 			args2: null,
 			set: 0,
 			unset: 0,
+			clicks1: 0,
+			clicks2: 0,
 			vmOnArgs: null,
 			globalOnArgs: null,
 		};
@@ -27,10 +29,12 @@ QUnit.module("Events");
 
 	function click1() {
 		counts.args1 = Array.prototype.slice.call(arguments);
+		counts.clicks1++;
 	}
 
 	function click2() {
 		counts.args2 = Array.prototype.slice.call(arguments);
+		counts.clicks2++;
 		return false;
 	}
 
@@ -38,7 +42,7 @@ QUnit.module("Events");
 
 	Object.defineProperty(HTMLElement.prototype, "onclick", {
 		set: function(s) {
-			if (s == null)
+			if (s == null || s == "")
 				counts.unset++;
 			else
 				counts.set++;
@@ -181,12 +185,77 @@ QUnit.module("Events");
 		reset();
 	});
 
-	QUnit.todo("Fancy (delegated)", function(assert) {
-		// todo: runs all matched delegs, not just first or most specific
+	QUnit.test("Fancy (delegated)", function(assert) {
+		tpl = el("div", {onclick: {"*": click1, "input": click1}}, [el("input")]);
+		vm = domvm.createView(View).mount(testyDiv);
+
+		// initial bind
+		assert.equal(vm.node.el.onclick.name, 'handle');
+		assert.equal(counts.set, 1);
+		assert.equal(counts.unset, 0);
+
+		reset();
+
+		// no re-bind on redraw, even with handler & param changes
+		tpl = el("div", {onclick: {"*": click2, "input": click2}}, [el("input")]);
+		vm.redraw(true);
+		assert.equal(vm.node.el.onclick.name, 'handle');
+		assert.equal(counts.set, 0);
+		assert.equal(counts.unset, 0);
+
+		// clicked args
+		doClick(vm.node.body[0].el);
+		assert.equal(counts.clicks2, 2, "runs all matched delegs, not just first or most specific");
+		assert.equal(counts.args2.length, 4);
+		assert.ok(counts.args2[0] instanceof MouseEvent);
+		assert.equal(counts.args2[1], vm.node.body[0]);
+		assert.equal(counts.args2[2], vm);
+		assert.equal(counts.args2[3], vm.data);
+
+		reset();
+
+		// remove
+		tpl = el("div", [el("input")]);
+		vm.redraw(true);
+		assert.equal(vm.node.el.onclick, null);
+		assert.equal(counts.set, 0);
+		assert.equal(counts.unset, 1);
+
+		reset();
 	});
 
-	QUnit.todo("Fancy (parameterized & delegated)", function(assert) {
+	QUnit.test("Fancy (parameterized & delegated)", function(assert) {
+		tpl = el("div", {onclick: {"*": [click1, 1, 2], "input": [click2, 3, 4]}}, [el("input")]);
+		vm = domvm.createView(View).mount(testyDiv);
 
+		// initial bind
+		assert.equal(vm.node.el.onclick.name, 'handle');
+		assert.equal(counts.set, 1);
+		assert.equal(counts.unset, 0);
+
+		reset();
+
+		doClick(vm.node.body[0].el);
+		assert.equal(counts.clicks1, 1, "runs all matched delegs, not just first or most specific");
+		assert.equal(counts.clicks2, 1, "runs all matched delegs, not just first or most specific");
+
+		assert.equal(counts.args1.length, 6);
+		assert.equal(counts.args1[0], 1);
+		assert.equal(counts.args1[1], 2);
+		assert.ok(counts.args1[2] instanceof MouseEvent);
+		assert.equal(counts.args1[3], vm.node.body[0]);
+		assert.equal(counts.args1[4], vm);
+		assert.equal(counts.args1[5], vm.data);
+
+		assert.equal(counts.args2.length, 6);
+		assert.equal(counts.args2[0], 3);
+		assert.equal(counts.args2[1], 4);
+		assert.ok(counts.args2[2] instanceof MouseEvent);
+		assert.equal(counts.args2[3], vm.node.body[0]);
+		assert.equal(counts.args2[4], vm);
+		assert.equal(counts.args2[5], vm.data);
+
+		reset();
 	});
 
 //	Object.defineProperty(HTMLElement.prototype, "onclick", onclick);
