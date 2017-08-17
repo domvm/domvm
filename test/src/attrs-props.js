@@ -215,6 +215,7 @@ QUnit.module("Attrs/props");
 
 	});
 */
+	// move this to events.js?
 	QUnit.test("Absent on* and style attrs after recycle", function(assert) {
 		var onclick = function() {};
 		var attrs = {style: "color: red;", onclick: onclick};		// TODO: props ".blah"

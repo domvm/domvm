@@ -245,11 +245,81 @@ QUnit.module("Flat List w/keys");
 		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 1 });
 	});
 
-	QUnit.skip("Swap nested", function(assert) {});
-	QUnit.skip("move two adjacent up", function(assert) {});
-	QUnit.skip("move two adjacent down", function(assert) {});
-	QUnit.skip("move two disjoint up", function(assert) {});
-	QUnit.skip("move two disjoint down", function(assert) {});
+	QUnit.test("Swap nested", function(assert) {
+	//	["z", "c", "b", "a", "xxx", "moo", 666] ->
+	//	["z", "moo", "xxx", "a", "b", "c", 666]
+
+		list.length = 0;
+		list.push("z", "moo", "xxx", "a", "b", "c", 666);
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>moo</li><li>xxx</li><li>a</li><li>b</li><li>c</li><li>666</li></ul>';
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 4 });
+	});
+
+	QUnit.test("move two adjacent up", function(assert) {
+	//	["z", "moo", "xxx", "a", "b", "c", 666] ->
+	//	["z", "a", "b", "moo", "xxx", "c", 666]
+
+		list.length = 0;
+		list.push("z", "a", "b", "moo", "xxx", "c", 666);
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>a</li><li>b</li><li>moo</li><li>xxx</li><li>c</li><li>666</li></ul>';
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
+	});
+
+	// optimal should be only 2 ops
+	QUnit.test("move two adjacent down", function(assert) {
+	//	["z", "a", "b", "moo", "xxx", "c", 666] ->
+	//	["b", "moo", "xxx", "z", "a", "c", 666]
+
+		list.length = 0;
+		list.push("b", "moo", "xxx", "z", "a", "c", 666);
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul id="list1" class="test-output"><li>b</li><li>moo</li><li>xxx</li><li>z</li><li>a</li><li>c</li><li>666</li></ul>';
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 3 });
+	});
+
+	QUnit.test("move two disjoint up", function(assert) {
+	//	["b", "moo", "xxx", "z", "a", "c", 666] ->
+	//	["b", "xxx", "moo", "a", "z", "c", 666]
+
+		list.length = 0;
+		list.push("b", "xxx", "moo", "a", "z", "c", 666);
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul id="list1" class="test-output"><li>b</li><li>xxx</li><li>moo</li><li>a</li><li>z</li><li>c</li><li>666</li></ul>';
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
+	});
+
+	QUnit.test("move two disjoint down", function(assert) {
+	//	["b", "xxx", "moo", "a", "z", "c", 666] ->
+	//	["b", "moo", "xxx", "z", "a", "c", 666]
+
+		list.length = 0;
+		list.push("b", "moo", "xxx", "z", "a", "c", 666);
+
+		instr.start();
+		vm.redraw(true);
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul id="list1" class="test-output"><li>b</li><li>moo</li><li>xxx</li><li>z</li><li>a</li><li>c</li><li>666</li></ul>';
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
+	});
 
 	// TODO: soundness: odd vs even lists
 	// TODO: coverage: test hydrating from right after hitting impasse on left
