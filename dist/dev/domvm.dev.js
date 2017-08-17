@@ -723,11 +723,16 @@ function deepNotifyRemove(node) {
 function _removeChild(parEl, el, immediate) {
 	var node = el._node, hooks = node.hooks, vm = node.vm;
 
-	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
-	//	var parEl = node.el;
-		for (var i = 0; i < node.body.length; i++)
-			{ _removeChild(el, node.body[i].el); }
+	if (isArr(node.body)) {
+		if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE) {
+			for (var i = 0; i < node.body.length; i++)
+				{ _removeChild(el, node.body[i].el); }
+		}
+		else
+			{ deepUnref(node); }
 	}
+
+	delete el._node;
 
 	parEl.removeChild(el);
 
@@ -753,11 +758,23 @@ function removeChild(parEl, el) {
 		{ _removeChild(parEl, el); }
 }
 
+function deepUnref(node) {
+	var obody = node.body;
+	for (var i = 0; i < obody.length; i++) {
+		var o2 = obody[i];
+		delete o2.el._node;
+		if (isArr(o2.body))
+			{ deepUnref(o2); }
+	}
+}
+
 function clearChildren(parent) {
 	var parEl = parent.el;
 
-	if ((parent.flags & DEEP_REMOVE) === 0)
-		{ parEl.textContent = null; }
+	if ((parent.flags & DEEP_REMOVE) === 0) {
+		isArr(parent.body) && deepUnref(parent);
+		parEl.textContent = null;
+	}
 	else {
 		var el = parEl.firstChild;
 
@@ -831,14 +848,11 @@ function config(newCfg) {
 }
 
 function bindEv(el, type, fn) {
-//	DEBUG && console.log("addEventListener");
 	el[type] = fn;
 }
 
-function handle(e, fn, args) {
-	var node = closestVNode(e.target);
-	var vm = getVm(node);
-	var out = fn.apply(null, args.concat([e, node, vm, vm.data]));
+function exec(fn, args, e, node, vm) {
+	var out = fn.apply(vm, args.concat([e, node, vm, vm.data]));
 
 	// should these respect out === false?
 	vm.onevent(e, node, vm, vm.data, args);
@@ -850,70 +864,60 @@ function handle(e, fn, args) {
 	}
 }
 
-function wrapHandler(fn, args) {
-//	console.log("wrapHandler");
+function handle(e) {
+	var node = closestVNode(e.target);
+	var vm = getVm(node);
 
-	return function wrap(e) {
-		handle(e, fn, args);
-	};
-}
+	var evDef = e.currentTarget._node.attrs["on" + e.type], fn, args;
 
-// delagated handlers {".moo": [fn, a, b]}, {".moo": fn}
-function wrapHandlers(hash) {
-//	console.log("wrapHandlers");
-
-	return function wrap(e) {
-		for (var sel in hash) {
+	if (isArr(evDef)) {
+		fn = evDef[0];
+		args = evDef.slice(1);
+		exec(fn, args, e, node, vm);
+	}
+	else {
+		for (var sel in evDef) {
 			if (e.target.matches(sel)) {
-				var hnd = hash[sel];
-				var isarr = isArr(hnd);
-				var fn = isarr ? hnd[0] : hnd;
-				var args = isarr ? hnd.slice(1) : [];
+				var evDef2 = evDef[sel];
 
-				handle(e, fn, args);
+				if (isArr(evDef2)) {
+					fn = evDef2[0];
+					args = evDef2.slice(1);
+				}
+				else {
+					fn = evDef2;
+					args = [];
+				}
+
+				exec(fn, args, e, node, vm);
 			}
 		}
 	}
 }
 
-// could merge with on*
-
 function patchEvent(node, name, nval, oval) {
 	if (nval === oval)
 		{ return; }
 
-	var el = node.el;
-
-	if (nval == null || nval._raw) {
-		bindEv(el, name, nval);
-		return;
-	}
-
 	{
 		if (isFunc(nval) && isFunc(oval) && oval.name == nval.name)
 			{ devNotify("INLINE_HANDLER", [node, oval, nval]); }
+
+		if (oval != null && nval != null &&
+			(
+				isArr(oval) != isArr(nval) ||
+				isPlainObj(oval) != isPlainObj(nval) ||
+				isFunc(oval) != isFunc(nval)
+			)
+		) { devNotify("MISMATCHED_HANDLER", [node, oval, nval]); }
 	}
 
-	// param'd eg onclick: [myFn, 1, 2, 3...]
-	if (isArr(nval)) {
-		{
-			if (oval != null && !isArr(oval))
-				{ devNotify("MISMATCHED_HANDLER", [node, oval, nval]); }
-		}
-		var diff = oval == null || !cmpArr(nval, oval);
-		diff && bindEv(el, name, wrapHandler(nval[0], nval.slice(1)));
-	}
-	// basic onclick: myFn (or extracted)
-	else if (isFunc(nval)) {
-		{
-			if (oval != null && !isFunc(oval))
-				{ devNotify("MISMATCHED_HANDLER", [node, oval, nval]); }
-		}
-		bindEv(el, name, wrapHandler(nval, []));
-	}
-	// delegated onclick: {".sel": myFn} & onclick: {".sel": [myFn, 1, 2, 3]}
-	else		// isPlainObj, TODO:, diff with old/clean
-		{ bindEv(el, name, wrapHandlers(nval)); }
+	var el = node.el;
+
+	if (nval == null || isFunc(nval))
+		{ bindEv(el, name, nval); }
+	else if (oval == null)
+		{ bindEv(el, name, handle); }
 }
 
 function defineElement(tag, arg1, arg2, flags) {

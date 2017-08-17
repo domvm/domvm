@@ -243,7 +243,7 @@ function CommentReplyView(vm, comment) {
 			el("form", {onsubmit: postComment}, [
 				el("textarea", {
 					value: tmpComment(),
-					onkeyup: previewReply,
+					onkeyup: [previewReply],
 				}),
 				el("input", {type: "submit", value: "Reply!"}),
 				el(".preview", {_raw: true}, T.previewComment(tmpComment())),

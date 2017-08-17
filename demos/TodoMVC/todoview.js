@@ -46,8 +46,8 @@ function HeaderView(vm, app) {
 		el("header#header", [
 			el("h1", "todos"),
 			el("form#todo-form", {onsubmit: preventSubmit}, [
-				app.items.length > 0 && el("input[type=checkbox]#toggle-all", {checked: !app.items.some(item => !item.done), onchange: toggleAll}),
-				el("input#new-todo", {placeholder: "What needs to be done?", onkeyup: maybeAdd, _hooks: {didInsert: n => n.el.focus()}})
+				app.items.length > 0 && el("input[type=checkbox]#toggle-all", {checked: !app.items.some(item => !item.done), onchange: [toggleAll]}),
+				el("input#new-todo", {placeholder: "What needs to be done?", onkeyup: [maybeAdd], _hooks: {didInsert: n => n.el.focus()}})
 			])
 		])
 }

@@ -41,6 +41,7 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 - [Templates](#templates)
 - [Views](#views)
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
+- [Event Listeners](#event-listeners)
 - [Hello World++](#hello-world)
 - [Parents & Roots](#parents--roots)
 - [Autoredraw](#autoredraw)
@@ -322,6 +323,51 @@ As an example, the distinction can be discussed in terms of the [calendar demo](
 
 The general advice is, restrict your views to complex, building-block-level, stateful components and use sub-template generators for readability and DRY purposes; a button should not be a view.
 
+---
+### Event Listeners
+
+**Basic** listeners are defined by plain functions, and receive only the event as an argument (the same as vanilla DOM). If you need high performance such as `mousemove`, `drag`, `scroll` or other events, use basic listeners.
+
+```js
+function filter(e) {
+    // ...
+}
+
+el("input", {oninput: filter});
+```
+
+**Fancy** listeners can do much more and are defined by a hash, an array or a hash of arrays. These listeners receive the following arguments: `(...args, e, node, vm, data)`.
+
+Listeners defined by a hash are used for event delegation:
+
+```js
+function rowClick(e, node, vm, data) {}
+function cellClick(e, node, vm, data) {}
+
+el("table", {onclick: {"tr": rowClick, "td": cellClick}}, ...);
+```
+
+Arrays can be used to pass additional args to parameterized listeners:
+
+```js
+function cellClick(foo, bar, e, node, vm, data) {}
+
+el("td", {onclick: [cellClick, "foo", "bar"]}, "moo");
+```
+
+Delegated and parameterized features can be combined:
+
+```js
+function cellClick(foo, bar, e, node, vm, data) {}
+
+el("table", {onclick: {"td": [cellClick, "foo", "bar"]}}, ...);
+```
+
+Notes:
+
+- Listeners may return `false` as a shorthand for `e.preventDefault()` + `e.stopPropagation()`.
+- Animation & transition listeners cannot be attached via `on*` props, such as `animationend`, `animationiteration`, `animationstart`, `transitionend`. To bind these events use a node-level `willInsert` [Lifecycle Hook](#lifecycle-hooks).
+- Only fancy listeners will invoke view-level `vm.config({onevent:...})` and global `domvm.config({onevent:...})` callbacks (if defined). See [Autoredraw](#autoredraw).
 
 ---
 ### Hello World++
@@ -432,7 +478,7 @@ So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().
 
 Is calling `vm.redraw()` everywhere a nuisance to you? Well, there is no autoredraw!
 
-However, there *is* an easy way to add it yourself using `domvm.config.onevent` which, if present, will fire after any event handler.
+However, there *is* an easy way to add it yourself using `domvm.config.onevent` which, if present, will fire after **fancy** [event listeners](#event-listeners).
 You can get as creative as you want, including adding your own semantics to prevent redraw on a case-by-case basis by setting and checking for `e.redraw = false`.
 Or maybe having a Promise piggyback on `e.redraw = new Promise(...)` that will resolve upon deep data being fetched.
 You can maybe implement filtering by event type so that a flood of `mousemove` events, doesnt result in a redraw flood. Etc..
@@ -476,6 +522,7 @@ Usage: `vm.config({hooks: {willMount: ...}})` or `return {render: ..., hooks: {w
 
 `did*` hooks fire after a forced DOM repaint. `willRemove` & `willUnmount` hooks can return a Promise to delay the removal/unmounting allowing you to CSS transition, etc.
 
+---
 ### Isomorphism & SSR
 
 Like React's `renderToString`, domvm can generate html and then hydrate it on the client.
