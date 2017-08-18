@@ -42,10 +42,10 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 - [Views](#views)
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
 - [Event Listeners](#event-listeners)
+- [Autoredraw](#autoredraw)
 - [Hello World++](#hello-world)
 - [Parents & Roots](#parents--roots)
 - [Emit System](#emit-system)
-- [Autoredraw](#autoredraw)
 - [Lifecycle Hooks](#lifecycle-hooks)
 - [Isomorphism & SSR](#isomorphism--ssr)
 - WIP: https://github.com/leeoniya/domvm/issues/156
@@ -364,11 +364,49 @@ function cellClick(foo, bar, e, node, vm, data) {}
 el("table", {onclick: {"td": [cellClick, "foo", "bar"]}}, ...);
 ```
 
+View-level and global `onevent` listeners can be also be defined to handle fancy events:
+
+```js
+// global
+domvm.config({
+    onevent: function(e, node, vm, data, args) {
+        // ...
+    }
+});
+
+// vm-level
+vm.config({
+    vm: function(e, node, vm, data, args) {
+        // ...
+    }
+});
+```
+
 Notes:
 
 - Listeners may return `false` as a shorthand for `e.preventDefault()` + `e.stopPropagation()`.
 - Animation & transition listeners cannot be attached via `on*` props, such as `animationend`, `animationiteration`, `animationstart`, `transitionend`. To bind these events use a node-level `willInsert` [Lifecycle Hook](#lifecycle-hooks).
-- Only fancy listeners will invoke view-level `vm.config({onevent:...})` and global `domvm.config({onevent:...})` callbacks (if defined). See [Autoredraw](#autoredraw).
+- `onevent`'s args always represent the origin of the event in the vtree
+
+---
+### Autoredraw
+
+Is calling `vm.redraw()` everywhere a nuisance to you?
+
+There's an easy way to implement autoredraw yourself via a global or vm-level `onevent` which fires after all **fancy** [event listeners](#event-listeners).
+The [onevent demo](http://leeoniya.github.io/domvm/demos/playground/#onevent) demonstrates a basic full app autoredraw:
+
+```js
+domvm.config({
+    onevent: function(e, node, vm, data, args) {
+        vm.root().redraw();
+    }
+});
+```
+
+You can get as creative as you want, including adding your own semantics to prevent redraw on a case-by-case basis by setting and checking for `e.redraw = false`.
+Or maybe having a Promise piggyback on `e.redraw = new Promise(...)` that will resolve upon deep data being fetched.
+You can maybe implement filtering by event type so that a flood of `mousemove` events, doesnt result in a redraw flood. Etc..
 
 ---
 ### Hello World++
@@ -483,7 +521,7 @@ Emit is similar to DOM events, but works explicitly within the vdom tree.
 When an event handler is found and invoked, the bubbling stops.
 
 ```js
-// set up a listener; vm and data args indicate the *source* vm
+// set up a listener; vm and data args reflect the origin of the event
 vm.config({
     onemit: {
         myEvent: function(arg1, arg2, vm, data) {
@@ -504,28 +542,6 @@ domvm.config({
         myEvent: function(arg1, arg2, vm, data) {
             // ... do stuff
         }
-    }
-});
-```
-
----
-### Autoredraw
-
-Is calling `vm.redraw()` everywhere a nuisance to you? Well, there is no autoredraw!
-
-However, there *is* an easy way to add it yourself using `domvm.config.onevent` which, if present, will fire after **fancy** [event listeners](#event-listeners).
-You can get as creative as you want, including adding your own semantics to prevent redraw on a case-by-case basis by setting and checking for `e.redraw = false`.
-Or maybe having a Promise piggyback on `e.redraw = new Promise(...)` that will resolve upon deep data being fetched.
-You can maybe implement filtering by event type so that a flood of `mousemove` events, doesnt result in a redraw flood. Etc..
-
-`onevent`'s arguments always represent the origin of the event in the vtree.
-
-The [onevent demo](http://leeoniya.github.io/domvm/demos/playground/#onevent) configs a basic full app autoredraw:
-
-```js
-domvm.config({
-    onevent: function(e, node, vm, data, args) {
-        vm.root().redraw();
     }
 });
 ```
