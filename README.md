@@ -366,7 +366,7 @@ function cellClick(foo, bar, e, node, vm, data) {}
 el("table", {onclick: {"td": [cellClick, "foo", "bar"]}}, ...);
 ```
 
-View-level and global `onevent` listeners can be also be defined to handle fancy events:
+View-level and global `onevent` listeners can be defined to handle **fancy** events:
 
 ```js
 // global
@@ -513,22 +513,6 @@ It is *this* fully capable, view-augmented domain model that domvm's author cons
 ```js
 var el = domvm.defineElement;
 
-function StepperView(vm, stepper) {
-    var add = stepper.add.bind(stepper);
-
-    function set(e) {
-        stepper.set(e.target.value);
-    }
-
-    return function() {
-        return el("#stepper", [
-            el("button", {onclick: [add, -1]}, "-"),
-            el("input[type=number]", {value: stepper.value, oninput: set}),
-            el("button", {onclick: [add, +1]}, "+"),
-        ]);
-    };
-}
-
 function Stepper() {
     this.value = 1;
 
@@ -543,6 +527,24 @@ function Stepper() {
     };
 
     this.view = domvm.createView(StepperView, this);
+}
+
+function StepperView(vm, stepper) {
+    function add(val) {
+        stepper.add(val);
+    }
+
+    function set(e) {
+        stepper.set(e.target.value);
+    }
+
+    return function() {
+        return el("#stepper", [
+            el("button", {onclick: [add, -1]}, "-"),
+            el("input[type=number]", {value: stepper.value, oninput: set}),
+            el("button", {onclick: [add, +1]}, "+"),
+        ]);
+    };
 }
 
 var stepper = new Stepper();

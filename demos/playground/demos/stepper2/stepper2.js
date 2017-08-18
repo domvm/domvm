@@ -1,21 +1,5 @@
 var el = domvm.defineElement;
 
-function StepperView(vm, stepper) {
-	var add = stepper.add.bind(stepper);
-
-	function sync(e) {
-		stepper.set(e.target.value);
-	}
-
-	return function() {
-		return el("#stepper", [
-			el("button", {onclick: [add, -1]}, "-"),
-			el("input[type=number]", {value: stepper.value, oninput: sync}),
-			el("button", {onclick: [add, +1]}, "+"),
-		]);
-	};
-}
-
 function Stepper() {
 	this.value = 1;
 
@@ -32,6 +16,24 @@ function Stepper() {
 	this.view = domvm.createView(StepperView, this);
 }
 
+function StepperView(vm, stepper) {
+	function add(val) {
+		stepper.add(val);
+	}
+
+	function set(e) {
+		stepper.set(e.target.value);
+	}
+
+	return function() {
+		return el("#stepper", [
+			el("button", {onclick: [add, -1]}, "-"),
+			el("input[type=number]", {value: stepper.value, oninput: set}),
+			el("button", {onclick: [add, +1]}, "+"),
+		]);
+	};
+}
+
 var stepper = new Stepper();
 
 stepper.view.mount(document.body);
@@ -42,4 +44,4 @@ var it = setInterval(function() {
 
 	if (i++ == 20)
 		clearInterval(it);
-}, 250)
+}, 250);
