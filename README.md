@@ -44,6 +44,7 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 - [Event Listeners](#event-listeners)
 - [Hello World++](#hello-world)
 - [Parents & Roots](#parents--roots)
+- [Emit System](#emit-system)
 - [Autoredraw](#autoredraw)
 - [Lifecycle Hooks](#lifecycle-hooks)
 - [Isomorphism & SSR](#isomorphism--ssr)
@@ -472,6 +473,40 @@ var it = setInterval(function() {
 
 You can access any view's parent view via `vm.parent()` and the great granddaddy of the view hierarchy via `vm.root()` shortcut.
 So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().redraw()`.
+
+---
+
+### Emit System
+
+You may want to send arbitrary signals to a view or bubble a signal up to an ancestor or root view.
+Emit is similar to DOM events, but works explicitly within the vdom tree.
+When an event handler is found and invoked, the bubbling stops.
+
+```js
+// set up a listener; vm and data args indicate the *source* vm
+vm.config({
+    onemit: {
+        myEvent: function(arg1, arg2, vm, data) {
+            // ... do stuff
+        }
+    }
+});
+
+// send signal to a view and bubble up through the view heirarchy
+vm.emit("myEvent", arg1, arg2);
+```
+
+There is also a global emit listener which can be used like an event bus and fires for all emit events.
+
+```js
+domvm.config({
+    onemit: {
+        myEvent: function(arg1, arg2, vm, data) {
+            // ... do stuff
+        }
+    }
+});
+```
 
 ---
 ### Autoredraw
