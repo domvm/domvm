@@ -571,12 +571,13 @@ So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().
 
 ### Emit System
 
-You may want to send arbitrary signals to a view or bubble a signal up to an ancestor or root view.
-Emit is similar to DOM events, but works explicitly within the vdom tree.
-When an event handler is found and invoked, the bubbling stops.
+Emit is similar to DOM events, but works explicitly within the vdom tree and is user-triggerd.
+Calling `vm.emit(evName, ...args)` on a view will trigger an event that bubbles up through the view hierarchy.
+When an emit listener is matched, it is invoked and the bubbling stops.
+Like fancy events, the `vm` and `data` args reflect the originating view of the event.
 
 ```js
-// set up a listener; vm and data args reflect the origin of the event
+// listen
 vm.config({
     onemit: {
         myEvent: function(arg1, arg2, vm, data) {
@@ -585,11 +586,11 @@ vm.config({
     }
 });
 
-// send signal to a view and bubble up through the view heirarchy
+// trigger
 vm.emit("myEvent", arg1, arg2);
 ```
 
-There is also a global emit listener which can be used like an event bus and fires for all emit events.
+There is also a global emit listener which fires for all emit events.
 
 ```js
 domvm.config({
