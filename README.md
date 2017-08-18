@@ -436,7 +436,7 @@ VNodes can hold arbitrary data, which obviates the need for slow `data-*` attrib
 ```js
 function View(vm) {
     function clickMe(e, node) {
-        console.log(node.data);
+        console.log(node.data.myVal);
     }
 
     return function() {
@@ -450,7 +450,7 @@ function View(vm) {
 ---
 ### Keys & DOM Recycling
 
-Like React and good dom-reusing libs, domvm sometimes needs keys to assure you of deterministic DOM recycling - ensuring similar sibling DOM elements are not reused in unpredictable ways during mutation.
+Like React and dom-reusing libs worth their salt, domvm sometimes needs keys to assure you of deterministic DOM recycling - ensuring similar sibling DOM elements are not reused in unpredictable ways during mutation.
 Unlike the others, keys in domvm are more flexible and often already implicit.
 
 - Both vnodes and views may be keyed: `el('div', {_key: "a"})`, `vw(MyView, {...}, "a")`.
