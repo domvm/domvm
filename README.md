@@ -43,6 +43,8 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
 - [Event Listeners](#event-listeners)
 - [Autoredraw](#autoredraw)
+- [Refs & Data](#refs--data)
+- [Keys & DOM Recycling](#keys--dom-recycling)
 - [Hello World++](#hello-world)
 - [Parents & Roots](#parents--roots)
 - [Emit System](#emit-system)
@@ -409,6 +411,57 @@ Or maybe having a Promise piggyback on `e.redraw = new Promise(...)` that will r
 You can maybe implement filtering by event type so that a flood of `mousemove` events, doesnt result in a redraw flood. Etc..
 
 ---
+### Refs & Data
+
+Like React, it's possible to access the live DOM from event listeners, etc via `refs`. In addition, domvm's refs can be namespaced:
+
+```js
+function View(vm) {
+    function sayPet(e) {
+        var vnode = vm.refs.pets.fluffy;
+        alert(fluffy.el.value);
+    }
+
+    return function() {
+        return el("form", [
+            el("button", {onclick: sayPet}, "Say Pet!"),
+            el("input", {_ref: "pets.fluffy"}),
+        ]);
+    };
+}
+```
+
+VNodes can hold arbitrary data, which obviates the need to use slow `data-*` attributes and keeps your DOM clean:
+
+```js
+function View(vm) {
+    function clickMe(e, node) {
+        concole.log(node.data);
+    }
+
+    return function() {
+        return el("form", [
+            el("button", {onclick: [clickMe], _data: {myVal: 123}}, "Click!"),
+        ]);
+    };
+}
+```
+
+---
+### Keys & DOM Recycling
+
+Like React and good dom-reusing libs, domvm sometimes needs keys to assure you of deterministic DOM recycling - ensuring similar sibling DOM elements are not reused in unpredictable ways during mutation.
+Unlike the others, keys in domvm are more flexible and often already implicit.
+
+- Both vnodes and views may be keyed: `el('div', {_key: "a"})`, `vw(MyView, {...}, "a")`.
+- Not all siblings need to be keyed - just those you need determinism for.
+- Attrs and special attrs that should be unique anyhow will establish keys:
+  - `_key` (explicit)
+  - `_ref` (must be unique within a view)
+  - `id` (should already be unique per document)
+  - `name` or `name`+`value` for radios and checkboxes (should already be unique per form)
+
+---
 ### Hello World++
 
 **Try it:** http://leeoniya.github.io/domvm/demos/playground/#stepper1
@@ -560,7 +613,7 @@ Usage: `el("div", {_key: "...", _hooks: {...}}, "Hello")`
 - will/didReinsert (detach & move)
 - will/didRemove
 
-While not required, it is strongly advised that your hook-handling vnodes are uniquely keyed as shown above, to ensure deterministic DOM recycling and hook invocation.
+While not required, it is strongly advised that your hook-handling vnodes are [uniquely keyed](#keys--dom-recycling) as shown above, to ensure deterministic DOM recycling and hook invocation.
 
 **View-level**
 
