@@ -453,8 +453,9 @@ function View(vm) {
 Like React and dom-reusing libs worth their salt, domvm sometimes needs keys to assure you of deterministic DOM recycling - ensuring similar sibling DOM elements are not reused in unpredictable ways during mutation.
 Unlike the others, keys in domvm are more flexible and often already implicit.
 
-- Both vnodes and views may be keyed: `el('div', {_key: "a"})`, `vw(MyView, {...}, "a")`.
-- Not all siblings need to be keyed - just those you need determinism for.
+- Both vnodes and views may be keyed: `el('div', {_key: "a"})`, `vw(MyView, {...}, "a")`
+- Keys do not need to be strings; they can be numbers, objects or functions
+- Not all siblings need to be keyed - just those you need determinism for
 - Attrs and special attrs that should be unique anyhow will establish keys:
   - `_key` (explicit)
   - `_ref` (must be unique within a view)
