@@ -378,7 +378,7 @@ domvm.config({
 
 // vm-level
 vm.config({
-    vm: function(e, node, vm, data, args) {
+    onevent: function(e, node, vm, data, args) {
         // ...
     }
 });
@@ -431,12 +431,12 @@ function View(vm) {
 }
 ```
 
-VNodes can hold arbitrary data, which obviates the need to use slow `data-*` attributes and keeps your DOM clean:
+VNodes can hold arbitrary data, which obviates the need for slow `data-*` attributes and keeps your DOM clean:
 
 ```js
 function View(vm) {
     function clickMe(e, node) {
-        concole.log(node.data);
+        console.log(node.data);
     }
 
     return function() {
