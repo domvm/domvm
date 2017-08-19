@@ -50,6 +50,7 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 - [Emit System](#emit-system)
 - [Lifecycle Hooks](#lifecycle-hooks)
 - [Isomorphism & SSR](#isomorphism--ssr)
+- [Optimizations](#optimizations)
 - WIP: https://github.com/leeoniya/domvm/issues/156
 
 ---
@@ -658,3 +659,160 @@ var html = domvm.createView(View, data).html();
 // then hydrate on the client to bind event handlers, etc.
 var vm = domvm.createView(View, data).attach(document.body);
 ```
+
+---
+### Optimizations
+
+Before you continue...
+
+- Recognize that domvm with no optimizations is able to rebuild and diff a full vtree and reconcile a DOM of 3,000 nodes in < 1.5ms. See [0% dbmonster bench](http://leeoniya.github.io/domvm/demos/bench/dbmonster/).
+- Make sure you've read and understood [Sub-views vs Sub-templates](#sub-views-vs-sub-templates).
+- Profile your code to be certain that domvm is the bottleneck and not something else in your app. e.g. [Issue #173](https://github.com/leeoniya/domvm/issues/173).
+  - When using the DEVMODE build, are the logged DOM operations close to what you expect?
+  - Are you rendering an enormous DOM that's already difficult for browsers to deal with? Run `document.querySelectorAll("*").length` in the devtools console. Live node counts over 10,000 should be evaluated for refactoring.
+  - Are you calling `vm.redraw()` from unthrottled event listeners such as `mousemove`, `scroll`, `resize`, `drag`, `touchmove`?
+  - Are you using `requestAnimationFrame()` where appropriate?
+  - Are you using event delegation where appropriate to avoid binding thousands of event listeners?
+  - Are you properly using CSS3 transforms, transitions and animation to do effects and animations rather than calling `vm.redraw()` at 60fps?
+  - Do thousands of nodes or views have lifecycle hooks?
+- Finally, understand that optimizations can only reduce the work needed to regenerate the vtree, diff and reconcile the DOM; the performed DOM operations will always be identical and near-optimal. In the vast majority of cases, the lowest-hanging fruit will be in the above advice.
+
+Oh, you're still here? You must be a glutton for punishment, hell-bent on rendering enormous grids or tabular data ;)
+
+Very well, then...
+
+#### Isolated Redraw
+
+Let's start with the obvious.
+Do you need to redraw everything or just a sub-view?
+`vm.redraw()` lets you to redraw only specific views.
+
+#### Old VTree Reuse
+
+If a view is static or is known to not have changed since the last redraw, `render()` can return the existing old vnode to short-circuit the vtree regeneration, diffing and dom reconciliation.
+
+```js
+function View(vm) {
+    return function(vm) {
+        if (noChanges)
+            return vm.node;
+        else
+            return el("div", "Hello World");
+    };
+}
+```
+
+The mechanism for determining if changes may exist is up to you, including caching old data within the closure and doing diffing on each redraw. Speaking of diffing...
+
+#### View Change Assessment
+
+Similar to React's `shouldComponentUpdate()`, `vm.config({diff:...})` is able to short-circuit redraw calls.
+It provides a caching layer that does shallow comparison before every `render()` call and may return an array or object to shallow-compare for changes.
+
+```js
+function View(vm) {
+    vm.config({
+        diff: function(vm, data) {
+            return [data.foo.bar, data.baz];
+        }
+    });
+
+    return function(vm) {
+        return el("div", "Hello World");
+    };
+}
+```
+
+`diff` may also return a plain value that's the result of your own DIY comparison, but is most useful for static views where no complex diff is required at all and a simple `===` will suffice.
+
+With a plain-object view, it looks like this:
+
+```js
+var StaticView = {
+    diff: function(vm, data) {
+        return 0;
+    },
+    render: function(vm, data) {},
+};
+```
+
+#### VNode Patching
+
+VNodes can be patched on an individual basis, and this can be done without having to patch the children, too.
+This makes mutating attributes, classes and styles much faster when the children have no changes.
+
+```js
+var vDiv = el("div", {class: "foo", style: "color: red;"}, [
+    el("div", "Mooo")
+]);
+
+vDiv.patch({class: "bar", style: "color: blue;"});
+```
+
+DOM patching can also be done via a full vnode rebuild:
+
+```js
+function makeDiv(klass) {
+    return el("div", {class: klass, style: "color: red;"}, [
+        el("div", "Mooo")
+    ]);
+}
+
+var vDiv = makeDiv("foo");
+
+vDiv.patch(makeDiv("bar"));
+```
+
+#### Fixed Structures
+
+Let's say you have a bench like dbmonster in this repo.
+It's a huge grid that has a fixed structure. No elements are ever inserted, removed or reordered.
+In fact, the only mutations that ever happen are `textContent` of the cells and patching of attrs like `class`, and `style`.
+
+There's a lot of work that domvm's DOM reconciler can avoid doing here, but you have to tell it that the structure of the DOM will not change.
+This is accomplished with a `domvm.FIXED_BODY` vnode flag on all nodes whose `body` will never change in shallow structure.
+
+```js
+var Table = {
+    render: function() {
+        return el("table", {_flags: domvm.FIXED_BODY}, [
+            el("tr", {_flags: domvm.FIXED_BODY}, [
+                el("td", {_flags: domvm.FIXED_BODY}, "Hello"),
+                el("td", {_flags: domvm.FIXED_BODY}, "World"),
+            ])
+        ]);
+    }
+};
+```
+
+This is rather tedious, so there's an easier way to get it done. The fourth argument to `defineElement()` is `flags`, so we create an additional element factory and use it normally:
+
+```js
+function fel(tag, arg1, arg2) {
+    return domvm.defineElement(tag, arg1, arg2, domvm.FIXED_BODY);
+}
+
+var Table = {
+    render: function() {
+        return fel("table", [
+            fel("tr", [
+                fel("td", "Hello"),
+                fel("td", "World"),
+            ])
+        ]);
+    }
+};
+```
+
+#### Fully-Keyed Lists
+
+In domvm, the term "list", implies that child elements are shallow-homogenous (the same views or elements with the same DOM tags).
+domvm does not require that child arrays are fully-keyed, but if they *are*, you can slightly simplify domvm's job of matching up the old vtree by *only* testing keys.
+This is done by setting the `domvm.KEYED_LIST` vnode flag on the parent.
+
+#### Lazy Lists
+
+Lazy lists allow for old vtree reuse in the absence of changes at the vnode level without having to refactor into more expensive views that return existing vnodes.
+This mostly saves on memory allocations.
+
+TODO...
