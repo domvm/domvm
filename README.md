@@ -36,6 +36,7 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 
 - [What's Missing?](#whats-missing)
 - [Builds](#builds)
+- [Changelog](#changelog)
 - [Installation](#usage)
 - [DEVMODE](#devmode)
 - [Templates](#templates)
@@ -49,6 +50,7 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 - [Parents & Roots](#parents--roots)
 - [Emit System](#emit-system)
 - [Lifecycle Hooks](#lifecycle-hooks)
+- [Third-party Integration](#third-party-integration)
 - [Isomorphism & SSR](#isomorphism--ssr)
 - [Optimizations](#optimizations)
 - WIP: https://github.com/leeoniya/domvm/issues/156
@@ -73,6 +75,11 @@ Many [/demos](/demos) are examples of how to use these libs in your apps.
 ### Builds
 
 domvm comes in [several builds](/dist) of increasing size and features. The `nano` build is a good starting point and is sufficient for most cases.
+
+---
+### Changelog
+
+Changes between versions are documented in [Releases](https://github.com/leeoniya/domvm/releases).
 
 ---
 ### Installation
@@ -330,7 +337,7 @@ The general advice is, restrict your views to complex, building-block-level, sta
 ---
 ### Event Listeners
 
-**Basic** listeners are defined by plain functions, and receive only the event as an argument (the same as vanilla DOM). If you need high performance such as `mousemove`, `drag`, `scroll` or other events, use basic listeners.
+**Basic** listeners are bound directly and are defined by plain functions. Like vanilla DOM, they receive only the event as an argument. If you need high performance such as `mousemove`, `drag`, `scroll` or other events, use basic listeners.
 
 ```js
 function filter(e) {
@@ -340,7 +347,14 @@ function filter(e) {
 el("input", {oninput: filter});
 ```
 
-**Fancy** listeners can do much more and are defined by a hash, an array or a hash of arrays. These listeners receive the following arguments: `(...args, e, node, vm, data)`.
+**Fancy** listeners are executed by a proxy handler and offer additonal features:
+
+- Can handle event delegation
+- Can pass through additional arguments
+- Will invoke global and vm-level `onevent` callbacks
+- Will call `e.preventDefault()` & `e.stopPropagation()` if `false` is returned
+
+They're defined by a hash, an array or a hash of arrays and receive these arguments: `(...args, e, node, vm, data)`.
 
 Listeners defined by a hash are used for event delegation:
 
@@ -367,7 +381,7 @@ function cellClick(foo, bar, e, node, vm, data) {}
 el("table", {onclick: {"td": [cellClick, "foo", "bar"]}}, ...);
 ```
 
-View-level and global `onevent` listeners can be defined to handle **fancy** events:
+View-level and global `onevent` callbacks can be defined to handle **fancy** events:
 
 ```js
 // global
@@ -387,7 +401,6 @@ vm.config({
 
 Notes:
 
-- Listeners may return `false` as a shorthand for `e.preventDefault()` + `e.stopPropagation()`.
 - Animation & transition listeners cannot be attached via `on*` props, such as `animationend`, `animationiteration`, `animationstart`, `transitionend`. To bind these events use a node-level `willInsert` [Lifecycle Hook](#lifecycle-hooks).
 - `onevent`'s args always represent the origin of the event in the vtree
 
@@ -613,10 +626,10 @@ domvm.config({
 
 Usage: `el("div", {_key: "...", _hooks: {...}}, "Hello")`
 
-- will/didInsert (initial insert)
-- will/didRecycle (reuse & patch)
-- will/didReinsert (detach & move)
-- will/didRemove
+- will/didInsert(newNode) - initial insert
+- will/didRecycle(oldNode, newNode) - reuse & patch
+- will/didReinsert(newNode) - detach & move
+- will/didRemove(oldNode)
 
 While not required, it is strongly advised that your hook-handling vnodes are [uniquely keyed](#keys--dom-recycling) as shown above, to ensure deterministic DOM recycling and hook invocation.
 
@@ -624,12 +637,42 @@ While not required, it is strongly advised that your hook-handling vnodes are [u
 
 Usage: `vm.config({hooks: {willMount: ...}})` or `return {render: ..., hooks: {willMount: ...}}`
 
-- willUpdate (before views's data is replaced)
-- will/didRedraw
-- will/didMount (dom insertion)
-- will/didUnmount (dom removal)
+- willUpdate(vm, data) - before views's data is replaced
+- will/didRedraw(vm, data)
+- will/didMount(vm, data) - dom insertion
+- will/didUnmount(vm, data) - dom removal
 
 `did*` hooks fire after a forced DOM repaint. `willRemove` & `willUnmount` hooks can return a Promise to delay the removal/unmounting allowing you to CSS transition, etc.
+
+---
+### Third-Party Integration
+
+Several facilities exist to interoperate with third-party libraries.
+
+#### Non-interference
+
+First, domvm will not touch attrs that are not specified or managed in your templates.
+In addition, elements not created by domvm will be ignored by the reconciler, as long as their ancestors continue to remain in the DOM.
+However, the position of any inserted third-party DOM element amongst its siblings cannot be guaranteed.
+
+#### will/didInsert Hooks
+
+You can use normal DOM methods to insert elements into elements managed by domvm by using [will/didInsert hooks](#lifecycle-hooks).
+See the [Embed Tweets](http://leeoniya.github.io/domvm/demos/playground/#embed-tweets) demo.
+
+#### injectElement
+
+`domvm.injectElement(elem)` allows you to insert any already-created third-party element into a template, deterministically manage its position and fire lifecycle hooks.
+
+#### innerHTML
+
+You can set the innerHTML of an element created by domvm using a special `{_raw: true}` attribute:
+
+```js
+el("div", {_raw: true}, "<p>Foo</p>");
+```
+
+However, it's **strongly recommended** for security reasons to use `domvm.injectElement()` after parsing the html string via the browser's native [DOMParser API](https://developer.mozilla.org/en-US/docs/Web/API/DOMParser).
 
 ---
 ### Isomorphism & SSR
@@ -667,6 +710,7 @@ Before you continue...
 
 - Recognize that domvm with no optimizations is able to rebuild and diff a full vtree and reconcile a DOM of 3,000 nodes in < 1.5ms. See [0% dbmonster bench](http://leeoniya.github.io/domvm/demos/bench/dbmonster/).
 - Make sure you've read and understood [Sub-views vs Sub-templates](#sub-views-vs-sub-templates).
+- Ensure you're not manually caching & reusing old vnodes or holding references to them in your app code. They're meant to be discarded by the GC; let them go.
 - Profile your code to be certain that domvm is the bottleneck and not something else in your app. e.g. [Issue #173](https://github.com/leeoniya/domvm/issues/173).
   - When using the DEVMODE build, are the logged DOM operations close to what you expect?
   - Are you rendering an enormous DOM that's already difficult for browsers to deal with? Run `document.querySelectorAll("*").length` in the devtools console. Live node counts over 10,000 should be evaluated for refactoring.
@@ -677,15 +721,17 @@ Before you continue...
   - Do thousands of nodes or views have lifecycle hooks?
 - Finally, understand that optimizations can only reduce the work needed to regenerate the vtree, diff and reconcile the DOM; the performed DOM operations will always be identical and near-optimal. In the vast majority of cases, the lowest-hanging fruit will be in the above advice.
 
-Oh, you're still here? You must be a glutton for punishment, hell-bent on rendering enormous grids or tabular data ;)
-
-Very well, then...
+Still here? You must be a glutton for punishment, hell-bent on rendering enormous grids or tabular data ;) Very well, then...
 
 #### Isolated Redraw
 
 Let's start with the obvious.
 Do you need to redraw everything or just a sub-view?
 `vm.redraw()` lets you to redraw only specific views.
+
+#### Flatten Nested Arrays
+
+While domvm will flatten nested arrays in your templates, you may get a small boost by doing it yourself via `Array.concat()` before returning your templates from `render()`.
 
 #### Old VTree Reuse
 
@@ -717,8 +763,8 @@ function View(vm) {
         }
     });
 
-    return function(vm) {
-        return el("div", "Hello World");
+    return function(vm, data) {
+        return el("div", {class: data.baz}, "Hello World, " + data.foo.bar);
     };
 }
 ```
