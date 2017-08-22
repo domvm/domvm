@@ -581,9 +581,10 @@ var it = setInterval(function() {
 
 You can access any view's parent view via `vm.parent()` and the great granddaddy of the view hierarchy via `vm.root()` shortcut.
 So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().redraw()`.
+For traversing the vtree, there's also `vm.body()` which gets the next level of descendent views (not necessarily direct children).
+`vnode.body` and `vnode.parent` complete the picture.
 
 ---
-
 ### Emit System
 
 Emit is similar to DOM events, but works explicitly within the vdom tree and is user-triggerd.
@@ -622,27 +623,30 @@ domvm.config({
 
 **Demo:** [lifecycle-hooks](http://leeoniya.github.io/domvm/demos/playground/#lifecycle-hooks) different hooks animate in/out with different colors.
 
-**Node-level**
+#### Node-level
 
 Usage: `el("div", {_key: "...", _hooks: {...}}, "Hello")`
 
-- will/didInsert(newNode) - initial insert
-- will/didRecycle(oldNode, newNode) - reuse & patch
-- will/didReinsert(newNode) - detach & move
-- will/didRemove(oldNode)
+- `will`/`didInsert(newNode)` - initial insert
+- `will`/`didRecycle(oldNode, newNode)` - reuse & patch
+- `will`/`didReinsert(newNode)` - detach & move
+- `will`/`didRemove(oldNode)`
 
 While not required, it is strongly advised that your hook-handling vnodes are [uniquely keyed](#keys--dom-recycling) as shown above, to ensure deterministic DOM recycling and hook invocation.
 
-**View-level**
+#### View-level
 
 Usage: `vm.config({hooks: {willMount: ...}})` or `return {render: ..., hooks: {willMount: ...}}`
 
-- willUpdate(vm, data) - before views's data is replaced
-- will/didRedraw(vm, data)
-- will/didMount(vm, data) - dom insertion
-- will/didUnmount(vm, data) - dom removal
+- `willUpdate(vm, data)` - before views's data is replaced
+- `will`/`didRedraw(vm, data)`
+- `will`/`didMount(vm, data)` - dom insertion
+- `will`/`didUnmount(vm, data)` - dom removal
 
-`did*` hooks fire after a forced DOM repaint. `willRemove` & `willUnmount` hooks can return a Promise to delay the removal/unmounting allowing you to CSS transition, etc.
+Notes:
+
+- `did*` hooks fire after a forced DOM repaint.
+- `willRemove` & `willUnmount` hooks can return a Promise to delay the removal/unmounting allowing you to CSS transition, etc.
 
 ---
 ### Third-Party Integration
