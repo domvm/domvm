@@ -801,6 +801,11 @@ var StaticView = {
 };
 ```
 
+Notes:
+
+If you intend to do a simple diff of an object by its identity, then return it wrapped in an array to avoid domvm diffing all of its enumerable keys.
+See [Issue #148](https://github.com/leeoniya/domvm/issues/148).
+
 #### VNode Patching
 
 VNodes can be patched on an individual basis, and this can be done without having to patch the children, too.
