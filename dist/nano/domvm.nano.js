@@ -558,6 +558,9 @@ function _removeChild(parEl, el, immediate) {
 			{ deepUnref(node); }
 	}
 
+	if (vm != null)
+		{ vm.node = null; }
+
 	delete el._node;
 
 	parEl.removeChild(el);
@@ -586,9 +589,14 @@ function removeChild(parEl, el) {
 
 function deepUnref(node) {
 	var obody = node.body;
+
 	for (var i = 0; i < obody.length; i++) {
 		var o2 = obody[i];
 		delete o2.el._node;
+
+		if (o2.vm != null)
+			{ o2.vm.node = null; }
+
 		if (isArr(o2.body))
 			{ deepUnref(o2); }
 	}
