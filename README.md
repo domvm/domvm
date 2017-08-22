@@ -51,6 +51,7 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 - [Emit System](#emit-system)
 - [Lifecycle Hooks](#lifecycle-hooks)
 - [Third-party Integration](#third-party-integration)
+- [Extending ViewModel & VNode](#extending-viewmodel--vnode)
 - [Isomorphism & SSR](#isomorphism--ssr)
 - [Optimizations](#optimizations)
 - WIP: https://github.com/leeoniya/domvm/issues/156
@@ -461,6 +462,11 @@ function View(vm) {
 }
 ```
 
+Notes:
+
+`vm.state` & `vm.api` are userspace-reserved and initialized to `null`.
+You may use them to expose view state or view methods as you see fit without fear of collisions with internal domvm properties & methods (present or future).
+
 ---
 ### Keys & DOM Recycling
 
@@ -677,6 +683,15 @@ el("div", {_raw: true}, "<p>Foo</p>");
 ```
 
 However, it's **strongly recommended** for security reasons to use `domvm.injectElement()` after parsing the html string via the browser's native [DOMParser API](https://developer.mozilla.org/en-US/docs/Web/API/DOMParser).
+
+---
+### Extending ViewModel & VNode
+
+If needed, you may extend some of domvm's internal class prototypes in your app to add helper methods, etc.
+The following are available:
+
+- `domvm.ViewModel.prototype`
+- `domvm.VNode.prototype`
 
 ---
 ### Isomorphism & SSR
