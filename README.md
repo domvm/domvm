@@ -3,7 +3,7 @@
 A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
 ---
-### Intro
+### Introduction
 
 domvm is a flexible, pure-js view layer for building high performance web applications; it'll happily fit into any existing codebase, whatever the structure.
 - It's zero-dependency, no-compilation & tooling-free; a single `<script>` tag and you're ready to go.
@@ -23,7 +23,9 @@ var HelloView = {
     }
 };
 
-domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
+var data = {name: "Leon"};
+
+domvm.createView(HelloView, data).mount(document.body);
 ```
 
 ---
@@ -34,7 +36,7 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 ---
 ### Documentation
 
-- [What's Missing?](#whats-missing)
+- [What domvm Is Not](#what-domvm-is-not)
 - [Builds](#builds)
 - [Changelog](#changelog)
 - [Installation](#usage)
@@ -57,7 +59,7 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 - WIP: https://github.com/leeoniya/domvm/issues/156
 
 ---
-### What's Missing?
+### What domvm Is Not
 
 As a view layer, domvm does not include some things you would find in a larger framework.
 This gives you the freedom to choose libs you already know or prefer for common tasks.
