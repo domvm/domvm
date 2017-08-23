@@ -36,11 +36,11 @@ export function prevSib(sib) {
 
 // TODO: this should collect all deep proms from all hooks and return Promise.all()
 function deepNotifyRemove(node) {
-	var hooks = node.hooks, vm = node.vm;
+	var vm = node.vm;
 
-	var wuRes = vm && vm.hooks && fireHook("willUnmount", vm, vm.data);
+	var wuRes = vm != null && fireHook(vm.hooks, "willUnmount", vm, vm.data);
 
-	var wrRes = hooks && fireHook("willRemove", node);
+	var wrRes = fireHook(node.hooks, "willRemove", node);
 
 	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
 		for (var i = 0; i < node.body.length; i++)
@@ -51,7 +51,7 @@ function deepNotifyRemove(node) {
 }
 
 function _removeChild(parEl, el, immediate) {
-	var node = el._node, hooks = node.hooks, vm = node.vm;
+	var node = el._node, vm = node.vm;
 
 	if (isArr(node.body)) {
 		if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE) {
@@ -62,16 +62,16 @@ function _removeChild(parEl, el, immediate) {
 			deepUnref(node);
 	}
 
-	if (vm != null)
-		vm.node = null;
-
 	delete el._node;
 
 	parEl.removeChild(el);
 
-	hooks && fireHook("didRemove", node, null, immediate);
+	fireHook(node.hooks, "didRemove", node, null, immediate);
 
-	vm && vm.hooks && fireHook("didUnmount", vm, vm.data, immediate);
+	if (vm != null) {
+		fireHook(vm.hooks, "didUnmount", vm, vm.data, immediate);
+		vm.node = null;
+	}
 }
 
 // todo: should delay parent unmount() by returning res prom?
@@ -125,18 +125,20 @@ export function clearChildren(parent) {
 
 // todo: hooks
 export function insertBefore(parEl, el, refEl) {
-	var node = el._node, hooks = node.hooks, inDom = el.parentNode != null;
+	var node = el._node, inDom = el.parentNode != null;
 
 	// el === refEl is asserted as a no-op insert called to fire hooks
 	var vm = (el === refEl || !inDom) && node.vm;
 
-	vm && vm.hooks && fireHook("willMount", vm, vm.data);
+	if (vm != null)
+		fireHook(vm.hooks, "willMount", vm, vm.data);
 
-	hooks && fireHook(inDom ? "willReinsert" : "willInsert", node);
+	fireHook(node.hooks, inDom ? "willReinsert" : "willInsert", node);
 	parEl.insertBefore(el, refEl);
-	hooks && fireHook(inDom ? "didReinsert" : "didInsert", node);
+	fireHook(node.hooks, inDom ? "didReinsert" : "didInsert", node);
 
-	vm && vm.hooks && fireHook("didMount", vm, vm.data);
+	if (vm != null)
+		fireHook(vm.hooks, "didMount", vm, vm.data);
 }
 
 export function insertAfter(parEl, el, refEl) {
