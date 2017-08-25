@@ -1,54 +1,39 @@
 var el = domvm.defineElement,
 	vw = domvm.defineView;
 
-function repaint(node) {
-	node && node.el && node.el.offsetHeight;
-}
-
 function View1(vm, data) {
-	// DOM node/template level hooks
+	// node-level hooks
 	var hooks = {
 		willInsert: function(node) {
-		//	console.log("willInsert", node);
 			node.patch({class: "inserted"});
 		},
 		didInsert: function(node) {
-		//	console.log("didInsert", node);
 			node.patch({class: ""});
 		},
 		willRecycle: function(oldNode, newNode) {
-		//	console.log("willRecycle", oldNode, newNode);
 			// DIY diff to detect changes
 			if (oldNode.body !== newNode.body) {
-				oldNode.patch({class: "reused changed"});
-				repaint(oldNode);
+				oldNode.patch({class: "reused changed"}, true);
 			}
 		},
 		didRecycle: function(oldNode, newNode) {
-		//	console.log("didRecycle", oldNode, newNode);
 			if (oldNode.body !== newNode.body)
 				newNode.patch({class: ""});
 		},
 		willReinsert: function(node) {
-		//	console.log("willReinsert", node);
 			node.patch({class: "moved"});
 		},
 		didReinsert: function(node) {
-		//	console.log("didReinsert", node);
 			node.patch({class: ""});
 		},
 		willRemove: function(node) {
-		//	console.log("willRemove", node);
 			return new Promise(function(resolve, reject) {
-				node.patch({class: "removing"});
-				repaint(node);
+				node.patch({class: "removing"}, true);
 				node.patch({class: "removed"});
 				node.el.addEventListener("transitionend", resolve);
 			});
 		},
-		didRemove: function(node) {
-		//	console.log("didRemove", node);
-		},
+		didRemove: function(node) {},
 	};
 
 	return function() {
@@ -87,36 +72,24 @@ var vm = domvm.createView(View1, data);
 
 // view-level hooks
 vm.config({hooks: {
-	willRedraw: function(vm) {
-	//	console.log("willRedraw", vm);
-	},
+	willRedraw: function(vm) {},
 	didRedraw: function(vm) {
-	//	console.log("didRedraw", vm);
-		vm.node.patch({class: "redrawn"});
-		repaint(vm.node);
+		vm.node.patch({class: "redrawn"}, true);
 		vm.node.patch({class: ""});
 	},
-	willMount: function(vm) {
-	//	console.log("willMount", vm);
-	},
+	willMount: function(vm) {},
 	didMount: function(vm) {
-	//	console.log("didMount", vm);
-		vm.node.patch({class: "mounted"});
-		repaint(vm.node);
+		vm.node.patch({class: "mounted"}, true);
 		vm.node.patch({class: ""});
 	},
 	willUnmount: function(vm) {
-	//	console.log("willUnmount", vm);
 		return new Promise(function(resolve, reject) {
-			vm.node.patch({class: "unmounting"});
-			repaint(vm.node);
+			vm.node.patch({class: "unmounting"}, true);
 			vm.node.patch({class: "unmounted"});
 			node.el.addEventListener("transitionend", resolve);
 		});
 	},
-	didUnmount: function(vm) {
-	//	console.log("didUnmount", vm);
-	},
+	didUnmount: function(vm) {},
 }});
 
 vm.mount(document.body);
