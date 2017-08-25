@@ -647,17 +647,19 @@ function patchStyle(n, o) {
 
 var didQueue = [];
 
-function fireHook(name, o, n, immediate) {
-	var fn = o.hooks[name];
+function fireHook(hooks, name, o, n, immediate) {
+	if (hooks != null) {
+		var fn = o.hooks[name];
 
-	if (fn) {
-		if (name[0] === "d" && name[1] === "i" && name[2] === "d") {	// did*
-			//	console.log(name + " should queue till repaint", o, n);
-			immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
-		}
-		else {		// will*
-			//	console.log(name + " may delay by promise", o, n);
-			return fn(o, n);		// or pass  done() resolver
+		if (fn) {
+			if (name[0] === "d" && name[1] === "i" && name[2] === "d") {	// did*
+				//	console.log(name + " should queue till repaint", o, n);
+				immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
+			}
+			else {		// will*
+				//	console.log(name + " may delay by promise", o, n);
+				return fn(o, n);		// or pass  done() resolver
+			}
 		}
 	}
 }
@@ -706,11 +708,11 @@ function prevSib(sib) {
 
 // TODO: this should collect all deep proms from all hooks and return Promise.all()
 function deepNotifyRemove(node) {
-	var hooks = node.hooks, vm = node.vm;
+	var vm = node.vm;
 
-	var wuRes = vm && vm.hooks && fireHook("willUnmount", vm, vm.data);
+	var wuRes = vm != null && fireHook(vm.hooks, "willUnmount", vm, vm.data);
 
-	var wrRes = hooks && fireHook("willRemove", node);
+	var wrRes = fireHook(node.hooks, "willRemove", node);
 
 	if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
 		for (var i = 0; i < node.body.length; i++)
@@ -721,7 +723,7 @@ function deepNotifyRemove(node) {
 }
 
 function _removeChild(parEl, el, immediate) {
-	var node = el._node, hooks = node.hooks, vm = node.vm;
+	var node = el._node, vm = node.vm;
 
 	if (isArr(node.body)) {
 		if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE) {
@@ -736,9 +738,12 @@ function _removeChild(parEl, el, immediate) {
 
 	parEl.removeChild(el);
 
-	hooks && fireHook("didRemove", node, null, immediate);
+	fireHook(node.hooks, "didRemove", node, null, immediate);
 
-	vm && vm.hooks && fireHook("didUnmount", vm, vm.data, immediate);
+	if (vm != null) {
+		fireHook(vm.hooks, "didUnmount", vm, vm.data, immediate);
+		vm.node = null;
+	}
 }
 
 // todo: should delay parent unmount() by returning res prom?
@@ -760,9 +765,14 @@ function removeChild(parEl, el) {
 
 function deepUnref(node) {
 	var obody = node.body;
+
 	for (var i = 0; i < obody.length; i++) {
 		var o2 = obody[i];
 		delete o2.el._node;
+
+		if (o2.vm != null)
+			{ o2.vm.node = null; }
+
 		if (isArr(o2.body))
 			{ deepUnref(o2); }
 	}
@@ -787,18 +797,20 @@ function clearChildren(parent) {
 
 // todo: hooks
 function insertBefore(parEl, el, refEl) {
-	var node = el._node, hooks = node.hooks, inDom = el.parentNode != null;
+	var node = el._node, inDom = el.parentNode != null;
 
 	// el === refEl is asserted as a no-op insert called to fire hooks
 	var vm = (el === refEl || !inDom) && node.vm;
 
-	vm && vm.hooks && fireHook("willMount", vm, vm.data);
+	if (vm != null)
+		{ fireHook(vm.hooks, "willMount", vm, vm.data); }
 
-	hooks && fireHook(inDom ? "willReinsert" : "willInsert", node);
+	fireHook(node.hooks, inDom ? "willReinsert" : "willInsert", node);
 	parEl.insertBefore(el, refEl);
-	hooks && fireHook(inDom ? "didReinsert" : "didInsert", node);
+	fireHook(node.hooks, inDom ? "didReinsert" : "didInsert", node);
 
-	vm && vm.hooks && fireHook("didMount", vm, vm.data);
+	if (vm != null)
+		{ fireHook(vm.hooks, "didMount", vm, vm.data); }
 }
 
 function insertAfter(parEl, el, refEl) {
@@ -1301,7 +1313,7 @@ function findSeqKeyed(n, obody, fromIdx) {
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists
 function patch(vnode, donor) {
-	donor.hooks && fireHook("willRecycle", donor, vnode);
+	fireHook(donor.hooks, "willRecycle", donor, vnode);
 
 	var el = vnode.el = donor.el;
 
@@ -1362,7 +1374,7 @@ function patch(vnode, donor) {
 		}
 	}
 
-	donor.hooks && fireHook("didRecycle", donor, vnode);
+	fireHook(donor.hooks, "didRecycle", donor, vnode);
 }
 
 // larger qtys of KEYED_LIST children will use binary search
@@ -1971,7 +1983,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		}
 	}
 
-	isMounted && vm.hooks && fireHook("willRedraw", vm, vm.data);
+	isMounted && fireHook(vm.hooks, "willRedraw", vm, vm.data);
 
 	var vnew = vm.render.call(vm, vm, vm.data, oldDiff, newDiff);
 
@@ -2024,7 +2036,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 			{ hydrate(vnew); }
 	}
 
-	isMounted && vm.hooks && fireHook("didRedraw", vm, vm.data);
+	isMounted && fireHook(vm.hooks, "didRedraw", vm, vm.data);
 
 	if (isRedrawRoot && isMounted)
 		{ drainDidHooks(vm); }
@@ -2047,7 +2059,7 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 			{
 				devNotify("DATA_REPLACED", [vm, vm.data, newData]);
 			}
-			vm.hooks && fireHook("willUpdate", vm, newData);
+			fireHook(vm.hooks, "willUpdate", vm, newData);
 			vm.data = newData;
 
 			{

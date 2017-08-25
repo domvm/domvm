@@ -215,7 +215,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		}
 	}
 
-	isMounted && vm.hooks && fireHook("willRedraw", vm, vm.data);
+	isMounted && fireHook(vm.hooks, "willRedraw", vm, vm.data);
 
 	var vnew = vm.render.call(vm, vm, vm.data, oldDiff, newDiff);
 
@@ -268,7 +268,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 			hydrate(vnew);
 	}
 
-	isMounted && vm.hooks && fireHook("didRedraw", vm, vm.data);
+	isMounted && fireHook(vm.hooks, "didRedraw", vm, vm.data);
 
 	if (isRedrawRoot && isMounted)
 		drainDidHooks(vm);
@@ -291,7 +291,7 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 			if (_DEVMODE) {
 				devNotify("DATA_REPLACED", [vm, vm.data, newData]);
 			}
-			vm.hooks && fireHook("willUpdate", vm, newData);
+			fireHook(vm.hooks, "willUpdate", vm, newData);
 			vm.data = newData;
 
 			if (FEAT_STREAM) {

@@ -53,7 +53,7 @@ function findBinKeyed(n, list) {
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists
 export function patch(vnode, donor) {
-	donor.hooks && fireHook("willRecycle", donor, vnode);
+	fireHook(donor.hooks, "willRecycle", donor, vnode);
 
 	var el = vnode.el = donor.el;
 
@@ -114,7 +114,7 @@ export function patch(vnode, donor) {
 		}
 	}
 
-	donor.hooks && fireHook("didRecycle", donor, vnode);
+	fireHook(donor.hooks, "didRecycle", donor, vnode);
 }
 
 function sortByKey(a, b) {

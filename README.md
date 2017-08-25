@@ -3,7 +3,7 @@
 A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
 ---
-### Intro
+### Introduction
 
 domvm is a flexible, pure-js view layer for building high performance web applications; it'll happily fit into any existing codebase, whatever the structure.
 - It's zero-dependency, no-compilation & tooling-free; a single `<script>` tag and you're ready to go.
@@ -23,7 +23,9 @@ var HelloView = {
     }
 };
 
-domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
+var data = {name: "Leon"};
+
+domvm.createView(HelloView, data).mount(document.body);
 ```
 
 ---
@@ -34,23 +36,30 @@ domvm.createView(HelloView, {name: "Leon"}).mount(document.body);
 ---
 ### Documentation
 
-- [What's Missing?](#whats-missing)
+- [What domvm Is Not](#what-domvm-is-not)
 - [Builds](#builds)
+- [Changelog](#changelog)
 - [Installation](#usage)
 - [DEVMODE](#devmode)
 - [Templates](#templates)
 - [Views](#views)
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
 - [Event Listeners](#event-listeners)
+- [Autoredraw](#autoredraw)
+- [Refs & Data](#refs--data)
+- [Keys & DOM Recycling](#keys--dom-recycling)
 - [Hello World++](#hello-world)
 - [Parents & Roots](#parents--roots)
-- [Autoredraw](#autoredraw)
+- [Emit System](#emit-system)
 - [Lifecycle Hooks](#lifecycle-hooks)
+- [Third-party Integration](#third-party-integration)
+- [Extending ViewModel & VNode](#extending-viewmodel--vnode)
 - [Isomorphism & SSR](#isomorphism--ssr)
+- [Optimizations](#optimizations)
 - WIP: https://github.com/leeoniya/domvm/issues/156
 
 ---
-### What's Missing?
+### What domvm Is Not
 
 As a view layer, domvm does not include some things you would find in a larger framework.
 This gives you the freedom to choose libs you already know or prefer for common tasks.
@@ -69,6 +78,11 @@ Many [/demos](/demos) are examples of how to use these libs in your apps.
 ### Builds
 
 domvm comes in [several builds](/dist) of increasing size and features. The `nano` build is a good starting point and is sufficient for most cases.
+
+---
+### Changelog
+
+Changes between versions are documented in [Releases](https://github.com/leeoniya/domvm/releases).
 
 ---
 ### Installation
@@ -302,6 +316,20 @@ var dataA = {
 var vmA = domvm.createView(ViewA, dataA).mount(document.body);
 ```
 
+#### Options
+
+`domvm.createView` and `domvm.defineView` have four arguments: `(view, data, key, opts)`.
+The fourth `opts` arg can be used to pass in any additional data into the view constructor/init without having to cram it into `data`.
+Several reserved options are handled automatically by domvm that correspond to existing `vm.config({...})` options (documented in other sections):
+
+- `init` (same as using `{init:...}` in views defs)
+- `diff`
+- `hooks`
+- `onevent`
+- `onemit`
+
+This can simplify sub-view internals when externally-defined opts are passed in, avoiding some boilerplate inside views, eg. `vm.config({hooks: opts.hooks})`.
+
 ---
 ### Sub-views vs Sub-templates
 
@@ -326,7 +354,7 @@ The general advice is, restrict your views to complex, building-block-level, sta
 ---
 ### Event Listeners
 
-**Basic** listeners are defined by plain functions, and receive only the event as an argument (the same as vanilla DOM). If you need high performance such as `mousemove`, `drag`, `scroll` or other events, use basic listeners.
+**Basic** listeners are bound directly and are defined by plain functions. Like vanilla DOM, they receive only the event as an argument. If you need high performance such as `mousemove`, `drag`, `scroll` or other events, use basic listeners.
 
 ```js
 function filter(e) {
@@ -336,7 +364,14 @@ function filter(e) {
 el("input", {oninput: filter});
 ```
 
-**Fancy** listeners can do much more and are defined by a hash, an array or a hash of arrays. These listeners receive the following arguments: `(...args, e, node, vm, data)`.
+**Fancy** listeners are executed by a proxy handler and offer additonal features:
+
+- Can handle event delegation
+- Can pass through additional arguments
+- Will invoke global and vm-level `onevent` callbacks
+- Will call `e.preventDefault()` & `e.stopPropagation()` if `false` is returned
+
+They're defined by a hash, an array or a hash of arrays and receive these arguments: `(...args, e, node, vm, data)`.
 
 Listeners defined by a hash are used for event delegation:
 
@@ -363,11 +398,105 @@ function cellClick(foo, bar, e, node, vm, data) {}
 el("table", {onclick: {"td": [cellClick, "foo", "bar"]}}, ...);
 ```
 
+View-level and global `onevent` callbacks can be defined to handle **fancy** events:
+
+```js
+// global
+domvm.config({
+    onevent: function(e, node, vm, data, args) {
+        // ...
+    }
+});
+
+// vm-level
+vm.config({
+    onevent: function(e, node, vm, data, args) {
+        // ...
+    }
+});
+```
+
 Notes:
 
-- Listeners may return `false` as a shorthand for `e.preventDefault()` + `e.stopPropagation()`.
 - Animation & transition listeners cannot be attached via `on*` props, such as `animationend`, `animationiteration`, `animationstart`, `transitionend`. To bind these events use a node-level `willInsert` [Lifecycle Hook](#lifecycle-hooks).
-- Only fancy listeners will invoke view-level `vm.config({onevent:...})` and global `domvm.config({onevent:...})` callbacks (if defined). See [Autoredraw](#autoredraw).
+- `onevent`'s args always represent the origin of the event in the vtree
+
+---
+### Autoredraw
+
+Is calling `vm.redraw()` everywhere a nuisance to you?
+
+There's an easy way to implement autoredraw yourself via a global or vm-level `onevent` which fires after all **fancy** [event listeners](#event-listeners).
+The [onevent demo](http://leeoniya.github.io/domvm/demos/playground/#onevent) demonstrates a basic full app autoredraw:
+
+```js
+domvm.config({
+    onevent: function(e, node, vm, data, args) {
+        vm.root().redraw();
+    }
+});
+```
+
+You can get as creative as you want, including adding your own semantics to prevent redraw on a case-by-case basis by setting and checking for `e.redraw = false`.
+Or maybe having a Promise piggyback on `e.redraw = new Promise(...)` that will resolve upon deep data being fetched.
+You can maybe implement filtering by event type so that a flood of `mousemove` events, doesnt result in a redraw flood. Etc..
+
+---
+### Refs & Data
+
+Like React, it's possible to access the live DOM from event listeners, etc via `refs`. In addition, domvm's refs can be namespaced:
+
+```js
+function View(vm) {
+    function sayPet(e) {
+        var vnode = vm.refs.pets.fluffy;
+        alert(fluffy.el.value);
+    }
+
+    return function() {
+        return el("form", [
+            el("button", {onclick: sayPet}, "Say Pet!"),
+            el("input", {_ref: "pets.fluffy"}),
+        ]);
+    };
+}
+```
+
+VNodes can hold arbitrary data, which obviates the need for slow `data-*` attributes and keeps your DOM clean:
+
+```js
+function View(vm) {
+    function clickMe(e, node) {
+        console.log(node.data.myVal);
+    }
+
+    return function() {
+        return el("form", [
+            el("button", {onclick: [clickMe], _data: {myVal: 123}}, "Click!"),
+        ]);
+    };
+}
+```
+
+Notes:
+
+`vm.state` & `vm.api` are userspace-reserved and initialized to `null`.
+You may use them to expose view state or view methods as you see fit without fear of collisions with internal domvm properties & methods (present or future).
+
+---
+### Keys & DOM Recycling
+
+Like React and dom-reusing libs worth their salt, domvm sometimes needs keys to assure you of deterministic DOM recycling - ensuring similar sibling DOM elements are not reused in unpredictable ways during mutation.
+Unlike the others, keys in domvm are more flexible and often already implicit.
+
+- Both vnodes and views may be keyed: `el('div', {_key: "a"})`, `vw(MyView, {...}, "a")`
+- Keys do not need to be strings; they can be numbers, objects or functions
+- Not all siblings need to be keyed - just those you need determinism for
+- Attrs and special attrs that should be unique anyhow will establish keys:
+  - `_key` (explicit)
+  - `_ref` (must be unique within a view)
+  - `id` (should already be unique per document)
+  - `name` or `name`+`value` for radios and checkboxes (should already be unique per form)
 
 ---
 ### Hello World++
@@ -421,22 +550,6 @@ It is *this* fully capable, view-augmented domain model that domvm's author cons
 ```js
 var el = domvm.defineElement;
 
-function StepperView(vm, stepper) {
-    var add = stepper.add.bind(stepper);
-
-    function set(e) {
-        stepper.set(e.target.value);
-    }
-
-    return function() {
-        return el("#stepper", [
-            el("button", {onclick: [add, -1]}, "-"),
-            el("input[type=number]", {value: stepper.value, oninput: set}),
-            el("button", {onclick: [add, +1]}, "+"),
-        ]);
-    };
-}
-
 function Stepper() {
     this.value = 1;
 
@@ -451,6 +564,24 @@ function Stepper() {
     };
 
     this.view = domvm.createView(StepperView, this);
+}
+
+function StepperView(vm, stepper) {
+    function add(val) {
+        stepper.add(val);
+    }
+
+    function set(e) {
+        stepper.set(e.target.value);
+    }
+
+    return function() {
+        return el("#stepper", [
+            el("button", {onclick: [add, -1]}, "-"),
+            el("input[type=number]", {value: stepper.value, oninput: set}),
+            el("button", {onclick: [add, +1]}, "+"),
+        ]);
+    };
 }
 
 var stepper = new Stepper();
@@ -472,25 +603,39 @@ var it = setInterval(function() {
 
 You can access any view's parent view via `vm.parent()` and the great granddaddy of the view hierarchy via `vm.root()` shortcut.
 So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().redraw()`.
+For traversing the vtree, there's also `vm.body()` which gets the next level of descendent views (not necessarily direct children).
+`vnode.body` and `vnode.parent` complete the picture.
 
 ---
-### Autoredraw
+### Emit System
 
-Is calling `vm.redraw()` everywhere a nuisance to you? Well, there is no autoredraw!
+Emit is similar to DOM events, but works explicitly within the vdom tree and is user-triggerd.
+Calling `vm.emit(evName, ...args)` on a view will trigger an event that bubbles up through the view hierarchy.
+When an emit listener is matched, it is invoked and the bubbling stops.
+Like fancy events, the `vm` and `data` args reflect the originating view of the event.
 
-However, there *is* an easy way to add it yourself using `domvm.config.onevent` which, if present, will fire after **fancy** [event listeners](#event-listeners).
-You can get as creative as you want, including adding your own semantics to prevent redraw on a case-by-case basis by setting and checking for `e.redraw = false`.
-Or maybe having a Promise piggyback on `e.redraw = new Promise(...)` that will resolve upon deep data being fetched.
-You can maybe implement filtering by event type so that a flood of `mousemove` events, doesnt result in a redraw flood. Etc..
+```js
+// listen
+vm.config({
+    onemit: {
+        myEvent: function(arg1, arg2, vm, data) {
+            // ... do stuff
+        }
+    }
+});
 
-`onevent`'s arguments always represent the origin of the event in the vtree.
+// trigger
+vm.emit("myEvent", arg1, arg2);
+```
 
-The [onevent demo](http://leeoniya.github.io/domvm/demos/playground/#onevent) configs a basic full app autoredraw:
+There is also a global emit listener which fires for all emit events.
 
 ```js
 domvm.config({
-    onevent: function(e, node, vm, data, args) {
-        vm.root().redraw();
+    onemit: {
+        myEvent: function(arg1, arg2, vm, data) {
+            // ... do stuff
+        }
     }
 });
 ```
@@ -500,27 +645,69 @@ domvm.config({
 
 **Demo:** [lifecycle-hooks](http://leeoniya.github.io/domvm/demos/playground/#lifecycle-hooks) different hooks animate in/out with different colors.
 
-**Node-level**
+#### Node-level
 
 Usage: `el("div", {_key: "...", _hooks: {...}}, "Hello")`
 
-- will/didInsert (initial insert)
-- will/didRecycle (reuse & patch)
-- will/didReinsert (detach & move)
-- will/didRemove
+- `will`/`didInsert(newNode)` - initial insert
+- `will`/`didRecycle(oldNode, newNode)` - reuse & patch
+- `will`/`didReinsert(newNode)` - detach & move
+- `will`/`didRemove(oldNode)`
 
-While not required, it is strongly advised that your hook-handling vnodes are uniquely keyed as shown above, to ensure deterministic DOM recycling and hook invocation.
+While not required, it is strongly advised that your hook-handling vnodes are [uniquely keyed](#keys--dom-recycling) as shown above, to ensure deterministic DOM recycling and hook invocation.
 
-**View-level**
+#### View-level
 
 Usage: `vm.config({hooks: {willMount: ...}})` or `return {render: ..., hooks: {willMount: ...}}`
 
-- willUpdate (before views's data is replaced)
-- will/didRedraw
-- will/didMount (dom insertion)
-- will/didUnmount (dom removal)
+- `willUpdate(vm, data)` - before views's data is replaced
+- `will`/`didRedraw(vm, data)`
+- `will`/`didMount(vm, data)` - dom insertion
+- `will`/`didUnmount(vm, data)` - dom removal
 
-`did*` hooks fire after a forced DOM repaint. `willRemove` & `willUnmount` hooks can return a Promise to delay the removal/unmounting allowing you to CSS transition, etc.
+Notes:
+
+- `did*` hooks fire after a forced DOM repaint.
+- `willRemove` & `willUnmount` hooks can return a Promise to delay the removal/unmounting allowing you to CSS transition, etc.
+
+---
+### Third-Party Integration
+
+Several facilities exist to interoperate with third-party libraries.
+
+#### Non-interference
+
+First, domvm will not touch attrs that are not specified or managed in your templates.
+In addition, elements not created by domvm will be ignored by the reconciler, as long as their ancestors continue to remain in the DOM.
+However, the position of any inserted third-party DOM element amongst its siblings cannot be guaranteed.
+
+#### will/didInsert Hooks
+
+You can use normal DOM methods to insert elements into elements managed by domvm by using [will/didInsert hooks](#lifecycle-hooks).
+See the [Embed Tweets](http://leeoniya.github.io/domvm/demos/playground/#embed-tweets) demo.
+
+#### injectElement
+
+`domvm.injectElement(elem)` allows you to insert any already-created third-party element into a template, deterministically manage its position and fire lifecycle hooks.
+
+#### innerHTML
+
+You can set the innerHTML of an element created by domvm using a special `{_raw: true}` attribute:
+
+```js
+el("div", {_raw: true}, "<p>Foo</p>");
+```
+
+However, it's **strongly recommended** for security reasons to use `domvm.injectElement()` after parsing the html string via the browser's native [DOMParser API](https://developer.mozilla.org/en-US/docs/Web/API/DOMParser).
+
+---
+### Extending ViewModel & VNode
+
+If needed, you may extend some of domvm's internal class prototypes in your app to add helper methods, etc.
+The following are available:
+
+- `domvm.ViewModel.prototype`
+- `domvm.VNode.prototype`
 
 ---
 ### Isomorphism & SSR
@@ -550,3 +737,175 @@ var html = domvm.createView(View, data).html();
 // then hydrate on the client to bind event handlers, etc.
 var vm = domvm.createView(View, data).attach(document.body);
 ```
+
+---
+### Optimizations
+
+Before you continue...
+
+- Recognize that domvm with no optimizations is able to rebuild and diff a full vtree and reconcile a DOM of 3,000 nodes in < 1.5ms. See [0% dbmonster bench](http://leeoniya.github.io/domvm/demos/bench/dbmonster/).
+- Make sure you've read and understood [Sub-views vs Sub-templates](#sub-views-vs-sub-templates).
+- Ensure you're not manually caching & reusing old vnodes or holding references to them in your app code. They're meant to be discarded by the GC; let them go.
+- Profile your code to be certain that domvm is the bottleneck and not something else in your app. e.g. [Issue #173](https://github.com/leeoniya/domvm/issues/173).
+  - When using the DEVMODE build, are the logged DOM operations close to what you expect?
+  - Are you rendering an enormous DOM that's already difficult for browsers to deal with? Run `document.querySelectorAll("*").length` in the devtools console. Live node counts over 10,000 should be evaluated for refactoring.
+  - Are you calling `vm.redraw()` from unthrottled event listeners such as `mousemove`, `scroll`, `resize`, `drag`, `touchmove`?
+  - Are you using `requestAnimationFrame()` where appropriate?
+  - Are you using event delegation where appropriate to avoid binding thousands of event listeners?
+  - Are you properly using CSS3 transforms, transitions and animation to do effects and animations rather than calling `vm.redraw()` at 60fps?
+  - Do thousands of nodes or views have lifecycle hooks?
+- Finally, understand that optimizations can only reduce the work needed to regenerate the vtree, diff and reconcile the DOM; the performed DOM operations will always be identical and near-optimal. In the vast majority of cases, the lowest-hanging fruit will be in the above advice.
+
+Still here? You must be a glutton for punishment, hell-bent on rendering enormous grids or tabular data ;) Very well, then...
+
+#### Isolated Redraw
+
+Let's start with the obvious.
+Do you need to redraw everything or just a sub-view?
+`vm.redraw()` lets you to redraw only specific views.
+
+#### Flatten Nested Arrays
+
+While domvm will flatten nested arrays in your templates, you may get a small boost by doing it yourself via `Array.concat()` before returning your templates from `render()`.
+
+#### Old VTree Reuse
+
+If a view is static or is known to not have changed since the last redraw, `render()` can return the existing old vnode to short-circuit the vtree regeneration, diffing and dom reconciliation.
+
+```js
+function View(vm) {
+    return function(vm) {
+        if (noChanges)
+            return vm.node;
+        else
+            return el("div", "Hello World");
+    };
+}
+```
+
+The mechanism for determining if changes may exist is up to you, including caching old data within the closure and doing diffing on each redraw. Speaking of diffing...
+
+#### View Change Assessment
+
+Similar to React's `shouldComponentUpdate()`, `vm.config({diff:...})` is able to short-circuit redraw calls.
+It provides a caching layer that does shallow comparison before every `render()` call and may return an array or object to shallow-compare for changes.
+
+```js
+function View(vm) {
+    vm.config({
+        diff: function(vm, data) {
+            return [data.foo.bar, data.baz];
+        }
+    });
+
+    return function(vm, data) {
+        return el("div", {class: data.baz}, "Hello World, " + data.foo.bar);
+    };
+}
+```
+
+`diff` may also return a plain value that's the result of your own DIY comparison, but is most useful for static views where no complex diff is required at all and a simple `===` will suffice.
+
+With a plain-object view, it looks like this:
+
+```js
+var StaticView = {
+    diff: function(vm, data) {
+        return 0;
+    },
+    render: function(vm, data) {},
+};
+```
+
+Notes:
+
+If you intend to do a simple diff of an object by its identity, then return it wrapped in an array to avoid domvm diffing all of its enumerable keys.
+See [Issue #148](https://github.com/leeoniya/domvm/issues/148).
+
+#### VNode Patching
+
+VNodes can be patched on an individual basis, and this can be done without having to patch the children, too.
+This makes mutating attributes, classes and styles much faster when the children have no changes.
+
+```js
+var vDiv = el("div", {class: "foo", style: "color: red;"}, [
+    el("div", "Mooo")
+]);
+
+vDiv.patch({class: "bar", style: "color: blue;"});
+```
+
+DOM patching can also be done via a full vnode rebuild:
+
+```js
+function makeDiv(klass) {
+    return el("div", {class: klass, style: "color: red;"}, [
+        el("div", "Mooo")
+    ]);
+}
+
+var vDiv = makeDiv("foo");
+
+vDiv.patch(makeDiv("bar"));
+```
+
+#### Fixed Structures
+
+Let's say you have a bench like dbmonster in this repo.
+It's a huge grid that has a fixed structure. No elements are ever inserted, removed or reordered.
+In fact, the only mutations that ever happen are `textContent` of the cells and patching of attrs like `class`, and `style`.
+
+There's a lot of work that domvm's DOM reconciler can avoid doing here, but you have to tell it that the structure of the DOM will not change.
+This is accomplished with a `domvm.FIXED_BODY` vnode flag on all nodes whose `body` will never change in shallow structure.
+
+```js
+var Table = {
+    render: function() {
+        return el("table", {_flags: domvm.FIXED_BODY}, [
+            el("tr", {_flags: domvm.FIXED_BODY}, [
+                el("td", {_flags: domvm.FIXED_BODY}, "Hello"),
+                el("td", {_flags: domvm.FIXED_BODY}, "World"),
+            ])
+        ]);
+    }
+};
+```
+
+This is rather tedious, so there's an easier way to get it done. The fourth argument to `defineElement()` is `flags`, so we create an additional element factory and use it normally:
+
+```js
+function fel(tag, arg1, arg2) {
+    return domvm.defineElement(tag, arg1, arg2, domvm.FIXED_BODY);
+}
+
+var Table = {
+    render: function() {
+        return fel("table", [
+            fel("tr", [
+                fel("td", "Hello"),
+                fel("td", "World"),
+            ])
+        ]);
+    }
+};
+```
+
+#### Fully-Keyed Lists
+
+In domvm, the term "list", implies that child elements are shallow-homogenous (the same views or elements with the same DOM tags).
+domvm does not require that child arrays are fully-keyed, but if they *are*, you can slightly simplify domvm's job of matching up the old vtree by *only* testing keys.
+This is done by setting the `domvm.KEYED_LIST` vnode flag on the parent.
+
+#### Lazy Lists
+
+Lazy lists allow for old vtree reuse in the absence of changes at the vnode level without having to refactor into more expensive views that return existing vnodes.
+This mostly saves on memory allocations. Lazy lists may be created for both, keyed and non-keyed lists.
+To these lists, you will need:
+
+- A list-item generating function, which you should have anyways as the callback passed to a `Array.map` iterator.
+- For keyed lists, a key-generating function that allows for matching up proper items in the old vtree.
+- A `diff` function which allows a lazy list to determine if an item has changed and needs a new vnode generated or can have its vnode reused.
+- Create a `domvm.lazyList()` iterator/generator using the above.
+- Set the appropriate flags on the list parent (`domvm.KEYED_LIST`, `domvm.LAZY_LIST`) and each list item (`{_key: ...}`)
+
+While a bit involved, the resulting code is quite terse and not as daunting as it sounds: http://leeoniya.github.io/domvm/demos/playground/#lazy-list

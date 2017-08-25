@@ -79,7 +79,7 @@ function compile(buildName) {
 	var feats = buildCfg.feats;
 
 	rollup({
-		entry: buildFile,
+		input: buildFile,
 		plugins: [
 			replace({
 				_DEVMODE:		buildName === "dev",
@@ -109,10 +109,10 @@ function compile(buildName) {
 				"*/",
 				"",
 			].join("\n"),
-			moduleName: "domvm",
+			name: "domvm",
 			format: "umd",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
-			sourceMap: true,
-			dest: "./dist/" + buildName + "/domvm." + buildName + ".js"
+			sourcemap: true,
+			file: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		});
 
 		console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
