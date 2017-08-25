@@ -316,6 +316,20 @@ var dataA = {
 var vmA = domvm.createView(ViewA, dataA).mount(document.body);
 ```
 
+#### Options
+
+`domvm.createView` and `domvm.defineView` have four arguments: `(view, data, key, opts)`.
+The fourth `opts` arg can be used to pass in any additional data into the view constructor/init without having to cram it into `data`.
+Several reserved options are handled automatically by domvm that correspond to existing `vm.config({...})` options (documented in other sections):
+
+- `init` (same as using `{init:...}` in views defs)
+- `diff`
+- `hooks`
+- `onevent`
+- `onemit`
+
+This can simplify sub-view internals when externally-defined opts are passed in, avoiding some boilerplate inside views, eg. `vm.config({hooks: opts.hooks})`.
+
 ---
 ### Sub-views vs Sub-templates
 
