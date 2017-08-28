@@ -76,7 +76,7 @@ function _removeChild(parEl, el, immediate) {
 
 // todo: should delay parent unmount() by returning res prom?
 export function removeChild(parEl, el) {
-	var node = el._node, hooks = node.hooks;
+	var node = el._node;
 
 	// already marked for removal
 	if (node._dead) return;
