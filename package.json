@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "node-watch": "*",
-    "rollup": "0.48.2",
+    "rollup": "*",
     "buble": "*",
     "rollup-plugin-replace": "*",
     "rollup-plugin-buble": "*"

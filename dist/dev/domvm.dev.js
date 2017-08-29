@@ -1523,8 +1523,6 @@ function patchChildren(vnode, donor) {
 function DOMInstr(withTime) {
 	var isEdge = navigator.userAgent.indexOf("Edge") !== -1;
 	var isIE = navigator.userAgent.indexOf("Trident/") !== -1;
-	var isMS = isEdge || isIE;
-
 	var getDescr = Object.getOwnPropertyDescriptor;
 	var defProp = Object.defineProperty;
 
