@@ -86,7 +86,7 @@ vm.config({hooks: {
 		return new Promise(function(resolve, reject) {
 			vm.node.patch({class: "unmounting"}, true);
 			vm.node.patch({class: "unmounted"});
-			node.el.addEventListener("transitionend", resolve);
+			vm.node.el.addEventListener("transitionend", resolve);
 		});
 	},
 	didUnmount: function(vm) {},
