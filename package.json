@@ -1,8 +1,13 @@
 {
   "name": "domvm",
   "description": "DOM ViewModel - A thin, fast, dependency-free vdom view layer",
-  "keywords": ["virtual-dom","mvvm","view-model","framework"],
-  "license" : "MIT",
+  "keywords": [
+    "virtual-dom",
+    "mvvm",
+    "view-model",
+    "framework"
+  ],
+  "license": "MIT",
   "homepage": "https://github.com/leeoniya/domvm",
   "author": "Leon Sorokin <leeoniya@gmail.com>",
   "version": "3.1.1",
@@ -16,7 +21,6 @@
     "watch:server": "node watch.js server",
     "watch:full": "node watch.js full",
     "watch:dev": "node watch.js dev",
-
     "build:pico": "node build.js pico",
     "build:nano": "node build.js nano",
     "build:micro": "node build.js micro",

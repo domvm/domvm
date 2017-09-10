@@ -849,6 +849,10 @@ var vDiv = makeDiv("foo");
 vDiv.patch(makeDiv("bar"));
 ```
 
+`vnode.patch(vnode|attrs, doRepaint)` can be called with a `doRepaint = true` arg to force a DOM update.
+This is typically useful in cases when a CSS transition must start from a new state and should not be batched with any followup `patch()` calls.
+You can see this used in the [lifecycle-hooks demo](http://leeoniya.github.io/domvm/demos/playground/#lifecycle-hooks).
+
 #### Fixed Structures
 
 Let's say you have a bench like dbmonster in this repo.

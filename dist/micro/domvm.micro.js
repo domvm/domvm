@@ -621,7 +621,7 @@ function _removeChild(parEl, el, immediate) {
 
 // todo: should delay parent unmount() by returning res prom?
 function removeChild(parEl, el) {
-	var node = el._node, hooks = node.hooks;
+	var node = el._node;
 
 	// already marked for removal
 	if (node._dead) { return; }
@@ -1751,13 +1751,13 @@ var nano = {
 	LAZY_LIST: LAZY_LIST,
 };
 
-function protoPatch(n) {
-	return patch$1(this, n);
+function protoPatch(n, doRepaint) {
+	patch$1(this, n, doRepaint);
 }
 
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch hooks?
-function patch$1(o, n) {
+function patch$1(o, n, doRepaint) {
 	if (n.type != null) {
 		// no full patching of view roots, just use redraw!
 		if (o.vm != null)
@@ -1766,6 +1766,7 @@ function patch$1(o, n) {
 		preProc(n, o.parent, o.idx, null);
 		o.parent.body[o.idx] = n;
 		patch(n, o);
+		doRepaint && repaint(n);
 		drainDidHooks(getVm(n));
 	}
 	else {
@@ -1784,6 +1785,8 @@ function patch$1(o, n) {
 		}
 
 		patchAttrs(o, donor);
+
+		doRepaint && repaint(o);
 	}
 }
 
