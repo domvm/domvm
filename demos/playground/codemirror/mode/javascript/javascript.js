@@ -419,7 +419,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
   function expressionInner(type, noComma) {
     if (cx.state.fatArrowAt == cx.stream.start) {
       var body = noComma ? arrowBodyNoComma : arrowBody;
-      if (type == "(") return cont(pushcontext, pushlex(")"), commasep(pattern, ")"), poplex, expect("=>"), body, popcontext);
+      if (type == "(") return cont(pushcontext, pushlex(")"), commasep(funarg, ")"), poplex, expect("=>"), body, popcontext);
       else if (type == "variable") return pass(pushcontext, pattern, expect("=>"), body, popcontext);
     }
 
@@ -519,6 +519,9 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
       }
       else {
         cx.marked = isTokenFunc(cx.stream) ? "function-2" : "property";
+        var m // Work around fat-arrow-detection complication for detecting typescript typed arrow params
+        if (isTS && cx.state.fatArrowAt == cx.stream.start && (m = cx.stream.match(/^\s*:\s*/, false)))
+          cx.state.fatArrowAt = cx.stream.pos + m[0].length
         return cont(afterprop);
       }
     } else if (type == "number" || type == "string") {
@@ -707,7 +710,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
 
       return cont(classBody);
     }
-    if (type == "variable") {
+    if (type == "variable" || cx.style == "keyword") {
       cx.marked = cx.isGetterSetter ? "property" : isTokenFunc(cx.stream) ? "function-2" : "property";
       cx.isGetterSetter = false;
       return cont(isTS ? classfield : functiondef, classBody);
