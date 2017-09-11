@@ -62,9 +62,6 @@ export function initElementNode(tag, attrs, body, flags) {
 		if (isSet(mergedAttrs._hooks))
 			node.hooks = mergedAttrs._hooks;
 
-		if (isSet(mergedAttrs._raw))
-			node.raw = mergedAttrs._raw;
-
 		if (isSet(mergedAttrs._data))
 			node.data = mergedAttrs._data;
 

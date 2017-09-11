@@ -178,7 +178,6 @@ el("#ui", [
 
 // special _* props
 
-el("p", {_raw: true}, "<span>A am text!</span>")            // raw innerHTML body, CAREFUL!
 el("p", {_key: "myParag"}, "Some text")                     // keyed nodes
 el("p", {_data: {foo: 123}}, "Some text")                   // per-node data (faster than attr)
 
@@ -692,10 +691,10 @@ See the [Embed Tweets](http://leeoniya.github.io/domvm/demos/playground/#embed-t
 
 #### innerHTML
 
-You can set the innerHTML of an element created by domvm using a special `{_raw: true}` attribute:
+You can set the innerHTML of an element created by domvm using a normal `.`-prefixed property attribute:
 
 ```js
-el("div", {_raw: true}, "<p>Foo</p>");
+el("div", {".innerHTML": "<p>Foo</p>"});
 ```
 
 However, it's **strongly recommended** for security reasons to use `domvm.injectElement()` after parsing the html string via the browser's native [DOMParser API](https://developer.mozilla.org/en-US/docs/Web/API/DOMParser).

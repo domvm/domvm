@@ -181,7 +181,6 @@ var VNodeProto = VNode.prototype = {
 	ref:	null,
 	data:	null,
 	hooks:	null,
-	raw:	false,
 	ns:		null,
 
 	el:		null,
@@ -390,9 +389,6 @@ function initElementNode(tag, attrs, body, flags) {
 
 		if (isSet(mergedAttrs._hooks))
 			{ node.hooks = mergedAttrs._hooks; }
-
-		if (isSet(mergedAttrs._raw))
-			{ node.raw = mergedAttrs._raw; }
 
 		if (isSet(mergedAttrs._data))
 			{ node.data = mergedAttrs._data; }
@@ -869,6 +865,11 @@ function defineSvgElement(tag, arg1, arg2, flags) {
 var XLINKHREF = "xlink:href";
 
 function remAttr(node, name, asProp) {
+	if (name[0] === ".") {
+		name = name.substr(1);
+		asProp = true;
+	}
+
 	if (asProp)
 		{ node.el[name] = ""; }
 	else {
@@ -885,7 +886,7 @@ function setAttr(node, name, val, asProp, initial) {
 	var el = node.el;
 
 	if (val == null)
-		{ !initial && remAttr(node, name, false); }		//, asProp?  // will also removeAttr of style: null
+		{ !initial && remAttr(node, name, false); }		// will also removeAttr of style: null
 	else if (node.ns != null) {
 		if (name === XLINKHREF)
 			{ el.setAttributeNS(XLINK_NS, "href", val); }
@@ -930,8 +931,7 @@ function patchAttrs(vnode, donor, initial) {
 				{ setAttr(vnode, key, nval, isDyn, initial); }
 		}
 
-		// TODO: handle key[0] === "."
-		// should bench style.cssText = "" vs removeAttribute("style")
+		// TODO: bench style.cssText = "" vs removeAttribute("style")
 		for (var key in oattrs) {
 			!(key in nattrs) &&
 			!isSplProp(key) &&
@@ -991,12 +991,8 @@ function hydrate(vnode, withEl) {
 
 			if (isArr(vnode.body))
 				{ hydrateBody(vnode); }
-			else if (vnode.body != null && vnode.body !== "") {
-				if (vnode.raw)
-					{ vnode.el.innerHTML = vnode.body; }
-				else
-					{ vnode.el.textContent = vnode.body; }
-			}
+			else if (vnode.body != null && vnode.body !== "")
+				{ vnode.el.textContent = vnode.body; }
 		}
 		else if (vnode.type === TEXT)
 			{ vnode.el = withEl || createTextNode(vnode.body); }
@@ -1248,12 +1244,8 @@ function patch(vnode, donor) {
 			{ patchChildren(vnode, donor); }
 		// [] => "" | null
 		else if (nbody !== obody) {
-			if (nbody != null) {
-				if (vnode.raw)
-					{ el.innerHTML = nbody; }
-				else
-					{ el.textContent = nbody; }
-			}
+			if (nbody != null)
+				{ el.textContent = nbody; }
 			else
 				{ clearChildren(donor); }
 		}
@@ -1266,11 +1258,7 @@ function patch(vnode, donor) {
 		}
 		// "" | null => "" | null
 		else if (nbody !== obody) {
-			if (vnode.raw)
-				{ el.innerHTML = nbody; }
-			else if (donor.raw)
-				{ el.textContent = nbody; }
-			else if (el.firstChild)
+			if (el.firstChild)
 				{ el.firstChild.nodeValue = nbody; }
 			else
 				{ el.textContent = nbody; }
@@ -2004,6 +1992,8 @@ function eachHtml(arr, dynProps) {
 	return buf;
 }
 
+var innerHTML = ".innerHTML";
+
 function html(node, dynProps) {
 	var out, style;
 
@@ -2024,12 +2014,15 @@ function html(node, dynProps) {
 
 			buf += "<" + node.tag;
 
-			if (node.attrs != null) {
-				for (var pname in node.attrs) {
+			var attrs = node.attrs,
+				hasAttrs = attrs != null;
+
+			if (hasAttrs) {
+				for (var pname in attrs) {
 					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_" || dynProps === false && isDynProp(node.tag, pname))
 						{ continue; }
 
-					var val = node.attrs[pname];
+					var val = attrs[pname];
 
 					if (pname === "style" && val != null) {
 						style = typeof val === "object" ? styleStr(val) : val;
@@ -2054,14 +2047,16 @@ function html(node, dynProps) {
 				{ buf += ">"; }
 
 			if (!voidTags[node.tag]) {
-				if (isArr(node.body))
+				if (hasAttrs && attrs[innerHTML] != null)
+					{ buf += attrs[innerHTML]; }
+				else if (isArr(node.body))
 					{ buf += eachHtml(node.body, dynProps); }
 				else if ((node.flags & LAZY_LIST) === LAZY_LIST) {
 					node.body.body(node);
 					buf += eachHtml(node.body, dynProps);
 				}
 				else
-					{ buf += node.raw ? node.body : escHtml(node.body); }
+					{ buf += escHtml(node.body); }
 
 				buf += "</" + node.tag + ">";
 			}

@@ -153,7 +153,7 @@ QUnit.module("Various Others");
 	QUnit.test('Raw HTML as body', function(assert) {
 		function View5(vm) {
 			return function() {
-				return el("div", {_raw: true}, '<p class="foo">bar</p>&nbsp;baz');		// .html()
+				return el("div", {".innerHTML": '<p class="foo">bar</p>&nbsp;baz'});		// .html()
 			};
 		}
 
@@ -171,7 +171,7 @@ QUnit.module("Various Others");
 			return function() {
 				return el('div', [
 					tab === 2 && el('span', 'foo'),
-					el('span', { _raw: true }, 'bar <b>baz</b>')
+					el('span', {".innerHTML": 'bar <b>baz</b>'})
 				]);
 			};
 		}
@@ -192,7 +192,7 @@ QUnit.module("Various Others");
 		vm.redraw(true);
 		var callCounts = instr.end();
 
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, textContent: 1, innerHTML: 1, insertBefore: 1 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, textContent: 1, innerHTML: 2, insertBefore: 1 });
 	});
 
 	QUnit.test('Existing DOM element as child', function(assert) {

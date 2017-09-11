@@ -12,7 +12,6 @@ export const VNodeProto = VNode.prototype = {
 	ref:	null,
 	data:	null,
 	hooks:	null,
-	raw:	false,
 	ns:		null,
 
 	el:		null,
