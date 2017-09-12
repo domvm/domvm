@@ -52,7 +52,7 @@ QUnit.module("lazyList");
 
 	QUnit.test('Redraw', function(assert) {
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><p><em>A</em></p><p class="selected"><em>B</em></p><p><em>C</em></p></div>';
@@ -63,7 +63,7 @@ QUnit.module("lazyList");
 		store.items = [];
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div></div>';
@@ -78,7 +78,7 @@ QUnit.module("lazyList");
 		];
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><p><em>A</em></p><p class="selected"><em>B</em></p><p><em>C</em></p></div>';
@@ -89,7 +89,7 @@ QUnit.module("lazyList");
 		store.items[3] = {id: "x", text: "X"};
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><p><em>A</em></p><p class="selected"><em>B</em></p><p><em>C</em></p><p><em>X</em></p></div>';
@@ -100,7 +100,7 @@ QUnit.module("lazyList");
 		store.items[1] = {id: "y", text: "Y"};
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><p><em>A</em></p><p><em>Y</em></p><p><em>C</em></p><p><em>X</em></p></div>';
@@ -126,7 +126,7 @@ QUnit.module("lazyList");
 		store.items[1] = {id: "y", text: "Y"};
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><p><em>A</em></p><p><em>Y</em></p><p><em>C</em></p></div>';
@@ -167,7 +167,7 @@ QUnit.module("lazyList");
 
 		store.items[1].text = "foo";
 		instr.start();
-		vm2.redraw(true);
+		vm2.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><p>A</p><p>foo</p><p>C</p></div>';

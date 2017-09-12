@@ -1,7 +1,7 @@
-QUnit.module("refs & didRedraw()");
+QUnit.module("refs & didRedraw");
 
 (function() {
-	QUnit.test('didredraw(true) is called on self', function(assert) {
+	QUnit.test('didRedraw is called on self', function(assert) {
 		assert.expect(2);
 
 		var done = assert.async();
@@ -9,7 +9,7 @@ QUnit.module("refs & didRedraw()");
 		function MyView(vm) {
 			vm.config({hooks: {
 				didRedraw: function() {
-					assert.ok(true, "Self didredraw(true)");
+					assert.ok(true, "Self didRedraw");
 					assert.ok(vm.refs.mySpan3.el === document.getElementById("zzz"), "Self ref");
 				//	console.log(vm.refs);
 					done();
@@ -23,10 +23,10 @@ QUnit.module("refs & didRedraw()");
 
 		var vm = domvm.createView(MyView).mount(testyDiv);
 
-		vm.redraw(true);
+		vm.redraw();
 	});
 
-	QUnit.test('didredraw(true) is called on subviews when parent redraws', function(assert) {
+	QUnit.test('didRedraw is called on subviews when parent redraws', function(assert) {
 		assert.expect(4);
 
 		var done1 = assert.async();
@@ -35,7 +35,7 @@ QUnit.module("refs & didRedraw()");
 		function MyView(vm) {
 			vm.config({hooks: {
 				didRedraw: function() {
-					assert.ok(true, "Parent didredraw(true)");
+					assert.ok(true, "Parent didRedraw");
 					assert.ok(vm.refs.mySpan1.el === document.getElementById("xxx"), "Parent ref");
 				//	console.log(vm.refs);
 					done2();
@@ -66,7 +66,7 @@ QUnit.module("refs & didRedraw()");
 
 		var vm = domvm.createView(MyView).mount(testyDiv);
 
-		vm.redraw(true);
+		vm.redraw();
 
 	//	setTimeout(done, 1);
 

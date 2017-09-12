@@ -38,7 +38,7 @@ QUnit.module("Non-VNodes");
 		var expcHtml = '<div>0<span>moo</span>function () {return "blah";}<span>bar</span><span>baz</span>Infinity</div>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 3, createTextNode: 2, insertBefore: 5, nodeValue: 1, textContent: 3 });

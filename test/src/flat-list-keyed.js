@@ -23,7 +23,7 @@ QUnit.module("Flat List w/keys");
 	// noop
 	QUnit.test("Redraw", function(assert) {
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>a</li><li>b</li><li>c</li></ul>';
@@ -35,7 +35,7 @@ QUnit.module("Flat List w/keys");
 		list.push("baz","cow");
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>a</li><li>b</li><li>c</li><li>baz</li><li>cow</li></ul>';
@@ -46,7 +46,7 @@ QUnit.module("Flat List w/keys");
 		list.unshift("foo", "bar");
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>foo</li><li>bar</li><li>a</li><li>b</li><li>c</li><li>baz</li><li>cow</li></ul>';
@@ -57,7 +57,7 @@ QUnit.module("Flat List w/keys");
 		list.splice(3, 0, "moo", "xxx");
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>foo</li><li>bar</li><li>a</li><li>moo</li><li>xxx</li><li>b</li><li>c</li><li>baz</li><li>cow</li></ul>';
@@ -69,7 +69,7 @@ QUnit.module("Flat List w/keys");
 		list.splice(6, 0, "zzz");
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>foo</li><li>bar</li><li>a</li><li>fff</li><li>moo</li><li>xxx</li><li>zzz</li><li>b</li><li>c</li><li>baz</li><li>cow</li></ul>';
@@ -81,7 +81,7 @@ QUnit.module("Flat List w/keys");
 		list[0] = "z";
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>bar</li><li>a</li><li>fff</li><li>moo</li><li>xxx</li><li>zzz</li><li>b</li><li>c</li><li>baz</li><li>cow</li></ul>';
@@ -92,7 +92,7 @@ QUnit.module("Flat List w/keys");
 		list[list.length-1] = 10;
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>bar</li><li>a</li><li>fff</li><li>moo</li><li>xxx</li><li>zzz</li><li>b</li><li>c</li><li>baz</li><li>10</li></ul>';
@@ -103,7 +103,7 @@ QUnit.module("Flat List w/keys");
 		list[3] = 666;
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>bar</li><li>a</li><li>666</li><li>moo</li><li>xxx</li><li>zzz</li><li>b</li><li>c</li><li>baz</li><li>10</li></ul>';
@@ -117,7 +117,7 @@ QUnit.module("Flat List w/keys");
 		list.sort();
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>10</li><li>666</li><li>a</li><li>b</li><li>bar</li><li>baz</li><li>c</li><li>moo</li><li>xxx</li><li>z</li><li>zzz</li></ul>';
@@ -129,7 +129,7 @@ QUnit.module("Flat List w/keys");
 		list.pop();
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>10</li><li>666</li><li>a</li><li>b</li><li>bar</li><li>baz</li><li>c</li><li>moo</li><li>xxx</li><li>z</li></ul>';
@@ -140,7 +140,7 @@ QUnit.module("Flat List w/keys");
 		list.shift();
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>666</li><li>a</li><li>b</li><li>bar</li><li>baz</li><li>c</li><li>moo</li><li>xxx</li><li>z</li></ul>';
@@ -154,7 +154,7 @@ QUnit.module("Flat List w/keys");
 		list.splice(3,2);
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>666</li><li>a</li><li>b</li><li>c</li><li>moo</li><li>xxx</li><li>z</li></ul>';
@@ -170,7 +170,7 @@ QUnit.module("Flat List w/keys");
 		list.unshift(list.pop());
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>666</li><li>a</li><li>b</li><li>c</li><li>moo</li><li>xxx</li></ul>';
@@ -184,7 +184,7 @@ QUnit.module("Flat List w/keys");
 		list.push(list.shift());
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>666</li><li>a</li><li>b</li><li>c</li><li>moo</li><li>xxx</li><li>z</li></ul>';
@@ -202,7 +202,7 @@ QUnit.module("Flat List w/keys");
 		list[list.length - 1] = a;
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>a</li><li>b</li><li>c</li><li>moo</li><li>xxx</li><li>666</li></ul>';
@@ -220,7 +220,7 @@ QUnit.module("Flat List w/keys");
 		list[3] = a;
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>c</li><li>b</li><li>a</li><li>moo</li><li>xxx</li><li>666</li></ul>';
@@ -238,7 +238,7 @@ QUnit.module("Flat List w/keys");
 		list[5] = a;
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>c</li><li>b</li><li>a</li><li>xxx</li><li>moo</li><li>666</li></ul>';
@@ -253,7 +253,7 @@ QUnit.module("Flat List w/keys");
 		list.push("z", "moo", "xxx", "a", "b", "c", 666);
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>moo</li><li>xxx</li><li>a</li><li>b</li><li>c</li><li>666</li></ul>';
@@ -268,7 +268,7 @@ QUnit.module("Flat List w/keys");
 		list.push("z", "a", "b", "moo", "xxx", "c", 666);
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>z</li><li>a</li><li>b</li><li>moo</li><li>xxx</li><li>c</li><li>666</li></ul>';
@@ -284,7 +284,7 @@ QUnit.module("Flat List w/keys");
 		list.push("b", "moo", "xxx", "z", "a", "c", 666);
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>b</li><li>moo</li><li>xxx</li><li>z</li><li>a</li><li>c</li><li>666</li></ul>';
@@ -299,7 +299,7 @@ QUnit.module("Flat List w/keys");
 		list.push("b", "xxx", "moo", "a", "z", "c", 666);
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>b</li><li>xxx</li><li>moo</li><li>a</li><li>z</li><li>c</li><li>666</li></ul>';
@@ -314,7 +314,7 @@ QUnit.module("Flat List w/keys");
 		list.push("b", "moo", "xxx", "z", "a", "c", 666);
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>b</li><li>moo</li><li>xxx</li><li>z</li><li>a</li><li>c</li><li>666</li></ul>';

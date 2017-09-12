@@ -106,6 +106,7 @@ If you're new to domvm, the [dev build](/dist/dev/domvm.dev.js) is recommended f
 
 There are a couple config options:
 
+- `domvm.DEVMODE.syncRedraw = true` will cause all redraws to be synchronous and unthrottled (useful for unit tests & debugging)
 - `domvm.DEVMODE.mutations = false` will disable DOM mutation logging.
 - `domvm.DEVMODE.warnings = false` will disable all warnings.
 - `domvm.DEVMODE.verbose = false` will suppress the explanations, but still leave the error names & object info.

@@ -1,6 +1,9 @@
 QUnit.config.reorder = false;
 
-//domvm.DEVMODE.verbose = false;
+domvm.DEVMODE.syncRedraw = true
+domvm.DEVMODE.mutations = false
+domvm.DEVMODE.warnings = false;
+domvm.DEVMODE.verbose = false;
 
 var	el = domvm.defineElement,
 	tx = domvm.defineText,

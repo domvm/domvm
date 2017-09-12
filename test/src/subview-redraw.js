@@ -1,4 +1,4 @@
-QUnit.module("Subview redraw(true) Branch Consistency");
+QUnit.module("Subview Branch Consistency");
 
 (function() {
 	function Parent() {
@@ -51,7 +51,7 @@ QUnit.module("Subview redraw(true) Branch Consistency");
 		mom.kids[0].name = "Johnny";
 
 		instr.start();
-		mom.kids[0].vm.redraw(true);
+		mom.kids[0].vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul><li>Johnny</li></ul>';
@@ -59,7 +59,7 @@ QUnit.module("Subview redraw(true) Branch Consistency");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { nodeValue: 1 });
 
 		instr.start();
-		mom.vm.redraw(true);
+		mom.vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, {});
@@ -69,7 +69,7 @@ QUnit.module("Subview redraw(true) Branch Consistency");
 		mom.kids[0].name = "Chuck Norris";
 
 		instr.start();
-		mom.vm.redraw(true);
+		mom.vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul><li>Chuck Norris</li></ul>';
@@ -77,7 +77,7 @@ QUnit.module("Subview redraw(true) Branch Consistency");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { nodeValue: 1 });
 
 		instr.start();
-		mom.kids[0].vm.redraw(true);
+		mom.kids[0].vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, {});

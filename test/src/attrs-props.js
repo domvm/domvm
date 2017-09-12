@@ -27,7 +27,7 @@ QUnit.module("Attrs/props");
 		tpl = el("input#foo", {type: "text", style: {padding: 10}, disabled: false, custom: "xyz", custom2: "...", custom4: null});
 
 		instr.start();
-		vm.redraw(true);		// todo: create test container
+		vm.redraw();		// todo: create test container
 		var callCounts = instr.end();
 /*
 		// a bit of a hack to get the outerHtml to match exactly fo the test
@@ -74,7 +74,7 @@ QUnit.module("Attrs/props");
 		check1.checked = true;
 
 		instr.start();
-		check1.vm.redraw(true);
+		check1.vm.redraw();
 		var callCounts = instr.end();
 
 		var checkEl = document.getElementById(check1.id);
@@ -98,7 +98,7 @@ QUnit.module("Attrs/props");
 		check2.checked = false;
 
 		instr.start();
-		check2.vm.redraw(true);
+		check2.vm.redraw();
 		var callCounts = instr.end();
 
 		var checkEl = document.getElementById(check2.id);
@@ -122,7 +122,7 @@ QUnit.module("Attrs/props");
 
 		// redraw with model.checked still true
 		instr.start();
-		check3.vm.redraw(true);
+		check3.vm.redraw();
 		var callCounts = instr.end();
 
 		// the visual state should be reset back to the model state
@@ -164,7 +164,7 @@ QUnit.module("Attrs/props");
 		var expcHtml = '<div><input type="checkbox"><input type="text"></div>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(false), expcHtml, callCounts, { removeChild: 2, setAttribute: 1, checked: 1 });
@@ -199,7 +199,7 @@ QUnit.module("Attrs/props");
 		attrs = null;
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { });
@@ -208,7 +208,7 @@ QUnit.module("Attrs/props");
 		var expcHtml = '<div abc="1">moo</div>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { setAttribute: 1 });
@@ -237,7 +237,7 @@ QUnit.module("Attrs/props");
 		attrs = null;		// or simply {}?
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div>moo</div>';

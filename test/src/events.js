@@ -89,7 +89,7 @@ QUnit.module("Events");
 
 		// no re-bind on redraw
 		tpl = el("div", [el("input", {onclick: click1})]);
-		vm.redraw(true);
+		vm.redraw();
 		assert.equal(vm.node.body[0].el.onclick, click1);
 		assert.equal(counts.set, 0);
 		assert.equal(counts.unset, 0);
@@ -98,7 +98,7 @@ QUnit.module("Events");
 
 		// mutate
 		tpl = el("div", [el("input", {onclick: click2})]);
-		vm.redraw(true);
+		vm.redraw();
 		assert.equal(vm.node.body[0].el.onclick, click2);
 		assert.equal(counts.set, 1);
 		assert.equal(counts.unset, 0);
@@ -112,7 +112,7 @@ QUnit.module("Events");
 
 		// remove
 		tpl = el("div", [el("input", {onclick: null})]);
-		vm.redraw(true);
+		vm.redraw();
 		assert.equal(vm.node.body[0].el.onclick, null);
 		assert.equal(counts.set, 0);
 		assert.equal(counts.unset, 1);
@@ -156,7 +156,7 @@ QUnit.module("Events");
 
 		// no re-bind on redraw, even with handler & param changes
 		tpl = el("div", [el("input", {onclick: [click2, 3, 4]})]);
-		vm.redraw(true);
+		vm.redraw();
 		assert.equal(vm.node.body[0].el.onclick.name, 'handle');
 		assert.equal(counts.set, 0);
 		assert.equal(counts.unset, 0);
@@ -177,7 +177,7 @@ QUnit.module("Events");
 
 		// remove
 		tpl = el("div", [el("input", {onclick: null})]);
-		vm.redraw(true);
+		vm.redraw();
 		assert.equal(vm.node.body[0].el.onclick, null);
 		assert.equal(counts.set, 0);
 		assert.equal(counts.unset, 1);
@@ -198,7 +198,7 @@ QUnit.module("Events");
 
 		// no re-bind on redraw, even with handler & param changes
 		tpl = el("div", {onclick: {"*": click2, "input": click2}}, [el("input")]);
-		vm.redraw(true);
+		vm.redraw();
 		assert.equal(vm.node.el.onclick.name, 'handle');
 		assert.equal(counts.set, 0);
 		assert.equal(counts.unset, 0);
@@ -216,7 +216,7 @@ QUnit.module("Events");
 
 		// remove
 		tpl = el("div", [el("input")]);
-		vm.redraw(true);
+		vm.redraw();
 		assert.equal(vm.node.el.onclick, null);
 		assert.equal(counts.set, 0);
 		assert.equal(counts.unset, 1);

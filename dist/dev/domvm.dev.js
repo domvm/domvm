@@ -333,6 +333,8 @@ function cssTag(raw) {
 }
 
 var DEVMODE = {
+	syncRedraw: false,
+
 	warnings: true,
 
 	verbose: true,
@@ -1856,6 +1858,11 @@ var ViewModelProto = ViewModel.prototype = {
 		return p.vm;
 	},
 	redraw: function(sync) {
+		{
+			if (DEVMODE.syncRedraw) {
+				sync = true;
+			}
+		}
 		var vm = this;
 		sync ? vm._redraw() : vm._redrawAsync();
 		return vm;

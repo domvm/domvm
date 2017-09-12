@@ -74,7 +74,7 @@ QUnit.module("Various Others");
 		nulls = true;
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><div>foo</div></div>';
@@ -82,7 +82,7 @@ QUnit.module("Various Others");
 
 		nulls = false;
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><div></div><div>foo</div><div></div></div>';
@@ -189,7 +189,7 @@ QUnit.module("Various Others");
 		var expcHtml = '<div><span>foo</span><span>bar <b>baz</b></span></div>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, textContent: 1, innerHTML: 2, insertBefore: 1 });
@@ -229,7 +229,7 @@ QUnit.module("Various Others");
 		var expcHtml = '<div>abc<strong>cow</strong></div>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { insertBefore: 1 });
@@ -264,7 +264,7 @@ QUnit.module("Various Others");
 		var expcHtml = '<div><span>a</span><strong>cow</strong><em>b</em></div>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html().replace("</span><em>","</span><strong>cow</strong><em>"), expcHtml, callCounts, { });
@@ -274,7 +274,7 @@ QUnit.module("Various Others");
 		var expcHtml = "<div><span>a</span><strong>cow</strong><i>me</i><em>b</em></div>";
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html().replace("</span><i>","</span><strong>cow</strong><i>"), expcHtml, callCounts, { createElement: 1, textContent: 1, insertBefore: 1});
@@ -312,7 +312,7 @@ QUnit.module("Various Others");
 		data2.shift();
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><p>a</p><ul><li>c</li></ul></div>';

@@ -77,7 +77,7 @@ QUnit.module("Imperative VMs");
 		modelA.val = "A+";
 
 		instr.start();
-		vmA.redraw(true);
+		vmA.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { nodeValue: 1 });
@@ -89,7 +89,7 @@ QUnit.module("Imperative VMs");
 		modelB.val = "B+";
 
 		instr.start();
-		vmB.redraw(true);
+		vmB.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { nodeValue: 1 });
@@ -99,7 +99,7 @@ QUnit.module("Imperative VMs");
 		var expcHtml = '<div>A+<strong>B+</strong><em>C<span>D</span></em></div>';
 
 		instr.start();
-		vmB.redraw(true);
+		vmB.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, {});
@@ -111,7 +111,7 @@ QUnit.module("Imperative VMs");
 		modelD.val = "D+";
 
 		instr.start();
-		vmA.redraw(true);
+		vmA.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { nodeValue: 1 });
@@ -121,7 +121,7 @@ QUnit.module("Imperative VMs");
 		var expcHtml = '<div>A+<strong>B+</strong><em>C<span>D+</span></em></div>';
 
 		instr.start();
-		vmC.redraw(true);
+		vmC.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, {});
@@ -133,8 +133,8 @@ QUnit.module("Imperative VMs");
 		modelC.val = "C+";
 
 		instr.start();
-		vmA.redraw(true);
-		vmC.redraw(true);
+		vmA.redraw();
+		vmC.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { nodeValue: 1 });
@@ -147,7 +147,7 @@ QUnit.module("Imperative VMs");
 		modelC.val = "C++";
 
 		instr.start();
-		vmA.redraw(true);
+		vmA.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { nodeValue: 2 });
@@ -193,7 +193,7 @@ QUnit.module("Imperative VMs");
 		a = domvm.createView(A);
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><div>A0</div></div>';
@@ -243,7 +243,7 @@ QUnit.module("Imperative VMs");
 		app.a = [1, 2];
 
 		instr.start();
-		app.vm.redraw(true);
+		app.vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div class="one">View 1</div>';
@@ -252,7 +252,7 @@ QUnit.module("Imperative VMs");
 		app.b = 0;
 
 		instr.start();
-		app.vm.redraw(true);
+		app.vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div class="one"><div class="two">View 2</div></div>';
