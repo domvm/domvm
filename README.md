@@ -129,15 +129,12 @@ var el = domvm.defineElement,
     sv = domvm.defineSvgElement,
     vw = domvm.defineView,
     iv = domvm.injectView,
-    ie = domvm.injectElement,
-    // micro+ builds only:
-    el2 = domvm.defineElementSpread,
-    sv2 = domvm.defineSvgElementSpread;
+    ie = domvm.injectElement;
 ```
 
-Using `defineText` isn't strictly necessary since all encountered numbers and strings will be automatically converted into `defineText` vnodes for you.
+Using `defineText` is not required since domvm will convert all numbers and strings into `defineText` vnodes automatically.
 
-Below is a dense reference of most template semantics. **Pay attention!**, there's a lot of neat stuff in here that won't be covered later!
+Below is a dense reference of most template semantics.
 
 ```js
 el("p", "Hello")                                            // plain tags
@@ -186,6 +183,21 @@ el("p", {_ref: "myParag"}, "Some text")                     // named refs (vm.re
 el("p", {_ref: "pets.james"}, "Some text")                  // namespaced (vm.refs.pets.james)
 
 el("div", {_flags: ...}, "Some text")                       // optimization flags
+```
+
+#### Spread children
+
+`micro`+ builds additionally provide two factories for defining child elements using a `...children` spread rather than an explicit array.
+
+```js
+var el = domvm.defineElementSpread,
+    sv = domvm.defineSvgElementSpread;
+
+el("ul",
+    el("li", 1),
+    el("li", 2),
+    el("li", 3)
+);
 ```
 
 ---
@@ -486,7 +498,7 @@ You may use them to expose view state or view methods as you see fit without fea
 ---
 ### Keys & DOM Recycling
 
-Like React and dom-reusing libs worth their salt, domvm sometimes needs keys to assure you of deterministic DOM recycling - ensuring similar sibling DOM elements are not reused in unpredictable ways during mutation.
+Like React [and any dom-reusing lib worth its salt], domvm sometimes needs keys to assure you of deterministic DOM recycling - ensuring similar sibling DOM elements are not reused in unpredictable ways during mutation.
 Unlike the others, keys in domvm are more flexible and often already implicit.
 
 - Both vnodes and views may be keyed: `el('div', {_key: "a"})`, `vw(MyView, {...}, "a")`
