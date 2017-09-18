@@ -90,6 +90,8 @@ function eachHtml(arr, dynProps) {
 	return buf;
 }
 
+const innerHTML = ".innerHTML";
+
 function html(node, dynProps) {
 	var out, style;
 
@@ -110,12 +112,15 @@ function html(node, dynProps) {
 
 			buf += "<" + node.tag;
 
-			if (node.attrs != null) {
-				for (var pname in node.attrs) {
+			var attrs = node.attrs,
+				hasAttrs = attrs != null;
+
+			if (hasAttrs) {
+				for (var pname in attrs) {
 					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_" || dynProps === false && isDynProp(node.tag, pname))
 						continue;
 
-					var val = node.attrs[pname];
+					var val = attrs[pname];
 
 					if (pname === "style" && val != null) {
 						style = typeof val === "object" ? styleStr(val) : val;
@@ -140,14 +145,16 @@ function html(node, dynProps) {
 				buf += ">";
 
 			if (!voidTags[node.tag]) {
-				if (isArr(node.body))
+				if (hasAttrs && attrs[innerHTML] != null)
+					buf += attrs[innerHTML];
+				else if (isArr(node.body))
 					buf += eachHtml(node.body, dynProps);
 				else if ((node.flags & LAZY_LIST) === LAZY_LIST) {
 					node.body.body(node);
 					buf += eachHtml(node.body, dynProps);
 				}
 				else
-					buf += node.raw ? node.body : escHtml(node.body);
+					buf += escHtml(node.body);
 
 				buf += "</" + node.tag + ">";
 			}

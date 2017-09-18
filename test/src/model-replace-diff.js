@@ -98,7 +98,7 @@ QUnit.module("Model replace & vm.diff()");
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1, className: 1 });
 
 		instr.start();
-		vmA.redraw(true);
+		vmA.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { });
@@ -110,7 +110,7 @@ QUnit.module("Model replace & vm.diff()");
 		var expcHtml = '<strong class="classy">fabric</strong>';
 
 		instr.start();
-		vmA.redraw(true);
+		vmA.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { nodeValue: 1 });
@@ -151,7 +151,7 @@ QUnit.module("Model replace & vm.diff()");
 		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { id: 2, createElement: 4, insertBefore: 4, textContent: 2 });
 
 		instr.start();
-		vmC.redraw(true);
+		vmC.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { });
@@ -160,7 +160,7 @@ QUnit.module("Model replace & vm.diff()");
 		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>cow</strong></div></div>';
 
 		instr.start();
-		vmC.redraw(true);
+		vmC.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { nodeValue: 1 });
@@ -199,7 +199,7 @@ QUnit.module("Model replace & vm.diff()");
 		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { id: 2, createElement: 4, insertBefore: 4, textContent: 2 });
 
 		instr.start();
-		vmC.redraw(true);
+		vmC.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { });
@@ -208,7 +208,7 @@ QUnit.module("Model replace & vm.diff()");
 		var expcHtml = '<div id="viewC"><div id="viewD"><span>bleh</span><strong>cow</strong></div></div>';
 
 		instr.start();
-		vmC.redraw(true);
+		vmC.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { nodeValue: 1 });

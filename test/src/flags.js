@@ -62,7 +62,7 @@ QUnit.module("flags/DEEP_REMOVE");
 		setTimeout(function() {
 			innerA = false;
 			instr.start();
-			vm.redraw(true);
+			vm.redraw();
 			console.log(instr.end());
 		}, 1000)
 	});

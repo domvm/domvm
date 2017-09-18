@@ -85,12 +85,8 @@ export function patch(vnode, donor) {
 			patchChildren(vnode, donor);
 		// [] => "" | null
 		else if (nbody !== obody) {
-			if (nbody != null) {
-				if (vnode.raw)
-					el.innerHTML = nbody;
-				else
-					el.textContent = nbody;
-			}
+			if (nbody != null)
+				el.textContent = nbody;
 			else
 				clearChildren(donor);
 		}
@@ -103,11 +99,7 @@ export function patch(vnode, donor) {
 		}
 		// "" | null => "" | null
 		else if (nbody !== obody) {
-			if (vnode.raw)
-				el.innerHTML = nbody;
-			else if (donor.raw)
-				el.textContent = nbody;
-			else if (el.firstChild)
+			if (el.firstChild)
 				el.firstChild.nodeValue = nbody;
 			else
 				el.textContent = nbody;

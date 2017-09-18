@@ -68,7 +68,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<a href="#">bar</a>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, setAttribute: 1, removeChild: 1, insertBefore: 1, textContent: 1 });
@@ -88,7 +88,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<div><a href="#">bar</a></div>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 1, createElement: 1, setAttribute: 1, insertBefore: 1, textContent: 1 });
@@ -108,7 +108,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<span>moo</span>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createTextNode: 1, insertBefore: 1 });
@@ -132,7 +132,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<span>moo cow</span>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { textContent: 1 });
@@ -156,7 +156,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<span><em>moo</em> <em>cow</em></span>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, textContent: 3, createTextNode: 1, insertBefore: 3 });
@@ -184,7 +184,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<span><em>foo</em><br><strong>baz</strong></span>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		// TODO-optim: can be replaceChild instead of removeChild/insertBefore
@@ -219,7 +219,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<div class="wrap"><div><input name="name"><input name="score"></div></div>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		// TODO-optim: can be replaceChild instead of removeChild/insertBefore
@@ -248,7 +248,7 @@ QUnit.module("Other mods");
 		var expcHtml = '<span><em>foo</em> bar <strong>baz</strong></span>';
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		// TODO-optim: can be replaceChild instead of removeChild/insertBefore
@@ -277,7 +277,7 @@ QUnit.module("Other mods");
 		model = {text: "b"};
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><p>b</p></div>';

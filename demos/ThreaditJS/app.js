@@ -97,7 +97,7 @@ function ThreadListView(vm) {
 		: el(".threads", data.threads.flatMap(thread => [
 			el("p", [
 				//	deps.router.href("thread", {id: thread.id})			r.goto("comment", [5]);  onclick: [onClick, thread.id]
-				el("a", {href: R.href('thread', { id: thread.id }), _raw: true}, T.trimTitle(thread.text))
+				el("a", {href: R.href('thread', { id: thread.id }), ".innerHTML": T.trimTitle(thread.text)})
 			]),
 			el("p.comment_count", thread.comment_count + " comment" + (thread.comment_count !== 1 ? "s" : "")),
 			el("hr"),
@@ -159,7 +159,7 @@ function ThreadBranchView(vm) {
 		return data.error ? errorTpl(data.error)
 		: data.comment == null ? statusTpl("Loading comments of thread #" + data.threadId)
 		: el(".comment", [
-			el("p", {_raw: true}, data.comment.text),
+			el("p", {".innerHTML": data.comment.text}),
 			vw(CommentReplyView, data.comment),
 			el(".children", data.comment.children.map(comment2 =>
 				vw(ThreadBranchView, {comment: comment2})
@@ -246,7 +246,7 @@ function CommentReplyView(vm, comment) {
 					onkeyup: [previewReply],
 				}),
 				el("input", {type: "submit", value: "Reply!"}),
-				el(".preview", {_raw: true}, T.previewComment(tmpComment())),
+				el(".preview", {".innerHTML": T.previewComment(tmpComment())}),
 			])
 			: el("a", {href: "#", onclick: toggleReplyMode}, "Reply!")
 			])

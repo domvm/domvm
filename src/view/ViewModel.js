@@ -102,6 +102,11 @@ export const ViewModelProto = ViewModel.prototype = {
 		return p.vm;
 	},
 	redraw: function(sync) {
+		if (_DEVMODE) {
+			if (DEVMODE.syncRedraw) {
+				sync = true;
+			}
+		}
 		var vm = this;
 		sync ? vm._redraw() : vm._redrawAsync();
 		return vm;

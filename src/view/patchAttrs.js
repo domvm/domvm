@@ -9,6 +9,11 @@ import { XLINK_NS } from './defineSvgElement';
 const XLINKHREF = "xlink:href";
 
 export function remAttr(node, name, asProp) {
+	if (name[0] === ".") {
+		name = name.substr(1);
+		asProp = true;
+	}
+
 	if (asProp)
 		node.el[name] = "";
 	else {
@@ -25,7 +30,7 @@ export function setAttr(node, name, val, asProp, initial) {
 	var el = node.el;
 
 	if (val == null)
-		!initial && remAttr(node, name, false);		//, asProp?  // will also removeAttr of style: null
+		!initial && remAttr(node, name, false);		// will also removeAttr of style: null
 	else if (node.ns != null) {
 		if (name === XLINKHREF)
 			el.setAttributeNS(XLINK_NS, "href", val);
@@ -71,8 +76,7 @@ export function patchAttrs(vnode, donor, initial) {
 				setAttr(vnode, key, nval, isDyn, initial);
 		}
 
-		// TODO: handle key[0] === "."
-		// should bench style.cssText = "" vs removeAttribute("style")
+		// TODO: bench style.cssText = "" vs removeAttribute("style")
 		for (var key in oattrs) {
 			!(key in nattrs) &&
 			!isSplProp(key) &&

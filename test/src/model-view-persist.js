@@ -83,7 +83,7 @@ QUnit.module("Model-view persistence, vm init, DOM reuse");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 3, insertBefore: 3, textContent: 2 });
 
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { });

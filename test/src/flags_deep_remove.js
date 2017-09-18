@@ -27,7 +27,7 @@ QUnit.module("flags/DEEP_REMOVE");
 
 		rem = true;
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div></div>';
@@ -71,7 +71,7 @@ QUnit.module("flags/DEEP_REMOVE");
 
 		rem = true;
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div></div>';
@@ -123,7 +123,7 @@ QUnit.module("flags/DEEP_REMOVE");
 
 		rem = true;
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div></div>';
@@ -177,7 +177,7 @@ QUnit.module("flags/DEEP_REMOVE");
 
 		rem = true;
 		instr.start();
-		vm.redraw(true);
+		vm.redraw();
 		var callCounts = instr.end();
 
 		var expcHtml = '<div></div>';
