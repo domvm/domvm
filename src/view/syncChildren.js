@@ -78,10 +78,6 @@ function sortDOM(parEl, lftSib, rgtSib, cmpFn) {
 	}, parEl, lftSib, rgtSib);
 }
 
-function cmpElNodeIdx(a, b) {
-	return a._node.idx - b._node.idx;
-}
-
 export function syncChildren(node, donor) {
 	var parEl		= node.el,
 		body		= node.body,

@@ -884,6 +884,10 @@ function parentNode(node) {
 	return node.parent;
 }
 
+function cmpElNodeIdx(a, b) {
+	return a._node.idx - b._node.idx;
+}
+
 function tmpEdges(fn, parEl, lftSib, rgtSib) {
 	// get outer immute edges
 	var lftLft = prevSib(lftSib);
@@ -941,10 +945,6 @@ function sortDOM(parEl, lftSib, rgtSib, cmpFn) {
 			i = min;
 		}
 	}, parEl, lftSib, rgtSib);
-}
-
-function cmpElNodeIdx(a, b) {
-	return a._node.idx - b._node.idx;
 }
 
 function syncChildren(node, donor) {
