@@ -2,17 +2,17 @@
   "dependencies": {
     "benchmark": "^2.1.4",
     "cliff": "^0.1.10",
-    "domvm": "git://github.com/leeoniya/domvm.git#7ef710798b04fd410e73de9541a5e75ed8550cb1",
-    "inferno": "^3.6.1",
-    "inferno-component": "^3.6.1",
-    "inferno-server": "^3.6.1",
-    "preact": "^8.1.0",
+    "domvm": "^3.2.0",
+    "inferno": "^3.9.0",
+    "inferno-component": "^3.9.0",
+    "inferno-server": "^3.9.0",
+    "preact": "^8.2.5",
     "preact-render-to-string": "^3.6.3",
-    "react": "^15.6.1",
-    "react-dom": "^15.6.1",
-    "vidom": "^0.9.15",
-    "vue": "^2.3.4",
-    "vue-server-renderer": "^2.3.4"
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
+    "vidom": "^0.9.21",
+    "vue": "^2.4.4",
+    "vue-server-renderer": "^2.4.4"
   },
   "scripts": {
     "start": "set NODE_ENV=production&&node index.js"
