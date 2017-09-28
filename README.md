@@ -5,8 +5,10 @@ A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 ---
 ### Introduction
 
-domvm is a flexible, pure-js view layer for building high performance web applications; it'll happily fit into any existing codebase, whatever the structure.
-- It's zero-dependency, no-compilation & tooling-free; a single `<script>` tag and you're ready to go.
+domvm is a flexible, pure-js view layer for building high performance web applications.
+Like jQuery, it'll happily fit into any existing codebase without introducing new tooling or requiring major architectural changes.
+
+- It's zero-dependency, requires no compilation & is tooling-free; one `<script>` tag is all that's needed.
 - It's small: [~5.5k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code. [2x faster SSR](/demos/bench/ssr) vs React v16.
 - Its entire, practical API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
 - It's well-suited for building [simple widgets](http://leeoniya.github.io/domvm/demos/playground/#calendar) and [complex, fault-tolerant applications](http://leeoniya.github.io/domvm/demos/ThreaditJS).
@@ -499,7 +501,7 @@ You may use them to expose view state or view methods as you see fit without fea
 ### Keys & DOM Recycling
 
 Like React [and any dom-reusing lib worth its salt], domvm sometimes needs keys to assure you of deterministic DOM recycling - ensuring similar sibling DOM elements are not reused in unpredictable ways during mutation.
-Unlike the others, keys in domvm are more flexible and often already implicit.
+In contrast to other libs, keys in domvm are more flexible and often already implicit.
 
 - Both vnodes and views may be keyed: `el('div', {_key: "a"})`, `vw(MyView, {...}, "a")`
 - Keys do not need to be strings; they can be numbers, objects or functions
