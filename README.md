@@ -45,13 +45,13 @@ domvm.createView(HelloView, data).mount(document.body);
 - [DEVMODE](#devmode)
 - [Templates](#templates)
 - [Views](#views)
+- [Parents & Roots](#parents--roots)
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
 - [Event Listeners](#event-listeners)
 - [Autoredraw](#autoredraw)
 - [Refs & Data](#refs--data)
 - [Keys & DOM Recycling](#keys--dom-recycling)
 - [Hello World++](#hello-world)
-- [Parents & Roots](#parents--roots)
 - [Emit System](#emit-system)
 - [Lifecycle Hooks](#lifecycle-hooks)
 - [Third-party Integration](#third-party-integration)
@@ -345,6 +345,14 @@ Several reserved options are handled automatically by domvm that correspond to e
 This can simplify sub-view internals when externally-defined opts are passed in, avoiding some boilerplate inside views, eg. `vm.config({hooks: opts.hooks})`.
 
 ---
+### Parents & Roots
+
+You can access any view's parent view via `vm.parent()` and the great granddaddy of any view hierarchy via `vm.root()` shortcut.
+So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().redraw()`.
+For traversing the vtree, there's also `vm.body()` which gets the next level of descendent views (not necessarily direct children).
+`vnode.body` and `vnode.parent` complete the picture.
+
+---
 ### Sub-views vs Sub-templates
 
 A core benefit of template composition is code reusability (DRY, component architecture). In domvm composition can be realized using either sub-views or sub-templates, often interchangeably. Sub-templates should generally be preferred over sub-views for the purposes of code reuse, keeping in mind that like sub-views, normal vnodes:
@@ -611,14 +619,6 @@ var it = setInterval(function() {
         clearInterval(it);
 }, 250);
 ```
-
----
-### Parents & Roots
-
-You can access any view's parent view via `vm.parent()` and the great granddaddy of the view hierarchy via `vm.root()` shortcut.
-So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().redraw()`.
-For traversing the vtree, there's also `vm.body()` which gets the next level of descendent views (not necessarily direct children).
-`vnode.body` and `vnode.parent` complete the picture.
 
 ---
 ### Emit System
