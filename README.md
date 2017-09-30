@@ -72,7 +72,7 @@ Some minimalist libs that work well:
 - Ajax/fetch/XHR: [xr](https://github.com/radiosilence/xr), [alite](https://github.com/chrisdavies/alite)
 - Streams: [flyd](https://github.com/paldepind/flyd), [xstream](https://github.com/staltz/xstream)
 - Immutable Stores: [Freezer](https://github.com/arqex/freezer), [MobX](https://github.com/mobxjs/mobx)
-- CSS-in-JS: [stylis.js](https://github.com/thysultan/stylis.js), [j2c](https://github.com/j2css/j2c), [emotion](https://github.com/tkh44/emotion), [oh boy...](https://github.com/MicheleBertoli/css-in-js)
+- CSS-in-JS: [linaria](https://github.com/callstack/linaria), [stylis.js](https://github.com/thysultan/stylis.js), [j2c](https://github.com/j2css/j2c), [emotion](https://github.com/tkh44/emotion), [oh boy...](https://github.com/MicheleBertoli/css-in-js)
 
 Many [/demos](/demos) are examples of how to use these libs in your apps.
 
@@ -349,7 +349,7 @@ This can simplify sub-view internals when externally-defined opts are passed in,
 
 You can access any view's parent view via `vm.parent()` and the great granddaddy of any view hierarchy via `vm.root()` shortcut.
 So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().redraw()`.
-For traversing the vtree, there's also `vm.body()` which gets the next level of descendent views (not necessarily direct children).
+For traversing the vtree, there's also `vm.body()` which gets the next level of descendant views (not necessarily direct children).
 `vnode.body` and `vnode.parent` complete the picture.
 
 ---
