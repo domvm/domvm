@@ -5,9 +5,11 @@ A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 ---
 ### Introduction
 
-domvm is a flexible, pure-js view layer for building high performance web applications; it'll happily fit into any existing codebase, whatever the structure.
-- It's zero-dependency, no-compilation & tooling-free; a single `<script>` tag and you're ready to go.
-- It's small: [~5.5k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code. [20x faster SSR](/demos/bench/ssr) vs React.
+domvm is a flexible, pure-js view layer for building high performance web applications.
+Like jQuery, it'll happily fit into any existing codebase without introducing new tooling or requiring major architectural changes.
+
+- It's zero-dependency and requires no compilation or tooling; one `<script>` tag is all that's needed.
+- It's small: [~5.5k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code. [2x faster SSR](/demos/bench/ssr) vs React v16.
 - Its entire, practical API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
 - It's well-suited for building [simple widgets](http://leeoniya.github.io/domvm/demos/playground/#calendar) and [complex, fault-tolerant applications](http://leeoniya.github.io/domvm/demos/ThreaditJS).
 - Supports down to IE9 with some tiny shims: [Promise](https://github.com/RubenVerborgh/promiscuous), [requestAnimationFrame](https://gist.github.com/paulirish/1579671), [matchesSelector](https://gist.github.com/elijahmanor/6452535).
@@ -43,13 +45,13 @@ domvm.createView(HelloView, data).mount(document.body);
 - [DEVMODE](#devmode)
 - [Templates](#templates)
 - [Views](#views)
+- [Parents & Roots](#parents--roots)
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
 - [Event Listeners](#event-listeners)
 - [Autoredraw](#autoredraw)
 - [Refs & Data](#refs--data)
 - [Keys & DOM Recycling](#keys--dom-recycling)
 - [Hello World++](#hello-world)
-- [Parents & Roots](#parents--roots)
 - [Emit System](#emit-system)
 - [Lifecycle Hooks](#lifecycle-hooks)
 - [Third-party Integration](#third-party-integration)
@@ -70,7 +72,7 @@ Some minimalist libs that work well:
 - Ajax/fetch/XHR: [xr](https://github.com/radiosilence/xr), [alite](https://github.com/chrisdavies/alite)
 - Streams: [flyd](https://github.com/paldepind/flyd), [xstream](https://github.com/staltz/xstream)
 - Immutable Stores: [Freezer](https://github.com/arqex/freezer), [MobX](https://github.com/mobxjs/mobx)
-- CSS-in-JS: [stylis.js](https://github.com/thysultan/stylis.js), [j2c](https://github.com/j2css/j2c), [emotion](https://github.com/tkh44/emotion), [oh boy...](https://github.com/MicheleBertoli/css-in-js)
+- CSS-in-JS: [linaria](https://github.com/callstack/linaria), [stylis.js](https://github.com/thysultan/stylis.js), [j2c](https://github.com/j2css/j2c), [emotion](https://github.com/tkh44/emotion), [oh boy...](https://github.com/MicheleBertoli/css-in-js)
 
 Many [/demos](/demos) are examples of how to use these libs in your apps.
 
@@ -343,6 +345,14 @@ Several reserved options are handled automatically by domvm that correspond to e
 This can simplify sub-view internals when externally-defined opts are passed in, avoiding some boilerplate inside views, eg. `vm.config({hooks: opts.hooks})`.
 
 ---
+### Parents & Roots
+
+You can access any view's parent view via `vm.parent()` and the great granddaddy of any view hierarchy via `vm.root()` shortcut.
+So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().redraw()`.
+For traversing the vtree, there's also `vm.body()` which gets the next level of descendant views (not necessarily direct children).
+`vnode.body` and `vnode.parent` complete the picture.
+
+---
 ### Sub-views vs Sub-templates
 
 A core benefit of template composition is code reusability (DRY, component architecture). In domvm composition can be realized using either sub-views or sub-templates, often interchangeably. Sub-templates should generally be preferred over sub-views for the purposes of code reuse, keeping in mind that like sub-views, normal vnodes:
@@ -499,7 +509,7 @@ You may use them to expose view state or view methods as you see fit without fea
 ### Keys & DOM Recycling
 
 Like React [and any dom-reusing lib worth its salt], domvm sometimes needs keys to assure you of deterministic DOM recycling - ensuring similar sibling DOM elements are not reused in unpredictable ways during mutation.
-Unlike the others, keys in domvm are more flexible and often already implicit.
+In contrast to other libs, keys in domvm are more flexible and often already implicit.
 
 - Both vnodes and views may be keyed: `el('div', {_key: "a"})`, `vw(MyView, {...}, "a")`
 - Keys do not need to be strings; they can be numbers, objects or functions
@@ -609,14 +619,6 @@ var it = setInterval(function() {
         clearInterval(it);
 }, 250);
 ```
-
----
-### Parents & Roots
-
-You can access any view's parent view via `vm.parent()` and the great granddaddy of the view hierarchy via `vm.root()` shortcut.
-So, logically, to redraw the entire UI tree from any subview, invoke `vm.root().redraw()`.
-For traversing the vtree, there's also `vm.body()` which gets the next level of descendent views (not necessarily direct children).
-`vnode.body` and `vnode.parent` complete the picture.
 
 ---
 ### Emit System
@@ -831,8 +833,10 @@ var StaticView = {
 
 Notes:
 
-If you intend to do a simple diff of an object by its identity, then return it wrapped in an array to avoid domvm diffing all of its enumerable keys.
-See [Issue #148](https://github.com/leeoniya/domvm/issues/148).
+If you intend to do a simple diff of an object by its identity, then it's preferable to return it wrapped in an array to avoid domvm also diffing all of its enumerable keys when `oldObj !== newObj`.
+This is a micro-optimization and will not affect the resulting behavior.
+You can see the simple diffing logic [here](https://github.com/leeoniya/domvm/blob/e7299cc42077ae1750ae8de1f753042570ce63f9/src/view/ViewModel.js#L214-L220).
+Also, see [Issue #148](https://github.com/leeoniya/domvm/issues/148).
 
 #### VNode Patching
 

@@ -10,7 +10,7 @@ function getBuilds(name) {
 	return [
 		{
 			build: "pico",
-			contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>element injection<br>raw html<br>vnode refs<br>css objects<br>svg<br>global onevent<br>diff<br>lazyList<br>",
+			contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>element injection<br>innerHTML<br>vnode refs<br>css objects<br>svg<br>global onevent<br>diff<br>lazyList<br>",
 			descr: "view core<br><br>**This build is unstable by design; features that get decoupled<br>can move to nano+ builds at any commit!**",
 			feats: [],
 		},

@@ -34,7 +34,7 @@ function Use(vm) {
 	return function() {
 		return sv("svg", {viewBox: "0 0 400 100"}, [
 			sv("rect#original-rect", {x: "50", y: "20", width: "50", height: "50", fill: "#29e"}),
-			sv("use", {"xlink:href": "#original-rect", x:"75", y:"10"}),
+			sv("use", {href: "#original-rect", x:"75", y:"10"}),
 		]);
 	}
 }
