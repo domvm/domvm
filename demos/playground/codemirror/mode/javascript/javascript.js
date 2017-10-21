@@ -543,7 +543,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     } else if (type == "[") {
       return cont(expression, expect("]"), afterprop);
     } else if (type == "spread") {
-      return cont(expression, afterprop);
+      return cont(expressionNoComma, afterprop);
     } else if (value == "*") {
       cx.marked = "keyword";
       return cont(objprop);
@@ -855,6 +855,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
     electricInput: /^\s*(?:case .*?:|default:|\{|\})$/,
     blockCommentStart: jsonMode ? null : "/*",
     blockCommentEnd: jsonMode ? null : "*/",
+    blockCommentContinue: jsonMode ? null : " * ",
     lineComment: jsonMode ? null : "//",
     fold: "brace",
     closeBrackets: "()[]{}''\"\"``",
