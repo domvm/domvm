@@ -5,6 +5,7 @@ const fs = require('fs');
 const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
 const zlib = require('zlib');
+const closure = require('google-closure-compiler-js').compile;
 
 function getBuilds(name) {
 	return [
@@ -89,6 +90,7 @@ function compile(buildName) {
 				FEAT_STREAM:	feats.indexOf("STREAM") != -1,
 			}),
 			buble(),
+		//	closure(),
 		],
 	})
 	.then(function(bundle) {
@@ -131,39 +133,33 @@ function minify(buildName, start) {
 //	var mapName = "domvm." + buildName + ".min.js.map";
 //	var dstMap = "dist/" + buildName + "/" + mapName;
 
-	let cmd = [
-		"java -jar compiler.jar --language_in=ECMASCRIPT5_STRICT --language_out=ECMASCRIPT5",
-		"--js             " + src,
-		"--js_output_file " + dst,
-	//	"--create_source_map " + dstMap,
-	//	"--source_map_include_content",
-	//	'--output_wrapper "%output%\n//# sourceMappingURL=' + mapName + '"',
-	].join(" ");
+	const flags = {
+		jsCode: [{src: fs.readFileSync(src, 'utf8')}],
+		languageIn: 'ECMASCRIPT5_STRICT',
+		languageOut: 'ECMASCRIPT5',
+		compilationLevel: 'SIMPLE',
+	//	warningLevel: 'VERBOSE',
+	};
 
-	exec(cmd, function(error, stdout, stderr) {
-		console.log((+new Date - start) + "ms: Closure done (build: " + buildName + ")");
+	var compiled = closure(flags).compiledCode
+		.replace(/window\.\w+\s*=\s*\w+;/gmi, "")
+		.replace('this,function(){','this,function(){"use strict";');
 
-	//	fs.writeFileSync(dst, fs.readFileSync(dst, 'utf8') + "//# sourceMappingURL="+mapName, 'utf8');
-	//	fs.writeFileSync(dstMap, fs.readFileSync(dstMap, 'utf8').replace(/dist\/nano\//g, ""), 'utf8');
+	// workaround for https://github.com/google/closure-compiler-js/issues/79
+	var chars = {
+		'\\x3d': '=',
+		'\\x3c': '<',
+		'\\x3e': '>',
+		'\\x26': '&',
+	};
 
-		// remove "window.moo = moo;" patterns inserted to prevent Closure Compiler from inlining.
-		fs.writeFileSync(dst,
-			fs.readFileSync(dst, 'utf8')
-				.replace(/window\.\w+\s*=\s*\w+;/gmi, "")
-				.replace('this,function(){','this,function(){"use strict";')
-		, 'utf8');
+	compiled = compiled.replace(/\\x3d|\\x3c|\\x3e|\\x26/g, m => chars[m]);
 
-		buildDistTable();
+	console.log((+new Date - start) + "ms: Closure done (build: " + buildName + ")");
 
-		/*
-		console.log('stdout: ' + stdout);
-		console.log('stderr: ' + stderr);
-		if (error !== null) {
-			console.log('exec error: ' + error);
-		}
-	//	fs.writeFileSync('/tmp/fs.tmp', '');
-		*/
-	});
+	fs.writeFileSync(dst, compiled, 'utf8');
+
+	buildDistTable();
 }
 
 function padRight(str, padStr, len) {
