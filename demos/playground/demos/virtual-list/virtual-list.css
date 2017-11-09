@@ -1,0 +1,24 @@
+body {
+	font: 12pt 'Helvetica Neue',arial,sans-serif;
+}
+
+.list {
+	position: absolute;
+	left: 20%;
+	height: 100%;
+	width: 60%;
+	border: 1px solid #CCC;
+	background: #FFF;
+	overflow: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+.row {
+	position: relative;
+	display: block;
+	height: 30px;
+	line-height: 30px;
+	padding: 0 20px;
+	box-shadow: inset 0 -1px 0 #DDD;
+	overflow: hidden;
+}
