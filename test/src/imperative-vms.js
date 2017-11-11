@@ -258,4 +258,49 @@ QUnit.module("Imperative VMs");
 		var expcHtml = '<div class="one"><div class="two">View 2</div></div>';
 		evalOut(assert, app.vm.node.el, app.vm.html(), expcHtml, callCounts, { className: 1, createElement: 1, insertBefore: 1, textContent: 2 });
 	});
+
+	QUnit.test("Mount new imperative vm children", function(assert) {
+		var type = "a";
+
+		function App(vm) {
+			var a = domvm.createView(ViewA);
+			var b = domvm.createView(ViewB);
+
+			function toggle() {
+				type = type === "a" ? "b" : "a";
+				vm.redraw(true);
+			}
+
+			return () =>
+				el("div", [
+					type === 'a' ? iv(a) : iv(b)
+				]);
+		}
+
+		function ViewA() {
+			return () =>
+				el("div", "a");
+		}
+
+		function ViewB() {
+			return () =>
+				el("div", "b");
+		}
+
+		instr.start();
+		var vm = domvm.createView(App).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><div>a</div></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
+
+		type = "b";
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><div>b</div></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, removeChild: 1, textContent: 1 });
+	});
 })();
