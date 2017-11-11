@@ -1286,7 +1286,13 @@ function patchChildren(vnode, donor) {
 				type2 = vm.node.type;
 			}
 			else if (type2 === VMODEL) {
-				var vm = node2.vm._update(node2.data, vnode, i);
+				// if the injected vm has never been rendered, this vm._update() serves as the
+				// initial vtree creator, but must avoid hydrating (creating .el) because syncChildren()
+				// which is responsible for mounting below (and optionally hydrating), tests .el presence
+				// to determine if hydration & mounting are needed
+				var withDOM = node2.vm.node !== null;
+
+				var vm = node2.vm._update(node2.data, vnode, i, withDOM);
 				type2 = vm.node.type;
 			}
 		}

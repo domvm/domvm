@@ -61,6 +61,42 @@ QUnit.module("Imperative VMs");
 		};
 	}
 
+	QUnit.test('Simple injectView + mod', function(assert) {
+		function ViewG() {
+			return function() {
+				return el("div", [
+					iv(vmH)
+				]);
+			};
+		}
+
+		function ViewH() {
+			return function() {
+				return el("span", hVal);
+			};
+		}
+
+		var vmH = domvm.createView(ViewH);
+
+		var hVal = "H";
+
+		instr.start();
+		var vmG = domvm.createView(ViewG).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><span>H</span></div>';
+		evalOut(assert, vmG.node.el, vmG.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
+
+		hVal = "H+";
+
+		instr.start();
+		vmG.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><span>H+</span></div>';
+		evalOut(assert, vmG.node.el, vmG.html(), expcHtml, callCounts, { nodeValue: 1 });
+	});
+
 	QUnit.test('Initial view built correctly', function(assert) {
 		var expcHtml = '<div>A<strong>B</strong><em>C<span>D</span></em></div>';
 
