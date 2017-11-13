@@ -2,9 +2,9 @@
 * Copyright (c) 2017, Leon Sorokin
 * All rights reserved. (MIT Licensed)
 *
-* domvm.full.js - DOM ViewModel
+* domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (3.x-dev, pico)
+* @preserve https://github.com/leeoniya/domvm (3.x-dev, pico build)
 */
 
 (function (global, factory) {
