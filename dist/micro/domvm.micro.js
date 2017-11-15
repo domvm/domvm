@@ -167,6 +167,52 @@ export function prop(val, cb, ctx, args) {
 
 // adapted from https://github.com/Olical/binary-search
 
+function isEvProp(name) {
+	return name[0] === "o" && name[1] === "n";
+}
+
+function isSplProp(name) {
+	return name[0] === "_";
+}
+
+function isStyleProp(name) {
+	return name === "style";
+}
+
+function repaint(node) {
+	node && node.el && node.el.offsetHeight;
+}
+
+function isHydrated(vm) {
+	return vm.node != null && vm.node.el != null;
+}
+
+// tests interactive props where real val should be compared
+function isDynProp(tag, attr) {
+//	switch (tag) {
+//		case "input":
+//		case "textarea":
+//		case "select":
+//		case "option":
+			switch (attr) {
+				case "value":
+				case "checked":
+				case "selected":
+//				case "selectedIndex":
+					return true;
+			}
+//	}
+
+	return false;
+}
+
+function getVm(n) {
+	n = n || emptyObj;
+	while (n.vm == null && n.parent)
+		{ n = n.parent; }
+	return n.vm;
+}
+
 function VNode() {}
 
 var VNodeProto = VNode.prototype = {
@@ -217,48 +263,6 @@ function defineText(body) {
 	node.type = TEXT;
 	node.body = body;
 	return node;
-}
-
-function isEvProp(name) {
-	return name[0] === "o" && name[1] === "n";
-}
-
-function isSplProp(name) {
-	return name[0] === "_";
-}
-
-function isStyleProp(name) {
-	return name === "style";
-}
-
-function repaint(node) {
-	node && node.el && node.el.offsetHeight;
-}
-
-// tests interactive props where real val should be compared
-function isDynProp(tag, attr) {
-//	switch (tag) {
-//		case "input":
-//		case "textarea":
-//		case "select":
-//		case "option":
-			switch (attr) {
-				case "value":
-				case "checked":
-				case "selected":
-//				case "selectedIndex":
-					return true;
-			}
-//	}
-
-	return false;
-}
-
-function getVm(n) {
-	n = n || emptyObj;
-	while (n.vm == null && n.parent)
-		{ n = n.parent; }
-	return n.vm;
 }
 
 // creates a one-shot self-ending stream that redraws target vm
@@ -1292,7 +1296,7 @@ function patchChildren(vnode, donor) {
 				// initial vtree creator, but must avoid hydrating (creating .el) because syncChildren()
 				// which is responsible for mounting below (and optionally hydrating), tests .el presence
 				// to determine if hydration & mounting are needed
-				var withDOM = node2.vm.node !== null;
+				var withDOM = isHydrated(node2.vm);
 
 				var vm = node2.vm._update(node2.data, vnode, i, withDOM);
 				type2 = vm.node.type;
@@ -1350,8 +1354,8 @@ function ViewModel(view, data, key, opts) {
 	}
 
 	// these must be wrapped here since they're debounced per view
-	vm._redrawAsync = raft(function (_) { return vm._redraw(); });
-	vm._updateAsync = raft(function (newData) { return vm._update(newData); });
+	vm._redrawAsync = raft(function (_) { return vm.redraw(true); });
+	vm._updateAsync = raft(function (newData) { return vm.update(newData, true); });
 
 	vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
 }
@@ -1408,12 +1412,12 @@ var ViewModelProto = ViewModel.prototype = {
 	},
 	redraw: function(sync) {
 		var vm = this;
-		sync ? vm._redraw() : vm._redrawAsync();
+		sync ? vm._redraw(null, null, isHydrated(vm)) : vm._redrawAsync();
 		return vm;
 	},
 	update: function(newData, sync) {
 		var vm = this;
-		sync ? vm._update(newData) : vm._updateAsync(newData);
+		sync ? vm._update(newData, null, null, isHydrated(vm)) : vm._updateAsync(newData);
 		return vm;
 	},
 

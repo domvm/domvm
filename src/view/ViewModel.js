@@ -2,7 +2,7 @@ import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
 import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, raft, noop } from "../utils";
-import { repaint, getVm } from "./utils";
+import { repaint, isHydrated, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
 import { isStream, hookStream2, unsubStream } from './addons/stream';
@@ -45,8 +45,8 @@ export function ViewModel(view, data, key, opts) {
 	}
 
 	// these must be wrapped here since they're debounced per view
-	vm._redrawAsync = raft(_ => vm._redraw());
-	vm._updateAsync = raft(newData => vm._update(newData));
+	vm._redrawAsync = raft(_ => vm.redraw(true));
+	vm._updateAsync = raft(newData => vm.update(newData, true));
 
 	vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
 }
@@ -108,12 +108,12 @@ export const ViewModelProto = ViewModel.prototype = {
 			}
 		}
 		var vm = this;
-		sync ? vm._redraw() : vm._redrawAsync();
+		sync ? vm._redraw(null, null, isHydrated(vm)) : vm._redrawAsync();
 		return vm;
 	},
 	update: function(newData, sync) {
 		var vm = this;
-		sync ? vm._update(newData) : vm._updateAsync(newData);
+		sync ? vm._update(newData, null, null, isHydrated(vm)) : vm._updateAsync(newData);
 		return vm;
 	},
 
