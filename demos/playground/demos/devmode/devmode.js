@@ -4,9 +4,12 @@
 
 var el = domvm.defineElement,
 	vw = domvm.defineView,
+	iv = domvm.injectView,
 	sv = domvm.defineSvgElement;
 
 var subView3 = true;
+
+var subView5 = false;
 
 function View(vm) {
 	function onclick() { var x = 1; }
@@ -40,6 +43,7 @@ function View(vm) {
 				"abc",
 				"def",
 			],
+			subView5 && iv(vm5)
 		]);
 	}
 }
@@ -53,6 +57,7 @@ function View2() {
 function View3(vm) {
 	setTimeout(function() {
 		subView3 = false;
+		subView5 = true;
 		vm.root().redraw();
 		vm.redraw();
 	}, 500);
@@ -67,6 +72,15 @@ function View4(vm, data) {
 		return el("em", "View4");
 	}
 }
+
+function View5(vm, data) {
+	return function() {
+		return el("em", "View5");
+	}
+}
+
+var vm5 = domvm.createView(View5);
+vm5.redraw();
 
 var vm = domvm.createView(View).mount(document.body);
 

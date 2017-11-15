@@ -383,6 +383,10 @@ var DEVMODE = {
 	ARRAY_FLATTENED: function(vnode, array) {
 		return ["Arrays within templates will be flattened. When they are leading or trailing, it's easy and more performant to just .concat() them in the template.", vnode, array];
 	},
+
+	ALREADY_HYDRATED: function(vm) {
+		return ["A child view failed to mount because it was already hydrated. Make sure not to invoke vm.redraw() or vm.update() on unmounted views.", vm];
+	},
 };
 
 function devNotify(key, args) {
@@ -1185,8 +1189,13 @@ function syncChildren(node, donor) {
 				lftNode = nextNode(lftNode, body);
 				lftSib = nextSib(lftSib);
 			}
-			else
-				{ break; }
+			else {
+				{
+					if (lftNode.vm != null)
+						{ devNotify("ALREADY_HYDRATED", [lftNode.vm]); }
+				}
+				break;
+			}
 		}
 
 //		from_right:
@@ -1220,8 +1229,13 @@ function syncChildren(node, donor) {
 				rgtNode = prevNode(rgtNode, body);
 				rgtSib = prevSib(rgtSib);
 			}
-			else
-				{ break; }
+			else {
+				{
+					if (rgtNode.vm != null)
+						{ devNotify("ALREADY_HYDRATED", [rgtNode.vm]); }
+				}
+				break;
+			}
 		}
 
 		if (newSibs = headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode)) {

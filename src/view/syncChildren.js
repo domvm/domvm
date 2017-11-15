@@ -126,8 +126,13 @@ export function syncChildren(node, donor) {
 				lftNode = nextNode(lftNode, body);
 				lftSib = nextSib(lftSib);
 			}
-			else
+			else {
+				if (_DEVMODE) {
+					if (lftNode.vm != null)
+						devNotify("ALREADY_HYDRATED", [lftNode.vm]);
+				}
 				break;
+			}
 		}
 
 //		from_right:
@@ -162,8 +167,13 @@ export function syncChildren(node, donor) {
 				rgtNode = prevNode(rgtNode, body);
 				rgtSib = prevSib(rgtSib);
 			}
-			else
+			else {
+				if (_DEVMODE) {
+					if (rgtNode.vm != null)
+						devNotify("ALREADY_HYDRATED", [rgtNode.vm]);
+				}
 				break;
+			}
 		}
 
 		if (newSibs = headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode)) {

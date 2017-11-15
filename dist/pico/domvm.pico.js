@@ -935,8 +935,9 @@ function syncChildren(node, donor) {
 				lftNode = nextNode(lftNode, body);
 				lftSib = nextSib(lftSib);
 			}
-			else
-				{ break; }
+			else {
+				break;
+			}
 		}
 
 //		from_right:
@@ -968,8 +969,9 @@ function syncChildren(node, donor) {
 				rgtNode = prevNode(rgtNode, body);
 				rgtSib = prevSib(rgtSib);
 			}
-			else
-				{ break; }
+			else {
+				break;
+			}
 		}
 
 		if (newSibs = headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode)) {
