@@ -2,9 +2,9 @@
 * Copyright (c) 2017, Leon Sorokin
 * All rights reserved. (MIT Licensed)
 *
-* domvm.full.js - DOM ViewModel
+* domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (v3.2.2, dev)
+* @preserve https://github.com/leeoniya/domvm (3.x-dev, dev build)
 */
 
 (function (global, factory) {
@@ -167,6 +167,52 @@ export function prop(val, cb, ctx, args) {
 
 // adapted from https://github.com/Olical/binary-search
 
+function isEvProp(name) {
+	return name[0] === "o" && name[1] === "n";
+}
+
+function isSplProp(name) {
+	return name[0] === "_";
+}
+
+function isStyleProp(name) {
+	return name === "style";
+}
+
+function repaint(node) {
+	node && node.el && node.el.offsetHeight;
+}
+
+function isHydrated(vm) {
+	return vm.node != null && vm.node.el != null;
+}
+
+// tests interactive props where real val should be compared
+function isDynProp(tag, attr) {
+//	switch (tag) {
+//		case "input":
+//		case "textarea":
+//		case "select":
+//		case "option":
+			switch (attr) {
+				case "value":
+				case "checked":
+				case "selected":
+//				case "selectedIndex":
+					return true;
+			}
+//	}
+
+	return false;
+}
+
+function getVm(n) {
+	n = n || emptyObj;
+	while (n.vm == null && n.parent)
+		{ n = n.parent; }
+	return n.vm;
+}
+
 function VNode() {}
 
 var VNodeProto = VNode.prototype = {
@@ -217,48 +263,6 @@ function defineText(body) {
 	node.type = TEXT;
 	node.body = body;
 	return node;
-}
-
-function isEvProp(name) {
-	return name[0] === "o" && name[1] === "n";
-}
-
-function isSplProp(name) {
-	return name[0] === "_";
-}
-
-function isStyleProp(name) {
-	return name === "style";
-}
-
-function repaint(node) {
-	node && node.el && node.el.offsetHeight;
-}
-
-// tests interactive props where real val should be compared
-function isDynProp(tag, attr) {
-//	switch (tag) {
-//		case "input":
-//		case "textarea":
-//		case "select":
-//		case "option":
-			switch (attr) {
-				case "value":
-				case "checked":
-				case "selected":
-//				case "selectedIndex":
-					return true;
-			}
-//	}
-
-	return false;
-}
-
-function getVm(n) {
-	n = n || emptyObj;
-	while (n.vm == null && n.parent)
-		{ n = n.parent; }
-	return n.vm;
 }
 
 var isStream = function() { return false };
@@ -382,6 +386,10 @@ var DEVMODE = {
 
 	ARRAY_FLATTENED: function(vnode, array) {
 		return ["Arrays within templates will be flattened. When they are leading or trailing, it's easy and more performant to just .concat() them in the template.", vnode, array];
+	},
+
+	ALREADY_HYDRATED: function(vm) {
+		return ["A child view failed to mount because it was already hydrated. Make sure not to invoke vm.redraw() or vm.update() on unmounted views.", vm];
 	},
 };
 
@@ -1185,8 +1193,13 @@ function syncChildren(node, donor) {
 				lftNode = nextNode(lftNode, body);
 				lftSib = nextSib(lftSib);
 			}
-			else
-				{ break; }
+			else {
+				{
+					if (lftNode.vm != null)
+						{ devNotify("ALREADY_HYDRATED", [lftNode.vm]); }
+				}
+				break;
+			}
 		}
 
 //		from_right:
@@ -1220,8 +1233,13 @@ function syncChildren(node, donor) {
 				rgtNode = prevNode(rgtNode, body);
 				rgtSib = prevSib(rgtSib);
 			}
-			else
-				{ break; }
+			else {
+				{
+					if (rgtNode.vm != null)
+						{ devNotify("ALREADY_HYDRATED", [rgtNode.vm]); }
+				}
+				break;
+			}
 		}
 
 		if (newSibs = headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode)) {
@@ -1440,7 +1458,13 @@ function patchChildren(vnode, donor) {
 				type2 = vm.node.type;
 			}
 			else if (type2 === VMODEL) {
-				var vm = node2.vm._update(node2.data, vnode, i);
+				// if the injected vm has never been rendered, this vm._update() serves as the
+				// initial vtree creator, but must avoid hydrating (creating .el) because syncChildren()
+				// which is responsible for mounting below (and optionally hydrating), tests .el presence
+				// to determine if hydration & mounting are needed
+				var withDOM = isHydrated(node2.vm);
+
+				var vm = node2.vm._update(node2.data, vnode, i, withDOM);
 				type2 = vm.node.type;
 			}
 		}
@@ -1764,8 +1788,8 @@ function ViewModel(view, data, key, opts) {
 	}
 
 	// these must be wrapped here since they're debounced per view
-	vm._redrawAsync = raft(function (_) { return vm._redraw(); });
-	vm._updateAsync = raft(function (newData) { return vm._update(newData); });
+	vm._redrawAsync = raft(function (_) { return vm.redraw(true); });
+	vm._updateAsync = raft(function (newData) { return vm.update(newData, true); });
 
 	vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
 }
@@ -1827,12 +1851,12 @@ var ViewModelProto = ViewModel.prototype = {
 			}
 		}
 		var vm = this;
-		sync ? vm._redraw() : vm._redrawAsync();
+		sync ? vm._redraw(null, null, isHydrated(vm)) : vm._redrawAsync();
 		return vm;
 	},
 	update: function(newData, sync) {
 		var vm = this;
-		sync ? vm._update(newData) : vm._updateAsync(newData);
+		sync ? vm._update(newData, null, null, isHydrated(vm)) : vm._updateAsync(newData);
 		return vm;
 	},
 

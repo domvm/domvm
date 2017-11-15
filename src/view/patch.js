@@ -1,5 +1,6 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
 import { isArr, binaryKeySearch } from '../utils';
+import { isHydrated } from "./utils";
 import { preProc } from './preProc';
 import { hydrateBody } from './hydrate';
 import { clearChildren } from './dom';
@@ -223,7 +224,13 @@ function patchChildren(vnode, donor) {
 				type2 = vm.node.type;
 			}
 			else if (type2 === VMODEL) {
-				var vm = node2.vm._update(node2.data, vnode, i);
+				// if the injected vm has never been rendered, this vm._update() serves as the
+				// initial vtree creator, but must avoid hydrating (creating .el) because syncChildren()
+				// which is responsible for mounting below (and optionally hydrating), tests .el presence
+				// to determine if hydration & mounting are needed
+				var withDOM = isHydrated(node2.vm);
+
+				var vm = node2.vm._update(node2.data, vnode, i, withDOM);
 				type2 = vm.node.type;
 			}
 		}

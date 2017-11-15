@@ -16,6 +16,10 @@ export function repaint(node) {
 	node && node.el && node.el.offsetHeight;
 }
 
+export function isHydrated(vm) {
+	return vm.node != null && vm.node.el != null;
+}
+
 // tests interactive props where real val should be compared
 export function isDynProp(tag, attr) {
 //	switch (tag) {

@@ -99,23 +99,35 @@ function compile(buildName) {
 
 		var ver = branch.indexOf("-dev") != -1 ? branch : "v" + pkg.version;
 
+		var banner = [
+			"/**",
+			"* Copyright (c) " + new Date().getFullYear() + ", Leon Sorokin",
+			"* All rights reserved. (MIT Licensed)",
+			"*",
+			"* domvm.js (DOM ViewModel)",
+			"* A thin, fast, dependency-free vdom view layer",
+			"* @preserve https://github.com/leeoniya/domvm (" + ver + ", " + buildName + " build)",
+			"*/",
+			"",
+		].join("\n");
+
 		bundle.write({
-			banner: [
-				"/**",
-				"* Copyright (c) " + new Date().getFullYear() + ", Leon Sorokin",
-				"* All rights reserved. (MIT Licensed)",
-				"*",
-				"* domvm.full.js - DOM ViewModel",
-				"* A thin, fast, dependency-free vdom view layer",
-				"* @preserve https://github.com/leeoniya/domvm (" + ver + ", " + buildName + ")",
-				"*/",
-				"",
-			].join("\n"),
+			banner: banner,
 			name: "domvm",
 			format: "umd",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
 			sourcemap: true,
 			file: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		});
+
+		/*
+		bundle.write({
+			banner: banner,
+			name: "domvm",
+			format: "es",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
+			sourcemap: true,
+			file: "./dist/" + buildName + "/domvm." + buildName + ".es.js"
+		});
+		*/
 
 		console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
 

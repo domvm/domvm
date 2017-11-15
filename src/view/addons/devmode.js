@@ -51,6 +51,10 @@ export const DEVMODE = {
 	ARRAY_FLATTENED: function(vnode, array) {
 		return ["Arrays within templates will be flattened. When they are leading or trailing, it's easy and more performant to just .concat() them in the template.", vnode, array];
 	},
+
+	ALREADY_HYDRATED: function(vm) {
+		return ["A child view failed to mount because it was already hydrated. Make sure not to invoke vm.redraw() or vm.update() on unmounted views.", vm];
+	},
 }
 
 export function devNotify(key, args) {
