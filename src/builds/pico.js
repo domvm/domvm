@@ -18,10 +18,6 @@ import { FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST } from "../view/initElem
 
 import { config } from '../view/config';
 
-// prevent GCC from inlining some large funcs (which negatively affects Chrome's JIT)
-import { syncChildren } from "../view/syncChildren";
-window.syncChildren = syncChildren;
-
 export default {
 	config,
 

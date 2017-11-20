@@ -153,9 +153,7 @@ function minify(buildName, start) {
 	//	warningLevel: 'VERBOSE',
 	};
 
-	var compiled = closure(flags).compiledCode
-		.replace(/window\.\w+\s*=\s*\w+;/gmi, "")
-		.replace('this,function(){','this,function(){"use strict";');
+	var compiled = closure(flags).compiledCode.replace('this,function(){','this,function(){"use strict";');
 
 	// workaround for https://github.com/google/closure-compiler-js/issues/79
 	var chars = {

@@ -1611,9 +1611,6 @@ function lazyList(items, cfg) {
 	return self;
 }
 
-// prevent GCC from inlining some large funcs (which negatively affects Chrome's JIT)
-window.syncChildren = syncChildren;
-
 var pico = {
 	config: config,
 
