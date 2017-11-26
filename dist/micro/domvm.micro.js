@@ -352,6 +352,8 @@ var VNodeProto = VNode.prototype = {
 
 	// pending removal on promise resolution
 	_dead:	false,
+	// part of longest increasing subsequence?
+	_lis:	false,
 
 	idx:	null,
 	parent:	null,
@@ -1074,7 +1076,7 @@ var BREAK = 1;
 var BREAK_ALL = 2;
 
 function syncDir(advSib, advNode, insert, sibName, nodeName) {
-	return function(node, parEl, body, state, convTest) {
+	return function(node, parEl, body, state, convTest, lis) {
 		var sibNode, tmpSib;
 
 		if (state[sibName]) {
@@ -1103,6 +1105,28 @@ function syncDir(advSib, advNode, insert, sibName, nodeName) {
 			state[sibName] = advSib(state[sibName]);
 		}
 		else {
+			if (lis && state[sibName]) {
+				if (sibNode._lis) {
+					insert(parEl, state[nodeName].el, state[sibName]);
+					state[nodeName] = advNode(state[nodeName], body);
+					return;
+				}
+
+				// find closest tomb
+				var t = binaryFindLarger(sibNode.idx, state.tombs);
+				sibNode._lis = true;
+				tmpSib = nextSib(state[sibName]);
+				insert(parEl, state[sibName], t != null ? body[state.tombs[t]].el : t);
+
+				if (t == null)
+					{ state.tombs.push(sibNode.idx); }
+				else
+					{ state.tombs.splice(t, 0, sibNode.idx); }
+
+				state[sibName] = tmpSib;
+				return;
+			}
+
 			return BREAK;
 		}
 	};
@@ -1126,14 +1150,14 @@ function syncChildren(node, donor) {
 	while (1) {
 //		from_left:
 		while (1) {
-			var l = syncLft(node, parEl, body, state, null);
+			var l = syncLft(node, parEl, body, state, null, false);
 			if (l === BREAK) { break; }
 			if (l === BREAK_ALL) { break converge; }
 		}
 
 //		from_right:
 		while (1) {
-			var r = syncRgt(node, parEl, body, state, state.lftNode);
+			var r = syncRgt(node, parEl, body, state, state.lftNode, false);
 			if (r === BREAK) { break; }
 			if (r === BREAK_ALL) { break converge; }
 		}
@@ -1153,7 +1177,6 @@ function syncChildren(node, donor) {
 
 // lft, rgt, fromIdx, toIdx
 function sortDOM(node, parEl, body) {
-	// static list of all dom nodes, should this operate only within already established bounds?
 	var kids = Array.prototype.slice.call(parEl.childNodes);
 	var domIdxs = [];
 
@@ -1170,55 +1193,15 @@ function sortDOM(node, parEl, body) {
 	for (var i = 0; i < tombs.length; i++)
 		{ body[tombs[i]]._lis = true; }
 
-	var lftSib = parEl.firstChild;
-	var lftNode = body[0];
-	var lsNode = null;
-	var tmpSib;
+	var state = {
+		lftSib: parEl.firstChild,
+		lftNode: body[0],
+		tombs: tombs,
+	};
 
 	while (1) {
-		if (lftSib) {
-			if ((lsNode = lftSib._node) == null) {
-				lftSib = nextSib(lftSib);
-				continue;
-			}
-
-			if (parentNode(lsNode) !== node) {
-				tmpSib = nextSib(lftSib);
-				lsNode.vm != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
-				lftSib = tmpSib;
-				continue;
-			}
-
-			if (lsNode._lis) {
-				lftSib = nextSib(lftSib);
-				continue;
-			}
-		}
-
-		if (lftNode == null)
-			{ break; }
-		else if (lftNode.el == null) {
-			insertBefore(parEl, hydrate(lftNode), lftSib);
-			lftNode = nextNode(lftNode, body);
-		}
-		else if (lftNode.el === lftSib) {
-			lftNode = nextNode(lftNode, body);
-			lftSib = nextSib(lftSib);
-		}
-		else {
-			if (lftSib) {	// && !lis
-				// find closest tomb
-				var t = binaryFindLarger(lsNode.idx, tombs);
-				lsNode._lis = true;
-				tmpSib = nextSib(lftSib);
-				insertBefore(parEl, lftSib, t != null ? body[tombs[t]].el : t);
-				tombs.splice(t, 0, lsNode.idx);
-				lftSib = tmpSib;
-				continue;
-			}
-
-			break;
-		}
+		var r = syncLft(node, parEl, body, state, null, true);
+		if (r === BREAK_ALL) { break; }
 	}
 }
 

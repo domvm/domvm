@@ -27,6 +27,8 @@ export const VNodeProto = VNode.prototype = {
 
 	// pending removal on promise resolution
 	_dead:	false,
+	// part of longest increasing subsequence?
+	_lis:	false,
 
 	idx:	null,
 	parent:	null,
