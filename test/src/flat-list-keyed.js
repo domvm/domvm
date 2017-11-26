@@ -121,7 +121,7 @@ QUnit.module("Flat List w/keys");
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>10</li><li>666</li><li>a</li><li>b</li><li>bar</li><li>baz</li><li>c</li><li>moo</li><li>xxx</li><li>z</li><li>zzz</li></ul>';
-		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 9 });
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 7 });
 	});
 
 	// remove
@@ -288,7 +288,7 @@ QUnit.module("Flat List w/keys");
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>b</li><li>moo</li><li>xxx</li><li>z</li><li>a</li><li>c</li><li>666</li></ul>';
-		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 3 });
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
 	});
 
 	QUnit.test("move two disjoint up", function(assert) {
@@ -318,6 +318,22 @@ QUnit.module("Flat List w/keys");
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>b</li><li>moo</li><li>xxx</li><li>z</li><li>a</li><li>c</li><li>666</li></ul>';
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
+	});
+
+	// snabbdom worst case
+	QUnit.test("move first and second-to-last to end", function(assert) {
+	//	["b", "moo", "xxx", "z", "a", "c", 666] ->
+	//	["moo", "xxx", "z", "a", 666, "b", "c"]
+
+		list.length = 0;
+		list.push("moo", "xxx", "z", "a", 666, "b", "c");
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul id="list1" class="test-output"><li>moo</li><li>xxx</li><li>z</li><li>a</li><li>666</li><li>b</li><li>c</li></ul>';
 		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
 	});
 

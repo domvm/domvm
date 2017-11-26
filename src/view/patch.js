@@ -1,5 +1,5 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
-import { isArr, binaryKeySearch } from '../utils';
+import { isArr } from '../utils';
 import { isHydrated } from "./utils";
 import { preProc } from './preProc';
 import { hydrateBody } from './hydrate';
@@ -45,11 +45,13 @@ function findSeqKeyed(n, obody, fromIdx) {
 	return null;
 }
 
+/*
 // list must be a sorted list of vnodes by key
 function findBinKeyed(n, list) {
 	var idx = binaryKeySearch(list, n.key);
 	return idx > -1 ? list[idx] : null;
 }
+*/
 
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists

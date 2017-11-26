@@ -1,4 +1,4 @@
-import { emptyObj } from '../utils';
+import { emptyObj, longestIncreasingSubsequence, binaryFindLarger } from '../utils';
 import { hydrate } from './hydrate';
 import { prevSib, nextSib, insertBefore, insertAfter, removeChild } from './dom';
 import { devNotify } from "./addons/devmode";
@@ -48,34 +48,6 @@ function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
 	}
 
 	return null;
-}
-
-// init vm,
-
-// selection sort of DOM (cause move cost >> cmp cost)
-// todo: skip removed
-function sortDOM(parEl, lftSib, rgtSib, cmpFn) {
-//	DEBUG && console.log("selection sort!");
-
-	return tmpEdges(function(lftLft, rgtRgt) {
-		var min;
-
-		for (var i = lftSib; i !== rgtRgt; i = nextSib(i)) {
-			lftSib = min = i;
-
-			for (var j = nextSib(i); j !== rgtRgt; j = nextSib(j)) {
-				if (cmpFn(min, j) > 0)
-					min = j;
-			}
-
-			if (min === i)
-				continue;
-
-			insertBefore(parEl, min, lftSib);
-
-			i = min;
-		}
-	}, parEl, lftSib, rgtSib);
 }
 
 const BREAK = 1;
@@ -161,8 +133,85 @@ export function syncChildren(node, donor) {
 			continue;
 		}
 
-		newSibs = sortDOM(parEl, state.lftSib, state.rgtSib, cmpElNodeIdx);
-		state.lftSib = newSibs.lftSib;
-		state.rgtSib = newSibs.rgtSib;
+		sortDOM(node, parEl, body);
+		break;
+	}
+}
+
+// lft, rgt, fromIdx, toIdx
+function sortDOM(node, parEl, body) {
+	// static list of all dom nodes, should this operate only within already established bounds?
+	var kids = Array.prototype.slice.call(parEl.childNodes);
+	var domIdxs = [];
+
+	for (var k = 0; k < kids.length; k++) {
+		var n = kids[k]._node;
+
+		if (n.parent === node)
+			domIdxs.push(n.idx);
+	}
+
+	// list of non-movable vnode indices (already in correct order in old dom)
+	var tombs = longestIncreasingSubsequence(domIdxs).map(i => domIdxs[i]);
+
+	for (var i = 0; i < tombs.length; i++)
+		body[tombs[i]]._lis = true;
+
+	var lftSib = parEl.firstChild;
+	var lftNode = body[0];
+	var lsNode = null;
+	var tmpSib;
+
+	while (1) {
+		if (lftSib) {
+			if ((lsNode = lftSib._node) == null) {
+				if (_DEVMODE)
+					devNotify("FOREIGN_ELEMENT", [lftSib]);
+
+				lftSib = nextSib(lftSib);
+				continue;
+			}
+
+			if (parentNode(lsNode) !== node) {
+				tmpSib = nextSib(lftSib);
+				lsNode.vm != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
+				lftSib = tmpSib;
+				continue;
+			}
+
+			if (lsNode._lis) {
+				lftSib = nextSib(lftSib);
+				continue;
+			}
+		}
+
+		if (lftNode == null)
+			break;
+		else if (lftNode.el == null) {
+			insertBefore(parEl, hydrate(lftNode), lftSib);
+			lftNode = nextNode(lftNode, body);
+		}
+		else if (lftNode.el === lftSib) {
+			lftNode = nextNode(lftNode, body);
+			lftSib = nextSib(lftSib);
+		}
+		else {
+			if (lftSib) {	// && !lis
+				// find closest tomb
+				var t = binaryFindLarger(lsNode.idx, tombs);
+				lsNode._lis = true;
+				tmpSib = nextSib(lftSib);
+				insertBefore(parEl, lftSib, t != null ? body[tombs[t]].el : t);
+				tombs.splice(t, 0, lsNode.idx);
+				lftSib = tmpSib;
+				continue;
+			}
+
+			if (_DEVMODE) {
+				if (lftNode.vm != null)
+					devNotify("ALREADY_HYDRATED", [lftNode.vm]);
+			}
+			break;
+		}
 	}
 }

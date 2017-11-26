@@ -165,7 +165,117 @@ export function prop(val, cb, ctx, args) {
 }
 */
 
+/*
 // adapted from https://github.com/Olical/binary-search
+export function binaryKeySearch(list, item) {
+    var min = 0;
+    var max = list.length - 1;
+    var guess;
+
+	var bitwise = (max <= 2147483647) ? true : false;
+	if (bitwise) {
+		while (min <= max) {
+			guess = (min + max) >> 1;
+			if (list[guess].key === item) { return guess; }
+			else {
+				if (list[guess].key < item) { min = guess + 1; }
+				else { max = guess - 1; }
+			}
+		}
+	} else {
+		while (min <= max) {
+			guess = Math.floor((min + max) / 2);
+			if (list[guess].key === item) { return guess; }
+			else {
+				if (list[guess].key < item) { min = guess + 1; }
+				else { max = guess - 1; }
+			}
+		}
+	}
+
+    return -1;
+}
+*/
+
+// https://en.wikipedia.org/wiki/Longest_increasing_subsequence
+// impl borrowed from https://github.com/ivijs/ivi
+function longestIncreasingSubsequence(a) {
+	var p = a.slice();
+	var result = [];
+	result.push(0);
+	var u;
+	var v;
+
+	for (var i = 0, il = a.length; i < il; ++i) {
+		var j = result[result.length - 1];
+		if (a[j] < a[i]) {
+			p[i] = j;
+			result.push(i);
+			continue;
+		}
+
+		u = 0;
+		v = result.length - 1;
+
+		while (u < v) {
+			var c = ((u + v) / 2) | 0;
+			if (a[result[c]] < a[i]) {
+				u = c + 1;
+			} else {
+				v = c;
+			}
+		}
+
+		if (a[i] < a[result[u]]) {
+			if (u > 0) {
+				p[i] = result[u - 1];
+			}
+			result[u] = i;
+		}
+	}
+
+	u = result.length;
+	v = result[u - 1];
+
+	while (u-- > 0) {
+		result[u] = v;
+		v = p[v];
+	}
+
+	return result;
+}
+
+// based on https://github.com/Olical/binary-search
+function binaryFindLarger(item, list) {
+	var min = 0;
+	var max = list.length - 1;
+	var guess;
+
+	var bitwise = (max <= 2147483647) ? true : false;
+	if (bitwise) {
+		while (min <= max) {
+			guess = (min + max) >> 1;
+			if (list[guess] === item) { return guess; }
+			else {
+				if (list[guess] < item) { min = guess + 1; }
+				else { max = guess - 1; }
+			}
+		}
+	} else {
+		while (min <= max) {
+			guess = Math.floor((min + max) / 2);
+			if (list[guess] === item) { return guess; }
+			else {
+				if (list[guess] < item) { min = guess + 1; }
+				else { max = guess - 1; }
+			}
+		}
+	}
+
+	return (min == list.length) ? null : min;
+
+//	return -1;
+}
 
 function isEvProp(name) {
 	return name[0] === "o" && name[1] === "n";
@@ -984,10 +1094,6 @@ function parentNode(node) {
 	return node.parent;
 }
 
-function cmpElNodeIdx(a, b) {
-	return a._node.idx - b._node.idx;
-}
-
 function tmpEdges(fn, parEl, lftSib, rgtSib) {
 	// get outer immute edges
 	var lftLft = prevSib(lftSib);
@@ -1017,34 +1123,6 @@ function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
 	}
 
 	return null;
-}
-
-// init vm,
-
-// selection sort of DOM (cause move cost >> cmp cost)
-// todo: skip removed
-function sortDOM(parEl, lftSib, rgtSib, cmpFn) {
-//	DEBUG && console.log("selection sort!");
-
-	return tmpEdges(function(lftLft, rgtRgt) {
-		var min;
-
-		for (var i = lftSib; i !== rgtRgt; i = nextSib(i)) {
-			lftSib = min = i;
-
-			for (var j = nextSib(i); j !== rgtRgt; j = nextSib(j)) {
-				if (cmpFn(min, j) > 0)
-					{ min = j; }
-			}
-
-			if (min === i)
-				{ continue; }
-
-			insertBefore(parEl, min, lftSib);
-
-			i = min;
-		}
-	}, parEl, lftSib, rgtSib);
 }
 
 var BREAK = 1;
@@ -1123,9 +1201,79 @@ function syncChildren(node, donor) {
 			continue;
 		}
 
-		newSibs = sortDOM(parEl, state.lftSib, state.rgtSib, cmpElNodeIdx);
-		state.lftSib = newSibs.lftSib;
-		state.rgtSib = newSibs.rgtSib;
+		sortDOM(node, parEl, body);
+		break;
+	}
+}
+
+// lft, rgt, fromIdx, toIdx
+function sortDOM(node, parEl, body) {
+	// static list of all dom nodes, should this operate only within already established bounds?
+	var kids = Array.prototype.slice.call(parEl.childNodes);
+	var domIdxs = [];
+
+	for (var k = 0; k < kids.length; k++) {
+		var n = kids[k]._node;
+
+		if (n.parent === node)
+			{ domIdxs.push(n.idx); }
+	}
+
+	// list of non-movable vnode indices (already in correct order in old dom)
+	var tombs = longestIncreasingSubsequence(domIdxs).map(function (i) { return domIdxs[i]; });
+
+	for (var i = 0; i < tombs.length; i++)
+		{ body[tombs[i]]._lis = true; }
+
+	var lftSib = parEl.firstChild;
+	var lftNode = body[0];
+	var lsNode = null;
+	var tmpSib;
+
+	while (1) {
+		if (lftSib) {
+			if ((lsNode = lftSib._node) == null) {
+				lftSib = nextSib(lftSib);
+				continue;
+			}
+
+			if (parentNode(lsNode) !== node) {
+				tmpSib = nextSib(lftSib);
+				lsNode.vm != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
+				lftSib = tmpSib;
+				continue;
+			}
+
+			if (lsNode._lis) {
+				lftSib = nextSib(lftSib);
+				continue;
+			}
+		}
+
+		if (lftNode == null)
+			{ break; }
+		else if (lftNode.el == null) {
+			insertBefore(parEl, hydrate(lftNode), lftSib);
+			lftNode = nextNode(lftNode, body);
+		}
+		else if (lftNode.el === lftSib) {
+			lftNode = nextNode(lftNode, body);
+			lftSib = nextSib(lftSib);
+		}
+		else {
+			if (lftSib) {	// && !lis
+				// find closest tomb
+				var t = binaryFindLarger(lsNode.idx, tombs);
+				lsNode._lis = true;
+				tmpSib = nextSib(lftSib);
+				insertBefore(parEl, lftSib, t != null ? body[tombs[t]].el : t);
+				tombs.splice(t, 0, lsNode.idx);
+				lftSib = tmpSib;
+				continue;
+			}
+
+			break;
+		}
 	}
 }
 
@@ -1163,6 +1311,14 @@ function findSeqKeyed(n, obody, fromIdx) {
 
 	return null;
 }
+
+/*
+// list must be a sorted list of vnodes by key
+function findBinKeyed(n, list) {
+	var idx = binaryKeySearch(list, n.key);
+	return idx > -1 ? list[idx] : null;
+}
+*/
 
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists

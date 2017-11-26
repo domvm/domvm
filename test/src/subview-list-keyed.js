@@ -133,7 +133,7 @@ QUnit.module("Subview List w/keys");
 //		var expcHtml = '<ul id="list2" class="test-output"><li>10</li><li>666</li><li>a</li><li>b</li><li>bar</li><li>baz</li><li>c</li><li>moo</li><li>xxx</li><li>z</li><li>zzz</li></ul>';
 //		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 9 });
 		var expcHtml = '<ul id=\"list2\" class=\"test-output\"><li>a</li><li>b</li><li>bar</li><li>baz</li><li>c</li><li>cow</li><li>fff</li><li>foo</li><li>moo</li><li>xxx</li><li>zzz</li></ul>';
-		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 7 });
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 6 });
 	});
 
 	// remove

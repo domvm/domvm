@@ -140,6 +140,7 @@ export function prop(val, cb, ctx, args) {
 }
 */
 
+/*
 // adapted from https://github.com/Olical/binary-search
 export function binaryKeySearch(list, item) {
     var min = 0;
@@ -168,4 +169,85 @@ export function binaryKeySearch(list, item) {
 	}
 
     return -1;
+}
+*/
+
+// https://en.wikipedia.org/wiki/Longest_increasing_subsequence
+// impl borrowed from https://github.com/ivijs/ivi
+export function longestIncreasingSubsequence(a) {
+	const p = a.slice();
+	const result = [];
+	result.push(0);
+	let u;
+	let v;
+
+	for (let i = 0, il = a.length; i < il; ++i) {
+		const j = result[result.length - 1];
+		if (a[j] < a[i]) {
+			p[i] = j;
+			result.push(i);
+			continue;
+		}
+
+		u = 0;
+		v = result.length - 1;
+
+		while (u < v) {
+			const c = ((u + v) / 2) | 0;
+			if (a[result[c]] < a[i]) {
+				u = c + 1;
+			} else {
+				v = c;
+			}
+		}
+
+		if (a[i] < a[result[u]]) {
+			if (u > 0) {
+				p[i] = result[u - 1];
+			}
+			result[u] = i;
+		}
+	}
+
+	u = result.length;
+	v = result[u - 1];
+
+	while (u-- > 0) {
+		result[u] = v;
+		v = p[v];
+	}
+
+	return result;
+}
+
+// based on https://github.com/Olical/binary-search
+export function binaryFindLarger(item, list) {
+	var min = 0;
+	var max = list.length - 1;
+	var guess;
+
+	var bitwise = (max <= 2147483647) ? true : false;
+	if (bitwise) {
+		while (min <= max) {
+			guess = (min + max) >> 1;
+			if (list[guess] === item) { return guess; }
+			else {
+				if (list[guess] < item) { min = guess + 1; }
+				else { max = guess - 1; }
+			}
+		}
+	} else {
+		while (min <= max) {
+			guess = Math.floor((min + max) / 2);
+			if (list[guess] === item) { return guess; }
+			else {
+				if (list[guess] < item) { min = guess + 1; }
+				else { max = guess - 1; }
+			}
+		}
+	}
+
+	return (min == list.length) ? null : min;
+
+//	return -1;
 }
