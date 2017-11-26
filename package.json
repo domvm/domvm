@@ -35,12 +35,12 @@
     "url": "https://github.com/leeoniya/domvm.git"
   },
   "devDependencies": {
-    "node-watch": "*",
-    "rollup": "*",
     "buble": "*",
-    "rollup-plugin-replace": "*",
+    "google-closure-compiler-js": "*",
+    "node-watch": "*",
+    "rollup": "^0.52.0",
     "rollup-plugin-buble": "*",
-    "google-closure-compiler-js": "*"
+    "rollup-plugin-replace": "*"
   },
   "bugs": {
     "url": "https://github.com/leeoniya/domvm/issues"

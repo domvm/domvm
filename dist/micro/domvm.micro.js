@@ -992,99 +992,85 @@ function sortDOM(parEl, lftSib, rgtSib, cmpFn) {
 	}, parEl, lftSib, rgtSib);
 }
 
+var BREAK = 1;
+var BREAK_ALL = 2;
+
+function syncDir(advSib, advNode, insert, sibName, nodeName) {
+	return function(node, parEl, body, state, convTest) {
+		var sibNode, tmpSib;
+
+		if (state[sibName]) {
+			// skip dom elements not created by domvm
+			if ((sibNode = state[sibName]._node) == null) {
+				state[sibName] = advSib(state[sibName]);
+				return;
+			}
+
+			if (parentNode(sibNode) !== node) {
+				tmpSib = advSib(state[sibName]);
+				sibNode.vm != null ? sibNode.vm.unmount(true) : removeChild(parEl, state[sibName]);
+				state[sibName] = tmpSib;
+				return;
+			}
+		}
+
+		if (state[nodeName] == convTest)
+			{ return BREAK_ALL; }
+		else if (state[nodeName].el == null) {
+			insert(parEl, hydrate(state[nodeName]), state[sibName]);
+			state[nodeName] = advNode(state[nodeName], body);		// also need to advance sib?
+		}
+		else if (state[nodeName].el === state[sibName]) {
+			state[nodeName] = advNode(state[nodeName], body);
+			state[sibName] = advSib(state[sibName]);
+		}
+		else {
+			return BREAK;
+		}
+	};
+}
+
+var syncLft = syncDir(nextSib, nextNode, insertBefore, "lftSib", "lftNode");
+var syncRgt = syncDir(prevSib, prevNode, insertAfter, "rgtSib", "rgtNode");
+
 function syncChildren(node, donor) {
-	var parEl		= node.el,
-		body		= node.body,
-		obody		= donor.body,
-		lftNode		= body[0],
-		rgtNode		= body[body.length - 1],
-		lftSib		= ((obody)[0] || emptyObj).el,
-	//	lftEnd		= prevSib(lftSib),
-		rgtSib		= (obody[obody.length - 1] || emptyObj).el,
-	//	rgtEnd		= nextSib(rgtSib),
-		newSibs,
-		tmpSib,
-		lsNode,
-		rsNode;
+	var obody	= donor.body,
+		parEl	= node.el,
+		body	= node.body,
+		state = {
+			lftNode:	body[0],
+			rgtNode:	body[body.length - 1],
+			lftSib:		((obody)[0] || emptyObj).el,
+			rgtSib:		(obody[obody.length - 1] || emptyObj).el,
+		};
 
 	converge:
 	while (1) {
 //		from_left:
 		while (1) {
-			// remove any non-recycled sibs whose el.node has the old parent
-			if (lftSib) {
-				// skip dom elements not created by domvm
-				if ((lsNode = lftSib._node) == null) {
-					lftSib = nextSib(lftSib);
-					continue;
-				}
-
-				if (parentNode(lsNode) !== node) {
-					tmpSib = nextSib(lftSib);
-					lsNode.vm != null ? lsNode.vm.unmount(true) : removeChild(parEl, lftSib);
-					lftSib = tmpSib;
-					continue;
-				}
-			}
-
-			if (lftNode == null)		// reached end
-				{ break converge; }
-			else if (lftNode.el == null) {
-				insertBefore(parEl, hydrate(lftNode), lftSib);		// lftNode.vm != null ? lftNode.vm.mount(parEl, false, true, lftSib) :
-				lftNode = nextNode(lftNode, body);
-			}
-			else if (lftNode.el === lftSib) {
-				lftNode = nextNode(lftNode, body);
-				lftSib = nextSib(lftSib);
-			}
-			else {
-				break;
-			}
+			var l = syncLft(node, parEl, body, state, null);
+			if (l === BREAK) { break; }
+			if (l === BREAK_ALL) { break converge; }
 		}
 
 //		from_right:
 		while (1) {
-		//	if (rgtSib === lftEnd)
-		//		break converge;
-
-			if (rgtSib) {
-				if ((rsNode = rgtSib._node) == null) {
-					rgtSib = prevSib(rgtSib);
-					continue;
-				}
-
-				if (parentNode(rsNode) !== node) {
-					tmpSib = prevSib(rgtSib);
-					rsNode.vm != null ? rsNode.vm.unmount(true) : removeChild(parEl, rgtSib);
-					rgtSib = tmpSib;
-					continue;
-				}
-			}
-
-			if (rgtNode === lftNode)		// converged
-				{ break converge; }
-			else if (rgtNode.el == null) {
-				insertAfter(parEl, hydrate(rgtNode), rgtSib);		// rgtNode.vm != null ? rgtNode.vm.mount(parEl, false, true, nextSib(rgtSib) :
-				rgtNode = prevNode(rgtNode, body);
-			}
-			else if (rgtNode.el === rgtSib) {
-				rgtNode = prevNode(rgtNode, body);
-				rgtSib = prevSib(rgtSib);
-			}
-			else {
-				break;
-			}
+			var r = syncRgt(node, parEl, body, state, state.lftNode);
+			if (r === BREAK) { break; }
+			if (r === BREAK_ALL) { break converge; }
 		}
 
-		if (newSibs = headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode)) {
-			lftSib = newSibs.lftSib;
-			rgtSib = newSibs.rgtSib;
+		var newSibs;
+
+		if (newSibs = headTailTry(parEl, state.lftSib, state.lftNode, state.rgtSib, state.rgtNode)) {
+			state.lftSib = newSibs.lftSib;
+			state.rgtSib = newSibs.rgtSib;
 			continue;
 		}
 
-		newSibs = sortDOM(parEl, lftSib, rgtSib, cmpElNodeIdx);
-		lftSib = newSibs.lftSib;
-		rgtSib = newSibs.rgtSib;
+		newSibs = sortDOM(parEl, state.lftSib, state.rgtSib, cmpElNodeIdx);
+		state.lftSib = newSibs.lftSib;
+		state.rgtSib = newSibs.rgtSib;
 	}
 }
 
