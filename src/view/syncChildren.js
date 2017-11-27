@@ -153,16 +153,16 @@ export function syncChildren(node, donor) {
 		if (newSibs = headTailTry(parEl, state.lftSib, state.lftNode, state.rgtSib, state.rgtNode)) {
 			state.lftSib = newSibs.lftSib;
 			state.rgtSib = newSibs.rgtSib;
-			continue;
 		}
-
-		sortDOM(node, parEl, body);
-		break;
+		else {
+			sortDOM(node, parEl, body, state);
+			break;
+		}
 	}
 }
 
-// lft, rgt, fromIdx, toIdx
-function sortDOM(node, parEl, body) {
+// TODO: also use the state.rgtSib and state.rgtNode bounds, plus reduce LIS range
+function sortDOM(node, parEl, body, state) {
 	var kids = Array.prototype.slice.call(parEl.childNodes);
 	var domIdxs = [];
 
@@ -179,11 +179,7 @@ function sortDOM(node, parEl, body) {
 	for (var i = 0; i < tombs.length; i++)
 		body[tombs[i]]._lis = true;
 
-	var state = {
-		lftSib: parEl.firstChild,
-		lftNode: body[0],
-		tombs: tombs,
-	};
+	state.tombs = tombs;
 
 	while (1) {
 		var r = syncLft(node, parEl, body, state, null, true);
