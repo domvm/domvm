@@ -38,7 +38,7 @@
     "buble": "*",
     "google-closure-compiler-js": "*",
     "node-watch": "*",
-    "rollup": "^0.52.0",
+    "rollup": "*",
     "rollup-plugin-buble": "*",
     "rollup-plugin-replace": "*"
   },
