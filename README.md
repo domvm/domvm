@@ -203,6 +203,11 @@ el("ul",
 );
 ```
 
+#### JSX
+
+While not all of domvm's features can be accommodated by JSX syntax, it's possible to cover a fairly large subset via a `defineElementSpread` pragma.
+Please refer to demos and examples in the [JSX wiki](https://github.com/leeoniya/domvm/wiki/JSX).
+
 ---
 ### Views
 
