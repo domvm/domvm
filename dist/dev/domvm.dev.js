@@ -1971,6 +1971,11 @@ var ViewModelProto = ViewModel.prototype = {
 		return vm;
 	},
 	update: function(newData, sync) {
+		{
+			if (DEVMODE.syncRedraw) {
+				sync = true;
+			}
+		}
 		var vm = this;
 		sync ? vm._update(newData, null, null, isHydrated(vm)) : vm._updateAsync(newData);
 		return vm;
