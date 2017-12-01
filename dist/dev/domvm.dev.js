@@ -1565,8 +1565,8 @@ function patchChildren(vnode, donor) {
 			}
 			else if (type2 === VVIEW) {
 				if (donor2 = doFind && find(node2, obody, fromIdx)) {		// update/moveTo
-					var vm = donor2.vm._update(node2.data, vnode, i);		// withDOM
 					foundIdx = donor2.idx;
+					var vm = donor2.vm._update(node2.data, vnode, i);		// withDOM
 				}
 				else
 					{ var vm = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
