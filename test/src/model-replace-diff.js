@@ -214,6 +214,51 @@ QUnit.module("Model replace & vm.diff()");
 		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { nodeValue: 1 });
 	});
 
+	QUnit.test('Do not unmount subviews when parent is diff some children are not', function(assert) {
+		var vmE = null;
+
+		const ViewE = {
+		//	diff: function(vm, items) {
+		//		return [items];
+		//	},
+			render: function(vm, items) {
+				return el("ul", items.map(function(item) {
+					return vw(ViewD, item, item.id);
+				}));
+			}
+		};
+
+		const ViewD = {
+			diff: function(vm, item) {
+				return [item];
+			},
+			render: function(vm, item) {
+				return el("li", item.text);
+			}
+		};
+
+		var items = [
+			{text: "foo", id: 1},
+			{text: "bar", id: 2},
+		];
+
+		instr.start();
+		vmE = domvm.createView(ViewE, items).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul><li>foo</li><li>bar</li></ul>';
+		evalOut(assert, vmE.node.el, vmE.html(), expcHtml, callCounts, { createElement: 3, insertBefore: 3, textContent: 2 });
+
+		instr.start();
+		var items2 = items.slice();
+		items2.reverse();
+		vmE.update(items2);
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul><li>bar</li><li>foo</li></ul>';
+		evalOut(assert, vmE.node.el, vmE.html(), expcHtml, callCounts, { insertBefore: 1 });
+	});
+
 	QUnit.skip('diff by object identity', function(assert) {
 		// diff: (vm, model) => model; rather than [model] or {model: model}
 	});
