@@ -963,32 +963,26 @@ function parentNode(node) {
 	return node.parent;
 }
 
-function tmpEdges(fn, parEl, lftSib, rgtSib) {
-	// get outer immute edges
-	var lftLft = prevSib(lftSib);
-	var rgtRgt = nextSib(rgtSib);
-
-	fn(lftLft, rgtRgt);
-
-	return {
-		lftSib: lftLft ? nextSib(lftLft) : parEl.firstChild,
-		rgtSib: rgtRgt ? prevSib(rgtRgt) : parEl.lastChild,
-	};
-}
-
 function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
 	var areAdjacent	= rgtNode.idx === lftNode.idx + 1;
 	var headToTail = areAdjacent ? false : lftSib._node === rgtNode;
 	var tailToHead = areAdjacent ? true  : rgtSib._node === lftNode;
 
 	if (headToTail || tailToHead) {
-		return tmpEdges(function(lftLft, rgtRgt) {
-			if (tailToHead)
-				{ insertBefore(parEl, rgtSib, lftSib); }
+		// get outer immute edges
+		var lftLft = prevSib(lftSib);
+		var rgtRgt = nextSib(rgtSib);
 
-			if (headToTail)
-				{ insertBefore(parEl, lftSib, rgtRgt); }
-		}, parEl, lftSib, rgtSib);
+		if (tailToHead)
+			{ insertBefore(parEl, rgtSib, lftSib); }
+
+		if (headToTail)
+			{ insertBefore(parEl, lftSib, rgtRgt); }
+
+		return {
+			lftSib: lftLft ? nextSib(lftLft) : parEl.firstChild,
+			rgtSib: rgtRgt ? prevSib(rgtRgt) : parEl.lastChild,
+		};
 	}
 
 	return null;
