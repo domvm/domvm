@@ -1096,31 +1096,6 @@ function parentNode(node) {
 	return node.parent;
 }
 
-function headTailTry(parEl, lftSib, lftNode, rgtSib, rgtNode) {
-	var areAdjacent	= rgtNode.idx === lftNode.idx + 1;
-	var headToTail = areAdjacent ? false : lftSib._node === rgtNode;
-	var tailToHead = areAdjacent ? true  : rgtSib._node === lftNode;
-
-	if (headToTail || tailToHead) {
-		// get outer immute edges
-		var lftLft = prevSib(lftSib);
-		var rgtRgt = nextSib(rgtSib);
-
-		if (tailToHead)
-			{ insertBefore(parEl, rgtSib, lftSib); }
-
-		if (headToTail)
-			{ insertBefore(parEl, lftSib, rgtRgt); }
-
-		return {
-			lftSib: lftLft ? nextSib(lftLft) : parEl.firstChild,
-			rgtSib: rgtRgt ? prevSib(rgtRgt) : parEl.lastChild,
-		};
-	}
-
-	return null;
-}
-
 var BREAK = 1;
 var BREAK_ALL = 2;
 
@@ -1211,16 +1186,28 @@ function syncChildren(node, donor) {
 			if (r === BREAK_ALL) { break converge; }
 		}
 
-		var newSibs;
+		var areAdjacent	= state.rgtNode.idx === state.lftNode.idx + 1;
+		var headToTail = areAdjacent ? false : state.lftSib._node === state.rgtNode;
+		var tailToHead = areAdjacent ? true  : state.rgtSib._node === state.lftNode;
 
-		if (newSibs = headTailTry(parEl, state.lftSib, state.lftNode, state.rgtSib, state.rgtNode)) {
-			state.lftSib = newSibs.lftSib;
-			state.rgtSib = newSibs.rgtSib;
+		if (headToTail || tailToHead) {
+			// get outer immute edges
+			var lftLft = prevSib(state.lftSib);
+			var rgtRgt = nextSib(state.rgtSib);
+
+			if (tailToHead)
+				{ insertBefore(parEl, state.rgtSib, state.lftSib); }
+
+			if (headToTail)
+				{ insertBefore(parEl, state.lftSib, rgtRgt); }
+
+			state.lftSib = lftLft ? nextSib(lftLft) : parEl.firstChild;
+			state.rgtSib = rgtRgt ? prevSib(rgtRgt) : parEl.lastChild;
+			continue;
 		}
-		else {
-			sortDOM(node, parEl, body, state);
-			break;
-		}
+
+		sortDOM(node, parEl, body, state);
+		break;
 	}
 }
 
