@@ -1099,7 +1099,7 @@ function parentNode(node) {
 var BREAK = 1;
 var BREAK_ALL = 2;
 
-function syncDir(advSib, advNode, insert, sibName, nodeName) {
+function syncDir(advSib, advNode, insert, sibName, nodeName, invNodeName, invSibName, invInsert) {
 	return function(node, parEl, body, state, convTest, lis) {
 		var sibNode, tmpSib;
 
@@ -1121,12 +1121,19 @@ function syncDir(advSib, advNode, insert, sibName, nodeName) {
 		if (state[nodeName] == convTest)
 			{ return BREAK_ALL; }
 		else if (state[nodeName].el == null) {
-			insert(parEl, hydrate(state[nodeName]), state[sibName]);
+			insert(parEl, hydrate(state[nodeName]), state[sibName]);	// should lis be updated here?
 			state[nodeName] = advNode(state[nodeName], body);		// also need to advance sib?
 		}
 		else if (state[nodeName].el === state[sibName]) {
 			state[nodeName] = advNode(state[nodeName], body);
 			state[sibName] = advSib(state[sibName]);
+		}
+		// head->tail or tail->head
+		else if (sibNode === state[invNodeName] && !lis) {		// lis?
+			tmpSib = state[sibName];
+			state[sibName] = advSib(tmpSib);
+			invInsert(parEl, tmpSib, state[invSibName]);
+			state[invSibName] = tmpSib;
 		}
 		else {
 			if (lis && state[sibName]) {
@@ -1156,8 +1163,8 @@ function syncDir(advSib, advNode, insert, sibName, nodeName) {
 	};
 }
 
-var syncLft = syncDir(nextSib, nextNode, insertBefore, "lftSib", "lftNode");
-var syncRgt = syncDir(prevSib, prevNode, insertAfter, "rgtSib", "rgtNode");
+var syncLft = syncDir(nextSib, nextNode, insertBefore, "lftSib", "lftNode", "rgtNode", "rgtSib", insertAfter);
+var syncRgt = syncDir(prevSib, prevNode, insertAfter, "rgtSib", "rgtNode", "lftNode", "lftSib", insertBefore);
 
 function syncChildren(node, donor) {
 	var obody	= donor.body,
@@ -1184,26 +1191,6 @@ function syncChildren(node, donor) {
 			var r = syncRgt(node, parEl, body, state, state.lftNode, false);
 			if (r === BREAK) { break; }
 			if (r === BREAK_ALL) { break converge; }
-		}
-
-		var areAdjacent	= state.rgtNode.idx === state.lftNode.idx + 1;
-		var headToTail = areAdjacent ? false : state.lftSib._node === state.rgtNode;
-		var tailToHead = areAdjacent ? true  : state.rgtSib._node === state.lftNode;
-
-		if (headToTail || tailToHead) {
-			// get outer immute edges
-			var lftLft = prevSib(state.lftSib);
-			var rgtRgt = nextSib(state.rgtSib);
-
-			if (tailToHead)
-				{ insertBefore(parEl, state.rgtSib, state.lftSib); }
-
-			if (headToTail)
-				{ insertBefore(parEl, state.lftSib, rgtRgt); }
-
-			state.lftSib = lftLft ? nextSib(lftLft) : parEl.firstChild;
-			state.rgtSib = rgtRgt ? prevSib(rgtRgt) : parEl.lastChild;
-			continue;
 		}
 
 		sortDOM(node, parEl, body, state);
