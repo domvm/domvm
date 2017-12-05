@@ -1099,7 +1099,7 @@ function parentNode(node) {
 var BREAK = 1;
 var BREAK_ALL = 2;
 
-function syncDir(advSib, advNode, insert, sibName, nodeName, invNodeName, invSibName, invInsert) {
+function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNodeName, invInsert) {
 	return function(node, parEl, body, state, convTest, lis) {
 		var sibNode, tmpSib;
 
@@ -1163,8 +1163,8 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invNodeName, invSib
 	};
 }
 
-var syncLft = syncDir(nextSib, nextNode, insertBefore, "lftSib", "lftNode", "rgtNode", "rgtSib", insertAfter);
-var syncRgt = syncDir(prevSib, prevNode, insertAfter, "rgtSib", "rgtNode", "lftNode", "lftSib", insertBefore);
+var syncLft = syncDir(nextSib, nextNode, insertBefore, "lftSib", "lftNode", "rgtSib", "rgtNode", insertAfter);
+var syncRgt = syncDir(prevSib, prevNode, insertAfter, "rgtSib", "rgtNode", "lftSib", "lftNode", insertBefore);
 
 function syncChildren(node, donor) {
 	var obody	= donor.body,
