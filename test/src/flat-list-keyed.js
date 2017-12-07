@@ -337,6 +337,22 @@ QUnit.module("Flat List w/keys");
 		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
 	});
 
+	// snabbdom worst case + insert & delete
+	QUnit.test("move first and second-to-last to end", function(assert) {
+	//	["moo", "xxx", "z", "a", 666, "b", "c"] ->
+	//	["xxx", "z", "y", 666, "c", "moo", "b"]
+
+		list.length = 0;
+		list.push("xxx", "z", "y", 666, "c", "moo", "b");
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul id="list1" class="test-output"><li>xxx</li><li>z</li><li>y</li><li>666</li><li>c</li><li>moo</li><li>b</li></ul>';
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 3, createElement: 1, textContent: 1, removeChild: 1 });
+	});
+
 	// TODO: soundness: odd vs even lists
 	// TODO: coverage: test hydrating from right after hitting impasse on left
 	// TODO: coverage: ensure sortDOM is hit
