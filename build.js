@@ -163,7 +163,9 @@ function minify(buildName, start) {
 		'\\x26': '&',
 	};
 
-	compiled = compiled.replace(/\\x3d|\\x3c|\\x3e|\\x26/g, m => chars[m]);
+	compiled = compiled
+		.replace(/window\.\w+\s*=\s*\w+;/gmi, "")
+		.replace(/\\x3d|\\x3c|\\x3e|\\x26/g, m => chars[m]);
 
 	console.log((+new Date - start) + "ms: Closure done (build: " + buildName + ")");
 

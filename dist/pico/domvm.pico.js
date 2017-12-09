@@ -931,6 +931,10 @@ function hydrate(vnode, withEl) {
 	return vnode.el;
 }
 
+// prevent GCC from inlining some large funcs (which negatively affects Chrome's JIT)
+//window.syncChildren = syncChildren;
+window.lisMove = lisMove;
+
 function nextNode(node, body) {
 	return body[node.idx + 1];
 }
@@ -950,7 +954,7 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 	return function(node, parEl, body, state, convTest, lis) {
 		var sibNode, tmpSib;
 
-		if (state[sibName]) {
+		if (state[sibName] != null) {
 			// skip dom elements not created by domvm
 			if ((sibNode = state[sibName]._node) == null) {
 				state[sibName] = advSib(state[sibName]);
@@ -976,38 +980,40 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 			state[sibName] = advSib(state[sibName]);
 		}
 		// head->tail or tail->head
-		else if (sibNode === state[invNodeName] && !lis) {		// lis?
+		else if (!lis && sibNode === state[invNodeName]) {
 			tmpSib = state[sibName];
 			state[sibName] = advSib(tmpSib);
 			invInsert(parEl, tmpSib, state[invSibName]);
 			state[invSibName] = tmpSib;
 		}
 		else {
-			if (lis && state[sibName]) {
-				if (sibNode._lis) {
-					insert(parEl, state[nodeName].el, state[sibName]);
-					state[nodeName] = advNode(state[nodeName], body);
-					return;
-				}
-
-				// find closest tomb
-				var t = binaryFindLarger(sibNode.idx, state.tombs);
-				sibNode._lis = true;
-				tmpSib = nextSib(state[sibName]);
-				insert(parEl, state[sibName], t != null ? body[state.tombs[t]].el : t);
-
-				if (t == null)
-					{ state.tombs.push(sibNode.idx); }
-				else
-					{ state.tombs.splice(t, 0, sibNode.idx); }
-
-				state[sibName] = tmpSib;
-				return;
-			}
+			if (lis && state[sibName] != null)
+				{ return lisMove(advSib, advNode, insert, sibName, nodeName, parEl, body, sibNode, state); }
 
 			return BREAK;
 		}
 	};
+}
+
+function lisMove(advSib, advNode, insert, sibName, nodeName, parEl, body, sibNode, state) {
+	if (sibNode._lis) {
+		insert(parEl, state[nodeName].el, state[sibName]);
+		state[nodeName] = advNode(state[nodeName], body);
+	}
+	else {
+		// find closest tomb
+		var t = binaryFindLarger(sibNode.idx, state.tombs);
+		sibNode._lis = true;
+		var tmpSib = advSib(state[sibName]);
+		insert(parEl, state[sibName], t != null ? body[state.tombs[t]].el : t);
+
+		if (t == null)
+			{ state.tombs.push(sibNode.idx); }
+		else
+			{ state.tombs.splice(t, 0, sibNode.idx); }
+
+		state[sibName] = tmpSib;
+	}
 }
 
 var syncLft = syncDir(nextSib, nextNode, insertBefore, "lftSib", "lftNode", "rgtSib", "rgtNode", insertAfter);
