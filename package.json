@@ -37,6 +37,7 @@
   "devDependencies": {
     "buble": "*",
     "google-closure-compiler-js": "*",
+    "js-beautify": "*",
     "node-watch": "*",
     "rollup": "*",
     "rollup-plugin-buble": "*",
