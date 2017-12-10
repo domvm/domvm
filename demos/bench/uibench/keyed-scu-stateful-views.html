@@ -1,0 +1,161 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="x-ua-compatible" content="ie=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>UIBench (domvm)</title>
+		<link rel="stylesheet" href="https://localvoid.github.io/uibench-base/0.1.0/styles.css">
+		<script src="https://localvoid.github.io/uibench-base/0.1.0/uibench.js"></script>
+		<script src="../../../dist/nano/domvm.nano.min.js"></script>
+	</head>
+	<body>
+		<div id="App"></div>
+		<script>
+			// react-like implementation (sCU, stateful components)
+
+			var el = domvm.defineElement,
+				vw = domvm.defineView;
+
+			const TableCell = {
+				diff(vm, text) {
+					return text;
+				},
+
+				onClick(e, node, vm, text) {
+					console.log('Clicked' + text);
+					return false;
+				},
+
+				render(vm, text) {
+					return el("td.TableCell", {onclick: [vm.view.onClick]}, text);
+				},
+			}
+
+			const TableRow = {
+				diff(vm, item) {
+					return [item];
+				},
+
+				render(vm, item) {
+					return el("tr.TableRow", {class: item.active ? 'active' : '', "data-id": item.id}, [
+						vw(TableCell, '#' + item.id)
+					].concat(item.props.map(i =>
+						vw(TableCell, i)
+					)));
+				},
+			}
+
+			const Table = {
+				diff(vm, state) {
+					return [state];
+				},
+
+				render(vm, state) {
+					return el("table.Table", [
+						el("tbody", {_flags: domvm.KEYED_LIST}, state.items.map(item =>
+							vw(TableRow, item, item.id)
+						))
+					]);
+				}
+			}
+
+			const Main = {
+				diff(vm, state) {
+					return [state];
+				},
+
+				render(vm, state) {
+					return el("div.Main", [
+						state.location === 'table' ? vw(Table, state.table) :
+						state.location === 'anim'  ? vw(Anim, state.anim)   :
+						state.location === 'tree'  ? vw(Tree, state.tree)   : null
+					]);
+				}
+			}
+
+			const AnimBox = {
+				diff(vm, item) {
+					return [item];
+				},
+
+				render(vm, item) {
+					return el("div.AnimBox", {"data-id": item.id, style: {
+						'borderRadius': (item.time % 10).toString() + 'px',
+						'background': 'rgba(0,0,0,' + (0.5 + ((item.time % 10) / 10)).toString() + ')'
+					}});
+				},
+			}
+
+			const Anim = {
+				diff(vm, state) {
+					return [state];
+				},
+
+				render(vm, state) {
+					return el("div.Anim", {_flags: domvm.KEYED_LIST}, state.items.map(item =>
+						vw(AnimBox, item, item.id)
+					));
+				},
+			}
+
+			const TreeLeaf = {
+				diff(vm, data) {
+					return [data];
+				},
+
+				render(vm, data) {
+					return el("li.TreeLeaf", data.id);
+				},
+			}
+
+			const TreeNode = {
+				diff(vm, data) {
+					return [data];
+				},
+
+				render(vm, data) {
+					return el("ul.TreeNode", {_flags: domvm.KEYED_LIST}, data.children.map(node =>
+						vw(node.container ? TreeNode : TreeLeaf, node, node.id)
+					));
+				},
+			}
+
+			const Tree = {
+				diff(vm, state) {
+					return [state];
+				},
+
+				render(vm, state) {
+					return el("div.Tree", [
+						vw(TreeNode, state.root)
+					]);
+				},
+			}
+
+			uibench.init('domvm', '3.2.5');
+
+			document.addEventListener('DOMContentLoaded', function(e) {
+				const container = document.querySelector('#App');
+				var vm = null;
+
+				uibench.run(
+					function(state) {
+						if (vm === null)
+							vm = domvm.createView(Main, state).mount(container);
+						else
+							vm.update(state, true);	// forced sync
+					},
+					function (samples) {
+						vm.unmount();
+
+						for (var s in samples)
+							samples[s].sort((a, b) => a - b);
+
+						container.innerHTML = "<pre>" + JSON.stringify(samples, null, 2) + "</pre>";
+					}
+				);
+			});
+		</script>
+	</body>
+</html>
