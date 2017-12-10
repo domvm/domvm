@@ -259,6 +259,85 @@ QUnit.module("Model replace & vm.diff()");
 		evalOut(assert, vmE.node.el, vmE.html(), expcHtml, callCounts, { insertBefore: 1 });
 	});
 
+	// ensures that _lis is cleared off reused vnodes
+	QUnit.test('Vnode reuse should not screw up LIS reconciler', function(assert) {
+		var vmF = null;
+
+		const ViewF = {
+			render: function(vm, items) {
+				return el("ul", items.map(function(item) {
+					return vw(ViewG, item, item.id);
+				}));
+			}
+		};
+
+		const ViewG = {
+			render: function(vm, item) {
+				return vm.node || el("li", item.text);
+			}
+		};
+
+		var items = [
+			{id: "a", text: "A"},
+			{id: "b", text: "B"},
+			{id: "c", text: "C"},
+			{id: "d", text: "D"},
+			{id: "e", text: "E"},
+		];
+
+		instr.start();
+		vmF = domvm.createView(ViewF, items).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul><li>A</li><li>B</li><li>C</li><li>D</li><li>E</li></ul>';
+		evalOut(assert, vmF.node.el, vmF.html(), expcHtml, callCounts, { createElement: 6, insertBefore: 6, textContent: 5 });
+
+		items = [
+			{id: "b", text: "B"},
+			{id: "c", text: "C"},
+			{id: "e", text: "E"},
+			{id: "a", text: "A"},
+			{id: "d", text: "D"},
+		];
+
+		instr.start();
+		vmF.update(items);
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul><li>B</li><li>C</li><li>E</li><li>A</li><li>D</li></ul>';
+		evalOut(assert, vmF.node.el, vmF.html(), expcHtml, callCounts, { insertBefore: 2 });
+
+		var items = [
+			{id: "a", text: "A"},
+			{id: "b", text: "B"},
+			{id: "c", text: "C"},
+			{id: "d", text: "D"},
+			{id: "e", text: "E"},
+		];
+
+		instr.start();
+		vmF.update(items);
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul><li>A</li><li>B</li><li>C</li><li>D</li><li>E</li></ul>';
+		evalOut(assert, vmF.node.el, vmF.html(), expcHtml, callCounts, { insertBefore: 2 });
+
+		items = [
+			{id: "b", text: "B"},
+			{id: "c", text: "C"},
+			{id: "e", text: "E"},
+			{id: "a", text: "A"},
+			{id: "d", text: "D"},
+		];
+
+		instr.start();
+		vmF.update(items);
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul><li>B</li><li>C</li><li>E</li><li>A</li><li>D</li></ul>';
+		evalOut(assert, vmF.node.el, vmF.html(), expcHtml, callCounts, { insertBefore: 2 });
+	});
+
 	QUnit.skip('diff by object identity', function(assert) {
 		// diff: (vm, model) => model; rather than [model] or {model: model}
 	});

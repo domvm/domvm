@@ -174,6 +174,70 @@ QUnit.module("lazyList");
 		evalOut(assert, vm2.node.el, vm2.html(), expcHtml, callCounts, { nodeValue: 1 });
 	});
 
+	// ensures that _lis is cleared off reused vnodes
+	QUnit.test('Vnode reuse should not screw up LIS reconciler', function(assert) {
+		store.selected = "b";
+		store.items = [
+			{id: "a", text: "A"},
+			{id: "b", text: "B"},
+			{id: "c", text: "C"},
+			{id: "d", text: "D"},
+			{id: "e", text: "E"},
+		];
+
+		instr.start();
+		vm = domvm.createView(View1).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><p><em>A</em></p><p class="selected"><em>B</em></p><p><em>C</em></p><p><em>D</em></p><p><em>E</em></p></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 11, className: 1, insertBefore: 11, textContent: 5 });
+
+		store.items = [
+			{id: "b", text: "B"},
+			{id: "c", text: "C"},
+			{id: "e", text: "E"},
+			{id: "a", text: "A"},
+			{id: "d", text: "D"},
+		];
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><p class="selected"><em>B</em></p><p><em>C</em></p><p><em>E</em></p><p><em>A</em></p><p><em>D</em></p></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
+
+		store.items = [
+			{id: "a", text: "A"},
+			{id: "b", text: "B"},
+			{id: "c", text: "C"},
+			{id: "d", text: "D"},
+			{id: "e", text: "E"},
+		];
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><p><em>A</em></p><p class="selected"><em>B</em></p><p><em>C</em></p><p><em>D</em></p><p><em>E</em></p></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
+
+		store.items = [
+			{id: "b", text: "B"},
+			{id: "c", text: "C"},
+			{id: "e", text: "E"},
+			{id: "a", text: "A"},
+			{id: "d", text: "D"},
+		];
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><p class="selected"><em>B</em></p><p><em>C</em></p><p><em>E</em></p><p><em>A</em></p><p><em>D</em></p></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
+	});
+
 	/*
 	QUnit.test('Full patch', function(assert) {
 	});
