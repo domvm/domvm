@@ -192,6 +192,7 @@ function reParent(vm, vold, newParent, newIdx) {
 		newParent.body[newIdx] = vold;
 		vold.idx = newIdx;
 		vold.parent = newParent;
+		vold._lis = false;
 	}
 	return vm;
 }

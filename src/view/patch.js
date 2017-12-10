@@ -179,6 +179,7 @@ function patchChildren(vnode, donor) {
 					node2 = donor2;
 					node2.parent = vnode;
 					node2.idx = i;
+					node2._lis = false;
 				}
 				// diff returns new diffVals, so generate new vnode & patch
 				else
