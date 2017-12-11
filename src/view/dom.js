@@ -128,7 +128,7 @@ export function insertBefore(parEl, el, refEl) {
 	var node = el._node, inDom = el.parentNode != null;
 
 	// el === refEl is asserted as a no-op insert called to fire hooks
-	var vm = (el === refEl || !inDom) && node.vm;
+	var vm = (el === refEl || !inDom) ? node.vm : null;
 
 	if (vm != null)
 		fireHook(vm.hooks, "willMount", vm, vm.data);

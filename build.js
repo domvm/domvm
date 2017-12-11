@@ -6,6 +6,7 @@ const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
 const zlib = require('zlib');
 const closure = require('google-closure-compiler-js').compile;
+const beautify = require('js-beautify').js_beautify;
 
 function getBuilds(name) {
 	return [
@@ -117,6 +118,9 @@ function compile(buildName) {
 			format: "umd",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
 			sourcemap: true,
 			file: "./dist/" + buildName + "/domvm." + buildName + ".js"
+		}).then(b => {
+			console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
+			minify(buildName, start);
 		});
 
 		/*
@@ -128,10 +132,6 @@ function compile(buildName) {
 			file: "./dist/" + buildName + "/domvm." + buildName + ".es.js"
 		});
 		*/
-
-		console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
-
-		minify(buildName, start);
 	}).catch(function(err) {
 		console.log(err);
 	})
@@ -163,11 +163,16 @@ function minify(buildName, start) {
 		'\\x26': '&',
 	};
 
-	compiled = compiled.replace(/\\x3d|\\x3c|\\x3e|\\x26/g, m => chars[m]);
+	compiled = compiled
+		.replace(/window\.\w+\s*=\s*\w+;/gmi, "")
+		.replace(/\\x3d|\\x3c|\\x3e|\\x26/g, m => chars[m]);
 
 	console.log((+new Date - start) + "ms: Closure done (build: " + buildName + ")");
 
 	fs.writeFileSync(dst, compiled, 'utf8');
+
+	var dstPretty = "dist/" + buildName + "/domvm." + buildName + ".pretty.js";
+	fs.writeFileSync(dstPretty, beautify(compiled, { indent_size: 2 }), 'utf8');
 
 	buildDistTable();
 }

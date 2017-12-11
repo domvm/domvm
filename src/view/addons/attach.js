@@ -5,6 +5,7 @@ import { isStyleProp, isSplProp, isEvProp, isDynProp } from '../utils';
 import { patchEvent } from '../patchEvent';
 import { setAttr } from '../patchAttrs';
 import { LAZY_LIST } from '../initElementNode';
+import { devNotify, DEVMODE } from "./devmode";
 
 export function protoAttach(el) {
 	var vm = this;
@@ -37,7 +38,7 @@ function attach(vnode, withEl) {
 	if ((vnode.flags & LAZY_LIST) === LAZY_LIST)
 		vnode.body.body(vnode);
 
-	if (isArr(vnode.body)) {
+	if (isArr(vnode.body) && vnode.body.length > 0) {
 		var c = withEl.firstChild;
 		var i = 0;
 		var v = vnode.body[i];
@@ -46,6 +47,12 @@ function attach(vnode, withEl) {
 				v = createView(v.view, v.data, v.key, v.opts)._redraw(vnode, i, false).node;
 			else if (v.type === VMODEL)
 				v = v.node || v._redraw(vnode, i, false).node;
+
+			if (_DEVMODE) {
+				if (vnode.tag === "table" && v.tag === "tr") {
+					devNotify("ATTACH_IMPLICIT_TBODY", [vnode, v]);
+				}
+			}
 
 			attach(v, c);
 		} while ((c = c.nextSibling) && (v = vnode.body[++i]))

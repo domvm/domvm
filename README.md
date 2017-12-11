@@ -9,7 +9,7 @@ domvm is a flexible, pure-js view layer for building high performance web applic
 Like jQuery, it'll happily fit into any existing codebase without introducing new tooling or requiring major architectural changes.
 
 - It's zero-dependency and requires no compilation or tooling; one `<script>` tag is all that's needed.
-- It's small: [~5.5k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs ideal vanilla DOM code. [2x faster SSR](/demos/bench/ssr) vs React v16.
+- It's small: [~6k gz](/dist/README.md), fast: [just 15%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts/table.html) slower vs painfully imperative vanilla DOM code. [2x faster SSR](/demos/bench/ssr) vs React v16.
 - Its entire, practical API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
 - It's well-suited for building [simple widgets](http://leeoniya.github.io/domvm/demos/playground/#calendar) and [complex, fault-tolerant applications](http://leeoniya.github.io/domvm/demos/ThreaditJS).
 - Supports down to IE9 with some tiny shims: [Promise](https://github.com/RubenVerborgh/promiscuous), [requestAnimationFrame](https://gist.github.com/paulirish/1579671), [matchesSelector](https://gist.github.com/elijahmanor/6452535).
@@ -202,6 +202,11 @@ el("ul",
     el("li", 3)
 );
 ```
+
+#### JSX
+
+While not all of domvm's features can be accommodated by JSX syntax, it's possible to cover a fairly large subset via a `defineElementSpread` pragma.
+Please refer to demos and examples in the [JSX wiki](https://github.com/leeoniya/domvm/wiki/JSX).
 
 ---
 ### Views
@@ -752,6 +757,12 @@ var html = domvm.createView(View, data).html();
 // then hydrate on the client to bind event handlers, etc.
 var vm = domvm.createView(View, data).attach(document.body);
 ```
+
+Notes:
+
+- `target` must be the DOM element which corresponds to the top-level/root virtual node of the view you're attaching
+- Whitespace in the generated HTML is significant; indented, formatted or pretty-printed markup will *not* attach properly
+- The HTML parsing spec requires that an implicit `<tbody>` DOM node is created if `<tr>`s are nested directly within `<table>`. This causes problems when no corresponding `<tbody>` is defined in the vtree. Therefore, when attaching tables via SSR, it is necessary to explicitly define `<tbody>` vnodes via `el("tbody",...)` and avoid creating `<tr>` children of `<table>` nodes. See [Issue #192](https://github.com/leeoniya/domvm/issues/192#issuecomment-350600764)
 
 ---
 ### Optimizations

@@ -1,5 +1,5 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
-import { isArr, binaryKeySearch } from '../utils';
+import { isArr } from '../utils';
 import { isHydrated } from "./utils";
 import { preProc } from './preProc';
 import { hydrateBody } from './hydrate';
@@ -45,11 +45,13 @@ function findSeqKeyed(n, obody, fromIdx) {
 	return null;
 }
 
+/*
 // list must be a sorted list of vnodes by key
 function findBinKeyed(n, list) {
 	var idx = binaryKeySearch(list, n.key);
 	return idx > -1 ? list[idx] : null;
 }
+*/
 
 // have it handle initial hydrate? !donor?
 // types (and tags if ELEM) are assumed the same, and donor exists
@@ -177,6 +179,7 @@ function patchChildren(vnode, donor) {
 					node2 = donor2;
 					node2.parent = vnode;
 					node2.idx = i;
+					node2._lis = false;
 				}
 				// diff returns new diffVals, so generate new vnode & patch
 				else
@@ -215,8 +218,8 @@ function patchChildren(vnode, donor) {
 			}
 			else if (type2 === VVIEW) {
 				if (donor2 = doFind && find(node2, obody, fromIdx)) {		// update/moveTo
-					var vm = donor2.vm._update(node2.data, vnode, i);		// withDOM
 					foundIdx = donor2.idx;
+					var vm = donor2.vm._update(node2.data, vnode, i);		// withDOM
 				}
 				else
 					var vm = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)

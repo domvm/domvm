@@ -121,7 +121,7 @@ QUnit.module("Flat List w/keys");
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>10</li><li>666</li><li>a</li><li>b</li><li>bar</li><li>baz</li><li>c</li><li>moo</li><li>xxx</li><li>z</li><li>zzz</li></ul>';
-		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 9 });
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 7 });
 	});
 
 	// remove
@@ -288,7 +288,7 @@ QUnit.module("Flat List w/keys");
 		var callCounts = instr.end();
 
 		var expcHtml = '<ul id="list1" class="test-output"><li>b</li><li>moo</li><li>xxx</li><li>z</li><li>a</li><li>c</li><li>666</li></ul>';
-		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 3 });
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
 	});
 
 	QUnit.test("move two disjoint up", function(assert) {
@@ -320,6 +320,80 @@ QUnit.module("Flat List w/keys");
 		var expcHtml = '<ul id="list1" class="test-output"><li>b</li><li>moo</li><li>xxx</li><li>z</li><li>a</li><li>c</li><li>666</li></ul>';
 		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
 	});
+
+	// snabbdom worst case
+	QUnit.test("move first and second-to-last to end", function(assert) {
+	//	["b", "moo", "xxx", "z", "a", "c", 666] ->
+	//	["moo", "xxx", "z", "a", 666, "b", "c"]
+
+		list.length = 0;
+		list.push("moo", "xxx", "z", "a", 666, "b", "c");
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul id="list1" class="test-output"><li>moo</li><li>xxx</li><li>z</li><li>a</li><li>666</li><li>b</li><li>c</li></ul>';
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 2 });
+	});
+
+	// snabbdom worst case + insert & delete
+	QUnit.test("move first and second-to-last to end", function(assert) {
+	//	["moo", "xxx", "z", "a", 666, "b", "c"] ->
+	//	["xxx", "z", "y", 666, "c", "moo", "b"]
+
+		list.length = 0;
+		list.push("xxx", "z", "y", 666, "c", "moo", "b");
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul id="list1" class="test-output"><li>xxx</li><li>z</li><li>y</li><li>666</li><li>c</li><li>moo</li><li>b</li></ul>';
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 3, createElement: 1, textContent: 1, removeChild: 1 });
+	});
+
+	// reverse list
+	QUnit.test("reverse", function(assert) {
+	//	["xxx", "z", "y", 666, "c", "moo", "b"] ->
+	//	["b", "moo", "c", 666, "y", "z", "xxx"]
+
+		list.length = 0;
+		list.push("b", "moo", "c", 666, "y", "z", "xxx");
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<ul id="list1" class="test-output"><li>b</li><li>moo</li><li>c</li><li>666</li><li>y</li><li>z</li><li>xxx</li></ul>';
+		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { insertBefore: 6 });
+	});
+
+/*
+	// mostly benchmark tests https://github.com/localvoid/uibench-base/blob/master/lib/uibench.ts#L302-L322
+
+	// special use case that should trigger worst case scenario for kivi library
+	testCase("tree/[50]/[kivi_worst_case]", tree50, scuClone(
+		treeTransform(treeTransform(treeTransform(tree50, [removeFirst(1)]), [removeLast(1)]), [reverse]))),
+
+	// special use case that should trigger worst case scenario for snabbdom library
+	testCase("tree/[50]/[snabbdom_worst_case]", tree50, scuClone(
+		treeTransform(tree50, [snabbdomWorstCase]))),
+
+	// special use case that should trigger worst case scenario for react library
+	testCase("tree/[50]/[react_worst_case]", tree50, scuClone(
+		treeTransform(treeTransform(treeTransform(tree50,
+			[removeFirst(1)]),
+			[removeLast(1)]),
+			[moveFromEndToStart(1)]))),
+
+	// special use case that should trigger worst case scenario for virtual-dom library
+	testCase("tree/[50]/[virtual_dom_worst_case]", tree50,
+		scuClone(treeTransform(tree50, [moveFromStartToEnd(2)]))),
+
+	// test case with large amount of vnodes to test diff overhead
+		testCase("tree/[10,10,10,2]/no_change", tree10_10_10_2, scuClone(tree10_10_10_2)),
+*/
 
 	// TODO: soundness: odd vs even lists
 	// TODO: coverage: test hydrating from right after hitting impasse on left
