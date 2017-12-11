@@ -2443,7 +2443,7 @@ function attach(vnode, withEl) {
 	if ((vnode.flags & LAZY_LIST) === LAZY_LIST)
 		{ vnode.body.body(vnode); }
 
-	if (isArr(vnode.body)) {
+	if (isArr(vnode.body) && vnode.body.length > 0) {
 		var c = withEl.firstChild;
 		var i = 0;
 		var v = vnode.body[i];
