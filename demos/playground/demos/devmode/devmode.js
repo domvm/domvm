@@ -79,6 +79,17 @@ function View5(vm, data) {
 	}
 }
 
+function View6(vm, data) {
+	return function() {
+		return el("table#table", [
+			el("tr", [
+				el("td", "foo"),
+				el("td", "bar"),
+			])
+		]);
+	}
+}
+
 var vm5 = domvm.createView(View5);
 vm5.redraw();
 
@@ -87,3 +98,6 @@ var vm = domvm.createView(View).mount(document.body);
 var myDiv = document.createElement("div");
 
 document.body.lastChild.appendChild(myDiv);
+
+var vm2 = domvm.createView(View6);
+vm2.attach(document.getElementById("table"));

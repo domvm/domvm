@@ -503,6 +503,10 @@ var DEVMODE = {
 	ALREADY_HYDRATED: function(vm) {
 		return ["A child view failed to mount because it was already hydrated. Make sure not to invoke vm.redraw() or vm.update() on unmounted views.", vm];
 	},
+
+	ATTACH_IMPLICIT_TBODY: function(vnode, vchild) {
+		return ["<table><tr> was detected in the vtree, but the DOM will be <table><tbody><tr> after HTML's implicit parsing. You should create the <tbody> vnode explicitly to avoid SSR/attach() failures.", vnode, vchild];
+	}
 };
 
 function devNotify(key, args) {
@@ -2448,6 +2452,12 @@ function attach(vnode, withEl) {
 				{ v = createView(v.view, v.data, v.key, v.opts)._redraw(vnode, i, false).node; }
 			else if (v.type === VMODEL)
 				{ v = v.node || v._redraw(vnode, i, false).node; }
+
+			{
+				if (vnode.tag === "table" && v.tag === "tr") {
+					devNotify("ATTACH_IMPLICIT_TBODY", [vnode, v]);
+				}
+			}
 
 			attach(v, c);
 		} while ((c = c.nextSibling) && (v = vnode.body[++i]))
