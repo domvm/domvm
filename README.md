@@ -758,6 +758,12 @@ var html = domvm.createView(View, data).html();
 var vm = domvm.createView(View, data).attach(document.body);
 ```
 
+Notes:
+
+- `target` must be the DOM element which corresponds to the top-level/root virtual node of the view you're attaching
+- Whitespace in the generated HTML is significant; indented, formatted or pretty-printed markup will *not* attach properly
+- The HTML parsing spec requires that an implicit `<tbody>` DOM node is created if `<tr>`s are nested directly within `<table>`. This causes problems when no corresponding `<tbody>` is defined in the vtree. Therefore, when attaching tables via SSR, it is necessary to explicitly define `<tbody>` vnodes via `el("tbody",...)` and avoid creating `<tr>` children of `<table>` nodes. See [Issue #192](https://github.com/leeoniya/domvm/issues/192#issuecomment-350600764)
+
 ---
 ### Optimizations
 
