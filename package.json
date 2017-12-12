@@ -10,7 +10,7 @@
   "license": "MIT",
   "homepage": "https://github.com/leeoniya/domvm",
   "author": "Leon Sorokin <leeoniya@gmail.com>",
-  "version": "3.2.5",
+  "version": "3.2.6",
   "main": "./dist/full/domvm.full.min.js",
   "scripts": {
     "watch:pico": "node watch.js pico",
