@@ -307,20 +307,23 @@ QUnit.module("Imperative VMs");
 				vm.redraw(true);
 			}
 
-			return () =>
-				el("div", [
+			return function() {
+				return el("div", [
 					type === 'a' ? iv(a) : iv(b)
 				]);
+			};
 		}
 
 		function ViewA() {
-			return () =>
-				el("div", "a");
+			return function() {
+				return el("div", "a");
+			};
 		}
 
 		function ViewB() {
-			return () =>
-				el("div", "b");
+			return function() {
+				return el("div", "b");
+			};
 		}
 
 		instr.start();

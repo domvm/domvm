@@ -1121,15 +1121,8 @@ function findSeqThorough(n, obody, fromIdx) {		// pre-tested isView?
 	return null;
 }
 
-function findSeqKeyed(n, obody, fromIdx) {
-	for (; fromIdx < obody.length; fromIdx++) {
-		var o = obody[fromIdx];
-
-		if (o.key === n.key)
-			{ return o; }
-	}
-
-	return null;
+function findHashKeyed(n, obody, fromIdx) {
+	return obody[obody._keys[n.key]];
 }
 
 /*
@@ -1217,10 +1210,17 @@ function patchChildren(vnode, donor) {
 		domSync		= !isFixed && vnode.type === ELEMENT,
 		doFind		= true,
 		find		= (
-			isKeyed ? findSeqKeyed :				// keyed lists/lazyLists (falls back to findBinKeyed when > SEQ_FAILS_MAX)
+			isKeyed ? findHashKeyed :				// keyed lists/lazyLists
 			isFixed || isLazy ? takeSeqIndex :		// unkeyed lazyLists and FIXED_BODY
 			findSeqThorough							// more complex stuff
 		);
+
+	if (isKeyed) {
+		var keys = {};
+		for (var i = 0; i < obody.length; i++)
+			{ keys[obody[i].key] = i; }
+		obody._keys = keys;
+	}
 
 	if (domSync && nlen === 0) {
 		clearChildren(donor);
@@ -1322,7 +1322,7 @@ function patchChildren(vnode, donor) {
 		}
 
 		// found donor & during a sequential search ...at search head
-		if (donor2 != null) {
+		if (!isKeyed && donor2 != null) {
 			if (foundIdx === fromIdx) {
 				// advance head
 				fromIdx++;
