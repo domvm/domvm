@@ -33,6 +33,11 @@
     "build:dev": "node build.js dev",
     "build:spec": "node build.js spec"
   },
+  "nyc": {
+    "require": [
+      "./test/init-spec.js"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/leeoniya/domvm.git"

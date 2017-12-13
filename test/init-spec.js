@@ -19,7 +19,7 @@ assert.propEqual = assert.expect = function() {};
 
 assert.async = function() { return function() {} };
 
-global.domvm = require('../../dist/spec/domvm.spec.js');
+global.domvm = require('../dist/spec/domvm.spec.js');
 
 domvm.DEVMODE.syncRedraw = true
 domvm.DEVMODE.mutations = false
