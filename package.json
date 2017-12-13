@@ -44,18 +44,20 @@
   },
   "devDependencies": {
     "buble": "*",
+    "chai": "^4.1.2",
     "google-closure-compiler-js": "*",
     "js-beautify": "*",
+    "jsdom": "^11.5.1",
+    "mocha": "^4.0.1",
     "node-watch": "*",
+    "nyc": "^11.4.0",
     "rollup": "*",
     "rollup-plugin-buble": "*",
     "rollup-plugin-replace": "*",
-    "chai": "^4.1.2",
-    "jsdom": "^11.5.1",
-    "mocha": "^4.0.1",
-    "nyc": "^11.4.0"
+    "undom": "^0.3.3"
   },
   "bugs": {
     "url": "https://github.com/leeoniya/domvm/issues"
-  }
+  },
+  "dependencies": {}
 }

@@ -1,17 +1,33 @@
 'use strict';
 
-const jsdom = require("jsdom");
-const { JSDOM } = jsdom;
+require('undom/register');
 
-const DEFAULT_HTML = '<!doctype html><html><body></body></html>';
+global.location = {href: {replace: function() {}}};
+global.HTMLElement = Element;
 
-global.window = (new JSDOM(DEFAULT_HTML)).window;
-global.document = window.document;
-global.navigator = window.navigator;
+function findById(par, id) {
+	for (var i = 0; i < par.childNodes.length; i++) {
+		var n = par.childNodes[i];
 
-global.Element = window.Element;
-global.HTMLElement = window.HTMLElement;
-global.MouseEvent = window.MouseEvent;
+		if (n.id == id)
+			return n;
+		/*
+		for (var j = 0; j < n.attributes.length; j++) {
+			if (n.attributes[j].name == "id" && n.attributes[j].value == id)
+				return n;
+		}
+		*/
+		var subFound = findById(n, id);
+
+		if (subFound)
+			return subFound;
+	}
+	return null;
+}
+
+document.getElementById = function(id) {
+	findById(document.body, id);
+};
 
 global.assert = require('chai').assert;
 
