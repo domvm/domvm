@@ -1,6 +1,4 @@
-QUnit.module("Model replace & vm.diff()");
-
-(function() {
+QUnit.module("Model replace & vm.diff()", function() {
 	function ViewA() {
 		return function(vm, model) {
 			return el("#viewA", [
@@ -358,5 +356,4 @@ QUnit.module("Model replace & vm.diff()");
 		}
 	}
 */
-
-})();
+});

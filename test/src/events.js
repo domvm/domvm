@@ -1,13 +1,11 @@
-QUnit.module("Events");
+QUnit.module("Events", function() {
+	if (Element && !Element.prototype.matches) {
+		var proto = Element.prototype;
+		proto.matches = proto.matchesSelector ||
+			proto.mozMatchesSelector || proto.msMatchesSelector ||
+			proto.oMatchesSelector || proto.webkitMatchesSelector;
+	}
 
-if (Element && !Element.prototype.matches) {
-    var proto = Element.prototype;
-    proto.matches = proto.matchesSelector ||
-        proto.mozMatchesSelector || proto.msMatchesSelector ||
-        proto.oMatchesSelector || proto.webkitMatchesSelector;
-}
-
-(function() {
 	var isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
 
 	var eventType = isIE11 ? Event : MouseEvent;
@@ -284,4 +282,4 @@ if (Element && !Element.prototype.matches) {
 	});
 
 //	Object.defineProperty(HTMLElement.prototype, "onclick", onclick);
-})();
+});

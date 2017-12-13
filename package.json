@@ -13,6 +13,7 @@
   "version": "3.0.0-dev",
   "main": "./dist/full/domvm.full.min.js",
   "scripts": {
+    "test": "nyc mocha test/src",
     "watch:pico": "node watch.js pico",
     "watch:nano": "node watch.js nano",
     "watch:micro": "node watch.js micro",
@@ -21,6 +22,7 @@
     "watch:server": "node watch.js server",
     "watch:full": "node watch.js full",
     "watch:dev": "node watch.js dev",
+    "watch:spec": "node watch.js spec",
     "build:pico": "node build.js pico",
     "build:nano": "node build.js nano",
     "build:micro": "node build.js micro",
@@ -28,7 +30,8 @@
     "build:client": "node build.js client",
     "build:server": "node build.js server",
     "build:full": "node build.js full",
-    "build:dev": "node build.js dev"
+    "build:dev": "node build.js dev",
+    "build:spec": "node build.js spec"
   },
   "repository": {
     "type": "git",
@@ -41,7 +44,11 @@
     "node-watch": "*",
     "rollup": "*",
     "rollup-plugin-buble": "*",
-    "rollup-plugin-replace": "*"
+    "rollup-plugin-replace": "*",
+    "chai": "^4.1.2",
+    "jsdom": "^11.5.1",
+    "mocha": "^4.0.1",
+    "nyc": "^11.4.0"
   },
   "bugs": {
     "url": "https://github.com/leeoniya/domvm/issues"

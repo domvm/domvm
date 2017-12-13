@@ -1,11 +1,11 @@
-import { emptyObj, longestIncreasingSubsequence, binaryFindLarger } from '../utils';
+import { win, emptyObj, longestIncreasingSubsequence, binaryFindLarger } from '../utils';
 import { hydrate } from './hydrate';
 import { prevSib, nextSib, insertBefore, insertAfter, removeChild } from './dom';
 import { devNotify } from "./addons/devmode";
 
 // prevent GCC from inlining some large funcs (which negatively affects Chrome's JIT)
-//window.syncChildren = syncChildren;
-window.lisMove = lisMove;
+//win._noinline_syncChildren = syncChildren;
+win._noinline_lisMove = lisMove;
 
 function nextNode(node, body) {
 	return body[node.idx + 1];

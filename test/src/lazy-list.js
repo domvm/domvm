@@ -1,6 +1,4 @@
-QUnit.module("lazyList");
-
-(function() {
+QUnit.module("lazyList", function() {
 	var el = domvm.defineElement, vm;
 
 	var store = {
@@ -242,4 +240,4 @@ QUnit.module("lazyList");
 	QUnit.test('Full patch', function(assert) {
 	});
 	*/
-})();
+});

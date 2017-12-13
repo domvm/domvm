@@ -1,6 +1,4 @@
-QUnit.module("Other mods");
-
-(function() {
+QUnit.module("Other mods", function() {
 	var tpl;
 
 	function View(vm) {
@@ -285,4 +283,4 @@ QUnit.module("Other mods");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, removeChild: 1, textContent: 1, insertBefore: 1 });
 	});
 */
-})();
+});

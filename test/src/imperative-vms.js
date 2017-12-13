@@ -1,6 +1,4 @@
-QUnit.module("Imperative VMs");
-
-(function() {
+QUnit.module("Imperative VMs", function() {
 	var modelA = {val: "A"},
 		modelB = {val: "B"},
 		modelC = {val: "C"},
@@ -342,4 +340,4 @@ QUnit.module("Imperative VMs");
 		var expcHtml = '<div><div>b</div></div>';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, removeChild: 1, textContent: 1 });
 	});
-})();
+});

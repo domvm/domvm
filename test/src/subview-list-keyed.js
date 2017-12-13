@@ -1,6 +1,4 @@
-QUnit.module("Subview List w/keys");
-
-(function() {
+QUnit.module("Subview List w/keys", function() {
 	var list = ["a","b","c"];
 
 	function ListViewKeyed(vm, list) {
@@ -172,4 +170,4 @@ QUnit.module("Subview List w/keys");
 		var expcHtml = '<ul id=\"list2\" class=\"test-output\"><li>b</li><li>bar</li><li>baz</li><li>fff</li><li>foo</li><li>moo</li><li>xxx</li></ul>';
 		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { removeChild: 2 });
 	});
-})();
+});

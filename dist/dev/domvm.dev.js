@@ -26,8 +26,12 @@ var VVIEW		= 4;
 var VMODEL		= 5;
 
 var ENV_DOM = typeof window !== "undefined";
-var win = ENV_DOM ? window : {};
-var rAF = win.requestAnimationFrame;
+
+var win$1 = ENV_DOM ? window : {};
+var doc = ENV_DOM ? document : {};
+
+
+var rAF = win$1.requestAnimationFrame;
 
 var emptyObj = {};
 
@@ -796,8 +800,6 @@ function drainDidHooks(vm) {
 	}
 }
 
-var doc = ENV_DOM ? document : null;
-
 function closestVNode(el) {
 	while (el._node == null)
 		{ el = el.parentNode; }
@@ -1188,8 +1190,8 @@ function hydrate(vnode, withEl) {
 }
 
 // prevent GCC from inlining some large funcs (which negatively affects Chrome's JIT)
-//window.syncChildren = syncChildren;
-window.lisMove = lisMove;
+//win._noinline_syncChildren = syncChildren;
+win$1._noinline_lisMove = lisMove;
 
 function nextNode(node, body) {
 	return body[node.idx + 1];
@@ -1665,7 +1667,7 @@ function DOMInstr(withTime) {
 
 	function ctxName(opName) {
 		var opPath = opName.split(".");
-		var o = window;
+		var o = win;
 		while (opPath.length > 1)
 			{ o = o[opPath.shift()]; }
 
@@ -2045,7 +2047,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		if (isRedrawRoot && vm.node && vm.node.el && !vm.node.el.parentNode)
 			{ devNotify("UNMOUNTED_REDRAW", [vm]); }
 
-		if (isRedrawRoot && DEVMODE.mutations && isMounted)
+		if (!false && isRedrawRoot && DEVMODE.mutations && isMounted)
 			{ instr.start(); }
 	}
 
@@ -2123,7 +2125,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		{ drainDidHooks(vm); }
 
 	{
-		if (isRedrawRoot && DEVMODE.mutations && isMounted)
+		if (!false && isRedrawRoot && DEVMODE.mutations && isMounted)
 			{ console.log(instr.end()); }
 	}
 

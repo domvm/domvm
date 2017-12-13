@@ -1,6 +1,4 @@
-QUnit.module("flags/DEEP_REMOVE");
-
-(function() {
+QUnit.module("flags/DEEP_REMOVE", function() {
 	QUnit.test('Off by default', function(assert) {
 		var rem = false;
 
@@ -185,4 +183,4 @@ QUnit.module("flags/DEEP_REMOVE");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 4 }, ops, { willUnmounted: 1 });
 	});
 
-})();
+});

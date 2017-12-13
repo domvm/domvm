@@ -1,6 +1,4 @@
-QUnit.module("Attrs/props");
-
-(function() {
+QUnit.module("Attrs/props", function() {
 	function View() {
 		return function() { return tpl; }
 	}
@@ -244,4 +242,4 @@ QUnit.module("Attrs/props");
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeAttribute: 1 });
 		assert.equal(vm.node.el.onclick, null, "onclick unset");
 	});
-})();
+});

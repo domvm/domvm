@@ -1,6 +1,4 @@
-QUnit.module("flags/DEEP_REMOVE");
-
-(function() {
+QUnit.module("flags/DEEP_REMOVE", function() {
 	var hooks = {
 		willUnmount: function(vm) {
 			console.log("willUnmount", vm);
@@ -66,4 +64,4 @@ QUnit.module("flags/DEEP_REMOVE");
 			console.log(instr.end());
 		}, 1000)
 	});
-})();
+});

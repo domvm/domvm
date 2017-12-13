@@ -1,8 +1,6 @@
-import { ENV_DOM, isArr, isProm, curry } from '../utils';
+import { doc, isArr, isProm, curry } from '../utils';
 import { fireHook } from './hooks';
 import { FIXED_BODY, DEEP_REMOVE } from './initElementNode';
-
-const doc = ENV_DOM ? document : null;
 
 export function closestVNode(el) {
 	while (el._node == null)

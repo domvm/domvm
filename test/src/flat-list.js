@@ -1,6 +1,4 @@
-QUnit.module("Flat List");
-
-(function() {
+QUnit.module("Flat List", function() {
 	var list = ["a","b","c"];
 
 	function ListView(vm) {
@@ -154,4 +152,4 @@ QUnit.module("Flat List");
 		var expcHtml = '<ul id="list0" class="test-output"><li>666</li><li>a</li><li>b</li><li>c</li><li>moo</li><li>xxx</li><li>z</li></ul>';
 		evalOut(assert, listEl, vm.html(), expcHtml, callCounts, { removeChild: 2, nodeValue: 4 });
 	});
-})();
+});

@@ -1,6 +1,4 @@
-QUnit.module("Flat List w/keys");
-
-(function() {
+QUnit.module("Flat List w/keys", function() {
 	var list = ["a","b","c"];
 
 	function ListViewKeyed(vm) {
@@ -398,4 +396,4 @@ QUnit.module("Flat List w/keys");
 	// TODO: soundness: odd vs even lists
 	// TODO: coverage: test hydrating from right after hitting impasse on left
 	// TODO: coverage: ensure sortDOM is hit
-})();
+});

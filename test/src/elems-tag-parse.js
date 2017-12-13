@@ -1,6 +1,4 @@
-QUnit.module("Elems & tag parsing");
-
-(function() {
+QUnit.module("Elems & tag parsing", function() {
 	QUnit.test('Empty elem: ["div"]', function(assert) {
 		var tpl = el("div");
 
@@ -133,4 +131,4 @@ QUnit.module("Elems & tag parsing");
 		var expcHtml = '<button type="submit" disabled="">Submit</button>';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, setAttribute: 2, textContent: 1 });
 	});
-})();
+});
