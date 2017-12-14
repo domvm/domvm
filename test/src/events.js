@@ -122,13 +122,13 @@ QUnit.module("Events", function() {
 		assert.equal(counts.set, 1);
 		assert.equal(counts.unset, 0);
 
-		// return false -> preventDefault + stopPropagation
+/*		// return false -> preventDefault + stopPropagation
 		// todo: spy on Event.prototype.stopPropagation
 		doClick(vm.node.body[0].el);
 		// IE11 has problems setting defaultPrevented on custom events
 		if (!isIE11)
 			assert.equal(counts.args2[0].defaultPrevented, true);
-
+*/
 		reset();
 
 		// remove
@@ -188,6 +188,8 @@ QUnit.module("Events", function() {
 		assert.equal(counts.args2[0], 3);
 		assert.equal(counts.args2[1], 4);
 		assert.ok(counts.args2[2] instanceof Event);
+		// IE11 has problems setting defaultPrevented on custom events
+		!isIE11 && assert.equal(counts.args2[2].defaultPrevented, true);
 		assert.equal(counts.args2[3], vm.node.body[0]);
 		assert.equal(counts.args2[4], vm);
 		assert.equal(counts.args2[5], vm.data);

@@ -47,7 +47,6 @@
     "chai": "^4.1.2",
     "google-closure-compiler-js": "*",
     "js-beautify": "*",
-    "jsdom": "^11.5.1",
     "mocha": "^4.0.1",
     "node-watch": "*",
     "nyc": "^11.4.0",
