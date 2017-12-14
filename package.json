@@ -43,16 +43,16 @@
     "url": "https://github.com/leeoniya/domvm.git"
   },
   "devDependencies": {
-    "buble": "*",
+    "buble": "^0.18.0",
     "chai": "^4.1.2",
-    "google-closure-compiler-js": "*",
-    "js-beautify": "*",
+    "google-closure-compiler-js": "^20171203.0.0",
+    "js-beautify": "^1.7.5",
     "mocha": "^4.0.1",
-    "node-watch": "*",
+    "node-watch": "^0.5.5",
     "nyc": "^11.4.1",
-    "rollup": "*",
-    "rollup-plugin-buble": "*",
-    "rollup-plugin-replace": "*",
+    "rollup": "^0.52.1",
+    "rollup-plugin-buble": "^0.18.0",
+    "rollup-plugin-replace": "^2.0.0",
     "undom": "^0.3.3"
   },
   "bugs": {
