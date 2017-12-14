@@ -13,7 +13,8 @@
   "version": "3.0.0-dev",
   "main": "./dist/full/domvm.full.min.js",
   "scripts": {
-    "test": "nyc mocha test/src",
+    "covtest": "nyc mocha test/src/*.js",
+    "covreport": "nyc report --reporter=text-summary --reporter=text > ./test/coverage.txt",
     "watch:pico": "node watch.js pico",
     "watch:nano": "node watch.js nano",
     "watch:micro": "node watch.js micro",
