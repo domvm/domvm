@@ -11,7 +11,7 @@ import { DOMInstr } from "./addons/dominstr";
 
 var instr = null;
 
-if (_DEVMODE) {
+if (_DEVMODE && !_SPEC) {
 	if (DEVMODE.mutations) {
 		instr = new DOMInstr(true);
 	}
@@ -207,7 +207,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		if (isRedrawRoot && vm.node && vm.node.el && !vm.node.el.parentNode)
 			devNotify("UNMOUNTED_REDRAW", [vm]);
 
-		if (isRedrawRoot && DEVMODE.mutations && isMounted)
+		if (!_SPEC && isRedrawRoot && DEVMODE.mutations && isMounted)
 			instr.start();
 	}
 
@@ -285,7 +285,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		drainDidHooks(vm);
 
 	if (_DEVMODE) {
-		if (isRedrawRoot && DEVMODE.mutations && isMounted)
+		if (!_SPEC && isRedrawRoot && DEVMODE.mutations && isMounted)
 			console.log(instr.end());
 	}
 

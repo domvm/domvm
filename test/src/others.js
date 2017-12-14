@@ -1,6 +1,4 @@
-QUnit.module("Various Others");
-
-(function() {
+QUnit.module("Various Others", function() {
 	var imperView = null;
 
 	function SomeView(vm) {
@@ -354,4 +352,4 @@ QUnit.module("Various Others");
 		assert.equal(vmB.root(), vmA);
 		assert.equal(vmA.root(), vmA);
 	});
-})();
+});

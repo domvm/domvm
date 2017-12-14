@@ -1,6 +1,4 @@
-QUnit.module("Subview Branch Consistency");
-
-(function() {
+QUnit.module("Subview Branch Consistency", function() {
 	function Parent() {
 		this.kids = [];
 
@@ -84,4 +82,4 @@ QUnit.module("Subview Branch Consistency");
 	});
 
 	// TODO: also with passed-in data
-})();
+});

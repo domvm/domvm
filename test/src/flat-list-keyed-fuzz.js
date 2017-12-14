@@ -1,6 +1,4 @@
-QUnit.module("Flat List w/keys (fuzz)");
-
-(function() {
+QUnit.module("Flat List w/keys (fuzz)", function() {
 	// https://stackoverflow.com/a/12646864/973988
 	function shuffleArray(array) {
 		for (let i = array.length - 1; i > 0; i--) {
@@ -134,7 +132,7 @@ QUnit.module("Flat List w/keys (fuzz)");
 			var callCounts = instr.end();
 
 			var expcHtml = vm.html();
-			evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, expCounts);
+			evalOut(assert, vm.node.el, expcHtml, expcHtml, callCounts, expCounts);
 		});
 	}
 
@@ -150,4 +148,4 @@ QUnit.module("Flat List w/keys (fuzz)");
 		while (tests--)
 			fuzzTest(c.delMax, c.movMax, c.insMax);
 	});
-})();
+});

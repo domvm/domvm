@@ -1,12 +1,10 @@
-QUnit.module("Hyperscript");
+QUnit.module("Hyperscript", function() {
+	var h  = domvm.h,
+		cm = domvm.defineComment,
+		tx = domvm.defineText;
+	//	es = defineElementSpread,
+	//	sv = defineSvgElement,
 
-var h  = domvm.h,
-	cm = domvm.defineComment,
-	tx = domvm.defineText;
-//	es = defineElementSpread,
-//	sv = defineSvgElement,
-
-(function() {
 	function ViewA() {
 		var viewB = domvm.createView(ViewB, "hello");
 
@@ -38,4 +36,4 @@ var h  = domvm.h,
 		var expcHtml = '<div id="foo" class="bar baz"><strong>test</strong><a href="#">x</a>moo<strong>hello</strong>cow<!--comment-->9</div>';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 4, createTextNode: 3, createComment: 1, textContent: 3, id: 1, className: 1, setAttribute: 1, insertBefore: 8 });
 	});
-})();
+});

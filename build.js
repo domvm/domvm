@@ -57,7 +57,13 @@ function getBuilds(name) {
 			contents: "`full`<br> + warnings<br>",
 			descr: "use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior",
 			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
-		}
+		},
+		{
+			build: "spec",
+			contents: "`dev`<br> - `DOMInstr`<br>",
+			descr: "for tests & code coverage",
+			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
+		},
 	].filter(b => name != null ? b.build === name : true);
 }
 
@@ -84,7 +90,8 @@ function compile(buildName) {
 		input: buildFile,
 		plugins: [
 			replace({
-				_DEVMODE:		buildName === "dev",
+				_DEVMODE:		buildName === "dev" || buildName === "spec",
+				_SPEC:			buildName === "spec",
 				FEAT_CSSTAG:	feats.indexOf("CSSTAG") != -1,
 				FEAT_AUTOPX:	feats.indexOf("AUTOPX") != -1,
 				FEAT_EMIT:		feats.indexOf("EMIT") != -1,
@@ -164,7 +171,7 @@ function minify(buildName, start) {
 	};
 
 	compiled = compiled
-		.replace(/window\.\w+\s*=\s*\w+;/gmi, "")
+		.replace(/\w+\._noinline_\w+\s*=\s*\w+;/gmi, "")
 		.replace(/\\x3d|\\x3c|\\x3e|\\x26/g, m => chars[m]);
 
 	console.log((+new Date - start) + "ms: Closure done (build: " + buildName + ")");

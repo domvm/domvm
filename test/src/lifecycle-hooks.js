@@ -1,8 +1,6 @@
-QUnit.module("Lifecycle hooks");
+QUnit.module("Lifecycle hooks", function() {
+	// willRecycle, willReinsert
 
-// willRecycle, willReinsert
-
-(function() {
 	var vm;
 
 	QUnit.test('will/did: mount/insert/remove/unmount (self)', function(assert) {
@@ -147,4 +145,4 @@ QUnit.module("Lifecycle hooks");
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { nodeValue: 1 });
 	});
-})();
+});

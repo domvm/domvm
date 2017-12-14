@@ -1,6 +1,4 @@
-QUnit.module("Non-VNodes");
-
-(function() {
+QUnit.module("Non-VNodes", function() {
 	function ViewAny(vm) {
 		return function() { return tpl; };
 	}
@@ -118,4 +116,4 @@ QUnit.module("Non-VNodes");
 
 		evalOut(assert, vm2.node.el, vm2.html(), expcHtml, callCounts, { createElement: 2, createTextNode: 2, insertBefore: 4, textContent: 1 });
 	});
-})();
+});

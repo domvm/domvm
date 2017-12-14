@@ -1,6 +1,4 @@
-QUnit.module("refs & didRedraw");
-
-(function() {
+QUnit.module("refs & didRedraw", function() {
 	QUnit.test('didRedraw is called on self', function(assert) {
 		assert.expect(2);
 
@@ -90,4 +88,4 @@ QUnit.module("refs & didRedraw");
 
 		assert.equal(vm.refs.a.b.c, vm.node);
 	});
-})();
+});

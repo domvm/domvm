@@ -1,16 +1,12 @@
-QUnit.module("Events");
+QUnit.module("Events", function() {
+	if (Element && !Element.prototype.matches) {
+		var proto = Element.prototype;
+		proto.matches = proto.matchesSelector ||
+			proto.mozMatchesSelector || proto.msMatchesSelector ||
+			proto.oMatchesSelector || proto.webkitMatchesSelector;
+	}
 
-if (Element && !Element.prototype.matches) {
-    var proto = Element.prototype;
-    proto.matches = proto.matchesSelector ||
-        proto.mozMatchesSelector || proto.msMatchesSelector ||
-        proto.oMatchesSelector || proto.webkitMatchesSelector;
-}
-
-(function() {
 	var isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
-
-	var eventType = isIE11 ? Event : MouseEvent;
 
 	function doClick(targ) {
 		if (isIE11) {
@@ -106,7 +102,7 @@ if (Element && !Element.prototype.matches) {
 		// clicked args
 		doClick(vm.node.body[0].el);
 		assert.equal(counts.args1.length, 1);
-		assert.ok(counts.args1[0] instanceof eventType);
+		assert.ok(counts.args1[0] instanceof Event);
 
 		reset();
 
@@ -126,13 +122,13 @@ if (Element && !Element.prototype.matches) {
 		assert.equal(counts.set, 1);
 		assert.equal(counts.unset, 0);
 
-		// return false -> preventDefault + stopPropagation
+/*		// return false -> preventDefault + stopPropagation
 		// todo: spy on Event.prototype.stopPropagation
 		doClick(vm.node.body[0].el);
 		// IE11 has problems setting defaultPrevented on custom events
 		if (!isIE11)
 			assert.equal(counts.args2[0].defaultPrevented, true);
-
+*/
 		reset();
 
 		// remove
@@ -159,19 +155,19 @@ if (Element && !Element.prototype.matches) {
 		assert.equal(counts.args1.length, 6);
 		assert.equal(counts.args1[0], 1);
 		assert.equal(counts.args1[1], 2);
-		assert.ok(counts.args1[2] instanceof eventType);
+		assert.ok(counts.args1[2] instanceof Event);
 		assert.equal(counts.args1[3], vm.node.body[0]);
 		assert.equal(counts.args1[4], vm);
 		assert.equal(counts.args1[5], vm.data);
 
 		// global & vm-level onevent args
-		assert.ok(counts.globalOnArgs[0] instanceof eventType);
+		assert.ok(counts.globalOnArgs[0] instanceof Event);
 		assert.equal(counts.globalOnArgs[1], vm.node.body[0]);
 		assert.equal(counts.globalOnArgs[2], vm);
 		assert.equal(counts.globalOnArgs[3], vm.data);
 		assert.deepEqual(counts.globalOnArgs[4], [1,2]);
 
-		assert.ok(counts.vmOnArgs[0] instanceof eventType);
+		assert.ok(counts.vmOnArgs[0] instanceof Event);
 		assert.equal(counts.vmOnArgs[1], vm.node.body[0]);
 		assert.equal(counts.vmOnArgs[2], vm);
 		assert.equal(counts.vmOnArgs[3], vm.data);
@@ -191,7 +187,9 @@ if (Element && !Element.prototype.matches) {
 		assert.equal(counts.args2.length, 6);
 		assert.equal(counts.args2[0], 3);
 		assert.equal(counts.args2[1], 4);
-		assert.ok(counts.args2[2] instanceof eventType);
+		assert.ok(counts.args2[2] instanceof Event);
+		// IE11 has problems setting defaultPrevented on custom events
+		!isIE11 && assert.equal(counts.args2[2].defaultPrevented, true);
 		assert.equal(counts.args2[3], vm.node.body[0]);
 		assert.equal(counts.args2[4], vm);
 		assert.equal(counts.args2[5], vm.data);
@@ -232,7 +230,7 @@ if (Element && !Element.prototype.matches) {
 		doClick(vm.node.body[0].el);
 		assert.equal(counts.clicks2, 2, "runs all matched delegs, not just first or most specific");
 		assert.equal(counts.args2.length, 4);
-		assert.ok(counts.args2[0] instanceof eventType);
+		assert.ok(counts.args2[0] instanceof Event);
 		assert.equal(counts.args2[1], vm.node.body[0]);
 		assert.equal(counts.args2[2], vm);
 		assert.equal(counts.args2[3], vm.data);
@@ -267,7 +265,7 @@ if (Element && !Element.prototype.matches) {
 		assert.equal(counts.args1.length, 6);
 		assert.equal(counts.args1[0], 1);
 		assert.equal(counts.args1[1], 2);
-		assert.ok(counts.args1[2] instanceof eventType);
+		assert.ok(counts.args1[2] instanceof Event);
 		assert.equal(counts.args1[3], vm.node.body[0]);
 		assert.equal(counts.args1[4], vm);
 		assert.equal(counts.args1[5], vm.data);
@@ -275,7 +273,7 @@ if (Element && !Element.prototype.matches) {
 		assert.equal(counts.args2.length, 6);
 		assert.equal(counts.args2[0], 3);
 		assert.equal(counts.args2[1], 4);
-		assert.ok(counts.args2[2] instanceof eventType);
+		assert.ok(counts.args2[2] instanceof Event);
 		assert.equal(counts.args2[3], vm.node.body[0]);
 		assert.equal(counts.args2[4], vm);
 		assert.equal(counts.args2[5], vm.data);
@@ -284,4 +282,4 @@ if (Element && !Element.prototype.matches) {
 	});
 
 //	Object.defineProperty(HTMLElement.prototype, "onclick", onclick);
-})();
+});

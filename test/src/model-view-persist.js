@@ -1,6 +1,4 @@
-QUnit.module("Model-view persistence, vm init, DOM reuse");
-
-(function() {
+QUnit.module("Model-view persistence, vm init, DOM reuse", function() {
 	var dataA = {foo: "foo", bar: "bar"},
 		dataB = {foo: "xxx", bar: "yyy"},
 		vmA = null;
@@ -88,4 +86,4 @@ QUnit.module("Model-view persistence, vm init, DOM reuse");
 
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { });
 	});
-})();
+});

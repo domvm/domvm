@@ -1,6 +1,4 @@
-QUnit.module("vnode.patch()");
-
-(function() {
+QUnit.module("vnode.patch()", function() {
 	function getTpl(marg, klass, body) {
 		return el("p.moo", {class: klass, style: {margin: marg}}, body);
 	}
@@ -45,4 +43,4 @@ QUnit.module("vnode.patch()");
 
 //		console.log(vm.node.el.firstChild._node);
 	});
-})();
+});

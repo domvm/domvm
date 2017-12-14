@@ -13,6 +13,8 @@
   "version": "3.2.6",
   "main": "./dist/full/domvm.full.min.js",
   "scripts": {
+    "covtest": "nyc mocha test/src/*.js",
+    "covreport": "nyc report --reporter=text-summary --reporter=text > ./test/coverage.txt",
     "watch:pico": "node watch.js pico",
     "watch:nano": "node watch.js nano",
     "watch:micro": "node watch.js micro",
@@ -21,6 +23,7 @@
     "watch:server": "node watch.js server",
     "watch:full": "node watch.js full",
     "watch:dev": "node watch.js dev",
+    "watch:spec": "node watch.js spec",
     "build:pico": "node build.js pico",
     "build:nano": "node build.js nano",
     "build:micro": "node build.js micro",
@@ -28,22 +31,33 @@
     "build:client": "node build.js client",
     "build:server": "node build.js server",
     "build:full": "node build.js full",
-    "build:dev": "node build.js dev"
+    "build:dev": "node build.js dev",
+    "build:spec": "node build.js spec"
+  },
+  "nyc": {
+    "require": [
+      "./test/init-spec.js"
+    ]
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/leeoniya/domvm.git"
   },
   "devDependencies": {
-    "buble": "*",
-    "google-closure-compiler-js": "*",
-    "js-beautify": "*",
-    "node-watch": "*",
-    "rollup": "*",
-    "rollup-plugin-buble": "*",
-    "rollup-plugin-replace": "*"
+    "buble": "^0.18.0",
+    "chai": "^4.1.2",
+    "google-closure-compiler-js": "^20171203.0.0",
+    "js-beautify": "^1.7.5",
+    "mocha": "^4.0.1",
+    "node-watch": "^0.5.5",
+    "nyc": "^11.4.1",
+    "rollup": "^0.52.1",
+    "rollup-plugin-buble": "^0.18.0",
+    "rollup-plugin-replace": "^2.0.0",
+    "undom": "^0.3.3"
   },
   "bugs": {
     "url": "https://github.com/leeoniya/domvm/issues"
-  }
+  },
+  "dependencies": {}
 }

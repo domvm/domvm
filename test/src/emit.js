@@ -1,6 +1,4 @@
-QUnit.module("emit()");
-
-(function() {
+QUnit.module("emit()", function() {
 	var data;
 
 	function reset() {
@@ -156,4 +154,4 @@ QUnit.module("emit()");
 
 		vmY.emit("testEv", "arg1", "arg2");
 	});
-})();
+});

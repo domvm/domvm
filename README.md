@@ -41,6 +41,7 @@ domvm.createView(HelloView, data).mount(document.body);
 - [What domvm Is Not](#what-domvm-is-not)
 - [Builds](#builds)
 - [Changelog](#changelog)
+- [Tests](#tests)
 - [Installation](#usage)
 - [DEVMODE](#devmode)
 - [Templates](#templates)
@@ -86,6 +87,13 @@ domvm comes in [several builds](/dist) of increasing size and features. The `nan
 ### Changelog
 
 Changes between versions are documented in [Releases](https://github.com/leeoniya/domvm/releases).
+
+---
+### Tests
+
+- Tests run in a browser: http://leeoniya.github.io/domvm/test/
+- Coverage reports are generated via `npm run covtest && npm run covreport`
+- Current coverage is [85% - 90%](/test/coverage.txt)
 
 ---
 ### Installation

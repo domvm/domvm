@@ -1,6 +1,4 @@
-QUnit.module("lazyList");
-
-(function() {
+QUnit.module("lazyList", function() {
 	var el = domvm.defineElement, vm;
 
 	var store = {
@@ -157,9 +155,17 @@ QUnit.module("lazyList");
 		var callCounts = instr.end();
 
 		var expcHtml = '<div><p>A</p><p>B</p><p>C</p></div>';
-		var targ = document.createElement("div");
-		targ.innerHTML = expcHtml;
-		var root = targ.firstChild;
+		var root = document.createElement("div");
+//		targ.innerHTML = expcHtml;
+		// undom-friendly (no innerHTML)
+		function addEl(par, tag, text) {
+			var x = document.createElement(tag);
+			x.textContent = text;
+			par.appendChild(x);
+		}
+		addEl(root, "p", "A");
+		addEl(root, "p", "B");
+		addEl(root, "p", "C");
 		testyDiv.appendChild(root);
 		var vm2 = domvm.createView(View3).attach(root);
 
@@ -242,4 +248,4 @@ QUnit.module("lazyList");
 	QUnit.test('Full patch', function(assert) {
 	});
 	*/
-})();
+});
