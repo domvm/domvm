@@ -89,19 +89,6 @@ function deepSet(targ, path, val) {
 	}
 }
 
-/*
-export function deepUnset(targ, path) {
-	var seg;
-
-	while (seg = path.shift()) {
-		if (path.length === 0)
-			targ[seg] = val;
-		else
-			targ[seg] = targ = targ[seg] || {};
-	}
-}
-*/
-
 function sliceArgs(args, offs) {
 	var arr = [];
 	for (var i = offs; i < args.length; i++)
@@ -155,51 +142,6 @@ function curry(fn, args, ctx) {
 		return fn.apply(ctx, args);
 	};
 }
-
-/*
-export function prop(val, cb, ctx, args) {
-	return function(newVal, execCb) {
-		if (newVal !== undefined && newVal !== val) {
-			val = newVal;
-			execCb !== false && isFunc(cb) && cb.apply(ctx, args);
-		}
-
-		return val;
-	};
-}
-*/
-
-/*
-// adapted from https://github.com/Olical/binary-search
-export function binaryKeySearch(list, item) {
-    var min = 0;
-    var max = list.length - 1;
-    var guess;
-
-	var bitwise = (max <= 2147483647) ? true : false;
-	if (bitwise) {
-		while (min <= max) {
-			guess = (min + max) >> 1;
-			if (list[guess].key === item) { return guess; }
-			else {
-				if (list[guess].key < item) { min = guess + 1; }
-				else { max = guess - 1; }
-			}
-		}
-	} else {
-		while (min <= max) {
-			guess = Math.floor((min + max) / 2);
-			if (list[guess].key === item) { return guess; }
-			else {
-				if (list[guess].key < item) { min = guess + 1; }
-				else { max = guess - 1; }
-			}
-		}
-	}
-
-    return -1;
-}
-*/
 
 // https://en.wikipedia.org/wiki/Longest_increasing_subsequence
 // impl borrowed from https://github.com/ivijs/ivi

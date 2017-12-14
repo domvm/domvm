@@ -49,7 +49,7 @@
     "js-beautify": "*",
     "mocha": "^4.0.1",
     "node-watch": "*",
-    "nyc": "^11.4.0",
+    "nyc": "^11.4.1",
     "rollup": "*",
     "rollup-plugin-buble": "*",
     "rollup-plugin-replace": "*",
