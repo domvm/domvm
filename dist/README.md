@@ -6,16 +6,16 @@
 | [mini][4]   | 15.3k / 6.2k | + `stream`<br>                                                                                                                                                                                              | view reactivity                                                                                                                                      |
 | [client][5] | 15.9k / 6.4k | `mini`<br> + `attach`<br>                                                                                                                                                                                   | SSR hydration                                                                                                                                        |
 | [server][6] | 16.8k / 6.8k | `mini`<br> + `html`<br>                                                                                                                                                                                     | SSR rendering                                                                                                                                        |
-| [full][7]   | 17.4k / 7.0k | `mini`<br> + `attach`<br> + `html`<br>                                                                                                                                                                      | everything (for tests)                                                                                                                               |
+| [full][7]   | 17.3k / 7.0k | `mini`<br> + `attach`<br> + `html`<br>                                                                                                                                                                      | everything (for tests)                                                                                                                               |
 | [dev][8]    | 23.2k / 9.3k | `full`<br> + warnings<br>                                                                                                                                                                                   | use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior |
 | [spec][9]   | 20.5k / 8.5k | `dev`<br> - `DOMInstr`<br>                                                                                                                                                                                  | for tests & code coverage                                                                                                                            |
 
-[1]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/pico/domvm.pico.min.js
-[2]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/nano/domvm.nano.min.js
-[3]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/micro/domvm.micro.min.js
-[4]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/mini/domvm.mini.min.js
-[5]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/client/domvm.client.min.js
-[6]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/server/domvm.server.min.js
-[7]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/full/domvm.full.min.js
-[8]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/dev/domvm.dev.min.js
-[9]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/spec/domvm.spec.min.js
+[1]: https://github.com/leeoniya/domvm/blob/3.x-stable/dist/pico/domvm.pico.min.js
+[2]: https://github.com/leeoniya/domvm/blob/3.x-stable/dist/nano/domvm.nano.min.js
+[3]: https://github.com/leeoniya/domvm/blob/3.x-stable/dist/micro/domvm.micro.min.js
+[4]: https://github.com/leeoniya/domvm/blob/3.x-stable/dist/mini/domvm.mini.min.js
+[5]: https://github.com/leeoniya/domvm/blob/3.x-stable/dist/client/domvm.client.min.js
+[6]: https://github.com/leeoniya/domvm/blob/3.x-stable/dist/server/domvm.server.min.js
+[7]: https://github.com/leeoniya/domvm/blob/3.x-stable/dist/full/domvm.full.min.js
+[8]: https://github.com/leeoniya/domvm/blob/3.x-stable/dist/dev/domvm.dev.min.js
+[9]: https://github.com/leeoniya/domvm/blob/3.x-stable/dist/spec/domvm.spec.min.js

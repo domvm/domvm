@@ -10,7 +10,7 @@
   "license": "MIT",
   "homepage": "https://github.com/leeoniya/domvm",
   "author": "Leon Sorokin <leeoniya@gmail.com>",
-  "version": "3.2.6",
+  "version": "3.2.7",
   "main": "./dist/full/domvm.full.min.js",
   "scripts": {
     "covtest": "nyc mocha test/src/*.js",
