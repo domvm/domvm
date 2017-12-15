@@ -358,13 +358,13 @@ function cssTag(raw) {
 // (de)optimization flags
 
 // forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
-var DEEP_REMOVE = 1;
+var DEEP_REMOVE = 1 << 0;
 // prevents inserting/removing/reordering of children
-var FIXED_BODY = 2;
+var FIXED_BODY = 1 << 1;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
-var KEYED_LIST = 4;
+var KEYED_LIST = 1 << 2;
 // indicates an vnode match/diff/recycler function for body
-var LAZY_LIST = 8;
+var LAZY_LIST = 1 << 3;
 
 function initElementNode(tag, attrs, body, flags) {
 	var node = new VNode;
@@ -1776,7 +1776,7 @@ var nano = {
 	DEEP_REMOVE: DEEP_REMOVE,
 	KEYED_LIST: KEYED_LIST,
 	LAZY_LIST: LAZY_LIST,
-};
+}
 
 function protoPatch(n, doRepaint) {
 	patch$1(this, n, doRepaint);

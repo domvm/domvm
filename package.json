@@ -51,7 +51,7 @@
     "mocha": "^4.0.1",
     "node-watch": "^0.5.5",
     "nyc": "^11.4.1",
-    "rollup": "^0.52.1",
+    "rollup": "^0.52.2",
     "rollup-plugin-buble": "^0.18.0",
     "rollup-plugin-replace": "^2.0.0",
     "undom": "^0.3.3"

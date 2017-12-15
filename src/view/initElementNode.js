@@ -7,13 +7,13 @@ import { devNotify } from "./addons/devmode";
 // (de)optimization flags
 
 // forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
-export const DEEP_REMOVE = 1;
+export const DEEP_REMOVE = 1 << 0;
 // prevents inserting/removing/reordering of children
-export const FIXED_BODY = 2;
+export const FIXED_BODY = 1 << 1;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
-export const KEYED_LIST = 4;
+export const KEYED_LIST = 1 << 2;
 // indicates an vnode match/diff/recycler function for body
-export const LAZY_LIST = 8;
+export const LAZY_LIST = 1 << 3;
 
 export function initElementNode(tag, attrs, body, flags) {
 	let node = new VNode;
