@@ -1,5 +1,8 @@
-import { isPlainObj, isArr, isVal, sliceArgs } from '../../utils';
-import { initElementNode, LAZY_LIST } from '../initElementNode';
+import { isPlainObj, sliceArgs } from '../../utils';
+import { initElementNode } from '../initElementNode';
+import { VNode } from '../VNode';
+import { VView } from '../VView';
+import { VModel } from '../VModel';
 
 export function defineElementSpread(tag) {
 	var args = arguments;
@@ -14,7 +17,7 @@ export function defineElementSpread(tag) {
 			bodyIdx = 2;
 		}
 
-		if (len === bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx]) || attrs && (attrs._flags & LAZY_LIST) === LAZY_LIST))
+		if (len === bodyIdx + 1 && !(args[bodyIdx] instanceof VNode) && !(args[bodyIdx] instanceof VView) && !(args[bodyIdx] instanceof VModel))
 			body = args[bodyIdx];
 		else
 			body = sliceArgs(args, bodyIdx);

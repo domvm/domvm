@@ -352,4 +352,62 @@ QUnit.module("Various Others", function() {
 		assert.equal(vmB.root(), vmA);
 		assert.equal(vmA.root(), vmA);
 	});
+
+	QUnit.test('defineElementSpread', function(assert) {
+		var el2 = domvm.defineElementSpread;
+
+		function ViewA(vm) {
+			return function() {
+				return el2("#a", vw(ViewB));
+			}
+		}
+
+		function ViewB(vm) {
+			return function() {
+				return el2("#b", "b");
+			}
+		}
+
+		function ViewC(vm) {
+			return function() {
+				return el2("#c", {class: "foo"}, "c");
+			}
+		}
+
+		function ViewD(vm) {
+			return function() {
+				return el2("#d", "d", "dog");
+			}
+		}
+
+		function ViewE(vm) {
+			return function() {
+				return el2("#e");
+			}
+		}
+
+		instr.start();
+		var vmA = domvm.createView(ViewA).mount(testyDiv);
+		var callCounts = instr.end();
+		var expcHtml = '<div id="a"><div id="b">b</div></div>';
+		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { createElement: 2, id: 2, insertBefore: 2, textContent: 1 });
+
+		instr.start();
+		var vmC = domvm.createView(ViewC).mount(testyDiv);
+		var callCounts = instr.end();
+		var expcHtml = '<div class="foo" id="c">c</div>';
+		evalOut(assert, vmC.node.el, vmC.html(), expcHtml, callCounts, { createElement: 1, id: 1, className: 1, insertBefore: 1, textContent: 1 });
+
+		instr.start();
+		var vmD = domvm.createView(ViewD).mount(testyDiv);
+		var callCounts = instr.end();
+		var expcHtml = '<div id="d">ddog</div>';
+		evalOut(assert, vmD.node.el, vmD.html(), expcHtml, callCounts, { createElement: 1, id: 1, createTextNode: 1, insertBefore: 2 });
+
+		instr.start();
+		var vmE = domvm.createView(ViewE).mount(testyDiv);
+		var callCounts = instr.end();
+		var expcHtml = '<div id="e"></div>';
+		evalOut(assert, vmE.node.el, vmE.html(), expcHtml, callCounts, { createElement: 1, id: 1, insertBefore: 1 });
+	});
 });

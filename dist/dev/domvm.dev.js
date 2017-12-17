@@ -2329,7 +2329,7 @@ function defineElementSpread(tag) {
 			bodyIdx = 2;
 		}
 
-		if (len === bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx]) || attrs && (attrs._flags & LAZY_LIST) === LAZY_LIST))
+		if (len === bodyIdx + 1 && !(args[bodyIdx] instanceof VNode) && !(args[bodyIdx] instanceof VView) && !(args[bodyIdx] instanceof VModel))
 			{ body = args[bodyIdx]; }
 		else
 			{ body = sliceArgs(args, bodyIdx); }
