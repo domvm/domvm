@@ -149,9 +149,14 @@
 					function (samples) {
 						vm.unmount();
 
-						for (var s in samples)
-							samples[s].sort((a, b) => a - b);
+						var total = 0;
 
+						for (var s in samples) {
+							samples[s].sort((a, b) => a - b);
+							total += samples[s].reduce((a, b) => (a + b), 0);
+						}
+
+						console.log(total);
 						container.innerHTML = "<pre>" + JSON.stringify(samples, null, 2) + "</pre>";
 					}
 				);
