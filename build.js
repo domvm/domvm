@@ -49,7 +49,7 @@ function getBuilds(name) {
 		{
 			build: "full",
 			contents: "`mini`<br> + `attach`<br> + `html`<br>",
-			descr: "everything (for tests)",
+			descr: "all the bells and whistles",
 			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
 		},
 		{
