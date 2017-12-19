@@ -35,6 +35,17 @@ Object.defineProperty(Element.prototype, "value", {
 	},
 });
 
+Object.defineProperty(Element.prototype, "textContent", {
+	configurable: true,
+	set: function(v) {
+		this.childNodes.length = 0;
+		this.childNodes.push(new Text(v));
+	},
+	get: function() {
+	//	return this.childNodes.join("");
+	},
+});
+
 Element.prototype.matches = function(sel) {
 	return sel == "*" || sel == this.nodeName.toLowerCase();
 };

@@ -106,7 +106,7 @@ export function patch(vnode, donor) {
 		}
 		// "" | null => "" | null
 		else if (nbody !== obody) {
-			if (el.firstChild)
+			if (nbody != null && obody != null)
 				el.firstChild.nodeValue = nbody;
 			else
 				el.textContent = nbody;

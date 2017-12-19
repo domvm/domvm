@@ -45,7 +45,7 @@ export function hydrate(vnode, withEl) {
 
 			if (isArr(vnode.body))
 				hydrateBody(vnode);
-			else if (vnode.body != null && vnode.body !== "")
+			else if (vnode.body != null)
 				vnode.el.textContent = vnode.body;
 		}
 		else if (vnode.type === TEXT)

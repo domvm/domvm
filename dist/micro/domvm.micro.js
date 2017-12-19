@@ -119,6 +119,7 @@ function cmpArr(a, b) {
 
 // https://github.com/darsain/raft
 // rAF throttler, aggregates multiple repeated redraw calls within single animframe
+/* istanbul ignore next */
 function raft(fn) {
 	if (!rAF)
 		{ return fn; }
@@ -192,6 +193,7 @@ function longestIncreasingSubsequence(a) {
 }
 
 // based on https://github.com/Olical/binary-search
+/* istanbul ignore next */
 function binaryFindLarger(item, list) {
 	var min = 0;
 	var max = list.length - 1;
@@ -465,6 +467,8 @@ function preProc(vnew, parent, idx, ownVm) {
 
 	if (isArr(vnew.body))
 		{ preProcBody(vnew); }
+	else if (vnew.body === "")
+		{ vnew.body = null; }
 	else {}
 }
 
@@ -958,7 +962,7 @@ function hydrate(vnode, withEl) {
 
 			if (isArr(vnode.body))
 				{ hydrateBody(vnode); }
-			else if (vnode.body != null && vnode.body !== "")
+			else if (vnode.body != null)
 				{ vnode.el.textContent = vnode.body; }
 		}
 		else if (vnode.type === TEXT)
@@ -1210,7 +1214,7 @@ function patch(vnode, donor) {
 		}
 		// "" | null => "" | null
 		else if (nbody !== obody) {
-			if (el.firstChild)
+			if (nbody != null && obody != null)
 				{ el.firstChild.nodeValue = nbody; }
 			else
 				{ el.textContent = nbody; }

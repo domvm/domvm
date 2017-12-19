@@ -94,6 +94,7 @@ export function cmpArr(a, b) {
 
 // https://github.com/darsain/raft
 // rAF throttler, aggregates multiple repeated redraw calls within single animframe
+/* istanbul ignore next */
 export function raft(fn) {
 	if (!rAF)
 		return fn;
@@ -167,6 +168,7 @@ export function longestIncreasingSubsequence(a) {
 }
 
 // based on https://github.com/Olical/binary-search
+/* istanbul ignore next */
 export function binaryFindLarger(item, list) {
 	var min = 0;
 	var max = list.length - 1;
