@@ -5,8 +5,8 @@ const fs = require('fs');
 const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
 const zlib = require('zlib');
-const closure = require('google-closure-compiler-js').compile;
 const beautify = require('js-beautify').js_beautify;
+const uglify = require("uglify-js").minify;
 
 function getBuilds(name) {
 	return [
@@ -98,7 +98,6 @@ function compile(buildName) {
 				FEAT_STREAM:	feats.indexOf("STREAM") != -1,
 			}),
 			buble(),
-		//	closure(),
 		],
 	})
 	.then(function(bundle) {
@@ -127,7 +126,7 @@ function compile(buildName) {
 			file: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		}).then(b => {
 			console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
-			minify(buildName, start);
+			squish(buildName, start);
 		});
 
 		/*
@@ -144,37 +143,19 @@ function compile(buildName) {
 	})
 }
 
-function minify(buildName, start) {
-	// --souce_map_input dist/domvm.full.js.map	// --create_source_map dist/domvm.full.min.js.map
-
+function squish(buildName, start) {
 	var src = "dist/" + buildName + "/domvm." + buildName + ".js";
 	var dst = "dist/" + buildName + "/domvm." + buildName + ".min.js";
-//	var mapName = "domvm." + buildName + ".min.js.map";
-//	var dstMap = "dist/" + buildName + "/" + mapName;
 
-	const flags = {
-		jsCode: [{src: fs.readFileSync(src, 'utf8')}],
-		languageIn: 'ECMASCRIPT5_STRICT',
-		languageOut: 'ECMASCRIPT5',
-		compilationLevel: 'SIMPLE',
-	//	warningLevel: 'VERBOSE',
+	var code = fs.readFileSync(src, 'utf8');
+	var opts = {
+		output: {
+	//		beautify: false,
+			preamble: "// " + /@preserve\s+(.*)$/gm.exec(code)[1] + "\n",
+		}
 	};
-
-	var compiled = closure(flags).compiledCode.replace('this,function(){','this,function(){"use strict";');
-
-	// workaround for https://github.com/google/closure-compiler-js/issues/79
-	var chars = {
-		'\\x3d': '=',
-		'\\x3c': '<',
-		'\\x3e': '>',
-		'\\x26': '&',
-	};
-
-	compiled = compiled
-		.replace(/\w+\._noinline_\w+\s*=\s*\w+;/gmi, "")
-		.replace(/\\x3d|\\x3c|\\x3e|\\x26/g, m => chars[m]);
-
-	console.log((+new Date - start) + "ms: Closure done (build: " + buildName + ")");
+	var result = uglify(code, opts);
+	var compiled = result.code;
 
 	fs.writeFileSync(dst, compiled, 'utf8');
 
@@ -182,6 +163,8 @@ function minify(buildName, start) {
 	fs.writeFileSync(dstPretty, beautify(compiled, { indent_size: 2 }), 'utf8');
 
 	buildDistTable();
+
+	console.log((+new Date - start) + "ms: Uglify done (build: " + buildName + ")");
 }
 
 function padRight(str, padStr, len) {

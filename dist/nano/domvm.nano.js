@@ -895,10 +895,6 @@ function hydrate(vnode, withEl) {
 	return vnode.el;
 }
 
-// prevent GCC from inlining some large funcs (which negatively affects Chrome's JIT)
-//win._noinline_syncChildren = syncChildren;
-win$1._noinline_lisMove = lisMove;
-
 function nextNode(node, body) {
 	return body[node.idx + 1];
 }
