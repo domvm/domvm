@@ -12,13 +12,18 @@ el = function(tag, arg1, arg2) {
 };
 */
 
+function keyed(key, vnode) {
+	vnode.key = key;
+	return vnode;
+}
+
 // avoids array flattening, uses concat()
 function DBMonView() {
 	return function (vm, dbs) { return (
 		el("div", [
 			el("table.table.table-striped.latest-data", [
 				el("tbody", {_flags: domvm.KEYED_LIST}, dbs.map(function(db, i) { return (
-					el("tr", {_key: i}, [
+					keyed(i, el("tr", [
 							el("td.dbname", db.dbname),
 							el("td.query-count", [
 								el("span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries)
@@ -32,7 +37,7 @@ function DBMonView() {
 								])
 							])
 						)}))
-					)
+					))
 				)}))
 			])
 		])
