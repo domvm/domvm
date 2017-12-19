@@ -410,4 +410,39 @@ QUnit.module("Various Others", function() {
 		var expcHtml = '<div id="e"></div>';
 		evalOut(assert, vmE.node.el, vmE.html(), expcHtml, callCounts, { createElement: 1, id: 1, insertBefore: 1 });
 	});
+
+	QUnit.test('defineElementSpread', function(assert) {
+		function ViewA(vm) {
+			return function() {
+				return el("#a", [
+					vw(ViewB),
+					el("div", [
+						vw(ViewB)
+					])
+				]);
+			}
+		}
+
+		var vmBs = [];
+
+		function ViewB(vm) {
+			vmBs.push(vm);
+
+			return function() {
+				return el("#b", "b");
+			}
+		}
+
+		instr.start();
+		var vmA = domvm.createView(ViewA).mount(testyDiv);
+		var callCounts = instr.end();
+		var expcHtml = '<div id="a"><div id="b">b</div><div><div id="b">b</div></div></div>';
+		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { createElement: 4, id: 3, insertBefore: 4, textContent: 2 });
+		var vmbody = vmA.body();
+		assert.equal(vmbody.length, 2);
+		assert.equal(vmbody[0], vmBs[0]);
+		assert.equal(vmbody[1], vmBs[1]);
+
+		assert.deepEqual(vmbody[0].body(), []);
+	});
 });

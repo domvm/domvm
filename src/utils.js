@@ -75,13 +75,14 @@ export function cmpObj(a, b) {
 	for (var i in a)
 		if (a[i] !== b[i])
 			return false;
-
+	/* istanbul ignore next */
 	return true;
 }
 
 export function cmpArr(a, b) {
 	const alen = a.length;
 
+	/* istanbul ignore if */
 	if (b.length !== alen)
 		return false;
 
