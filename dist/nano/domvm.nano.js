@@ -1280,7 +1280,7 @@ function patchChildren(vnode, donor) {
 			else
 				{ everNonseq = true; }
 
-			if (olen > 100 && everNonseq && ++patched % 10 === 0)
+			if (!isKeyed && olen > 100 && everNonseq && ++patched % 10 === 0)
 				{ while (fromIdx < olen && alreadyAdopted(obody[fromIdx]))
 					{ fromIdx++; } }
 		}
