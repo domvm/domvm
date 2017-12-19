@@ -20,10 +20,9 @@ export function initElementNode(tag, attrs, body, flags) {
 
 	node.type = ELEMENT;
 
-	if (isSet(flags))
-		node.flags = flags;
+	node.flags = flags || 0;
 
-	node.attrs = attrs;
+	node.attrs = attrs || null;
 
 	var parsed = cssTag(tag);
 

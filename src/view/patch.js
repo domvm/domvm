@@ -1,5 +1,5 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
-import { isArr } from '../utils';
+import { isArr, noop } from '../utils';
 import { isHydrated } from "./utils";
 import { preProc } from './preProc';
 import { hydrateBody } from './hydrate';
@@ -34,7 +34,18 @@ function findSeqThorough(n, obody, fromIdx) {		// pre-tested isView?
 	return null;
 }
 
-function findHashKeyed(n, obody, fromIdx) {
+function findKeyed(n, obody, fromIdx) {
+	if (obody._keys == null) {
+		if (obody[fromIdx].key === n.key)
+			return obody[fromIdx];
+		else {
+			var keys = {};
+			for (var i = 0; i < obody.length; i++)
+				keys[obody[i].key] = i;
+			obody._keys = keys;
+		}
+	}
+
 	return obody[obody._keys[n.key]];
 }
 
@@ -127,17 +138,11 @@ function patchChildren(vnode, donor) {
 		domSync		= !isFixed && vnode.type === ELEMENT,
 		doFind		= true,
 		find		= (
-			isKeyed ? findHashKeyed :				// keyed lists/lazyLists
+			olen === 0 ? noop :
+			isKeyed ? findKeyed :					// keyed lists/lazyLists
 			isFixed || isLazy ? takeSeqIndex :		// unkeyed lazyLists and FIXED_BODY
 			findSeqThorough							// more complex stuff
 		);
-
-	if (isKeyed) {
-		var keys = {};
-		for (var i = 0; i < obody.length; i++)
-			keys[obody[i].key] = i;
-		obody._keys = keys;
-	}
 
 	if (domSync && nlen === 0) {
 		clearChildren(donor);
@@ -239,7 +244,7 @@ function patchChildren(vnode, donor) {
 		}
 
 		// found donor & during a sequential search ...at search head
-		if (!isKeyed && donor2 != null) {
+		if (donor2 != null) {
 			if (foundIdx === fromIdx) {
 				// advance head
 				fromIdx++;
