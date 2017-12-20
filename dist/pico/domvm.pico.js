@@ -768,9 +768,7 @@ function remAttr(node, name, asProp) {
 function setAttr(node, name, val, asProp, initial) {
 	var el = node.el;
 
-	if (val == null)
-		{ !initial && remAttr(node, name, false); }		// will also removeAttr of style: null
-	else if (node.ns != null)
+	if (node.ns != null)
 		{ el.setAttribute(name, val); }
 	else if (name === "class")
 		{ el.className = val; }
@@ -792,6 +790,10 @@ function patchAttrs(vnode, donor, initial) {
 	else {
 		for (var key in nattrs) {
 			var nval = nattrs[key];
+
+			if (nval == null)
+				{ continue; }
+
 			var isDyn = isDynProp(vnode.tag, key);
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
@@ -807,7 +809,7 @@ function patchAttrs(vnode, donor, initial) {
 
 		// TODO: bench style.cssText = "" vs removeAttribute("style")
 		for (var key in oattrs) {
-			!(key in nattrs) &&
+			nattrs[key] == null &&
 			!isSplProp(key) &&
 			remAttr(vnode, key, isDynProp(vnode.tag, key) || isEvProp(key));
 		}

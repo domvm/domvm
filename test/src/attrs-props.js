@@ -21,18 +21,12 @@ QUnit.module("Attrs/props", function() {
 	// TODO: can 'id' or 'name' be allowed to change for recycling since they implicitly double as keys?
 	// TODO: can any form elements be reused if non-matching type?
 	QUnit.test("Update", function(assert) {
-		var onclick = function() {};
 		tpl = el("input#foo", {type: "text", style: {padding: 10}, disabled: false, custom: "xyz", custom2: "...", custom4: null});
 
 		instr.start();
 		vm.redraw();		// todo: create test container
 		var callCounts = instr.end();
-/*
-		// a bit of a hack to get the outerHtml to match exactly fo the test
-		// domvm sets className="" for perf rather than removeAttribute("class")
-		if (vm.node.el.className === "")
-			vm.node.el.removeAttribute("class");
-*/
+
 		var expcHtml = '<input type="text" custom="xyz" custom2="..." id="foo" style="padding: 10px;">';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeAttribute: 3, setAttribute: 2 });
 	});
