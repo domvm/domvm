@@ -357,25 +357,27 @@ function initElementNode(tag, attrs, body, flags) {
 
 	node.tag = parsed.tag;
 
-	// meh, weak assertion, will fail for id=0, etc.
-	if (parsed.id || parsed.class || parsed.attrs) {
+	var hasId = isSet(parsed.id),
+		hasClass = isSet(parsed.class),
+		hasAttrs = isSet(parsed.attrs);
+
+	if (hasId || hasClass || hasAttrs) {
 		var p = node.attrs || {};
 
-		if (parsed.id && !isSet(p.id))
+		if (hasId && !isSet(p.id))
 			{ p.id = parsed.id; }
 
-		if (parsed.class) {
+		if (hasClass) {
 			node._class = parsed.class;		// static class
 			p.class = parsed.class + (isSet(p.class) ? (" " + p.class) : "");
 		}
-		if (parsed.attrs) {
+		if (hasAttrs) {
 			for (var key in parsed.attrs)
 				{ if (!isSet(p[key]))
 					{ p[key] = parsed.attrs[key]; } }
 		}
 
-//		if (node.attrs !== p)
-			node.attrs = p;
+		node.attrs = p;
 	}
 
 	var mergedAttrs = node.attrs;
