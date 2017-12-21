@@ -60,6 +60,7 @@ domvm.createView(HelloView, data).mount(document.body);
 - [Extending ViewModel & VNode](#extending-viewmodel--vnode)
 - [Isomorphism & SSR](#isomorphism--ssr)
 - [Optimizations](#optimizations)
+- [Streams](#streams)
 - WIP: https://github.com/leeoniya/domvm/issues/156
 
 ---
@@ -805,6 +806,46 @@ Notes:
 - `target` must be the DOM element which corresponds to the top-level/root virtual node of the view you're attaching
 - Whitespace in the generated HTML is significant; indented, formatted or pretty-printed markup will *not* attach properly
 - The HTML parsing spec requires that an implicit `<tbody>` DOM node is created if `<tr>`s are nested directly within `<table>`. This causes problems when no corresponding `<tbody>` is defined in the vtree. Therefore, when attaching tables via SSR, it is necessary to explicitly define `<tbody>` vnodes via `el("tbody",...)` and avoid creating `<tr>` children of `<table>` nodes. See [Issue #192](https://github.com/leeoniya/domvm/issues/192#issuecomment-350600764)
+
+---
+### Streams
+
+domvm supports streams to automatically update template content and will manage subscriptions for the life of the view.  To use streams you must first configure domvm with the stream signature relevant to the stream library you are using.  For example, the correct configuration for using [flyd](https://github.com/paldepind/flyd) is:
+
+```
+domvm.config({
+  stream: {
+    is:		s => flyd.isStream(s),
+    val:	s => s(),
+    sub:	(s, fn) => flyd.on(fn, s),
+    unsub:	s => s.end(true),
+  }
+});
+```
+
+After configuration, you can pass a stream as the element body (not as an array):
+
+```
+const title = flyd.stream('Start');
+
+# ...
+
+defineElement('h1', title)
+```
+
+...or an attribute value:
+
+```
+const disabled = flyd.stream(true);
+
+# ...
+
+defineElement('button', {disabled: disabled}, 'OK');
+```
+
+One limitation of passing streams as the element body is that it is incompatible with `defineElementSpread`.
+
+The [demo playground](http://leeoniya.github.io/domvm/demos/) has a comprehensive [example](http://leeoniya.github.io/domvm/demos/playground/#streams).
 
 ---
 ### Optimizations
