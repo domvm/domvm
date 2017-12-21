@@ -993,3 +993,30 @@ To these lists, you will need:
 - Set the appropriate flags on the list parent (`domvm.KEYED_LIST`, `domvm.LAZY_LIST`) and each list item (`{_key: ...}`)
 
 While a bit involved, the resulting code is quite terse and not as daunting as it sounds: http://leeoniya.github.io/domvm/demos/playground/#lazy-list
+
+#### Special Attrs
+
+VNodes use `attrs` objects to also pass special properties: `_key`, `_ref`, `_hooks`, `_data`, `_flags`. If you only need to pass one of these special options to a vnode and have not actual attributes to set, you can avoid allocating attrs objects by assigning them directly to the created vnodes.
+
+Instead of creating attrs objects just to set a key:
+
+```js
+el("ul", [
+    el("li", {_key: "foo"}, "hello"),
+    el("li", {_key: "bar"}, "world"),
+])
+```
+
+Create a helper to set the key directly:
+
+```js
+function keyed(key, vnode) {
+    vnode.key = key;
+    return vnode;
+}
+
+el("ul", [
+    keyed("foo", el("li", "hello")),
+    keyed("bar", el("li", "world")),
+])
+```
