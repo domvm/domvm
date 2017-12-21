@@ -50,6 +50,7 @@ domvm.createView(HelloView, data).mount(document.body);
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
 - [Event Listeners](#event-listeners)
 - [Autoredraw](#autoredraw)
+- [Streams](#streams)
 - [Refs & Data](#refs--data)
 - [Keys & DOM Recycling](#keys--dom-recycling)
 - [Hello World++](#hello-world)
@@ -476,6 +477,39 @@ domvm.config({
 You can get as creative as you want, including adding your own semantics to prevent redraw on a case-by-case basis by setting and checking for `e.redraw = false`.
 Or maybe having a Promise piggyback on `e.redraw = new Promise(...)` that will resolve upon deep data being fetched.
 You can maybe implement filtering by event type so that a flood of `mousemove` events, doesnt result in a redraw flood. Etc..
+
+---
+### Streams
+
+Another way to implement view reactivity and autoredraw is by using streams. By providing streams to your templates rather than values, views will autoredraw whenever streams change. domvm does not provide its own stream implementation but instead exposes a simple adapter to plug in your favorite stream lib. For example, an adapter for [flyd](https://github.com/paldepind/flyd) looks like this:
+
+```js
+domvm.config({
+    stream: {
+        is:     s => flyd.isStream(s),
+        val:    s => s(),
+        sub:    (s, fn) => flyd.on(fn, s),
+        unsub:  s => s.end(true),
+    }
+});
+```
+
+- `is` takes any value and returns whether or not the value is a stream
+- `val` takes a stream and returns its value
+- `sub` takes a stream + callback and returns a dependent stream that invokes the callback during updates
+- `unsub` takes the dependent stream returned by `sub` and severs it from its parent
+
+domvm's templates support streams only in the following places:
+
+- simple body: `el("#total", cartTotalStream)`
+- attr value: `el("input[type=checkbox]", {checked: checkedStream})`
+- css value: `el("div", {style: {background: colorStream}})`
+
+An extensive demo can be found in the [streams playground](http://leeoniya.github.io/domvm/demos/playground/#streams).
+
+Notes:
+
+- Streams must never create, cache or reuse domvm's vnodes (`defineElement()`, etc.) since this *will* cause memory leaks and major bugs.
 
 ---
 ### Refs & Data
