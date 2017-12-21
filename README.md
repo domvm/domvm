@@ -359,6 +359,16 @@ Several reserved options are handled automatically by domvm that correspond to e
 
 This can simplify sub-view internals when externally-defined opts are passed in, avoiding some boilerplate inside views, eg. `vm.config({hooks: opts.hooks})`.
 
+#### ES6/ES2015 Classes
+
+Class views are not supported because domvm avoids use of `this` in its public APIs. To keep all functions pure, each is invoked with a `vm` argument. Not only does this compress better, but it also avoids much ambiguity. Everything that can be done with classes can be done better with domvm's plain object views, ES6 modules, `Object.assign()` and/or `Object.create()`. See [#194](https://github.com/leeoniya/domvm/issues/194#issuecomment-352231381) & [#147](https://github.com/leeoniya/domvm/issues/147#issuecomment-307845459) for more details.
+
+TODO: create Wiki page showing ES6 class equivalents:
+
+- extend via ES6 module import & `Object.assign({}, base, current)`
+- super() via ES6 module import and passing vm instance
+- invoking additional "methods" via `vm.view.*` from handlers or view closure
+
 ---
 ### Parents & Roots
 
