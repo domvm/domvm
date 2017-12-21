@@ -12,10 +12,6 @@ export function noop() {};
 
 export const isArr = Array.isArray;
 
-export function isSet(val) {
-	return val != null;
-}
-
 export function isPlainObj(val) {
 	return val != null && val.constructor === Object;		//  && typeof val === "object"
 }

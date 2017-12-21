@@ -39,10 +39,6 @@ function noop() {}
 
 var isArr = Array.isArray;
 
-function isSet(val) {
-	return val != null;
-}
-
 function isPlainObj(val) {
 	return val != null && val.constructor === Object;		//  && typeof val === "object"
 }
@@ -493,23 +489,23 @@ function initElementNode(tag, attrs, body, flags) {
 
 	node.tag = parsed.tag;
 
-	var hasId = isSet(parsed.id),
-		hasClass = isSet(parsed.class),
-		hasAttrs = isSet(parsed.attrs);
+	var hasId = parsed.id != null,
+		hasClass = parsed.class != null,
+		hasAttrs = parsed.attrs != null;
 
 	if (hasId || hasClass || hasAttrs) {
 		var p = node.attrs || {};
 
-		if (hasId && !isSet(p.id))
+		if (hasId && p.id == null)
 			{ p.id = parsed.id; }
 
 		if (hasClass) {
 			node._class = parsed.class;		// static class
-			p.class = parsed.class + (isSet(p.class) ? (" " + p.class) : "");
+			p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
 		}
 		if (hasAttrs) {
 			for (var key in parsed.attrs)
-				{ if (!isSet(p[key]))
+				{ if (p[key] == null)
 					{ p[key] = parsed.attrs[key]; } }
 		}
 
@@ -518,28 +514,28 @@ function initElementNode(tag, attrs, body, flags) {
 
 	var mergedAttrs = node.attrs;
 
-	if (isSet(mergedAttrs)) {
-		if (isSet(mergedAttrs._key))
+	if (mergedAttrs != null) {
+		if (mergedAttrs._key != null)
 			{ node.key = mergedAttrs._key; }
 
-		if (isSet(mergedAttrs._ref))
+		if (mergedAttrs._ref != null)
 			{ node.ref = mergedAttrs._ref; }
 
-		if (isSet(mergedAttrs._hooks))
+		if (mergedAttrs._hooks != null)
 			{ node.hooks = mergedAttrs._hooks; }
 
-		if (isSet(mergedAttrs._data))
+		if (mergedAttrs._data != null)
 			{ node.data = mergedAttrs._data; }
 
-		if (isSet(mergedAttrs._flags))
+		if (mergedAttrs._flags != null)
 			{ node.flags = mergedAttrs._flags; }
 
-		if (!isSet(node.key)) {
-			if (isSet(node.ref))
+		if (node.key == null) {
+			if (node.ref != null)
 				{ node.key = node.ref; }
-			else if (isSet(mergedAttrs.id))
+			else if (mergedAttrs.id != null)
 				{ node.key = mergedAttrs.id; }
-			else if (isSet(mergedAttrs.name))
+			else if (mergedAttrs.name != null)
 				{ node.key = mergedAttrs.name + (mergedAttrs.type === "radio" || mergedAttrs.type === "checkbox" ? mergedAttrs.value : ""); }
 		}
 	}
