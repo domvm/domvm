@@ -50,6 +50,7 @@ domvm.createView(HelloView, data).mount(document.body);
 - [Sub-views vs Sub-templates](#sub-views-vs-sub-templates)
 - [Event Listeners](#event-listeners)
 - [Autoredraw](#autoredraw)
+- [Streams](#streams)
 - [Refs & Data](#refs--data)
 - [Keys & DOM Recycling](#keys--dom-recycling)
 - [Hello World++](#hello-world)
@@ -117,13 +118,20 @@ If you're new to domvm, the [dev build](/dist/dev/domvm.dev.js) is recommended f
 
 There are a couple config options:
 
-- `domvm.DEVMODE.syncRedraw = true` will cause all redraws to be synchronous and non-debounced (useful for unit tests & debugging)
 - `domvm.DEVMODE.mutations = false` will disable DOM mutation logging.
 - `domvm.DEVMODE.warnings = false` will disable all warnings.
 - `domvm.DEVMODE.verbose = false` will suppress the explanations, but still leave the error names & object info.
 - `domvm.DEVMODE.UNKEYED_INPUT = false` will disable only these warnings. The full list can be found in [devmode.js](/src/view/addons/devmode.js).
 
 Due to the runtime nature of DEVMODE heuristics, some warnings may be false positives (where the observed behavior is intentional). If you feel an error message can be improved, open an issue!
+
+While not DEVMODE-specific, you may find it useful to toggle always-sychronous redraw during testing and benchmarks:
+
+```js
+domvm.config({
+    syncRedraw: true
+});
+```
 
 ---
 ### Templates
@@ -358,6 +366,16 @@ Several reserved options are handled automatically by domvm that correspond to e
 
 This can simplify sub-view internals when externally-defined opts are passed in, avoiding some boilerplate inside views, eg. `vm.config({hooks: opts.hooks})`.
 
+#### ES6/ES2015 Classes
+
+Class views are not supported because domvm avoids use of `this` in its public APIs. To keep all functions pure, each is invoked with a `vm` argument. Not only does this compress better, but it also avoids much ambiguity. Everything that can be done with classes can be done better with domvm's plain object views, ES6 modules, `Object.assign()` and/or `Object.create()`. See [#194](https://github.com/leeoniya/domvm/issues/194#issuecomment-352231381) & [#147](https://github.com/leeoniya/domvm/issues/147#issuecomment-307845459) for more details.
+
+TODO: create Wiki page showing ES6 class equivalents:
+
+- extend via ES6 module import & `Object.assign({}, base, current)`
+- super() via ES6 module import and passing vm instance
+- invoking additional "methods" via `vm.view.*` from handlers or view closure
+
 ---
 ### Parents & Roots
 
@@ -476,6 +494,40 @@ domvm.config({
 You can get as creative as you want, including adding your own semantics to prevent redraw on a case-by-case basis by setting and checking for `e.redraw = false`.
 Or maybe having a Promise piggyback on `e.redraw = new Promise(...)` that will resolve upon deep data being fetched.
 You can maybe implement filtering by event type so that a flood of `mousemove` events, doesnt result in a redraw flood. Etc..
+
+---
+### Streams
+
+Another way to implement view reactivity and autoredraw is by using streams. By providing streams to your templates rather than values, views will autoredraw whenever streams change. domvm does not provide its own stream implementation but instead exposes a simple adapter to plug in your favorite stream lib. For example, an adapter for [flyd](https://github.com/paldepind/flyd) looks like this:
+
+```js
+domvm.config({
+    stream: {
+        is:     s => flyd.isStream(s),
+        val:    s => s(),
+        sub:    (s, fn) => flyd.on(fn, s),
+        unsub:  s => s.end(true),
+    }
+});
+```
+
+- `is` takes any value and returns whether or not the value is a stream
+- `val` takes a stream and returns its value
+- `sub` takes a stream + callback and returns a dependent stream that invokes the callback during updates
+- `unsub` takes the dependent stream returned by `sub` and severs it from its parent
+
+domvm's templates support streams in the following contexts:
+
+- view data: `vw(MyView, dataStream...)` and `domvm.createView(MyView, dataStream...)`
+- simple body: `el("#total", cartTotalStream)`
+- attr value: `el("input[type=checkbox]", {checked: checkedStream})`
+- css value: `el("div", {style: {background: colorStream}})`
+
+An extensive demo can be found in the [streams playground](http://leeoniya.github.io/domvm/demos/playground/#streams).
+
+Notes:
+
+- Streams must never create, cache or reuse domvm's vnodes (`defineElement()`, etc.) since this *will* cause memory leaks and major bugs.
 
 ---
 ### Refs & Data
@@ -949,3 +1001,30 @@ To these lists, you will need:
 - Set the appropriate flags on the list parent (`domvm.KEYED_LIST`, `domvm.LAZY_LIST`) and each list item (`{_key: ...}`)
 
 While a bit involved, the resulting code is quite terse and not as daunting as it sounds: http://leeoniya.github.io/domvm/demos/playground/#lazy-list
+
+#### Special Attrs
+
+VNodes use `attrs` objects to also pass special properties: `_key`, `_ref`, `_hooks`, `_data`, `_flags`. If you only need to pass one of these special options to a vnode and have not actual attributes to set, you can avoid allocating attrs objects by assigning them directly to the created vnodes.
+
+Instead of creating attrs objects just to set a key:
+
+```js
+el("ul", [
+    el("li", {_key: "foo"}, "hello"),
+    el("li", {_key: "bar"}, "world"),
+])
+```
+
+Create a helper to set the key directly:
+
+```js
+function keyed(key, vnode) {
+    vnode.key = key;
+    return vnode;
+}
+
+el("ul", [
+    keyed("foo", el("li", "hello")),
+    keyed("bar", el("li", "world")),
+])
+```

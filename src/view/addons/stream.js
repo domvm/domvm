@@ -19,9 +19,10 @@ export function hookStream(s, vm) {
 	var redrawStream = subStream(s, val => {
 		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
 		if (redrawStream) {
-			// if vm fully is formed (or mounted vm.node.el?)
+			/* istanbul ignore else  */
 			if (vm.node != null)
 				vm.redraw();
+
 			unsubStream(redrawStream);
 		}
 	});
@@ -33,7 +34,7 @@ export function hookStream2(s, vm) {
 	var redrawStream = subStream(s, val => {
 		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
 		if (redrawStream) {
-			// if vm fully is formed (or mounted vm.node.el?)
+			/* istanbul ignore else  */
 			if (vm.node != null)
 				vm.redraw();
 		}

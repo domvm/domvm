@@ -12,10 +12,6 @@ export function noop() {};
 
 export const isArr = Array.isArray;
 
-export function isSet(val) {
-	return val != null;
-}
-
 export function isPlainObj(val) {
 	return val != null && val.constructor === Object;		//  && typeof val === "object"
 }
@@ -75,13 +71,14 @@ export function cmpObj(a, b) {
 	for (var i in a)
 		if (a[i] !== b[i])
 			return false;
-
+	/* istanbul ignore next */
 	return true;
 }
 
 export function cmpArr(a, b) {
 	const alen = a.length;
 
+	/* istanbul ignore if */
 	if (b.length !== alen)
 		return false;
 
@@ -94,6 +91,7 @@ export function cmpArr(a, b) {
 
 // https://github.com/darsain/raft
 // rAF throttler, aggregates multiple repeated redraw calls within single animframe
+/* istanbul ignore next */
 export function raft(fn) {
 	if (!rAF)
 		return fn;
@@ -167,6 +165,7 @@ export function longestIncreasingSubsequence(a) {
 }
 
 // based on https://github.com/Olical/binary-search
+/* istanbul ignore next */
 export function binaryFindLarger(item, list) {
 	var min = 0;
 	var max = list.length - 1;

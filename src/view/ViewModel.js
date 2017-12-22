@@ -6,12 +6,13 @@ import { repaint, isHydrated, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
 import { isStream, hookStream2, unsubStream } from './addons/stream';
+import { syncRedraw } from './config';
 import { devNotify, DEVMODE } from "./addons/devmode";
 import { DOMInstr } from "./addons/dominstr";
 
 var instr = null;
 
-if (_DEVMODE && !_SPEC) {
+if (_DEVMODE) {
 	if (DEVMODE.mutations) {
 		instr = new DOMInstr(true);
 	}
@@ -102,21 +103,17 @@ export const ViewModelProto = ViewModel.prototype = {
 		return p.vm;
 	},
 	redraw: function(sync) {
-		if (_DEVMODE) {
-			if (DEVMODE.syncRedraw) {
-				sync = true;
-			}
-		}
+		if (sync == null)
+			sync = syncRedraw;
+
 		var vm = this;
 		sync ? vm._redraw(null, null, isHydrated(vm)) : vm._redrawAsync();
 		return vm;
 	},
 	update: function(newData, sync) {
-		if (_DEVMODE) {
-			if (DEVMODE.syncRedraw) {
-				sync = true;
-			}
-		}
+		if (sync == null)
+			sync = syncRedraw;
+
 		var vm = this;
 		sync ? vm._update(newData, null, null, isHydrated(vm)) : vm._updateAsync(newData);
 		return vm;
@@ -207,7 +204,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		if (isRedrawRoot && vm.node && vm.node.el && !vm.node.el.parentNode)
 			devNotify("UNMOUNTED_REDRAW", [vm]);
 
-		if (!_SPEC && isRedrawRoot && DEVMODE.mutations && isMounted)
+		if (isRedrawRoot && DEVMODE.mutations && isMounted)
 			instr.start();
 	}
 
@@ -285,7 +282,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		drainDidHooks(vm);
 
 	if (_DEVMODE) {
-		if (!_SPEC && isRedrawRoot && DEVMODE.mutations && isMounted)
+		if (isRedrawRoot && DEVMODE.mutations && isMounted)
 			console.log(instr.end());
 	}
 

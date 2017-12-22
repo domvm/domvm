@@ -3,9 +3,13 @@ import { streamCfg } from './addons/stream';
 import { emitCfg } from './addons/emit';
 
 export let onevent = noop;
+export let syncRedraw = false;
 
 export function config(newCfg) {
 	onevent = newCfg.onevent || onevent;
+
+	if (newCfg.syncRedraw != null)
+		syncRedraw = newCfg.syncRedraw;
 
 	if (FEAT_EMIT) {
 		if (newCfg.onemit)

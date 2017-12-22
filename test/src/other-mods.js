@@ -160,6 +160,46 @@ QUnit.module("Other mods", function() {
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, textContent: 3, createTextNode: 1, insertBefore: 3 });
 	});
 
+	QUnit.test('(body) text -> null', function(assert) {
+		tpl = el("span", "moo cow");
+		var expcHtml = '<span>moo cow</span>';
+
+		instr.start();
+		var vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, textContent: 1, insertBefore: 1 });
+
+		tpl = el("span", null);
+		var expcHtml = '<span></span>';
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { textContent: 1 });
+	});
+
+	QUnit.test('(body) null -> text', function(assert) {
+		tpl = el("span", null);
+		var expcHtml = '<span></span>';
+
+		instr.start();
+		var vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });
+
+		tpl = el("span", "moo cow");
+		var expcHtml = '<span>moo cow</span>';
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { textContent: 1 });
+	});
+
 	QUnit.test('(body) textNode -> elem', function(assert) {
 		tpl = el("span", [
 			el("em", "foo"),
@@ -251,6 +291,35 @@ QUnit.module("Other mods", function() {
 
 		// TODO-optim: can be replaceChild instead of removeChild/insertBefore
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 1, createTextNode: 1, insertBefore: 1 });
+	});
+
+	QUnit.test('patch findSeqThorough fast-forward', function(assert) {
+		function genTpl(divAt) {
+			var len = 101;
+			var arr = Array(len);
+			for (var i = 0; i < len; i++)
+				arr[i] = divAt == i ? el("div") : el("i");
+			return arr;
+		}
+
+		tpl = el("div", genTpl(0));
+		var expcHtml = '<div><div></div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>';
+
+		instr.start();
+		var vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 102, insertBefore: 102 });
+
+		tpl = el("div", genTpl(50));
+		var expcHtml = '<div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><div></div><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>';
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		// TODO-optim: can be replaceChild instead of removeChild/insertBefore
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { insertBefore: 1 });
 	});
 
 /*

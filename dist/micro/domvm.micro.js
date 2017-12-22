@@ -27,21 +27,17 @@ var VMODEL		= 5;
 
 var ENV_DOM = typeof window !== "undefined";
 
-var win$1 = ENV_DOM ? window : {};
+var win = ENV_DOM ? window : {};
 var doc = ENV_DOM ? document : {};
 
 
-var rAF = win$1.requestAnimationFrame;
+var rAF = win.requestAnimationFrame;
 
 var emptyObj = {};
 
 function noop() {}
 
 var isArr = Array.isArray;
-
-function isSet(val) {
-	return val != null;
-}
 
 function isPlainObj(val) {
 	return val != null && val.constructor === Object;		//  && typeof val === "object"
@@ -100,13 +96,14 @@ function cmpObj(a, b) {
 	for (var i in a)
 		{ if (a[i] !== b[i])
 			{ return false; } }
-
+	/* istanbul ignore next */
 	return true;
 }
 
 function cmpArr(a, b) {
 	var alen = a.length;
 
+	/* istanbul ignore if */
 	if (b.length !== alen)
 		{ return false; }
 
@@ -119,6 +116,7 @@ function cmpArr(a, b) {
 
 // https://github.com/darsain/raft
 // rAF throttler, aggregates multiple repeated redraw calls within single animframe
+/* istanbul ignore next */
 function raft(fn) {
 	if (!rAF)
 		{ return fn; }
@@ -192,6 +190,7 @@ function longestIncreasingSubsequence(a) {
 }
 
 // based on https://github.com/Olical/binary-search
+/* istanbul ignore next */
 function binaryFindLarger(item, list) {
 	var min = 0;
 	var max = list.length - 1;
@@ -358,73 +357,74 @@ function cssTag(raw) {
 // (de)optimization flags
 
 // forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
-var DEEP_REMOVE = 1;
+var DEEP_REMOVE = 1 << 0;
 // prevents inserting/removing/reordering of children
-var FIXED_BODY = 2;
+var FIXED_BODY = 1 << 1;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
-var KEYED_LIST = 4;
+var KEYED_LIST = 1 << 2;
 // indicates an vnode match/diff/recycler function for body
-var LAZY_LIST = 8;
+var LAZY_LIST = 1 << 3;
 
 function initElementNode(tag, attrs, body, flags) {
 	var node = new VNode;
 
 	node.type = ELEMENT;
 
-	if (isSet(flags))
-		{ node.flags = flags; }
+	node.flags = flags || 0;
 
-	node.attrs = attrs;
+	node.attrs = attrs || null;
 
 	var parsed = cssTag(tag);
 
 	node.tag = parsed.tag;
 
-	// meh, weak assertion, will fail for id=0, etc.
-	if (parsed.id || parsed.class || parsed.attrs) {
+	var hasId = parsed.id != null,
+		hasClass = parsed.class != null,
+		hasAttrs = parsed.attrs != null;
+
+	if (hasId || hasClass || hasAttrs) {
 		var p = node.attrs || {};
 
-		if (parsed.id && !isSet(p.id))
+		if (hasId && p.id == null)
 			{ p.id = parsed.id; }
 
-		if (parsed.class) {
+		if (hasClass) {
 			node._class = parsed.class;		// static class
-			p.class = parsed.class + (isSet(p.class) ? (" " + p.class) : "");
+			p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
 		}
-		if (parsed.attrs) {
+		if (hasAttrs) {
 			for (var key in parsed.attrs)
-				{ if (!isSet(p[key]))
+				{ if (p[key] == null)
 					{ p[key] = parsed.attrs[key]; } }
 		}
 
-//		if (node.attrs !== p)
-			node.attrs = p;
+		node.attrs = p;
 	}
 
 	var mergedAttrs = node.attrs;
 
-	if (isSet(mergedAttrs)) {
-		if (isSet(mergedAttrs._key))
+	if (mergedAttrs != null) {
+		if (mergedAttrs._key != null)
 			{ node.key = mergedAttrs._key; }
 
-		if (isSet(mergedAttrs._ref))
+		if (mergedAttrs._ref != null)
 			{ node.ref = mergedAttrs._ref; }
 
-		if (isSet(mergedAttrs._hooks))
+		if (mergedAttrs._hooks != null)
 			{ node.hooks = mergedAttrs._hooks; }
 
-		if (isSet(mergedAttrs._data))
+		if (mergedAttrs._data != null)
 			{ node.data = mergedAttrs._data; }
 
-		if (isSet(mergedAttrs._flags))
+		if (mergedAttrs._flags != null)
 			{ node.flags = mergedAttrs._flags; }
 
-		if (!isSet(node.key)) {
-			if (isSet(node.ref))
+		if (node.key == null) {
+			if (node.ref != null)
 				{ node.key = node.ref; }
-			else if (isSet(mergedAttrs.id))
+			else if (mergedAttrs.id != null)
 				{ node.key = mergedAttrs.id; }
-			else if (isSet(mergedAttrs.name))
+			else if (mergedAttrs.name != null)
 				{ node.key = mergedAttrs.name + (mergedAttrs.type === "radio" || mergedAttrs.type === "checkbox" ? mergedAttrs.value : ""); }
 		}
 	}
@@ -466,6 +466,8 @@ function preProc(vnew, parent, idx, ownVm) {
 
 	if (isArr(vnew.body))
 		{ preProcBody(vnew); }
+	else if (vnew.body === "")
+		{ vnew.body = null; }
 	else {}
 }
 
@@ -773,9 +775,13 @@ function emit(evName) {
 }
 
 var onevent = noop;
+var syncRedraw = false;
 
 function config(newCfg) {
 	onevent = newCfg.onevent || onevent;
+
+	if (newCfg.syncRedraw != null)
+		{ syncRedraw = newCfg.syncRedraw; }
 
 	{
 		if (newCfg.onemit)
@@ -862,9 +868,7 @@ function remAttr(node, name, asProp) {
 function setAttr(node, name, val, asProp, initial) {
 	var el = node.el;
 
-	if (val == null)
-		{ !initial && remAttr(node, name, false); }		// will also removeAttr of style: null
-	else if (node.ns != null)
+	if (node.ns != null)
 		{ el.setAttribute(name, val); }
 	else if (name === "class")
 		{ el.className = val; }
@@ -886,6 +890,10 @@ function patchAttrs(vnode, donor, initial) {
 	else {
 		for (var key in nattrs) {
 			var nval = nattrs[key];
+
+			if (nval == null)
+				{ continue; }
+
 			var isDyn = isDynProp(vnode.tag, key);
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
@@ -901,7 +909,7 @@ function patchAttrs(vnode, donor, initial) {
 
 		// TODO: bench style.cssText = "" vs removeAttribute("style")
 		for (var key in oattrs) {
-			!(key in nattrs) &&
+			nattrs[key] == null &&
 			!isSplProp(key) &&
 			remAttr(vnode, key, isDynProp(vnode.tag, key) || isEvProp(key));
 		}
@@ -959,7 +967,7 @@ function hydrate(vnode, withEl) {
 
 			if (isArr(vnode.body))
 				{ hydrateBody(vnode); }
-			else if (vnode.body != null && vnode.body !== "")
+			else if (vnode.body != null)
 				{ vnode.el.textContent = vnode.body; }
 		}
 		else if (vnode.type === TEXT)
@@ -972,10 +980,6 @@ function hydrate(vnode, withEl) {
 
 	return vnode.el;
 }
-
-// prevent GCC from inlining some large funcs (which negatively affects Chrome's JIT)
-//win._noinline_syncChildren = syncChildren;
-win$1._noinline_lisMove = lisMove;
 
 function nextNode(node, body) {
 	return body[node.idx + 1];
@@ -1143,7 +1147,18 @@ function findSeqThorough(n, obody, fromIdx) {		// pre-tested isView?
 	return null;
 }
 
-function findHashKeyed(n, obody, fromIdx) {
+function findKeyed(n, obody, fromIdx) {
+	if (obody._keys == null) {
+		if (obody[fromIdx].key === n.key)
+			{ return obody[fromIdx]; }
+		else {
+			var keys = {};
+			for (var i = 0; i < obody.length; i++)
+				{ keys[obody[i].key] = i; }
+			obody._keys = keys;
+		}
+	}
+
 	return obody[obody._keys[n.key]];
 }
 
@@ -1204,7 +1219,7 @@ function patch(vnode, donor) {
 		}
 		// "" | null => "" | null
 		else if (nbody !== obody) {
-			if (el.firstChild)
+			if (nbody != null && obody != null)
 				{ el.firstChild.nodeValue = nbody; }
 			else
 				{ el.textContent = nbody; }
@@ -1232,17 +1247,11 @@ function patchChildren(vnode, donor) {
 		domSync		= !isFixed && vnode.type === ELEMENT,
 		doFind		= true,
 		find		= (
-			isKeyed ? findHashKeyed :				// keyed lists/lazyLists
+			olen === 0 ? noop :
+			isKeyed ? findKeyed :					// keyed lists/lazyLists
 			isFixed || isLazy ? takeSeqIndex :		// unkeyed lazyLists and FIXED_BODY
 			findSeqThorough							// more complex stuff
 		);
-
-	if (isKeyed) {
-		var keys = {};
-		for (var i = 0; i < obody.length; i++)
-			{ keys[obody[i].key] = i; }
-		obody._keys = keys;
-	}
 
 	if (domSync && nlen === 0) {
 		clearChildren(donor);
@@ -1344,7 +1353,7 @@ function patchChildren(vnode, donor) {
 		}
 
 		// found donor & during a sequential search ...at search head
-		if (!isKeyed && donor2 != null) {
+		if (donor2 != null) {
 			if (foundIdx === fromIdx) {
 				// advance head
 				fromIdx++;
@@ -1358,7 +1367,7 @@ function patchChildren(vnode, donor) {
 			else
 				{ everNonseq = true; }
 
-			if (olen > 100 && everNonseq && ++patched % 10 === 0)
+			if (!isKeyed && olen > 100 && everNonseq && ++patched % 10 === 0)
 				{ while (fromIdx < olen && alreadyAdopted(obody[fromIdx]))
 					{ fromIdx++; } }
 		}
@@ -1451,11 +1460,17 @@ var ViewModelProto = ViewModel.prototype = {
 		return p.vm;
 	},
 	redraw: function(sync) {
+		if (sync == null)
+			{ sync = syncRedraw; }
+
 		var vm = this;
 		sync ? vm._redraw(null, null, isHydrated(vm)) : vm._redrawAsync();
 		return vm;
 	},
 	update: function(newData, sync) {
+		if (sync == null)
+			{ sync = syncRedraw; }
+
 		var vm = this;
 		sync ? vm._update(newData, null, null, isHydrated(vm)) : vm._updateAsync(newData);
 		return vm;
@@ -1776,7 +1791,7 @@ var nano = {
 	DEEP_REMOVE: DEEP_REMOVE,
 	KEYED_LIST: KEYED_LIST,
 	LAZY_LIST: LAZY_LIST,
-};
+}
 
 function protoPatch(n, doRepaint) {
 	patch$1(this, n, doRepaint);
@@ -1849,7 +1864,7 @@ function defineElementSpread(tag) {
 			bodyIdx = 2;
 		}
 
-		if (len === bodyIdx + 1 && (isVal(args[bodyIdx]) || isArr(args[bodyIdx]) || attrs && (attrs._flags & LAZY_LIST) === LAZY_LIST))
+		if (len === bodyIdx + 1 && !(args[bodyIdx] instanceof VNode) && !(args[bodyIdx] instanceof VView) && !(args[bodyIdx] instanceof VModel))
 			{ body = args[bodyIdx]; }
 		else
 			{ body = sliceArgs(args, bodyIdx); }

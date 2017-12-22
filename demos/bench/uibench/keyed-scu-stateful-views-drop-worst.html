@@ -135,6 +135,20 @@
 
 			uibench.init('domvm', '3.x-dev');
 
+			function median(nums) {
+				var median = 0,
+					numsLen = nums.length;
+
+				nums.sort();
+
+				if (numsLen % 2 === 0)
+					median = (nums[numsLen / 2 - 1] + nums[numsLen / 2]) / 2;
+				else
+					median = nums[(numsLen - 1) / 2];
+
+				return median;
+			}
+
 			document.addEventListener('DOMContentLoaded', function(e) {
 				const container = document.querySelector('#App');
 				var vm = null;
@@ -150,13 +164,22 @@
 						vm.unmount();
 
 						var total = 0;
+						var meds = {};
+						var sums = {};
 
 						for (var s in samples) {
 							samples[s].sort((a, b) => a - b);
-							total += samples[s].reduce((a, b) => (a + b), 0);
+							samples[s].pop();
+							samples[s].pop();
+							samples[s].pop();
+							sums[s] = samples[s].reduce((a, b) => (a + b), 0);
+							meds[s] = median(samples[s]);
+							total += sums[s];
 						}
 
-						console.log(total);
+						console.log("medians", meds);
+						console.log("sums", sums);
+						console.log("total", total);
 						container.innerHTML = "<pre>" + JSON.stringify(samples, null, 2) + "</pre>";
 					}
 				);

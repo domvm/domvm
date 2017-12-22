@@ -21,18 +21,12 @@ QUnit.module("Attrs/props", function() {
 	// TODO: can 'id' or 'name' be allowed to change for recycling since they implicitly double as keys?
 	// TODO: can any form elements be reused if non-matching type?
 	QUnit.test("Update", function(assert) {
-		var onclick = function() {};
 		tpl = el("input#foo", {type: "text", style: {padding: 10}, disabled: false, custom: "xyz", custom2: "...", custom4: null});
 
 		instr.start();
 		vm.redraw();		// todo: create test container
 		var callCounts = instr.end();
-/*
-		// a bit of a hack to get the outerHtml to match exactly fo the test
-		// domvm sets className="" for perf rather than removeAttribute("class")
-		if (vm.node.el.className === "")
-			vm.node.el.removeAttribute("class");
-*/
+
 		var expcHtml = '<input type="text" custom="xyz" custom2="..." id="foo" style="padding: 10px;">';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeAttribute: 3, setAttribute: 2 });
 	});
@@ -241,5 +235,28 @@ QUnit.module("Attrs/props", function() {
 		var expcHtml = '<div>moo</div>';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeAttribute: 1 });
 		assert.equal(vm.node.el.onclick, null, "onclick unset");
+	});
+
+	QUnit.test("Reused static attrs object", function(assert) {
+		var attrs = {foo: "bar"};
+
+		function View() {
+			return function() {
+				return el("div", attrs, "moo");
+			}
+		}
+
+		instr.start();
+		var vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div foo="bar">moo</div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, setAttribute: 1, textContent: 1, insertBefore: 1 });
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { });
 	});
 });

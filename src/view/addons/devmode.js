@@ -1,8 +1,6 @@
 import { isFunc } from '../../utils';
 
 export const DEVMODE = {
-	syncRedraw: false,
-
 	warnings: true,
 
 	verbose: true,

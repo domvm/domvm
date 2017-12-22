@@ -1,79 +1,80 @@
 import { ELEMENT } from './VTYPES';
 import { VNode } from './VNode';
 import { cssTag } from './addons/cssTag';
-import { isSet, isPlainObj } from '../utils';
+import { isPlainObj } from '../utils';
 import { devNotify } from "./addons/devmode";
 
 // (de)optimization flags
 
 // forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
-export const DEEP_REMOVE = 1;
+export const DEEP_REMOVE = 1 << 0;
 // prevents inserting/removing/reordering of children
-export const FIXED_BODY = 2;
+export const FIXED_BODY = 1 << 1;
 // enables fast keyed lookup of children via binary search, expects homogeneous keyed body
-export const KEYED_LIST = 4;
+export const KEYED_LIST = 1 << 2;
 // indicates an vnode match/diff/recycler function for body
-export const LAZY_LIST = 8;
+export const LAZY_LIST = 1 << 3;
 
 export function initElementNode(tag, attrs, body, flags) {
 	let node = new VNode;
 
 	node.type = ELEMENT;
 
-	if (isSet(flags))
-		node.flags = flags;
+	node.flags = flags || 0;
 
-	node.attrs = attrs;
+	node.attrs = attrs || null;
 
 	var parsed = cssTag(tag);
 
 	node.tag = parsed.tag;
 
-	// meh, weak assertion, will fail for id=0, etc.
-	if (parsed.id || parsed.class || parsed.attrs) {
+	var hasId = parsed.id != null,
+		hasClass = parsed.class != null,
+		hasAttrs = parsed.attrs != null;
+
+	if (hasId || hasClass || hasAttrs) {
 		var p = node.attrs || {};
 
-		if (parsed.id && !isSet(p.id))
+		if (hasId && p.id == null)
 			p.id = parsed.id;
 
-		if (parsed.class) {
+		if (hasClass) {
 			node._class = parsed.class;		// static class
-			p.class = parsed.class + (isSet(p.class) ? (" " + p.class) : "");
+			p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
 		}
-		if (parsed.attrs) {
+		if (hasAttrs) {
 			for (var key in parsed.attrs)
-				if (!isSet(p[key]))
+				if (p[key] == null)
 					p[key] = parsed.attrs[key];
 		}
 
-//		if (node.attrs !== p)
-			node.attrs = p;
+		node.attrs = p;
 	}
 
 	var mergedAttrs = node.attrs;
 
-	if (isSet(mergedAttrs)) {
-		if (isSet(mergedAttrs._key))
+	if (mergedAttrs != null) {
+		if (mergedAttrs._key != null)
 			node.key = mergedAttrs._key;
 
-		if (isSet(mergedAttrs._ref))
+		if (mergedAttrs._ref != null)
 			node.ref = mergedAttrs._ref;
 
-		if (isSet(mergedAttrs._hooks))
+		if (mergedAttrs._hooks != null)
 			node.hooks = mergedAttrs._hooks;
 
-		if (isSet(mergedAttrs._data))
+		if (mergedAttrs._data != null)
 			node.data = mergedAttrs._data;
 
-		if (isSet(mergedAttrs._flags))
+		if (mergedAttrs._flags != null)
 			node.flags = mergedAttrs._flags;
 
-		if (!isSet(node.key)) {
-			if (isSet(node.ref))
+		if (node.key == null) {
+			if (node.ref != null)
 				node.key = node.ref;
-			else if (isSet(mergedAttrs.id))
+			else if (mergedAttrs.id != null)
 				node.key = mergedAttrs.id;
-			else if (isSet(mergedAttrs.name))
+			else if (mergedAttrs.name != null)
 				node.key = mergedAttrs.name + (mergedAttrs.type === "radio" || mergedAttrs.type === "checkbox" ? mergedAttrs.value : "");
 		}
 	}
