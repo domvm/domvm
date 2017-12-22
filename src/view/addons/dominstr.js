@@ -73,7 +73,7 @@ export function DOMInstr(withTime) {
 
 	function ctxName(opName) {
 		var opPath = opName.split(".");
-		var o = win;
+		var o = window;
 		while (opPath.length > 1)
 			o = o[opPath.shift()];
 

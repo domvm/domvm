@@ -1,6 +1,6 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
 import { createView } from '../createView';
-import { isArr, isPlainObj, isVal, isFunc, ENV_DOM } from '../../utils';
+import { isArr } from '../../utils';
 import { isEvProp, isDynProp } from '../utils';
 import { autoPx } from './autoPx';
 import { LAZY_LIST } from '../initElementNode';

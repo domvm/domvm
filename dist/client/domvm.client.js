@@ -27,11 +27,11 @@ var VMODEL		= 5;
 
 var ENV_DOM = typeof window !== "undefined";
 
-var win$1 = ENV_DOM ? window : {};
+var win = ENV_DOM ? window : {};
 var doc = ENV_DOM ? document : {};
 
 
-var rAF = win$1.requestAnimationFrame;
+var rAF = win.requestAnimationFrame;
 
 var emptyObj = {};
 
@@ -341,9 +341,10 @@ function hookStream(s, vm) {
 	var redrawStream = subStream(s, function (val) {
 		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
 		if (redrawStream) {
-			// if vm fully is formed (or mounted vm.node.el?)
+			/* istanbul ignore else  */
 			if (vm.node != null)
 				{ vm.redraw(); }
+
 			unsubStream(redrawStream);
 		}
 	});
@@ -355,7 +356,7 @@ function hookStream2(s, vm) {
 	var redrawStream = subStream(s, function (val) {
 		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
 		if (redrawStream) {
-			// if vm fully is formed (or mounted vm.node.el?)
+			/* istanbul ignore else  */
 			if (vm.node != null)
 				{ vm.redraw(); }
 		}
@@ -608,7 +609,7 @@ function patchStyle(n, o) {
 
 			{
 				if (isStream(nv))
-					{ nv = hookStream(nv, getVm(n)); }
+					{ ns[nn] = nv = hookStream(nv, getVm(n)); }
 			}
 
 			if (os == null || nv != null && nv !== os[nn])
@@ -822,9 +823,13 @@ function emit(evName) {
 }
 
 var onevent = noop;
+var syncRedraw = false;
 
 function config(newCfg) {
 	onevent = newCfg.onevent || onevent;
+
+	if (newCfg.syncRedraw != null)
+		{ syncRedraw = newCfg.syncRedraw; }
 
 	{
 		if (newCfg.onemit)
@@ -1516,11 +1521,17 @@ var ViewModelProto = ViewModel.prototype = {
 		return p.vm;
 	},
 	redraw: function(sync) {
+		if (sync == null)
+			{ sync = syncRedraw; }
+
 		var vm = this;
 		sync ? vm._redraw(null, null, isHydrated(vm)) : vm._redrawAsync();
 		return vm;
 	},
 	update: function(newData, sync) {
+		if (sync == null)
+			{ sync = syncRedraw; }
+
 		var vm = this;
 		sync ? vm._update(newData, null, null, isHydrated(vm)) : vm._updateAsync(newData);
 		return vm;

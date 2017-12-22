@@ -2,6 +2,8 @@
 
 require('undom/register');
 
+global.flyd = require('../demos/lib/flyd.min.js');
+
 global.location = {href: {replace: function() {}}};
 
 global.MouseEvent = Event;
@@ -97,12 +99,7 @@ assert.propEqual = assert.expect = function() {};
 assert.async = function() { return function() {} };
 assert.ok = assert.equal = assert.deepEqual = function() {};
 
-global.domvm = require('../dist/spec/domvm.spec.js');
-
-domvm.DEVMODE.syncRedraw = true
-domvm.DEVMODE.mutations = false
-domvm.DEVMODE.warnings = false;
-domvm.DEVMODE.verbose = false;
+global.domvm = require('../dist/full/domvm.full.js');
 
 global.QUnit = {
 	module: function(name, fn) {

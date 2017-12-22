@@ -27,11 +27,11 @@ var VMODEL		= 5;
 
 var ENV_DOM = typeof window !== "undefined";
 
-var win$1 = ENV_DOM ? window : {};
+var win = ENV_DOM ? window : {};
 var doc = ENV_DOM ? document : {};
 
 
-var rAF = win$1.requestAnimationFrame;
+var rAF = win.requestAnimationFrame;
 
 var emptyObj = {};
 
@@ -775,9 +775,13 @@ function emit(evName) {
 }
 
 var onevent = noop;
+var syncRedraw = false;
 
 function config(newCfg) {
 	onevent = newCfg.onevent || onevent;
+
+	if (newCfg.syncRedraw != null)
+		{ syncRedraw = newCfg.syncRedraw; }
 
 	{
 		if (newCfg.onemit)
@@ -1456,11 +1460,17 @@ var ViewModelProto = ViewModel.prototype = {
 		return p.vm;
 	},
 	redraw: function(sync) {
+		if (sync == null)
+			{ sync = syncRedraw; }
+
 		var vm = this;
 		sync ? vm._redraw(null, null, isHydrated(vm)) : vm._redrawAsync();
 		return vm;
 	},
 	update: function(newData, sync) {
+		if (sync == null)
+			{ sync = syncRedraw; }
+
 		var vm = this;
 		sync ? vm._update(newData, null, null, isHydrated(vm)) : vm._updateAsync(newData);
 		return vm;

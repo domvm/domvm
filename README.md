@@ -118,13 +118,20 @@ If you're new to domvm, the [dev build](/dist/dev/domvm.dev.js) is recommended f
 
 There are a couple config options:
 
-- `domvm.DEVMODE.syncRedraw = true` will cause all redraws to be synchronous and non-debounced (useful for unit tests & debugging)
 - `domvm.DEVMODE.mutations = false` will disable DOM mutation logging.
 - `domvm.DEVMODE.warnings = false` will disable all warnings.
 - `domvm.DEVMODE.verbose = false` will suppress the explanations, but still leave the error names & object info.
 - `domvm.DEVMODE.UNKEYED_INPUT = false` will disable only these warnings. The full list can be found in [devmode.js](/src/view/addons/devmode.js).
 
 Due to the runtime nature of DEVMODE heuristics, some warnings may be false positives (where the observed behavior is intentional). If you feel an error message can be improved, open an issue!
+
+While not DEVMODE-specific, you may find it useful to toggle always-sychronous redraw during testing and benchmarks:
+
+```js
+domvm.config({
+    syncRedraw: true
+});
+```
 
 ---
 ### Templates
@@ -509,8 +516,9 @@ domvm.config({
 - `sub` takes a stream + callback and returns a dependent stream that invokes the callback during updates
 - `unsub` takes the dependent stream returned by `sub` and severs it from its parent
 
-domvm's templates support streams only in the following places:
+domvm's templates support streams in the following contexts:
 
+- view data: `vw(MyView, dataStream...)` and `domvm.createView(MyView, dataStream...)`
 - simple body: `el("#total", cartTotalStream)`
 - attr value: `el("input[type=checkbox]", {checked: checkedStream})`
 - css value: `el("div", {style: {background: colorStream}})`

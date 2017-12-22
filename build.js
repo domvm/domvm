@@ -58,12 +58,6 @@ function getBuilds(name) {
 			descr: "use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior",
 			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
 		},
-		{
-			build: "spec",
-			contents: "`dev`<br> - `DOMInstr`<br>",
-			descr: "for tests & code coverage",
-			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
-		},
 	].filter(b => name != null ? b.build === name : true);
 }
 
@@ -90,8 +84,7 @@ function compile(buildName) {
 		input: buildFile,
 		plugins: [
 			replace({
-				_DEVMODE:		buildName === "dev" || buildName === "spec",
-				_SPEC:			buildName === "spec",
+				_DEVMODE:		buildName === "dev",
 				FEAT_CSSTAG:	feats.indexOf("CSSTAG") != -1,
 				FEAT_AUTOPX:	feats.indexOf("AUTOPX") != -1,
 				FEAT_EMIT:		feats.indexOf("EMIT") != -1,

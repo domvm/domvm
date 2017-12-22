@@ -23,7 +23,6 @@
     "watch:server": "node watch.js server",
     "watch:full": "node watch.js full",
     "watch:dev": "node watch.js dev",
-    "watch:spec": "node watch.js spec",
     "build:pico": "node build.js pico",
     "build:nano": "node build.js nano",
     "build:micro": "node build.js micro",
@@ -31,8 +30,7 @@
     "build:client": "node build.js client",
     "build:server": "node build.js server",
     "build:full": "node build.js full",
-    "build:dev": "node build.js dev",
-    "build:spec": "node build.js spec"
+    "build:dev": "node build.js dev"
   },
   "nyc": {
     "require": [

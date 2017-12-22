@@ -27,11 +27,11 @@ var VMODEL		= 5;
 
 var ENV_DOM = typeof window !== "undefined";
 
-var win$1 = ENV_DOM ? window : {};
+var win = ENV_DOM ? window : {};
 var doc = ENV_DOM ? document : {};
 
 
-var rAF = win$1.requestAnimationFrame;
+var rAF = win.requestAnimationFrame;
 
 var emptyObj = {};
 
@@ -341,9 +341,10 @@ function hookStream(s, vm) {
 	var redrawStream = subStream(s, function (val) {
 		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
 		if (redrawStream) {
-			// if vm fully is formed (or mounted vm.node.el?)
+			/* istanbul ignore else  */
 			if (vm.node != null)
 				{ vm.redraw(); }
+
 			unsubStream(redrawStream);
 		}
 	});
@@ -355,7 +356,7 @@ function hookStream2(s, vm) {
 	var redrawStream = subStream(s, function (val) {
 		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
 		if (redrawStream) {
-			// if vm fully is formed (or mounted vm.node.el?)
+			/* istanbul ignore else  */
 			if (vm.node != null)
 				{ vm.redraw(); }
 		}
@@ -394,8 +395,6 @@ function cssTag(raw) {
 }
 
 var DEVMODE = {
-	syncRedraw: false,
-
 	warnings: true,
 
 	verbose: true,
@@ -698,7 +697,7 @@ function patchStyle(n, o) {
 
 			{
 				if (isStream(nv))
-					{ nv = hookStream(nv, getVm(n)); }
+					{ ns[nn] = nv = hookStream(nv, getVm(n)); }
 			}
 
 			if (os == null || nv != null && nv !== os[nn])
@@ -912,9 +911,13 @@ function emit(evName) {
 }
 
 var onevent = noop;
+var syncRedraw = false;
 
 function config(newCfg) {
 	onevent = newCfg.onevent || onevent;
+
+	if (newCfg.syncRedraw != null)
+		{ syncRedraw = newCfg.syncRedraw; }
 
 	{
 		if (newCfg.onemit)
@@ -1614,7 +1617,7 @@ function DOMInstr(withTime) {
 
 	function ctxName(opName) {
 		var opPath = opName.split(".");
-		var o = win;
+		var o = window;
 		while (opPath.length > 1)
 			{ o = o[opPath.shift()]; }
 
@@ -1889,21 +1892,17 @@ var ViewModelProto = ViewModel.prototype = {
 		return p.vm;
 	},
 	redraw: function(sync) {
-		{
-			if (DEVMODE.syncRedraw) {
-				sync = true;
-			}
-		}
+		if (sync == null)
+			{ sync = syncRedraw; }
+
 		var vm = this;
 		sync ? vm._redraw(null, null, isHydrated(vm)) : vm._redrawAsync();
 		return vm;
 	},
 	update: function(newData, sync) {
-		{
-			if (DEVMODE.syncRedraw) {
-				sync = true;
-			}
-		}
+		if (sync == null)
+			{ sync = syncRedraw; }
+
 		var vm = this;
 		sync ? vm._update(newData, null, null, isHydrated(vm)) : vm._updateAsync(newData);
 		return vm;
@@ -1994,7 +1993,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		if (isRedrawRoot && vm.node && vm.node.el && !vm.node.el.parentNode)
 			{ devNotify("UNMOUNTED_REDRAW", [vm]); }
 
-		if (!false && isRedrawRoot && DEVMODE.mutations && isMounted)
+		if (isRedrawRoot && DEVMODE.mutations && isMounted)
 			{ instr.start(); }
 	}
 
@@ -2072,7 +2071,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		{ drainDidHooks(vm); }
 
 	{
-		if (!false && isRedrawRoot && DEVMODE.mutations && isMounted)
+		if (isRedrawRoot && DEVMODE.mutations && isMounted)
 			{ console.log(instr.end()); }
 	}
 

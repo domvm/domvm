@@ -17,7 +17,7 @@ export function patchStyle(n, o) {
 
 			if (FEAT_STREAM) {
 				if (isStream(nv))
-					nv = hookStream(nv, getVm(n));
+					ns[nn] = nv = hookStream(nv, getVm(n));
 			}
 
 			if (os == null || nv != null && nv !== os[nn])
