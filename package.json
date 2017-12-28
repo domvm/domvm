@@ -44,13 +44,13 @@
   "devDependencies": {
     "buble": "^0.18.0",
     "js-beautify": "^1.7.5",
-    "mocha": "^4.0.1",
+    "mocha": "^4.1.0",
     "node-watch": "^0.5.5",
     "nyc": "^11.4.1",
-    "rollup": "^0.52.3",
+    "rollup": "^0.53.3",
     "rollup-plugin-buble": "^0.18.0",
     "rollup-plugin-replace": "^2.0.0",
-    "uglify-js": "^3.2.2",
+    "uglify-js": "^3.3.4",
     "undom": "^0.3.3"
   },
   "bugs": {

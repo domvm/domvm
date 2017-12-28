@@ -144,7 +144,7 @@ function squish(buildName, start) {
 	var opts = {
 		output: {
 	//		beautify: false,
-			preamble: "// " + /@preserve\s+(.*)$/gm.exec(code)[1] + "\n",
+			preamble: "// " + /@preserve\s+(.*)$/gm.exec(code)[1],
 		}
 	};
 	var result = uglify(code, opts);

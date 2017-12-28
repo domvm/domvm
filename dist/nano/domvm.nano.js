@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2017, Leon Sorokin
+* Copyright (c) 2018, Leon Sorokin
 * All rights reserved. (MIT Licensed)
 *
 * domvm.js (DOM ViewModel)
