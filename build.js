@@ -62,8 +62,11 @@ function getBuilds(name) {
 
 var args = process.argv.slice(2);
 
-if (args.length == 1)
-	compile(args[0]);
+if (args.length == 1) {
+	var buildName = args[0];
+	builds = buildName === "all" ? getBuilds().map(b => b.build) : [buildName];
+	builds.forEach(b => compile(b));
+}
 
 function getCurBranch() {
 	var branches = execSync("git branch", {encoding: 'utf8'});
