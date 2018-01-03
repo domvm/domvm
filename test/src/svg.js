@@ -19,7 +19,7 @@ QUnit.module("SVG", function() {
 	QUnit.test('SVG elems (spread)', function(assert) {
 		var tpl = svs("svg", {width: "500", height: "150"},
 			svs("ellipse", {cx: "240", cy: "100", rx: "220", ry: "30", style: "fill: purple;"}),
-			"Sorry, your browser does not support inline SVG.",
+			"Sorry, your browser does not support inline SVG."
 		);
 
 		instr.start();
