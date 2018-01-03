@@ -5,7 +5,6 @@ const fs = require('fs');
 const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
 const zlib = require('zlib');
-const beautify = require('js-beautify').js_beautify;
 const uglify = require("uglify-js").minify;
 
 function getBuilds(name) {
@@ -149,11 +148,7 @@ function squish(buildName, start) {
 	};
 	var result = uglify(code, opts);
 	var compiled = result.code;
-
 	fs.writeFileSync(dst, compiled, 'utf8');
-
-	var dstPretty = "dist/" + buildName + "/domvm." + buildName + ".pretty.js";
-	fs.writeFileSync(dstPretty, beautify(compiled, { indent_size: 2 }), 'utf8');
 
 	buildDistTable();
 
