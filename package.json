@@ -32,10 +32,10 @@
     "mocha": "^4.1.0",
     "node-watch": "^0.5.5",
     "nyc": "^11.4.1",
-    "rollup": "^0.53.3",
+    "rollup": "^0.53.4",
     "rollup-plugin-buble": "^0.18.0",
     "rollup-plugin-replace": "^2.0.0",
-    "uglify-js": "^3.3.4",
+    "uglify-js": "^3.3.7",
     "undom": "^0.3.3"
   },
   "bugs": {
