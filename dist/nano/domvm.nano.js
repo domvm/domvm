@@ -1021,8 +1021,9 @@ function syncChildren(node, donor) {
 
 // TODO: also use the state.rgtSib and state.rgtNode bounds, plus reduce LIS range
 function sortDOM(node, parEl, body, state) {
-	var kids = Array.prototype.slice.call(parEl.childNodes);
 	var domIdxs = [];
+	// compression micro-opt (instead of Array.prototype.slice.call(...);
+	var kids = domIdxs.slice.call(parEl.childNodes);
 
 	for (var k = 0; k < kids.length; k++) {
 		var n = kids[k]._node;

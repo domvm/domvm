@@ -195,7 +195,6 @@ function buildDistTable() {
 
 		for (var colName in colWidths)
 			colWidths[colName] = Math.max(colWidths[colName], build[colName].length);
-
 	});
 
 	var table = '';
