@@ -1688,7 +1688,7 @@ function lazyList(items, cfg) {
 	return self;
 }
 
-var nano$1 = {
+var nano = {
 	config: config,
 
 	ViewModel: ViewModel,
@@ -1754,7 +1754,7 @@ function patch$1(o, n, doRepaint) {
 
 VNodeProto.patch = protoPatch;
 
-return nano$1;
+return nano;
 
 })));
 //# sourceMappingURL=domvm.nano.js.map
