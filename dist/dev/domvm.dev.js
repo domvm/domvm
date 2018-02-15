@@ -30,13 +30,11 @@ var ENV_DOM = typeof window !== "undefined";
 var win = ENV_DOM ? window : {};
 var doc = ENV_DOM ? document : {};
 
-
 var rAF = win.requestAnimationFrame;
 
 var emptyObj = {};
 
 function noop() {}
-
 var isArr = Array.isArray;
 
 function isPlainObj(val) {
@@ -59,8 +57,6 @@ function isFunc(val) {
 function isProm(val) {
 	return typeof val === "object" && isFunc(val.then);
 }
-
-
 
 function assignObj(targ) {
 	var args = arguments;
@@ -1084,7 +1080,6 @@ function createView(view, data, key, opts) {
 	return new ViewModel(view, data, key, opts);
 }
 
-//import { XML_NS, XLINK_NS } from './defineSvgElement';
 function hydrateBody(vnode) {
 	for (var i = 0; i < vnode.body.length; i++) {
 		var vnode2 = vnode.body[i];
@@ -1548,6 +1543,7 @@ function patchChildren(vnode, donor) {
 function DOMInstr(withTime) {
 	var isEdge = navigator.userAgent.indexOf("Edge") !== -1;
 	var isIE = navigator.userAgent.indexOf("Trident/") !== -1;
+
 	var getDescr = Object.getOwnPropertyDescriptor;
 	var defProp = Object.defineProperty;
 
@@ -2370,7 +2366,6 @@ function protoAttach(el) {
 
 	return vm;
 }
-
 // very similar to hydrate, TODO: dry
 function attach(vnode, withEl) {
 	vnode.el = withEl;
@@ -2421,11 +2416,9 @@ function vmProtoHtml(dynProps) {
 
 	return html(vm.node, dynProps);
 }
-
 function vProtoHtml(dynProps) {
 	return html(this, dynProps);
 }
-
 function camelDash(val) {
 	return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }

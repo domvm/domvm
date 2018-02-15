@@ -30,13 +30,11 @@ var ENV_DOM = typeof window !== "undefined";
 var win = ENV_DOM ? window : {};
 var doc = ENV_DOM ? document : {};
 
-
 var rAF = win.requestAnimationFrame;
 
 var emptyObj = {};
 
 function noop() {}
-
 var isArr = Array.isArray;
 
 function isPlainObj(val) {
@@ -59,8 +57,6 @@ function isFunc(val) {
 function isProm(val) {
 	return typeof val === "object" && isFunc(val.then);
 }
-
-
 
 function assignObj(targ) {
 	var args = arguments;
@@ -321,9 +317,6 @@ function defineText(body) {
 	node.body = body;
 	return node;
 }
-
-// creates a one-shot self-ending stream that redraws target vm
-// TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
 
 var tagCache = {};
 
@@ -787,8 +780,6 @@ function config(newCfg) {
 		if (newCfg.onemit)
 			{ emitCfg(newCfg.onemit); }
 	}
-
-	
 }
 
 function bindEv(el, type, fn) {
@@ -885,7 +876,6 @@ function patchAttrs(vnode, donor, initial) {
 	var oattrs = donor.attrs || emptyObj;
 
 	if (nattrs === oattrs) {
-		
 	}
 	else {
 		for (var key in nattrs) {
@@ -927,7 +917,6 @@ function createView(view, data, key, opts) {
 	return new ViewModel(view, data, key, opts);
 }
 
-//import { XML_NS, XLINK_NS } from './defineSvgElement';
 function hydrateBody(vnode) {
 	for (var i = 0; i < vnode.body.length; i++) {
 		var vnode2 = vnode.body[i];
@@ -1003,6 +992,7 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 		if (state[sibName] != null) {
 			// skip dom elements not created by domvm
 			if ((sibNode = state[sibName]._node) == null) {
+
 				state[sibName] = advSib(state[sibName]);
 				return;
 			}
@@ -1033,6 +1023,7 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 			state[invSibName] = tmpSib;
 		}
 		else {
+
 			if (lis && state[sibName] != null)
 				{ return lisMove(advSib, advNode, insert, sibName, nodeName, parEl, body, sibNode, state); }
 
@@ -1627,8 +1618,6 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 		if (vm.data !== newData) {
 			fireHook(vm.hooks, "willUpdate", vm, newData);
 			vm.data = newData;
-
-			
 		}
 	}
 
