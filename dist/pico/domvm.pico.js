@@ -1294,10 +1294,6 @@ function ViewModel(view, data, key, opts) {
 		vm.config(out);
 	}
 
-	// these must be wrapped here since they're debounced per view
-	vm._redrawAsync = raft(function (_) { return vm.redraw(true); });
-	vm._updateAsync = raft(function (newData) { return vm.update(newData, true); });
-
 	vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
 }
 
@@ -1351,7 +1347,12 @@ var ViewModelProto = ViewModel.prototype = {
 			{ sync = syncRedraw; }
 
 		var vm = this;
-		sync ? vm._redraw(null, null, isHydrated(vm)) : vm._redrawAsync();
+
+		if (sync)
+			{ vm._redraw(null, null, isHydrated(vm)); }
+		else
+			{ (vm._redrawAsync = vm._redrawAsync || raft(function (_) { return vm.redraw(true); }))(); }
+
 		return vm;
 	},
 	update: function(newData, sync) {
@@ -1359,7 +1360,12 @@ var ViewModelProto = ViewModel.prototype = {
 			{ sync = syncRedraw; }
 
 		var vm = this;
-		sync ? vm._update(newData, null, null, isHydrated(vm)) : vm._updateAsync(newData);
+
+		if (sync)
+			{ vm._update(newData, null, null, isHydrated(vm)); }
+		else
+			{ (vm._updateAsync = vm._updateAsync || raft(function (newData) { return vm.update(newData, true); }))(newData); }
+
 		return vm;
 	},
 
