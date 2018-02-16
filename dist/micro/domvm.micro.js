@@ -429,7 +429,7 @@ function initElementNode(tag, attrs, body, flags) {
 }
 
 function setRef(vm, name, node) {
-	var path = ["refs"].concat(name.split("."));
+	var path = ("refs." + name).split(".");
 	deepSet(vm, path, node);
 }
 

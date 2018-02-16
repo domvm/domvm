@@ -7,7 +7,7 @@ import { DEEP_REMOVE } from './initElementNode';
 import { devNotify } from "./addons/devmode";
 
 function setRef(vm, name, node) {
-	var path = ["refs"].concat(name.split("."));
+	var path = ("refs." + name).split(".");
 	deepSet(vm, path, node);
 }
 
