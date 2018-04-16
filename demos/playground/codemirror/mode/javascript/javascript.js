@@ -126,7 +126,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
           var kw = keywords[word]
           return ret(kw.type, kw.style, word)
         }
-        if (word == "async" && stream.match(/^(\s|\/\*.*?\*\/)*[\(\w]/, false))
+        if (word == "async" && stream.match(/^(\s|\/\*.*?\*\/)*[\[\(\w]/, false))
           return ret("async", "keyword", word)
       }
       return ret("variable", "variable", word)
@@ -594,7 +594,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
   function typeexpr(type, value) {
     if (value == "keyof" || value == "typeof") {
       cx.marked = "keyword"
-      return cont(value == "keyof" ? typeexpr : expression)
+      return cont(value == "keyof" ? typeexpr : expressionNoComma)
     }
     if (type == "variable" || value == "void") {
       cx.marked = "type"
