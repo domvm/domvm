@@ -157,9 +157,7 @@ function squish(buildName, start) {
 		'\\x26': '&',
 	};
 
-	compiled = compiled
-		.replace(/\w+\._noinline_\w+\s*=\s*\w+;/gmi, "")
-		.replace(/\\x3d|\\x3c|\\x3e|\\x26/g, m => chars[m]);
+	compiled = compiled.replace(/\\x3d|\\x3c|\\x3e|\\x26/g, m => chars[m]);
 
 	fs.writeFileSync(dst, compiled, 'utf8');
 

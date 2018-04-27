@@ -3,10 +3,6 @@ import { hydrate } from './hydrate';
 import { prevSib, nextSib, insertBefore, insertAfter, removeChild } from './dom';
 import { devNotify } from "./addons/devmode";
 
-// prevent GCC from inlining some large funcs (which negatively affects Chrome's JIT)
-//win._noinline_syncChildren = syncChildren;
-win._noinline_lisMove = lisMove;
-
 function nextNode(node, body) {
 	return body[node.idx + 1];
 }
@@ -79,6 +75,7 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 	};
 }
 
+/** @noinline */
 function lisMove(advSib, advNode, insert, sibName, nodeName, parEl, body, sibNode, state) {
 	if (sibNode._lis) {
 		insert(parEl, state[nodeName].el, state[sibName]);
