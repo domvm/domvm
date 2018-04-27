@@ -341,8 +341,6 @@ QUnit.module("Imperative VMs", function() {
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, removeChild: 1, textContent: 1 });
 	});
 
-	// this *can* result in an extra redraw before unmount/remount
-	// also results in extra remove call
 	QUnit.test("VM remounted in different sub-tree", function(assert) {
 		var inLeft = false, ts = 0;
 
