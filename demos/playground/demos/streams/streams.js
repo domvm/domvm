@@ -1,9 +1,28 @@
 domvm.config({
 	stream: {
-		is:		s => flyd.isStream(s),
-		val:	s => s(),
-		sub:	(s, fn) => flyd.on(fn, s),
-		unsub:	s => s.end(true),
+		val: function(v, accum) {
+			if (flyd.isStream(v)) {
+				accum.push(v);
+				return v();
+			}
+			else
+				return v;
+		},
+		on: function(accum, vm) {
+			let calls = 0;
+
+			const s = flyd.combine(function() {
+				if (++calls == 2) {
+					vm.redraw();
+					s.end(true);
+				}
+			}, accum);
+
+			return s;
+		},
+		off: function(s) {
+			s.end(true);
+		}
 	}
 });
 

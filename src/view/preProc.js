@@ -2,7 +2,7 @@ import { TEXT, VVIEW, VMODEL } from './VTYPES';
 import { defineText } from './defineText';
 import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
 import { getVm } from './utils';
-import { isStream, hookStream } from './addons/stream';
+import { streamVal } from './addons/stream';
 import { DEEP_REMOVE } from './initElementNode';
 import { devNotify } from "./addons/devmode";
 
@@ -40,8 +40,7 @@ export function preProc(vnew, parent, idx, ownVm) {
 	else if (vnew.body === "")
 		vnew.body = null;
 	else if (FEAT_STREAM) {
-		if (isStream(vnew.body))
-			vnew.body = hookStream(vnew.body, getVm(vnew));
+		vnew.body = streamVal(vnew.body, getVm(vnew)._stream);
 	}
 }
 

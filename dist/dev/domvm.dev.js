@@ -318,47 +318,14 @@ function defineText(body) {
 	return node;
 }
 
-var isStream = function() { return false };
-
 var streamVal = noop;
-var subStream = noop;
-var unsubStream = noop;
+var streamOn = noop;
+var streamOff = noop;
 
 function streamCfg(cfg) {
-	isStream	= cfg.is;
-	streamVal	= cfg.val;
-	subStream	= cfg.sub;
-	unsubStream	= cfg.unsub;
-}
-
-// creates a one-shot self-ending stream that redraws target vm
-// TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
-function hookStream(s, vm) {
-	var redrawStream = subStream(s, function (val) {
-		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
-		if (redrawStream) {
-			/* istanbul ignore else  */
-			if (vm.node != null)
-				{ vm.redraw(); }
-
-			unsubStream(redrawStream);
-		}
-	});
-
-	return streamVal(s);
-}
-
-function hookStream2(s, vm) {
-	var redrawStream = subStream(s, function (val) {
-		// this "if" ignores the initial firing during subscription (there's no redrawable vm yet)
-		if (redrawStream) {
-			/* istanbul ignore else  */
-			if (vm.node != null)
-				{ vm.redraw(); }
-		}
-	});
-
-	return redrawStream;
+	streamVal = cfg.val;
+	streamOn = cfg.on;
+	streamOff = cfg.off;
 }
 
 var tagCache = {};
@@ -586,8 +553,7 @@ function preProc(vnew, parent, idx, ownVm) {
 	else if (vnew.body === "")
 		{ vnew.body = null; }
 	else {
-		if (isStream(vnew.body))
-			{ vnew.body = hookStream(vnew.body, getVm(vnew)); }
+		vnew.body = streamVal(vnew.body, getVm(vnew)._stream);
 	}
 }
 
@@ -692,8 +658,7 @@ function patchStyle(n, o) {
 			var nv = ns[nn];
 
 			{
-				if (isStream(nv))
-					{ ns[nn] = nv = hookStream(nv, getVm(n)); }
+				ns[nn] = nv = streamVal(nv, getVm(n)._stream);
 			}
 
 			if (os == null || nv != null && nv !== os[nn])
@@ -1050,8 +1015,7 @@ function patchAttrs(vnode, donor, initial) {
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
 			{
-				if (isStream(nval))
-					{ nattrs[key] = nval = hookStream(nval, getVm(vnode)); }
+				nattrs[key] = nval = streamVal(nval, (getVm(vnode) || emptyObj)._stream);
 			}
 
 			if (nval === oval) {}
@@ -1824,11 +1788,6 @@ function ViewModel(view, data, key, opts) {
 	vm.data = data;
 	vm.key = key;
 
-	{
-		if (isStream(data))
-			{ vm._stream = hookStream2(data, vm); }
-	}
-
 	if (opts) {
 		vm.opts = opts;
 		vm.config(opts);
@@ -1974,8 +1933,8 @@ function unmount(asSub) {
 	var vm = this;
 
 	{
-		if (isStream(vm._stream))
-			{ unsubStream(vm._stream); }
+		streamOff(vm._stream);
+		vm._stream = null;
 	}
 
 	var node = vm.node;
@@ -2045,6 +2004,10 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	vm.node = vnew;
 
+	{
+		vm._stream = [];
+	}
+
 	if (newParent) {
 		preProc(vnew, newParent, newIdx, vm);
 		newParent.body[newIdx] = vnew;
@@ -2082,6 +2045,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 			{ hydrate(vnew); }
 	}
 
+	{
+		streamVal(vm.data, vm._stream);
+		vm._stream = streamOn(vm._stream, vm);
+	}
+
 	isMounted && fireHook(vm.hooks, "didRedraw", vm, vm.data);
 
 	if (isRedrawRoot && isMounted)
@@ -2107,13 +2075,6 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 			}
 			fireHook(vm.hooks, "willUpdate", vm, newData);
 			vm.data = newData;
-
-			{
-				if (isStream(vm._stream))
-					{ unsubStream(vm._stream); }
-				if (isStream(newData))
-					{ vm._stream = hookStream2(newData, vm); }
-			}
 		}
 	}
 

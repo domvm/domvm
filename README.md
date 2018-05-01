@@ -498,23 +498,7 @@ You can maybe implement filtering by event type so that a flood of `mousemove` e
 ---
 ### Streams
 
-Another way to implement view reactivity and autoredraw is by using streams. By providing streams to your templates rather than values, views will autoredraw whenever streams change. domvm does not provide its own stream implementation but instead exposes a simple adapter to plug in your favorite stream lib. For example, an adapter for [flyd](https://github.com/paldepind/flyd) looks like this:
-
-```js
-domvm.config({
-    stream: {
-        is:     s => flyd.isStream(s),
-        val:    s => s(),
-        sub:    (s, fn) => flyd.on(fn, s),
-        unsub:  s => s.end(true),
-    }
-});
-```
-
-- `is` takes any value and returns whether or not the value is a stream
-- `val` takes a stream and returns its value
-- `sub` takes a stream + callback and returns a dependent stream that invokes the callback during updates
-- `unsub` takes the dependent stream returned by `sub` and severs it from its parent
+Another way to implement view reactivity and autoredraw is by using streams. By providing streams to your templates rather than values, views will autoredraw whenever streams change. domvm does not provide its own stream implementation but instead exposes a simple adapter to plug in your favorite stream lib.
 
 domvm's templates support streams in the following contexts:
 
@@ -522,6 +506,42 @@ domvm's templates support streams in the following contexts:
 - simple body: `el("#total", cartTotalStream)`
 - attr value: `el("input[type=checkbox]", {checked: checkedStream})`
 - css value: `el("div", {style: {background: colorStream}})`
+
+A stream adapter for [flyd](https://github.com/paldepind/flyd) looks like this:
+
+```js
+domvm.config({
+    stream: {
+        val: function(v, accum) {
+            if (flyd.isStream(v)) {
+                accum.push(v);
+                return v();
+            }
+            else
+                return v;
+        },
+        on: function(accum, vm) {
+            let calls = 0;
+
+            const s = flyd.combine(function() {
+                if (++calls == 2) {
+                    vm.redraw();
+                    s.end(true);
+                }
+            }, accum);
+
+            return s;
+        },
+        off: function(s) {
+            s.end(true);
+        }
+    }
+});
+```
+
+- `val` accepts any value and, if that value is a stream, appends it to the provided accumulator array; then returns the stream's current value, else the original object. called multiple times per redraw.
+- `on` accepts the accumulater array (now filled with streams) and returns a dependent stream that will invoke `vm.redraw()` once and end (ignoring initial stream creation). this can also be implemented via a `.drop(1).take(1).map(...)` pattern, if supported by your stream lib (see https://github.com/paldepind/flyd/issues/176#issuecomment-385141469). called once per redraw.
+- `off` accepts the dependent stream created by `on` and ends it. called once per unmount.
 
 An extensive demo can be found in the [streams playground](http://leeoniya.github.io/domvm/demos/playground/#streams).
 

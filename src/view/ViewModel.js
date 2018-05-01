@@ -5,7 +5,7 @@ import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, ra
 import { repaint, isHydrated, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
-import { isStream, hookStream2, unsubStream } from './addons/stream';
+import { streamVal, streamOn, streamOff } from './addons/stream';
 import { syncRedraw } from './config';
 import { devNotify, DEVMODE } from "./addons/devmode";
 import { DOMInstr } from "./addons/dominstr";
@@ -25,11 +25,6 @@ export function ViewModel(view, data, key, opts) {
 	vm.view = view;
 	vm.data = data;
 	vm.key = key;
-
-	if (FEAT_STREAM) {
-		if (isStream(data))
-			vm._stream = hookStream2(data, vm);
-	}
 
 	if (opts) {
 		vm.opts = opts;
@@ -176,8 +171,8 @@ function unmount(asSub) {
 	var vm = this;
 
 	if (FEAT_STREAM) {
-		if (isStream(vm._stream))
-			unsubStream(vm._stream);
+		streamOff(vm._stream);
+		vm._stream = null;
 	}
 
 	var node = vm.node;
@@ -247,6 +242,10 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	vm.node = vnew;
 
+	if (FEAT_STREAM) {
+		vm._stream = [];
+	}
+
 	if (newParent) {
 		preProc(vnew, newParent, newIdx, vm);
 		newParent.body[newIdx] = vnew;
@@ -284,6 +283,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 			hydrate(vnew);
 	}
 
+	if (FEAT_STREAM) {
+		streamVal(vm.data, vm._stream);
+		vm._stream = streamOn(vm._stream, vm);
+	}
+
 	isMounted && fireHook(vm.hooks, "didRedraw", vm, vm.data);
 
 	if (isRedrawRoot && isMounted)
@@ -309,13 +313,6 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 			}
 			fireHook(vm.hooks, "willUpdate", vm, newData);
 			vm.data = newData;
-
-			if (FEAT_STREAM) {
-				if (isStream(vm._stream))
-					unsubStream(vm._stream);
-				if (isStream(newData))
-					vm._stream = hookStream2(newData, vm);
-			}
 		}
 	}
 
