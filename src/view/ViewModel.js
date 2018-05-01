@@ -5,7 +5,7 @@ import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, ra
 import { repaint, isHydrated, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
-import { isStream, hookStream2, unsubStream } from './addons/stream';
+import { streamVal, streamOn, streamOff } from './addons/stream';
 import { syncRedraw } from './config';
 import { devNotify, DEVMODE } from "./addons/devmode";
 import { DOMInstr } from "./addons/dominstr";
@@ -26,11 +26,6 @@ export function ViewModel(view, data, key, opts) {
 	vm.data = data;
 	vm.key = key;
 
-	if (FEAT_STREAM) {
-		if (isStream(data))
-			vm._stream = hookStream2(data, vm);
-	}
-
 	if (opts) {
 		vm.opts = opts;
 		vm.config(opts);
@@ -44,10 +39,6 @@ export function ViewModel(view, data, key, opts) {
 		vm.render = out.render;
 		vm.config(out);
 	}
-
-	// these must be wrapped here since they're debounced per view
-	vm._redrawAsync = raft(_ => vm.redraw(true));
-	vm._updateAsync = raft(newData => vm.update(newData, true));
 
 	vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
 }
@@ -107,7 +98,12 @@ export const ViewModelProto = ViewModel.prototype = {
 			sync = syncRedraw;
 
 		var vm = this;
-		sync ? vm._redraw(null, null, isHydrated(vm)) : vm._redrawAsync();
+
+		if (sync)
+			vm._redraw(null, null, isHydrated(vm));
+		else
+			(vm._redrawAsync = vm._redrawAsync || raft(_ => vm.redraw(true)))();
+
 		return vm;
 	},
 	update: function(newData, sync) {
@@ -115,7 +111,12 @@ export const ViewModelProto = ViewModel.prototype = {
 			sync = syncRedraw;
 
 		var vm = this;
-		sync ? vm._update(newData, null, null, isHydrated(vm)) : vm._updateAsync(newData);
+
+		if (sync)
+			vm._update(newData, null, null, isHydrated(vm));
+		else
+			(vm._updateAsync = vm._updateAsync || raft(newData => vm.update(newData, true)))(newData);
+
 		return vm;
 	},
 
@@ -170,8 +171,8 @@ function unmount(asSub) {
 	var vm = this;
 
 	if (FEAT_STREAM) {
-		if (isStream(vm._stream))
-			unsubStream(vm._stream);
+		streamOff(vm._stream);
+		vm._stream = null;
 	}
 
 	var node = vm.node;
@@ -179,6 +180,8 @@ function unmount(asSub) {
 
 	// edge bug: this could also be willRemove promise-delayed; should .then() or something to make sure hooks fire in order
 	removeChild(parEl, node.el);
+
+	node.el = null;
 
 	if (!asSub)
 		drainDidHooks(vm);
@@ -239,6 +242,10 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	vm.node = vnew;
 
+	if (FEAT_STREAM) {
+		vm._stream = [];
+	}
+
 	if (newParent) {
 		preProc(vnew, newParent, newIdx, vm);
 		newParent.body[newIdx] = vnew;
@@ -276,6 +283,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 			hydrate(vnew);
 	}
 
+	if (FEAT_STREAM) {
+		streamVal(vm.data, vm._stream);
+		vm._stream = streamOn(vm._stream, vm);
+	}
+
 	isMounted && fireHook(vm.hooks, "didRedraw", vm, vm.data);
 
 	if (isRedrawRoot && isMounted)
@@ -301,13 +313,6 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 			}
 			fireHook(vm.hooks, "willUpdate", vm, newData);
 			vm.data = newData;
-
-			if (FEAT_STREAM) {
-				if (isStream(vm._stream))
-					unsubStream(vm._stream);
-				if (isStream(newData))
-					vm._stream = hookStream2(newData, vm);
-			}
 		}
 	}
 

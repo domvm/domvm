@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2017, Leon Sorokin
+* Copyright (c) 2018, Leon Sorokin
 * All rights reserved. (MIT Licensed)
 *
 * domvm.js (DOM ViewModel)
@@ -30,13 +30,11 @@ var ENV_DOM = typeof window !== "undefined";
 var win = ENV_DOM ? window : {};
 var doc = ENV_DOM ? document : {};
 
-
 var rAF = win.requestAnimationFrame;
 
 var emptyObj = {};
 
 function noop() {}
-
 var isArr = Array.isArray;
 
 function isPlainObj(val) {
@@ -60,8 +58,6 @@ function isProm(val) {
 	return typeof val === "object" && isFunc(val.then);
 }
 
-
-
 function assignObj(targ) {
 	var args = arguments;
 
@@ -84,8 +80,6 @@ function deepSet(targ, path, val) {
 			{ targ[seg] = targ = targ[seg] || {}; }
 	}
 }
-
-
 
 function cmpObj(a, b) {
 	for (var i in a)
@@ -317,9 +311,6 @@ function defineText(body) {
 	return node;
 }
 
-// creates a one-shot self-ending stream that redraws target vm
-// TODO: if it's already registered by any parent vm, then ignore to avoid simultaneous parent & child refresh
-
 var tagCache = {};
 
 var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
@@ -431,7 +422,7 @@ function initElementNode(tag, attrs, body, flags) {
 }
 
 function setRef(vm, name, node) {
-	var path = ["refs"].concat(name.split("."));
+	var path = ("refs." + name).split(".");
 	deepSet(vm, path, node);
 }
 
@@ -652,7 +643,9 @@ function deepUnref(node) {
 
 	for (var i = 0; i < obody.length; i++) {
 		var o2 = obody[i];
-		delete o2.el._node;
+
+		if (o2.el != null)
+			{ delete o2.el._node; }
 
 		if (o2.vm != null)
 			{ o2.vm.node = null; }
@@ -672,10 +665,12 @@ function clearChildren(parent) {
 	else {
 		var el = parEl.firstChild;
 
-		do {
-			var next = nextSib(el);
-			removeChild(parEl, el);
-		} while (el = next);
+		if (el != null) {
+			do {
+				var next = nextSib(el);
+				removeChild(parEl, el);
+			} while (el = next);
+		}
 	}
 }
 
@@ -709,8 +704,6 @@ function config(newCfg) {
 
 	if (newCfg.syncRedraw != null)
 		{ syncRedraw = newCfg.syncRedraw; }
-
-	
 }
 
 function bindEv(el, type, fn) {
@@ -807,7 +800,6 @@ function patchAttrs(vnode, donor, initial) {
 	var oattrs = donor.attrs || emptyObj;
 
 	if (nattrs === oattrs) {
-		
 	}
 	else {
 		for (var key in nattrs) {
@@ -849,7 +841,6 @@ function createView(view, data, key, opts) {
 	return new ViewModel(view, data, key, opts);
 }
 
-//import { XML_NS, XLINK_NS } from './defineSvgElement';
 function hydrateBody(vnode) {
 	for (var i = 0; i < vnode.body.length; i++) {
 		var vnode2 = vnode.body[i];
@@ -925,6 +916,7 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 		if (state[sibName] != null) {
 			// skip dom elements not created by domvm
 			if ((sibNode = state[sibName]._node) == null) {
+
 				state[sibName] = advSib(state[sibName]);
 				return;
 			}
@@ -955,6 +947,7 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 			state[invSibName] = tmpSib;
 		}
 		else {
+
 			if (lis && state[sibName] != null)
 				{ return lisMove(advSib, advNode, insert, sibName, nodeName, parEl, body, sibNode, state); }
 
@@ -963,6 +956,7 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 	};
 }
 
+/** @noinline */
 function lisMove(advSib, advNode, insert, sibName, nodeName, parEl, body, sibNode, state) {
 	if (sibNode._lis) {
 		insert(parEl, state[nodeName].el, state[sibName]);
@@ -1021,8 +1015,9 @@ function syncChildren(node, donor) {
 
 // TODO: also use the state.rgtSib and state.rgtNode bounds, plus reduce LIS range
 function sortDOM(node, parEl, body, state) {
-	var kids = Array.prototype.slice.call(parEl.childNodes);
 	var domIdxs = [];
+	// compression micro-opt (instead of Array.prototype.slice.call(...);
+	var kids = domIdxs.slice.call(parEl.childNodes);
 
 	for (var k = 0; k < kids.length; k++) {
 		var n = kids[k]._node;
@@ -1255,22 +1250,29 @@ function patchChildren(vnode, donor) {
 			else if (type2 === VVIEW) {
 				if (donor2 = doFind && find(node2, obody, fromIdx)) {		// update/moveTo
 					foundIdx = donor2.idx;
-					var vm = donor2.vm._update(node2.data, vnode, i);		// withDOM
+					donor2.vm._update(node2.data, vnode, i);		// withDOM
 				}
 				else
-					{ var vm = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
-
-				type2 = vm.node.type;
+					{ createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
 			}
 			else if (type2 === VMODEL) {
+				var vm = node2.vm;
+
 				// if the injected vm has never been rendered, this vm._update() serves as the
 				// initial vtree creator, but must avoid hydrating (creating .el) because syncChildren()
 				// which is responsible for mounting below (and optionally hydrating), tests .el presence
 				// to determine if hydration & mounting are needed
-				var withDOM = isHydrated(node2.vm);
+				var hasDOM = isHydrated(vm);
 
-				var vm = node2.vm._update(node2.data, vnode, i, withDOM);
-				type2 = vm.node.type;
+				// injected vm existed in another sub-tree / dom parent
+				// (not ideal to unmount here, but faster and less code than
+				// delegating to dom reconciler)
+				if (hasDOM && vm.node.parent != donor) {
+					vm.unmount(true);
+					hasDOM = false;
+				}
+
+				vm._update(node2.data, vnode, i, hasDOM);
 			}
 		}
 
@@ -1324,10 +1326,6 @@ function ViewModel(view, data, key, opts) {
 		vm.config(out);
 	}
 
-	// these must be wrapped here since they're debounced per view
-	vm._redrawAsync = raft(function (_) { return vm.redraw(true); });
-	vm._updateAsync = raft(function (newData) { return vm.update(newData, true); });
-
 	vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
 }
 
@@ -1364,8 +1362,6 @@ var ViewModelProto = ViewModel.prototype = {
 		// maybe invert assignment order?
 		if (opts.hooks)
 			{ t.hooks = assignObj(t.hooks || {}, opts.hooks); }
-
-		
 	},
 	parent: function() {
 		return getVm(this.node.parent);
@@ -1383,7 +1379,12 @@ var ViewModelProto = ViewModel.prototype = {
 			{ sync = syncRedraw; }
 
 		var vm = this;
-		sync ? vm._redraw(null, null, isHydrated(vm)) : vm._redrawAsync();
+
+		if (sync)
+			{ vm._redraw(null, null, isHydrated(vm)); }
+		else
+			{ (vm._redrawAsync = vm._redrawAsync || raft(function (_) { return vm.redraw(true); }))(); }
+
 		return vm;
 	},
 	update: function(newData, sync) {
@@ -1391,7 +1392,12 @@ var ViewModelProto = ViewModel.prototype = {
 			{ sync = syncRedraw; }
 
 		var vm = this;
-		sync ? vm._update(newData, null, null, isHydrated(vm)) : vm._updateAsync(newData);
+
+		if (sync)
+			{ vm._update(newData, null, null, isHydrated(vm)); }
+		else
+			{ (vm._updateAsync = vm._updateAsync || raft(function (newData) { return vm.update(newData, true); }))(newData); }
+
 		return vm;
 	},
 
@@ -1440,6 +1446,8 @@ function unmount(asSub) {
 
 	// edge bug: this could also be willRemove promise-delayed; should .then() or something to make sure hooks fire in order
 	removeChild(parEl, node.el);
+
+	node.el = null;
 
 	if (!asSub)
 		{ drainDidHooks(vm); }
@@ -1545,8 +1553,6 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 		if (vm.data !== newData) {
 			fireHook(vm.hooks, "willUpdate", vm, newData);
 			vm.data = newData;
-
-			
 		}
 	}
 
@@ -1687,7 +1693,7 @@ function lazyList(items, cfg) {
 	return self;
 }
 
-var nano$1 = {
+var nano = {
 	config: config,
 
 	ViewModel: ViewModel,
@@ -1753,7 +1759,7 @@ function patch$1(o, n, doRepaint) {
 
 VNodeProto.patch = protoPatch;
 
-return nano$1;
+return nano;
 
 })));
 //# sourceMappingURL=domvm.nano.js.map

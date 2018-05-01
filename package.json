@@ -15,22 +15,8 @@
   "scripts": {
     "covtest": "nyc mocha test/src/*.js",
     "covreport": "nyc report --reporter=text-summary --reporter=text > ./test/coverage.txt",
-    "watch:pico": "node watch.js pico",
-    "watch:nano": "node watch.js nano",
-    "watch:micro": "node watch.js micro",
-    "watch:mini": "node watch.js mini",
-    "watch:client": "node watch.js client",
-    "watch:server": "node watch.js server",
-    "watch:full": "node watch.js full",
-    "watch:dev": "node watch.js dev",
-    "build:pico": "node build.js pico",
-    "build:nano": "node build.js nano",
-    "build:micro": "node build.js micro",
-    "build:mini": "node build.js mini",
-    "build:client": "node build.js client",
-    "build:server": "node build.js server",
-    "build:full": "node build.js full",
-    "build:dev": "node build.js dev"
+    "watch": "node watch.js",
+    "build": "node build.js"
   },
   "nyc": {
     "require": [
@@ -42,15 +28,14 @@
     "url": "https://github.com/leeoniya/domvm.git"
   },
   "devDependencies": {
-    "buble": "^0.18.0",
-    "js-beautify": "^1.7.5",
-    "mocha": "^4.0.1",
-    "node-watch": "^0.5.5",
-    "nyc": "^11.4.1",
-    "rollup": "^0.52.3",
-    "rollup-plugin-buble": "^0.18.0",
+    "buble": "^0.19.3",
+    "google-closure-compiler-js": "^20180204.0.0",
+    "mocha": "^5.1.1",
+    "node-watch": "^0.5.8",
+    "nyc": "^11.7.1",
+    "rollup": "^0.56.5",
+    "rollup-plugin-buble": "^0.19.2",
     "rollup-plugin-replace": "^2.0.0",
-    "uglify-js": "^3.2.2",
     "undom": "^0.3.3"
   },
   "bugs": {

@@ -1,4 +1,4 @@
-import { emptyObj, longestIncreasingSubsequence, binaryFindLarger } from '../utils';
+import { win, emptyObj, longestIncreasingSubsequence, binaryFindLarger } from '../utils';
 import { hydrate } from './hydrate';
 import { prevSib, nextSib, insertBefore, insertAfter, removeChild } from './dom';
 import { devNotify } from "./addons/devmode";
@@ -75,6 +75,7 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 	};
 }
 
+/** @noinline */
 function lisMove(advSib, advNode, insert, sibName, nodeName, parEl, body, sibNode, state) {
 	if (sibNode._lis) {
 		insert(parEl, state[nodeName].el, state[sibName]);
@@ -133,8 +134,9 @@ export function syncChildren(node, donor) {
 
 // TODO: also use the state.rgtSib and state.rgtNode bounds, plus reduce LIS range
 function sortDOM(node, parEl, body, state) {
-	var kids = Array.prototype.slice.call(parEl.childNodes);
 	var domIdxs = [];
+	// compression micro-opt (instead of Array.prototype.slice.call(...);
+	var kids = domIdxs.slice.call(parEl.childNodes);
 
 	for (var k = 0; k < kids.length; k++) {
 		var n = kids[k]._node;

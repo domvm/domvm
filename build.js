@@ -5,8 +5,7 @@ const fs = require('fs');
 const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
 const zlib = require('zlib');
-const beautify = require('js-beautify').js_beautify;
-const uglify = require("uglify-js").minify;
+const closure = require('google-closure-compiler-js').compile;
 
 function getBuilds(name) {
 	return [
@@ -62,9 +61,9 @@ function getBuilds(name) {
 }
 
 var args = process.argv.slice(2);
-
-if (args.length == 1)
-	compile(args[0]);
+var buildName = args[0];
+builds = buildName == null ? getBuilds().map(b => b.build) : [buildName];
+builds.forEach(b => compile(b));
 
 function getCurBranch() {
 	var branches = execSync("git branch", {encoding: 'utf8'});
@@ -140,24 +139,31 @@ function squish(buildName, start) {
 	var src = "dist/" + buildName + "/domvm." + buildName + ".js";
 	var dst = "dist/" + buildName + "/domvm." + buildName + ".min.js";
 
-	var code = fs.readFileSync(src, 'utf8');
-	var opts = {
-		output: {
-	//		beautify: false,
-			preamble: "// " + /@preserve\s+(.*)$/gm.exec(code)[1] + "\n",
-		}
+	const flags = {
+		jsCode: [{src: fs.readFileSync(src, 'utf8')}],
+		languageIn: 'ECMASCRIPT5_STRICT',
+		languageOut: 'ECMASCRIPT5',
+		compilationLevel: 'SIMPLE',
+	//	warningLevel: 'VERBOSE',
 	};
-	var result = uglify(code, opts);
-	var compiled = result.code;
+
+	var compiled = closure(flags).compiledCode.replace('this,function(){','this,function(){"use strict";');
+
+	// workaround for https://github.com/google/closure-compiler-js/issues/79
+	var chars = {
+		'\\x3d': '=',
+		'\\x3c': '<',
+		'\\x3e': '>',
+		'\\x26': '&',
+	};
+
+	compiled = compiled.replace(/\\x3d|\\x3c|\\x3e|\\x26/g, m => chars[m]);
 
 	fs.writeFileSync(dst, compiled, 'utf8');
 
-	var dstPretty = "dist/" + buildName + "/domvm." + buildName + ".pretty.js";
-	fs.writeFileSync(dstPretty, beautify(compiled, { indent_size: 2 }), 'utf8');
-
 	buildDistTable();
 
-	console.log((+new Date - start) + "ms: Uglify done (build: " + buildName + ")");
+	console.log((+new Date - start) + "ms: Closure done (build: " + buildName + ")");
 }
 
 function padRight(str, padStr, len) {
@@ -197,7 +203,6 @@ function buildDistTable() {
 
 		for (var colName in colWidths)
 			colWidths[colName] = Math.max(colWidths[colName], build[colName].length);
-
 	});
 
 	var table = '';

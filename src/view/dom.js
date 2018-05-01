@@ -94,7 +94,9 @@ function deepUnref(node) {
 
 	for (var i = 0; i < obody.length; i++) {
 		var o2 = obody[i];
-		delete o2.el._node;
+
+		if (o2.el != null)
+			delete o2.el._node;
 
 		if (o2.vm != null)
 			o2.vm.node = null;
@@ -114,10 +116,12 @@ export function clearChildren(parent) {
 	else {
 		var el = parEl.firstChild;
 
-		do {
-			var next = nextSib(el);
-			removeChild(parEl, el);
-		} while (el = next);
+		if (el != null) {
+			do {
+				var next = nextSib(el);
+				removeChild(parEl, el);
+			} while (el = next);
+		}
 	}
 }
 

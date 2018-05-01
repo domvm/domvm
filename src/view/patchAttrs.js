@@ -2,7 +2,7 @@ import { isStyleProp, isSplProp, isEvProp, isDynProp, getVm } from './utils';
 import { isFunc, emptyObj } from '../utils';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
-import { isStream, hookStream } from './addons/stream';
+import { streamVal } from './addons/stream';
 import { devNotify } from "./addons/devmode";
 
 export function remAttr(node, name, asProp) {
@@ -53,8 +53,7 @@ export function patchAttrs(vnode, donor, initial) {
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
 			if (FEAT_STREAM) {
-				if (isStream(nval))
-					nattrs[key] = nval = hookStream(nval, getVm(vnode));
+				nattrs[key] = nval = streamVal(nval, (getVm(vnode) || emptyObj)._stream);
 			}
 
 			if (nval === oval) {}

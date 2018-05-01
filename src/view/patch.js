@@ -224,22 +224,29 @@ function patchChildren(vnode, donor) {
 			else if (type2 === VVIEW) {
 				if (donor2 = doFind && find(node2, obody, fromIdx)) {		// update/moveTo
 					foundIdx = donor2.idx;
-					var vm = donor2.vm._update(node2.data, vnode, i);		// withDOM
+					donor2.vm._update(node2.data, vnode, i);		// withDOM
 				}
 				else
-					var vm = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
-
-				type2 = vm.node.type;
+					createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
 			}
 			else if (type2 === VMODEL) {
+				var vm = node2.vm;
+
 				// if the injected vm has never been rendered, this vm._update() serves as the
 				// initial vtree creator, but must avoid hydrating (creating .el) because syncChildren()
 				// which is responsible for mounting below (and optionally hydrating), tests .el presence
 				// to determine if hydration & mounting are needed
-				var withDOM = isHydrated(node2.vm);
+				var hasDOM = isHydrated(vm);
 
-				var vm = node2.vm._update(node2.data, vnode, i, withDOM);
-				type2 = vm.node.type;
+				// injected vm existed in another sub-tree / dom parent
+				// (not ideal to unmount here, but faster and less code than
+				// delegating to dom reconciler)
+				if (hasDOM && vm.node.parent != donor) {
+					vm.unmount(true);
+					hasDOM = false;
+				}
+
+				vm._update(node2.data, vnode, i, hasDOM);
 			}
 		}
 

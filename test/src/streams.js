@@ -1,10 +1,29 @@
 QUnit.module("streams", function() {
 	domvm.config({
 		stream: {
-			is:		function(s) { return flyd.isStream(s); },
-			val:	function(s) { return s(); },
-			sub:	function(s, fn) { return flyd.on(fn, s); },
-			unsub:	function(s) { return s.end(true); },
+			val: function(v, accum) {
+				if (flyd.isStream(v)) {
+					accum.push(v);
+					return v();
+				}
+				else
+					return v;
+			},
+			on: function(accum, vm) {
+				let calls = 0;
+
+				const s = flyd.combine(function() {
+					if (++calls == 2) {
+						vm.redraw();
+						s.end(true);
+					}
+				}, accum);
+
+				return s;
+			},
+			off: function(s) {
+				s.end(true);
+			}
 		}
 	});
 

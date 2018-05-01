@@ -340,4 +340,46 @@ QUnit.module("Imperative VMs", function() {
 		var expcHtml = '<div><div>b</div></div>';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, removeChild: 1, textContent: 1 });
 	});
+
+	QUnit.test("VM remounted in different sub-tree", function(assert) {
+		var inLeft = false, ts = 0;
+
+		function AppView() {
+			return function() {
+				return el("div", [
+					el("div", [
+						inLeft && iv(chatView)
+					]),
+					el("div", [
+						!inLeft && iv(chatView)
+					]),
+				])
+			};
+		}
+
+		function ChatView() {
+			ts += 1;
+
+			return function(vm, msg) {
+				return el("div", ts + ": " + msg);
+			};
+		}
+
+		instr.start();
+		var chatView = domvm.createView(ChatView, "Hello World!");
+		var appView = domvm.createView(AppView).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><div></div><div><div>1: Hello World!</div></div></div>';
+		evalOut(assert, appView.node.el, appView.html(), expcHtml, callCounts, { createElement: 4, insertBefore: 4, textContent: 1 });
+
+		inLeft = true;
+
+		instr.start();
+		appView.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><div><div>1: Hello World!</div></div><div></div></div>';
+		evalOut(assert, appView.node.el, appView.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, removeChild: 1, textContent: 2 });
+	});
 });
