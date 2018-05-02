@@ -1,4 +1,4 @@
-import { assignObj } from '../../utils';
+import { assignObj, isPlainObj } from '../../utils';
 import { getVm, repaint } from '../utils';
 import { patchAttrs } from '../patchAttrs';
 import { preProc } from '../preProc';
@@ -12,19 +12,8 @@ export function protoPatch(n, doRepaint) {
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch hooks?
 export function patch(o, n, doRepaint) {
-	// this is a weak assertion, will fail in cases of type attr mutation
-	if (n.type != null) {
-		// no full patching of view roots, just use redraw!
-		if (o.vm != null)
-			return;
-
-		preProc(n, o.parent, o.idx, null);
-		o.parent.body[o.idx] = n;
-		fullPatch(n, o);
-		doRepaint && repaint(n);
-		drainDidHooks(getVm(n));
-	}
-	else {
+	// patch attrs obj
+	if (isPlainObj(n)) {
 		// TODO: re-establish refs
 
 		// shallow-clone target
@@ -40,5 +29,17 @@ export function patch(o, n, doRepaint) {
 		patchAttrs(o, donor);
 
 		doRepaint && repaint(o);
+	}
+	// patch full vnode
+	else {
+		// no full patching of view roots, just use redraw!
+		if (o.vm != null)
+			return;
+
+		preProc(n, o.parent, o.idx, null);
+		o.parent.body[o.idx] = n;
+		fullPatch(n, o);
+		doRepaint && repaint(n);
+		drainDidHooks(getVm(n));
 	}
 }

@@ -1725,19 +1725,8 @@ function protoPatch(n, doRepaint) {
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch hooks?
 function patch$1(o, n, doRepaint) {
-	// this is a weak assertion, will fail in cases of type attr mutation
-	if (n.type != null) {
-		// no full patching of view roots, just use redraw!
-		if (o.vm != null)
-			{ return; }
-
-		preProc(n, o.parent, o.idx, null);
-		o.parent.body[o.idx] = n;
-		patch(n, o);
-		doRepaint && repaint(n);
-		drainDidHooks(getVm(n));
-	}
-	else {
+	// patch attrs obj
+	if (isPlainObj(n)) {
 		// TODO: re-establish refs
 
 		// shallow-clone target
@@ -1753,6 +1742,18 @@ function patch$1(o, n, doRepaint) {
 		patchAttrs(o, donor);
 
 		doRepaint && repaint(o);
+	}
+	// patch full vnode
+	else {
+		// no full patching of view roots, just use redraw!
+		if (o.vm != null)
+			{ return; }
+
+		preProc(n, o.parent, o.idx, null);
+		o.parent.body[o.idx] = n;
+		patch(n, o);
+		doRepaint && repaint(n);
+		drainDidHooks(getVm(n));
 	}
 }
 
