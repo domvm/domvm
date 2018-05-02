@@ -12,6 +12,7 @@ export function protoPatch(n, doRepaint) {
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch hooks?
 export function patch(o, n, doRepaint) {
+	// this is a weak assertion, will fail in cases of type attr mutation
 	if (n.type != null) {
 		// no full patching of view roots, just use redraw!
 		if (o.vm != null)
@@ -30,13 +31,11 @@ export function patch(o, n, doRepaint) {
 		var donor = Object.create(o);
 		// fixate orig attrs
 		donor.attrs = assignObj({}, o.attrs);
+		// prepend any fixed shorthand class
+		if (n.class != null && o._class != null)
+			n.class = o._class + " " + n.class;
 		// assign new attrs into live targ node
 		var oattrs = assignObj(o.attrs, n);
-		// prepend any fixed shorthand class
-		if (o._class != null) {
-			var aclass = oattrs.class;
-			oattrs.class = aclass != null && aclass !== "" ? o._class + " " + aclass : o._class;
-		}
 
 		patchAttrs(o, donor);
 
