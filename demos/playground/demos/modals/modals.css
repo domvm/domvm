@@ -15,7 +15,7 @@ body {
 	padding: 10px;
 }
 
-.dvm-modal-overlay {
+.dv-modals-overlay {
 	background: rgba(128,255,255,.5);
 	position: fixed;
 	width: 100%;
@@ -24,7 +24,7 @@ body {
 	left: 0;
 }
 
-.dvm-modal-content {
+.dv-modals-content {
 	background: white;
 /*	text-align: center;*/
 	padding: 10px;
@@ -41,7 +41,7 @@ body {
 	margin-top: 10px;
 }
 
-.dvm-modal-content {
+.dv-modals-content {
 	width: 300px;
 	height: 300px;
 	left: 150px;
