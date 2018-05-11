@@ -1,7 +1,8 @@
-import { default as nano } from "./pico";
+export * from "./pico";
 
 import { VNodeProto } from '../view/VNode';
 import { protoPatch } from "../view/addons/patch";
+
 VNodeProto.patch = protoPatch;
 
 /*
@@ -13,5 +14,3 @@ import { defineElementSpread } from "../view/addons/defineElementSpread";
 
 nano.defineElementSpread = defineElementSpread;
 */
-
-export default nano;

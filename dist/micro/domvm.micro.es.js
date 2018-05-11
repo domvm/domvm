@@ -7,12 +7,6 @@
 * @preserve https://github.com/leeoniya/domvm (3.x-dev, micro build)
 */
 
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	(factory((global.domvm = {})));
-}(this, (function (exports) { 'use strict';
-
 // NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 // There are some places that test <= COMMENT to assert if node is a VNode
 
@@ -1880,26 +1874,5 @@ ViewModelProto.body = function() {
 	return nextSubVms(this.node, []);
 };
 
-exports.defineElementSpread = defineElementSpread;
-exports.defineSvgElementSpread = defineSvgElementSpread;
-exports.ViewModel = ViewModel;
-exports.VNode = VNode;
-exports.createView = createView;
-exports.defineElement = defineElement;
-exports.defineSvgElement = defineSvgElement;
-exports.defineText = defineText;
-exports.defineComment = defineComment;
-exports.defineView = defineView;
-exports.injectView = injectView;
-exports.injectElement = injectElement;
-exports.lazyList = lazyList;
-exports.FIXED_BODY = FIXED_BODY;
-exports.DEEP_REMOVE = DEEP_REMOVE;
-exports.KEYED_LIST = KEYED_LIST;
-exports.LAZY_LIST = LAZY_LIST;
-exports.config = config;
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-})));
-//# sourceMappingURL=domvm.micro.js.map
+export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST, config };
+//# sourceMappingURL=domvm.micro.es.js.map

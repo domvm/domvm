@@ -4,14 +4,8 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (3.x-dev, micro build)
+* @preserve https://github.com/leeoniya/domvm (3.x-dev, pico build)
 */
-
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	(factory((global.domvm = {})));
-}(this, (function (exports) { 'use strict';
 
 // NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 // There are some places that test <= COMMENT to assert if node is a VNode
@@ -79,13 +73,6 @@ function deepSet(targ, path, val) {
 		else
 			{ targ[seg] = targ = targ[seg] || {}; }
 	}
-}
-
-function sliceArgs(args, offs) {
-	var arr = [];
-	for (var i = offs; i < args.length; i++)
-		{ arr.push(args[i]); }
-	return arr;
 }
 
 function cmpObj(a, b) {
@@ -318,32 +305,12 @@ function defineText(body) {
 	return node;
 }
 
-var tagCache = {};
-
-var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
+var tagObj = {};
 
 function cssTag(raw) {
 	{
-		var cached = tagCache[raw];
-
-		if (cached == null) {
-			var tag, id, cls, attr;
-
-			tagCache[raw] = cached = {
-				tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
-				id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
-				class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
-				attrs:	null,
-			};
-
-			while (attr = RE_ATTRS.exec(raw)) {
-				if (cached.attrs == null)
-					{ cached.attrs = {}; }
-				cached.attrs[attr[1]] = attr[2] || "";
-			}
-		}
-
-		return cached;
+		tagObj.tag = raw;
+		return tagObj;
 	}
 }
 
@@ -499,50 +466,8 @@ function preProcBody(vnew) {
 	}
 }
 
-var unitlessProps = {
-	animationIterationCount: true,
-	boxFlex: true,
-	boxFlexGroup: true,
-	boxOrdinalGroup: true,
-	columnCount: true,
-	flex: true,
-	flexGrow: true,
-	flexPositive: true,
-	flexShrink: true,
-	flexNegative: true,
-	flexOrder: true,
-	gridRow: true,
-	gridColumn: true,
-	order: true,
-	lineClamp: true,
-
-	borderImageOutset: true,
-	borderImageSlice: true,
-	borderImageWidth: true,
-	fontWeight: true,
-	lineHeight: true,
-	opacity: true,
-	orphans: true,
-	tabSize: true,
-	widows: true,
-	zIndex: true,
-	zoom: true,
-
-	fillOpacity: true,
-	floodOpacity: true,
-	stopOpacity: true,
-	strokeDasharray: true,
-	strokeDashoffset: true,
-	strokeMiterlimit: true,
-	strokeOpacity: true,
-	strokeWidth: true
-};
-
 function autoPx(name, val) {
-	{
-		// typeof val === 'number' is faster but fails for numeric strings
-		return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
-	}
+	{ return val; }
 }
 
 // assumes if styles exist both are objects or both are strings
@@ -745,32 +670,6 @@ function insertAfter(parEl, el, refEl) {
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
 }
 
-var onemit = {};
-
-function emitCfg(cfg) {
-	assignObj(onemit, cfg);
-}
-
-function emit(evName) {
-	var targ = this,
-		src = targ;
-
-	var args = sliceArgs(arguments, 1).concat(src, src.data);
-
-	do {
-		var evs = targ.onemit;
-		var fn = evs ? evs[evName] : null;
-
-		if (fn) {
-			fn.apply(targ, args);
-			break;
-		}
-	} while (targ = targ.parent());
-
-	if (onemit[evName])
-		{ onemit[evName].apply(targ, args); }
-}
-
 var onevent = noop;
 var syncRedraw = false;
 
@@ -779,11 +678,6 @@ function config(newCfg) {
 
 	if (newCfg.syncRedraw != null)
 		{ syncRedraw = newCfg.syncRedraw; }
-
-	{
-		if (newCfg.onemit)
-			{ emitCfg(newCfg.onemit); }
-	}
 }
 
 function bindEv(el, type, fn) {
@@ -1442,11 +1336,6 @@ var ViewModelProto = ViewModel.prototype = {
 		// maybe invert assignment order?
 		if (opts.hooks)
 			{ t.hooks = assignObj(t.hooks || {}, opts.hooks); }
-
-		{
-			if (opts.onemit)
-				{ t.onemit = assignObj(t.onemit || {}, opts.onemit); }
-		}
 	},
 	parent: function() {
 		return getVm(this.node.parent);
@@ -1778,128 +1667,5 @@ function lazyList(items, cfg) {
 	return self;
 }
 
-function protoPatch(n, doRepaint) {
-	patch$1(this, n, doRepaint);
-}
-
-// newNode can be either {class: style: } or full new VNode
-// will/didPatch hooks?
-function patch$1(o, n, doRepaint) {
-	// patch attrs obj
-	if (isPlainObj(n)) {
-		// TODO: re-establish refs
-
-		// shallow-clone target
-		var donor = Object.create(o);
-		// fixate orig attrs
-		donor.attrs = assignObj({}, o.attrs);
-		// prepend any fixed shorthand class
-		if (n.class != null && o._class != null)
-			{ n.class = o._class + " " + n.class; }
-		// assign new attrs into live targ node
-		var oattrs = assignObj(o.attrs, n);
-
-		patchAttrs(o, donor);
-
-		doRepaint && repaint(o);
-	}
-	// patch full vnode
-	else {
-		// no full patching of view roots, just use redraw!
-		if (o.vm != null)
-			{ return; }
-
-		preProc(n, o.parent, o.idx, null);
-		o.parent.body[o.idx] = n;
-		patch(n, o);
-		doRepaint && repaint(n);
-		drainDidHooks(getVm(n));
-	}
-}
-
-VNodeProto.patch = protoPatch;
-
-/*
-import { h } from "../view/addons/h";
-
-nano.h = h;
-
-import { defineElementSpread } from "../view/addons/defineElementSpread";
-
-nano.defineElementSpread = defineElementSpread;
-*/
-
-function defineElementSpread(tag) {
-	var args = arguments;
-	var len = args.length;
-	var body, attrs;
-
-	if (len > 1) {
-		var bodyIdx = 1;
-
-		if (isPlainObj(args[1])) {
-			attrs = args[1];
-			bodyIdx = 2;
-		}
-
-		if (len === bodyIdx + 1 && !(args[bodyIdx] instanceof VNode) && !(args[bodyIdx] instanceof VView) && !(args[bodyIdx] instanceof VModel))
-			{ body = args[bodyIdx]; }
-		else
-			{ body = sliceArgs(args, bodyIdx); }
-	}
-
-	return initElementNode(tag, attrs, body);
-}
-
-function defineSvgElementSpread() {
-	var n = defineElementSpread.apply(null, arguments);
-	n.ns = SVG_NS;
-	return n;
-}
-
-function nextSubVms(n, accum) {
-	var body = n.body;
-
-	if (isArr(body)) {
-		for (var i = 0; i < body.length; i++) {
-			var n2 = body[i];
-
-			if (n2.vm != null)
-				{ accum.push(n2.vm); }
-			else
-				{ nextSubVms(n2, accum); }
-		}
-	}
-
-	return accum;
-}
-
-ViewModelProto.emit = emit;
-ViewModelProto.onemit = null;
-ViewModelProto.body = function() {
-	return nextSubVms(this.node, []);
-};
-
-exports.defineElementSpread = defineElementSpread;
-exports.defineSvgElementSpread = defineSvgElementSpread;
-exports.ViewModel = ViewModel;
-exports.VNode = VNode;
-exports.createView = createView;
-exports.defineElement = defineElement;
-exports.defineSvgElement = defineSvgElement;
-exports.defineText = defineText;
-exports.defineComment = defineComment;
-exports.defineView = defineView;
-exports.injectView = injectView;
-exports.injectElement = injectElement;
-exports.lazyList = lazyList;
-exports.FIXED_BODY = FIXED_BODY;
-exports.DEEP_REMOVE = DEEP_REMOVE;
-exports.KEYED_LIST = KEYED_LIST;
-exports.LAZY_LIST = LAZY_LIST;
-exports.config = config;
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-})));
-//# sourceMappingURL=domvm.micro.js.map
+export { ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST, config };
+//# sourceMappingURL=domvm.pico.es.js.map

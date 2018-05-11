@@ -4,14 +4,8 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (3.x-dev, micro build)
+* @preserve https://github.com/leeoniya/domvm (3.x-dev, client build)
 */
-
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	(factory((global.domvm = {})));
-}(this, (function (exports) { 'use strict';
 
 // NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 // There are some places that test <= COMMENT to assert if node is a VNode
@@ -318,6 +312,16 @@ function defineText(body) {
 	return node;
 }
 
+var streamVal = noop;
+var streamOn = noop;
+var streamOff = noop;
+
+function streamCfg(cfg) {
+	streamVal = cfg.val;
+	streamOn = cfg.on;
+	streamOff = cfg.off;
+}
+
 var tagCache = {};
 
 var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
@@ -461,7 +465,9 @@ function preProc(vnew, parent, idx, ownVm) {
 		{ preProcBody(vnew); }
 	else if (vnew.body === "")
 		{ vnew.body = null; }
-	else {}
+	else {
+		vnew.body = streamVal(vnew.body, getVm(vnew)._stream);
+	}
 }
 
 function preProcBody(vnew) {
@@ -556,6 +562,10 @@ function patchStyle(n, o) {
 	else {
 		for (var nn in ns) {
 			var nv = ns[nn];
+
+			{
+				ns[nn] = nv = streamVal(nv, getVm(n)._stream);
+			}
 
 			if (os == null || nv != null && nv !== os[nn])
 				{ n.el.style[nn] = autoPx(nn, nv); }
@@ -784,6 +794,11 @@ function config(newCfg) {
 		if (newCfg.onemit)
 			{ emitCfg(newCfg.onemit); }
 	}
+
+	{
+		if (newCfg.stream)
+			{ streamCfg(newCfg.stream); }
+	}
 }
 
 function bindEv(el, type, fn) {
@@ -890,6 +905,10 @@ function patchAttrs(vnode, donor, initial) {
 
 			var isDyn = isDynProp(vnode.tag, key);
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
+
+			{
+				nattrs[key] = nval = streamVal(nval, (getVm(vnode) || emptyObj)._stream);
+			}
 
 			if (nval === oval) {}
 			else if (isStyleProp(key))
@@ -1526,6 +1545,11 @@ function mount(el, isRoot) {
 function unmount(asSub) {
 	var vm = this;
 
+	{
+		streamOff(vm._stream);
+		vm._stream = null;
+	}
+
 	var node = vm.node;
 	var parEl = node.el.parentNode;
 
@@ -1584,6 +1608,10 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	vm.node = vnew;
 
+	{
+		vm._stream = [];
+	}
+
 	if (newParent) {
 		preProc(vnew, newParent, newIdx, vm);
 		newParent.body[newIdx] = vnew;
@@ -1619,6 +1647,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 		}
 		else
 			{ hydrate(vnew); }
+	}
+
+	{
+		streamVal(vm.data, vm._stream);
+		vm._stream = streamOn(vm._stream, vm);
 	}
 
 	isMounted && fireHook(vm.hooks, "didRedraw", vm, vm.data);
@@ -1880,26 +1913,57 @@ ViewModelProto.body = function() {
 	return nextSubVms(this.node, []);
 };
 
-exports.defineElementSpread = defineElementSpread;
-exports.defineSvgElementSpread = defineSvgElementSpread;
-exports.ViewModel = ViewModel;
-exports.VNode = VNode;
-exports.createView = createView;
-exports.defineElement = defineElement;
-exports.defineSvgElement = defineSvgElement;
-exports.defineText = defineText;
-exports.defineComment = defineComment;
-exports.defineView = defineView;
-exports.injectView = injectView;
-exports.injectElement = injectElement;
-exports.lazyList = lazyList;
-exports.FIXED_BODY = FIXED_BODY;
-exports.DEEP_REMOVE = DEEP_REMOVE;
-exports.KEYED_LIST = KEYED_LIST;
-exports.LAZY_LIST = LAZY_LIST;
-exports.config = config;
+ViewModelProto._stream = null;
 
-Object.defineProperty(exports, '__esModule', { value: true });
+//import { prop } from "../utils";
+//mini.prop = prop;
 
-})));
-//# sourceMappingURL=domvm.micro.js.map
+function protoAttach(el) {
+	var vm = this;
+	if (vm.node == null)
+		{ vm._redraw(null, null, false); }
+
+	attach(vm.node, el);
+
+	return vm;
+}
+// very similar to hydrate, TODO: dry
+function attach(vnode, withEl) {
+	vnode.el = withEl;
+	withEl._node = vnode;
+
+	var nattrs = vnode.attrs;
+
+	for (var key in nattrs) {
+		var nval = nattrs[key];
+		var isDyn = isDynProp(vnode.tag, key);
+
+		if (isStyleProp(key) || isSplProp(key)) {}
+		else if (isEvProp(key))
+			{ patchEvent(vnode, key, nval); }
+		else if (nval != null && isDyn)
+			{ setAttr(vnode, key, nval, isDyn); }
+	}
+
+	if ((vnode.flags & LAZY_LIST) === LAZY_LIST)
+		{ vnode.body.body(vnode); }
+
+	if (isArr(vnode.body) && vnode.body.length > 0) {
+		var c = withEl.firstChild;
+		var i = 0;
+		var v = vnode.body[i];
+		do {
+			if (v.type === VVIEW)
+				{ v = createView(v.view, v.data, v.key, v.opts)._redraw(vnode, i, false).node; }
+			else if (v.type === VMODEL)
+				{ v = v.node || v._redraw(vnode, i, false).node; }
+
+			attach(v, c);
+		} while ((c = c.nextSibling) && (v = vnode.body[++i]))
+	}
+}
+
+ViewModelProto.attach = protoAttach;
+
+export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST, config };
+//# sourceMappingURL=domvm.client.es.js.map

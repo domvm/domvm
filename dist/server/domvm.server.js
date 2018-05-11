@@ -8,10 +8,10 @@
 */
 
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global.domvm = factory());
-}(this, (function () { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+	typeof define === 'function' && define.amd ? define(['exports'], factory) :
+	(factory((global.domvm = {})));
+}(this, (function (exports) { 'use strict';
 
 // NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 // There are some places that test <= COMMENT to assert if node is a VNode
@@ -1817,31 +1817,6 @@ function lazyList(items, cfg) {
 	return self;
 }
 
-var nano = {
-	config: config,
-
-	ViewModel: ViewModel,
-	VNode: VNode,
-
-	createView: createView,
-
-	defineElement: defineElement,
-	defineSvgElement: defineSvgElement,
-	defineText: defineText,
-	defineComment: defineComment,
-	defineView: defineView,
-
-	injectView: injectView,
-	injectElement: injectElement,
-
-	lazyList: lazyList,
-
-	FIXED_BODY: FIXED_BODY,
-	DEEP_REMOVE: DEEP_REMOVE,
-	KEYED_LIST: KEYED_LIST,
-	LAZY_LIST: LAZY_LIST,
-}
-
 function protoPatch(n, doRepaint) {
 	patch$1(this, n, doRepaint);
 }
@@ -1883,22 +1858,15 @@ function patch$1(o, n, doRepaint) {
 
 VNodeProto.patch = protoPatch;
 
-function nextSubVms(n, accum) {
-	var body = n.body;
+/*
+import { h } from "../view/addons/h";
 
-	if (isArr(body)) {
-		for (var i = 0; i < body.length; i++) {
-			var n2 = body[i];
+nano.h = h;
 
-			if (n2.vm != null)
-				{ accum.push(n2.vm); }
-			else
-				{ nextSubVms(n2, accum); }
-		}
-	}
+import { defineElementSpread } from "../view/addons/defineElementSpread";
 
-	return accum;
-}
+nano.defineElementSpread = defineElementSpread;
+*/
 
 function defineElementSpread(tag) {
 	var args = arguments;
@@ -1928,17 +1896,33 @@ function defineSvgElementSpread() {
 	return n;
 }
 
+function nextSubVms(n, accum) {
+	var body = n.body;
+
+	if (isArr(body)) {
+		for (var i = 0; i < body.length; i++) {
+			var n2 = body[i];
+
+			if (n2.vm != null)
+				{ accum.push(n2.vm); }
+			else
+				{ nextSubVms(n2, accum); }
+		}
+	}
+
+	return accum;
+}
+
 ViewModelProto.emit = emit;
 ViewModelProto.onemit = null;
-
 ViewModelProto.body = function() {
 	return nextSubVms(this.node, []);
 };
 
-nano.defineElementSpread = defineElementSpread;
-nano.defineSvgElementSpread = defineSvgElementSpread;
-
 ViewModelProto._stream = null;
+
+//import { prop } from "../utils";
+//mini.prop = prop;
 
 function vmProtoHtml(dynProps) {
 	var vm = this;
@@ -2107,7 +2091,26 @@ function html(node, dynProps) {
 ViewModelProto.html = vmProtoHtml;
 VNodeProto.html = vProtoHtml;
 
-return nano;
+exports.defineElementSpread = defineElementSpread;
+exports.defineSvgElementSpread = defineSvgElementSpread;
+exports.ViewModel = ViewModel;
+exports.VNode = VNode;
+exports.createView = createView;
+exports.defineElement = defineElement;
+exports.defineSvgElement = defineSvgElement;
+exports.defineText = defineText;
+exports.defineComment = defineComment;
+exports.defineView = defineView;
+exports.injectView = injectView;
+exports.injectElement = injectElement;
+exports.lazyList = lazyList;
+exports.FIXED_BODY = FIXED_BODY;
+exports.DEEP_REMOVE = DEEP_REMOVE;
+exports.KEYED_LIST = KEYED_LIST;
+exports.LAZY_LIST = LAZY_LIST;
+exports.config = config;
+
+Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
 //# sourceMappingURL=domvm.server.js.map

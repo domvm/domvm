@@ -8,10 +8,10 @@
 */
 
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global.domvm = factory());
-}(this, (function () { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+	typeof define === 'function' && define.amd ? define(['exports'], factory) :
+	(factory((global.domvm = {})));
+}(this, (function (exports) { 'use strict';
 
 // NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 // There are some places that test <= COMMENT to assert if node is a VNode
@@ -1693,31 +1693,6 @@ function lazyList(items, cfg) {
 	return self;
 }
 
-var nano = {
-	config: config,
-
-	ViewModel: ViewModel,
-	VNode: VNode,
-
-	createView: createView,
-
-	defineElement: defineElement,
-	defineSvgElement: defineSvgElement,
-	defineText: defineText,
-	defineComment: defineComment,
-	defineView: defineView,
-
-	injectView: injectView,
-	injectElement: injectElement,
-
-	lazyList: lazyList,
-
-	FIXED_BODY: FIXED_BODY,
-	DEEP_REMOVE: DEEP_REMOVE,
-	KEYED_LIST: KEYED_LIST,
-	LAZY_LIST: LAZY_LIST,
-}
-
 function protoPatch(n, doRepaint) {
 	patch$1(this, n, doRepaint);
 }
@@ -1759,7 +1734,34 @@ function patch$1(o, n, doRepaint) {
 
 VNodeProto.patch = protoPatch;
 
-return nano;
+/*
+import { h } from "../view/addons/h";
+
+nano.h = h;
+
+import { defineElementSpread } from "../view/addons/defineElementSpread";
+
+nano.defineElementSpread = defineElementSpread;
+*/
+
+exports.ViewModel = ViewModel;
+exports.VNode = VNode;
+exports.createView = createView;
+exports.defineElement = defineElement;
+exports.defineSvgElement = defineSvgElement;
+exports.defineText = defineText;
+exports.defineComment = defineComment;
+exports.defineView = defineView;
+exports.injectView = injectView;
+exports.injectElement = injectElement;
+exports.lazyList = lazyList;
+exports.FIXED_BODY = FIXED_BODY;
+exports.DEEP_REMOVE = DEEP_REMOVE;
+exports.KEYED_LIST = KEYED_LIST;
+exports.LAZY_LIST = LAZY_LIST;
+exports.config = config;
+
+Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
 //# sourceMappingURL=domvm.nano.js.map

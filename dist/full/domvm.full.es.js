@@ -1811,31 +1811,6 @@ function lazyList(items, cfg) {
 	return self;
 }
 
-var nano = {
-	config: config,
-
-	ViewModel: ViewModel,
-	VNode: VNode,
-
-	createView: createView,
-
-	defineElement: defineElement,
-	defineSvgElement: defineSvgElement,
-	defineText: defineText,
-	defineComment: defineComment,
-	defineView: defineView,
-
-	injectView: injectView,
-	injectElement: injectElement,
-
-	lazyList: lazyList,
-
-	FIXED_BODY: FIXED_BODY,
-	DEEP_REMOVE: DEEP_REMOVE,
-	KEYED_LIST: KEYED_LIST,
-	LAZY_LIST: LAZY_LIST,
-}
-
 function protoPatch(n, doRepaint) {
 	patch$1(this, n, doRepaint);
 }
@@ -1877,22 +1852,15 @@ function patch$1(o, n, doRepaint) {
 
 VNodeProto.patch = protoPatch;
 
-function nextSubVms(n, accum) {
-	var body = n.body;
+/*
+import { h } from "../view/addons/h";
 
-	if (isArr(body)) {
-		for (var i = 0; i < body.length; i++) {
-			var n2 = body[i];
+nano.h = h;
 
-			if (n2.vm != null)
-				{ accum.push(n2.vm); }
-			else
-				{ nextSubVms(n2, accum); }
-		}
-	}
+import { defineElementSpread } from "../view/addons/defineElementSpread";
 
-	return accum;
-}
+nano.defineElementSpread = defineElementSpread;
+*/
 
 function defineElementSpread(tag) {
 	var args = arguments;
@@ -1922,17 +1890,33 @@ function defineSvgElementSpread() {
 	return n;
 }
 
+function nextSubVms(n, accum) {
+	var body = n.body;
+
+	if (isArr(body)) {
+		for (var i = 0; i < body.length; i++) {
+			var n2 = body[i];
+
+			if (n2.vm != null)
+				{ accum.push(n2.vm); }
+			else
+				{ nextSubVms(n2, accum); }
+		}
+	}
+
+	return accum;
+}
+
 ViewModelProto.emit = emit;
 ViewModelProto.onemit = null;
-
 ViewModelProto.body = function() {
 	return nextSubVms(this.node, []);
 };
 
-nano.defineElementSpread = defineElementSpread;
-nano.defineSvgElementSpread = defineSvgElementSpread;
-
 ViewModelProto._stream = null;
+
+//import { prop } from "../utils";
+//mini.prop = prop;
 
 function protoAttach(el) {
 	var vm = this;
@@ -2144,9 +2128,8 @@ function html(node, dynProps) {
 }
 
 ViewModelProto.attach = protoAttach;
-
 ViewModelProto.html = vmProtoHtml;
 VNodeProto.html = vProtoHtml;
 
-export default nano;
+export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST, config };
 //# sourceMappingURL=domvm.full.es.js.map
