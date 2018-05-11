@@ -455,7 +455,6 @@ function preProc(vnew, parent, idx, ownVm) {
 		{ preProcBody(vnew); }
 	else if (vnew.body === "")
 		{ vnew.body = null; }
-	else {}
 }
 
 function preProcBody(vnew) {
@@ -873,8 +872,7 @@ function patchAttrs(vnode, donor, initial) {
 	var nattrs = vnode.attrs || emptyObj;
 	var oattrs = donor.attrs || emptyObj;
 
-	if (nattrs === oattrs) {
-	}
+	if (nattrs === oattrs) ;
 	else {
 		for (var key in nattrs) {
 			var nval = nattrs[key];
@@ -885,10 +883,10 @@ function patchAttrs(vnode, donor, initial) {
 			var isDyn = isDynProp(vnode.tag, key);
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
-			if (nval === oval) {}
+			if (nval === oval) ;
 			else if (isStyleProp(key))
 				{ patchStyle(vnode, donor); }
-			else if (isSplProp(key)) {}
+			else if (isSplProp(key)) ;
 			else if (isEvProp(key))
 				{ patchEvent(vnode, key, nval, oval); }
 			else
@@ -1301,11 +1299,6 @@ function patchChildren(vnode, donor) {
 
 				if (donor2 != null)
 					{ patch(node2, donor2); }
-			}
-			else {
-				// TODO: flag tmp FIXED_BODY on unchanged nodes?
-
-				// domSync = true;		if any idx changes or new nodes added/removed
 			}
 
 			nbodyNew[i] = node2;

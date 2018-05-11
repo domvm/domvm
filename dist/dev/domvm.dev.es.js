@@ -1012,10 +1012,10 @@ function patchAttrs(vnode, donor, initial) {
 				nattrs[key] = nval = streamVal(nval, (getVm(vnode) || emptyObj)._stream);
 			}
 
-			if (nval === oval) {}
+			if (nval === oval) ;
 			else if (isStyleProp(key))
 				{ patchStyle(vnode, donor); }
-			else if (isSplProp(key)) {}
+			else if (isSplProp(key)) ;
 			else if (isEvProp(key))
 				{ patchEvent(vnode, key, nval, oval); }
 			else
@@ -1433,11 +1433,6 @@ function patchChildren(vnode, donor) {
 
 				if (donor2 != null)
 					{ patch(node2, donor2); }
-			}
-			else {
-				// TODO: flag tmp FIXED_BODY on unchanged nodes?
-
-				// domSync = true;		if any idx changes or new nodes added/removed
 			}
 
 			nbodyNew[i] = node2;
@@ -2336,7 +2331,7 @@ function attach(vnode, withEl) {
 		var nval = nattrs[key];
 		var isDyn = isDynProp(vnode.tag, key);
 
-		if (isStyleProp(key) || isSplProp(key)) {}
+		if (isStyleProp(key) || isSplProp(key)) ;
 		else if (isEvProp(key))
 			{ patchEvent(vnode, key, nval); }
 		else if (nval != null && isDyn)
@@ -2489,7 +2484,7 @@ function html(node, dynProps) {
 
 					if (val === true)
 						{ buf += " " + escHtml(pname) + '=""'; }
-					else if (val === false) {}
+					else if (val === false) ;
 					else if (val != null)
 						{ buf += " " + escHtml(pname) + '="' + escQuotes(val) + '"'; }
 				}
