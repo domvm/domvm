@@ -11,7 +11,14 @@ QUnit.module("vnode.patch()", function() {
 		};
 	}
 
+	function TestView2() {
+		return function() {
+			return el(".foo", "a");
+		};
+	}
+
 	var vm;
+
 	QUnit.test('Create', function(assert) {
 		instr.start();
 		vm = domvm.createView(TestView).mount(testyDiv);
@@ -42,5 +49,23 @@ QUnit.module("vnode.patch()", function() {
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { className: 1, nodeValue: 1 });
 
 //		console.log(vm.node.el.firstChild._node);
+	});
+
+	QUnit.test('Static class prepend', function(assert) {
+		instr.start();
+		vm = domvm.createView(TestView2).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div class="foo">a</div>';
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { className: 1, createElement: 1, textContent: 1, insertBefore: 1 });
+
+		instr.start();
+		vm.node.patch({style: {margin: 5}});
+		var callCounts = instr.end();
+
+		var expcHtml = '<div class="foo" style="margin: 5px;">a</div>';
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { });
 	});
 });

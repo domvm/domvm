@@ -113,6 +113,14 @@ function compile(buildName) {
 		bundle.write({
 			banner: banner,
 			name: "domvm",
+			format: "es",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
+			sourcemap: true,
+			file: "./dist/" + buildName + "/domvm." + buildName + ".es.js"
+		});
+
+		bundle.write({
+			banner: banner,
+			name: "domvm",
 			format: "umd",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
 			sourcemap: true,
 			file: "./dist/" + buildName + "/domvm." + buildName + ".js"
@@ -120,16 +128,6 @@ function compile(buildName) {
 			console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
 			squish(buildName, start);
 		});
-
-		/*
-		bundle.write({
-			banner: banner,
-			name: "domvm",
-			format: "es",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
-			sourcemap: true,
-			file: "./dist/" + buildName + "/domvm." + buildName + ".es.js"
-		});
-		*/
 	}).catch(function(err) {
 		console.log(err);
 	})

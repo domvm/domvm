@@ -12,6 +12,8 @@
   "author": "Leon Sorokin <leeoniya@gmail.com>",
   "version": "3.3.0",
   "main": "./dist/full/domvm.full.min.js",
+  "module": "./dist/full/domvm.full.es.js",
+  "jsnext:main": "./dist/full/domvm.full.es.js",
   "scripts": {
     "covtest": "nyc mocha test/src/*.js",
     "covreport": "nyc report --reporter=text-summary --reporter=text > ./test/coverage.txt",
@@ -28,15 +30,15 @@
     "url": "https://github.com/leeoniya/domvm.git"
   },
   "devDependencies": {
-    "buble": "^0.19.3",
-    "google-closure-compiler-js": "^20180204.0.0",
-    "mocha": "^5.1.1",
-    "node-watch": "^0.5.8",
-    "nyc": "^11.7.1",
-    "rollup": "^0.56.5",
-    "rollup-plugin-buble": "^0.19.2",
-    "rollup-plugin-replace": "^2.0.0",
-    "undom": "^0.3.3"
+    "buble": "*",
+    "google-closure-compiler-js": "*",
+    "mocha": "*",
+    "node-watch": "*",
+    "nyc": "*",
+    "rollup": "*",
+    "rollup-plugin-buble": "*",
+    "rollup-plugin-replace": "*",
+    "undom": "*"
   },
   "bugs": {
     "url": "https://github.com/leeoniya/domvm/issues"

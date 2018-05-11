@@ -1,4 +1,4 @@
-import { assignObj } from '../../utils';
+import { assignObj, isPlainObj } from '../../utils';
 import { getVm, repaint } from '../utils';
 import { patchAttrs } from '../patchAttrs';
 import { preProc } from '../preProc';
@@ -12,7 +12,26 @@ export function protoPatch(n, doRepaint) {
 // newNode can be either {class: style: } or full new VNode
 // will/didPatch hooks?
 export function patch(o, n, doRepaint) {
-	if (n.type != null) {
+	// patch attrs obj
+	if (isPlainObj(n)) {
+		// TODO: re-establish refs
+
+		// shallow-clone target
+		var donor = Object.create(o);
+		// fixate orig attrs
+		donor.attrs = assignObj({}, o.attrs);
+		// prepend any fixed shorthand class
+		if (n.class != null && o._class != null)
+			n.class = o._class + " " + n.class;
+		// assign new attrs into live targ node
+		var oattrs = assignObj(o.attrs, n);
+
+		patchAttrs(o, donor);
+
+		doRepaint && repaint(o);
+	}
+	// patch full vnode
+	else {
 		// no full patching of view roots, just use redraw!
 		if (o.vm != null)
 			return;
@@ -22,24 +41,5 @@ export function patch(o, n, doRepaint) {
 		fullPatch(n, o);
 		doRepaint && repaint(n);
 		drainDidHooks(getVm(n));
-	}
-	else {
-		// TODO: re-establish refs
-
-		// shallow-clone target
-		var donor = Object.create(o);
-		// fixate orig attrs
-		donor.attrs = assignObj({}, o.attrs);
-		// assign new attrs into live targ node
-		var oattrs = assignObj(o.attrs, n);
-		// prepend any fixed shorthand class
-		if (o._class != null) {
-			var aclass = oattrs.class;
-			oattrs.class = aclass != null && aclass !== "" ? o._class + " " + aclass : o._class;
-		}
-
-		patchAttrs(o, donor);
-
-		doRepaint && repaint(o);
 	}
 }
