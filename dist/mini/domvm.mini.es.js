@@ -806,13 +806,11 @@ function bindEv(el, type, fn) {
 }
 
 function exec(fn, args, e, node, vm) {
-	var out = fn.apply(vm, args.concat([e, node, vm, vm.data]));
+	var out1 = fn.apply(vm, args.concat([e, node, vm, vm.data])),
+		out2 = vm.onevent(e, node, vm, vm.data, args),
+		out3 = onevent.call(null, e, node, vm, vm.data, args);
 
-	// should these respect out === false?
-	vm.onevent(e, node, vm, vm.data, args);
-	onevent.call(null, e, node, vm, vm.data, args);
-
-	if (out === false) {
+	if (out1 === false || out2 === false || out3 === false) {
 		e.preventDefault();
 		e.stopPropagation();
 	}
