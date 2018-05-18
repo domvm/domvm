@@ -895,8 +895,12 @@
 		}
 	}
 
-	function bindEv(el, type, fn) {
-		el[type] = fn;
+	function unbind(el, type, fn) {
+		el.removeEventListener(type.slice(2), fn, false);
+	}
+
+	function bind(el, type, fn) {
+		el.addEventListener(type.slice(2), fn, false);
 	}
 
 	function exec(fn, args, e, node, vm) {
@@ -942,7 +946,7 @@
 	}
 
 	function patchEvent(node, name, nval, oval) {
-		if (nval === oval)
+		if (nval == oval)
 			{ return; }
 
 		{
@@ -960,10 +964,14 @@
 
 		var el = node.el;
 
-		if (nval == null || isFunc(nval))
-			{ bindEv(el, name, nval); }
-		else if (oval == null)
-			{ bindEv(el, name, handle); }
+		if (oval == null)
+			{ bind(el, name, isFunc(nval) ? nval : handle); }
+		else {
+			if (nval == null || isFunc(nval))
+				{ unbind(el, name, isFunc(oval) ? oval : handle); }
+			if (nval != null)
+				{ bind(el, name, isFunc(nval) ? nval : handle); }
+		}
 	}
 
 	function remAttr(node, name, asProp) {
