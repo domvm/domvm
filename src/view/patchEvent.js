@@ -1,5 +1,4 @@
 import { isArr, isFunc, isPlainObj } from '../utils';
-import { closestVNode } from './dom';
 import { getVm } from './utils';
 import { onevent } from './config';
 import { devNotify } from "./addons/devmode";
@@ -24,7 +23,11 @@ function exec(fn, args, e, node, vm) {
 }
 
 function handle(e) {
-	var node = closestVNode(e.target);
+	var node = e.target._node;
+
+	if (node == null)
+		return;
+
 	var vm = getVm(node);
 
 	var evDef = e.currentTarget._node.attrs["on" + e.type], fn, args;
