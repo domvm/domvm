@@ -421,13 +421,11 @@ el("input", {oninput: filter});
 **Fancy** listeners are executed by a proxy handler and offer additonal features:
 
 - Can handle event delegation
-- Can pass through additional arguments
+- Can pass through additional args and receive `(...args, e, node, vm, data)`
 - Will invoke global and vm-level `onevent` callbacks
 - Will call `e.preventDefault()` & `e.stopPropagation()` if `false` is returned
 
-They're defined by a hash, an array or a hash of arrays and receive these arguments: `(...args, e, node, vm, data)`.
-
-Listeners defined by a hash are used for event delegation:
+Listeners defined using an object are used for event delegation:
 
 ```js
 function rowClick(e, node, vm, data) {}
@@ -452,7 +450,7 @@ function cellClick(foo, bar, e, node, vm, data) {}
 el("table", {onclick: {"td": [cellClick, "foo", "bar"]}}, ...);
 ```
 
-View-level and global `onevent` callbacks can be defined to handle **fancy** events:
+View-level and global `onevent` callbacks:
 
 ```js
 // global
@@ -472,8 +470,7 @@ vm.config({
 
 Notes:
 
-- Animation & transition listeners cannot be attached via `on*` props, such as `animationend`, `animationiteration`, `animationstart`, `transitionend`. To bind these events use a node-level `willInsert` [Lifecycle Hook](#lifecycle-hooks).
-- `onevent`'s args always represent the origin of the event in the vtree
+- Fancy args always reflect the origin of the event in the vtree
 
 ---
 ### Autoredraw
