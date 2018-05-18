@@ -69,7 +69,7 @@ function CalendarView(vm, args) {
 						cellClass = (idx < start || off > end ? ".dim" : "") + (!!api.selected[date] ? ".sel" : ""),
 						cellText = idx < start ? prevEnd + off : off > end ? off - end : off;
 
-					return el("td.day" + cellClass, {_data: date}, cellText);
+					return el("td.day" + cellClass, {onclick: [api.selectDate, date]}, cellText);
 				}));
 			})
 		]);
@@ -80,7 +80,7 @@ function CalendarView(vm, args) {
 		var prevYear = args.year - 1,
 			nextYear = args.year + 1;
 
-		return el(".year", {onclick: {".day": function(e, node) { api.selectDate(node.data); }}}, [
+		return el(".year", [
 			el("header", [
 				el("button.prev", {onclick: [api.loadYear, prevYear]}, "< " + prevYear),
 				el("strong", {style: {fontSize: "18pt"}}, args.year),
