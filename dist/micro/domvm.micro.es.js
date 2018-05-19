@@ -668,10 +668,12 @@ function patchEvent(node, name, nval, oval) {
 	if (oval == null)
 		{ bind(el, name, isFunc(nval) ? nval : handle); }
 	else {
-		if (nval == null || isFunc(nval))
+		var nIsFn = isFunc(nval);
+
+		if (nIsFn)
+			{ bind(el, name, nval); }
+		if (nIsFn || nval == null)
 			{ unbind(el, name, isFunc(oval) ? oval : handle); }
-		if (nval != null)
-			{ bind(el, name, isFunc(nval) ? nval : handle); }
 	}
 }
 
@@ -731,9 +733,12 @@ function patchAttrs(vnode, donor, initial) {
 
 		// TODO: bench style.cssText = "" vs removeAttribute("style")
 		for (var key in oattrs) {
-			nattrs[key] == null &&
-			!isSplProp(key) &&
-			remAttr(vnode, key, isDynProp(vnode.tag, key) || isEvProp(key));
+			if (nattrs[key] == null) {
+				if (isEvProp(key))
+					{ patchEvent(vnode, key, nattrs[key], oattrs[key]); }
+				else if (!isSplProp(key))
+					{ remAttr(vnode, key, isDynProp(vnode.tag, key)); }
+			}
 		}
 	}
 }

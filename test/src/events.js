@@ -57,19 +57,6 @@ QUnit.module("Events", function() {
 		return false;
 	}
 
-	var onclick = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "onclick");
-
-	Object.defineProperty(HTMLElement.prototype, "onclick", {
-		set: function(s) {
-			if (s == null || s == "")
-				counts.unset++;
-			else
-				counts.set++;
-
-			onclick.set.call(this, s);
-		},
-	});
-
 	domvm.config({
 		onevent: function(e, node, vm, data, args) {
 			counts.globalOnArgs = Array.prototype.slice.call(arguments);
@@ -92,12 +79,12 @@ QUnit.module("Events", function() {
 		reset();
 
 		tpl = el("div", [el("input", {onclick: click1})]);
-		vm = domvm.createView(View).mount(testyDiv);
 
-		// initial bind
-		assert.equal(vm.node.body[0].el.onclick, click1);
-		assert.equal(counts.set, 1);
-		assert.equal(counts.unset, 0);
+		instr.start();
+		vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+		var expcHtml = '<div><input></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, addEventListener: 1, insertBefore: 2 });
 
 		// clicked args
 		doClick(vm.node.body[0].el);
@@ -108,19 +95,25 @@ QUnit.module("Events", function() {
 
 		// no re-bind on redraw
 		tpl = el("div", [el("input", {onclick: click1})]);
+
+		instr.start();
 		vm.redraw();
-		assert.equal(vm.node.body[0].el.onclick, click1);
-		assert.equal(counts.set, 0);
-		assert.equal(counts.unset, 0);
+		var callCounts = instr.end();
+		var expcHtml = '<div><input></div>';
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { });
 
 		reset();
 
 		// mutate
 		tpl = el("div", [el("input", {onclick: click2})]);
+
+		instr.start();
 		vm.redraw();
-		assert.equal(vm.node.body[0].el.onclick, click2);
-		assert.equal(counts.set, 1);
-		assert.equal(counts.unset, 0);
+		var callCounts = instr.end();
+		var expcHtml = '<div><input></div>';
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { addEventListener: 1, removeEventListener: 1 });
 
 /*		// return false -> preventDefault + stopPropagation
 		// todo: spy on Event.prototype.stopPropagation
@@ -133,22 +126,27 @@ QUnit.module("Events", function() {
 
 		// remove
 		tpl = el("div", [el("input", {onclick: null})]);
+
+		instr.start();
 		vm.redraw();
-		assert.equal(vm.node.body[0].el.onclick, null);
-		assert.equal(counts.set, 0);
-		assert.equal(counts.unset, 1);
+		var callCounts = instr.end();
+		var expcHtml = '<div><input></div>';
+
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeEventListener: 1 });
 
 		reset();
 	});
 
 	QUnit.test("Fancy (parameterized)", function(assert) {
 		tpl = el("div", [el("input", {onclick: [click1, 1, 2]})]);
-		vm = domvm.createView(View).mount(testyDiv);
 
-		// initial bind
-		assert.equal(vm.node.body[0].el.onclick.name, 'handle');
-		assert.equal(counts.set, 1);
-		assert.equal(counts.unset, 0);
+		instr.start();
+		vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+		var expcHtml = '<div><input></div>';
+
+		// TODO: test if "handle" is the thing that's bound
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, addEventListener: 1, insertBefore: 2 });
 
 		// clicked args
 		doClick(vm.node.body[0].el);
@@ -177,10 +175,14 @@ QUnit.module("Events", function() {
 
 		// no re-bind on redraw, even with handler & param changes
 		tpl = el("div", [el("input", {onclick: [click2, 3, 4]})]);
+
+		instr.start();
 		vm.redraw();
-		assert.equal(vm.node.body[0].el.onclick.name, 'handle');
-		assert.equal(counts.set, 0);
-		assert.equal(counts.unset, 0);
+		var callCounts = instr.end();
+		var expcHtml = '<div><input></div>';
+
+		// TODO: test if "handle" is the thing that's bound
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { });
 
 		// clicked args
 		doClick(vm.node.body[0].el);
@@ -200,31 +202,41 @@ QUnit.module("Events", function() {
 
 		// remove
 		tpl = el("div", [el("input", {onclick: null})]);
+
+		instr.start();
 		vm.redraw();
-		assert.equal(vm.node.body[0].el.onclick, null);
-		assert.equal(counts.set, 0);
-		assert.equal(counts.unset, 1);
+		var callCounts = instr.end();
+		var expcHtml = '<div><input></div>';
+
+		// TODO: test if "handle" is the thing that's bound
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeEventListener: 1 });
 
 		reset();
 	});
 
 	QUnit.test("Fancy (delegated)", function(assert) {
 		tpl = el("div", {onclick: {"*": click1, "input": click1}}, [el("input")]);
-		vm = domvm.createView(View).mount(testyDiv);
 
-		// initial bind
-		assert.equal(vm.node.el.onclick.name, 'handle');
-		assert.equal(counts.set, 1);
-		assert.equal(counts.unset, 0);
+		instr.start();
+		vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+		var expcHtml = '<div><input></div>';
+
+		// TODO: test if "handle" is the thing that's bound
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, addEventListener: 1, insertBefore: 2 });
 
 		reset();
 
 		// no re-bind on redraw, even with handler & param changes
 		tpl = el("div", {onclick: {"*": click2, "input": click2}}, [el("input")]);
+
+		instr.start();
 		vm.redraw();
-		assert.equal(vm.node.el.onclick.name, 'handle');
-		assert.equal(counts.set, 0);
-		assert.equal(counts.unset, 0);
+		var callCounts = instr.end();
+		var expcHtml = '<div><input></div>';
+
+		// TODO: test if "handle" is the thing that's bound
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { });
 
 		// clicked args
 		doClick(vm.node.body[0].el);
@@ -239,22 +251,28 @@ QUnit.module("Events", function() {
 
 		// remove
 		tpl = el("div", [el("input")]);
+
+		instr.start();
 		vm.redraw();
-		assert.equal(vm.node.el.onclick, null);
-		assert.equal(counts.set, 0);
-		assert.equal(counts.unset, 1);
+		var callCounts = instr.end();
+		var expcHtml = '<div><input></div>';
+
+		// TODO: test if "handle" is the thing that's bound
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeEventListener: 1 });
 
 		reset();
 	});
 
 	QUnit.test("Fancy (parameterized & delegated)", function(assert) {
 		tpl = el("div", {onclick: {"*": [click1, 1, 2], "input": [click2, 3, 4]}}, [el("input")]);
-		vm = domvm.createView(View).mount(testyDiv);
 
-		// initial bind
-		assert.equal(vm.node.el.onclick.name, 'handle');
-		assert.equal(counts.set, 1);
-		assert.equal(counts.unset, 0);
+		instr.start();
+		vm = domvm.createView(View).mount(testyDiv);
+		var callCounts = instr.end();
+		var expcHtml = '<div><input></div>';
+
+		// TODO: test if "handle" is the thing that's bound
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, addEventListener: 1, insertBefore: 2 });
 
 		reset();
 
@@ -280,6 +298,4 @@ QUnit.module("Events", function() {
 
 		reset();
 	});
-
-//	Object.defineProperty(HTMLElement.prototype, "onclick", onclick);
 });

@@ -79,9 +79,11 @@ export function patchEvent(node, name, nval, oval) {
 	if (oval == null)
 		bind(el, name, isFunc(nval) ? nval : handle);
 	else {
-		if (nval == null || isFunc(nval))
+		var nIsFn = isFunc(nval);
+
+		if (nIsFn)
+			bind(el, name, nval);
+		if (nIsFn || nval == null)
 			unbind(el, name, isFunc(oval) ? oval : handle);
-		if (nval != null)
-			bind(el, name, isFunc(nval) ? nval : handle);
 	}
 }
