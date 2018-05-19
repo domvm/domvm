@@ -1736,16 +1736,6 @@
 
 	VNodeProto.patch = protoPatch;
 
-	/*
-	import { h } from "../view/addons/h";
-
-	nano.h = h;
-
-	import { defineElementSpread } from "../view/addons/defineElementSpread";
-
-	nano.defineElementSpread = defineElementSpread;
-	*/
-
 	exports.ViewModel = ViewModel;
 	exports.VNode = VNode;
 	exports.createView = createView;

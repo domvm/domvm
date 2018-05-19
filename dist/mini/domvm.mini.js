@@ -1861,16 +1861,6 @@
 
 	VNodeProto.patch = protoPatch;
 
-	/*
-	import { h } from "../view/addons/h";
-
-	nano.h = h;
-
-	import { defineElementSpread } from "../view/addons/defineElementSpread";
-
-	nano.defineElementSpread = defineElementSpread;
-	*/
-
 	function defineElementSpread(tag) {
 		var args = arguments;
 		var len = args.length;

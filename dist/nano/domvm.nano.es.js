@@ -1730,15 +1730,5 @@ function patch$1(o, n, doRepaint) {
 
 VNodeProto.patch = protoPatch;
 
-/*
-import { h } from "../view/addons/h";
-
-nano.h = h;
-
-import { defineElementSpread } from "../view/addons/defineElementSpread";
-
-nano.defineElementSpread = defineElementSpread;
-*/
-
 export { ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST, config };
 //# sourceMappingURL=domvm.nano.es.js.map
