@@ -4,7 +4,7 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (v3.3.1, client build)
+* @preserve https://github.com/leeoniya/domvm (v3.3.2, client build)
 */
 
 (function (global, factory) {
