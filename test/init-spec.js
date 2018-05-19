@@ -10,23 +10,6 @@ global.MouseEvent = Event;
 
 global.HTMLElement = Element;
 
-Object.defineProperty(Element.prototype, "onclick", {
-	configurable: true,
-	set: function(s) {
-		if (s == null || s === "") {
-			this.removeEventListener("click", this._onclick);
-			delete this._onclick;
-		}
-		else {
-			this._onclick = s;
-			this.addEventListener("click", this._onclick);
-		}
-	},
-	get: function() {
-		return this._onclick;
-	},
-});
-
 Object.defineProperty(Element.prototype, "value", {
 	configurable: true,
 	set: function(s) {

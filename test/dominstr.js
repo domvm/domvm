@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2016, Leon Sorokin
+* Copyright (c) 2018, Leon Sorokin
 * All rights reserved. (MIT Licensed)
 *
 * A DOM instrumenting helper for debugging
@@ -60,6 +60,9 @@
 			"document.createTextNode": null,
 			"document.createComment": null,
 			"document.createDocumentFragment": null,
+
+			"Node.prototype.addEventListener": null,
+			"Node.prototype.removeEventListener": null,
 
 			"DocumentFragment.prototype.insertBefore": null,		// appendChild
 

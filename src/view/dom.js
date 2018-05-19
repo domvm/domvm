@@ -2,12 +2,6 @@ import { doc, isArr, isProm, curry } from '../utils';
 import { fireHook } from './hooks';
 import { FIXED_BODY, DEEP_REMOVE } from './initElementNode';
 
-export function closestVNode(el) {
-	while (el._node == null)
-		el = el.parentNode;
-	return el._node;
-}
-
 export function createElement(tag, ns) {
 	if (ns != null)
 		return doc.createElementNS(ns, tag);

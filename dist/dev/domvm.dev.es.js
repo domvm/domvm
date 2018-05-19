@@ -669,6 +669,220 @@ function patchStyle(n, o) {
 	}
 }
 
+var onemit = {};
+
+function emitCfg(cfg) {
+	assignObj(onemit, cfg);
+}
+
+function emit(evName) {
+	var targ = this,
+		src = targ;
+
+	var args = sliceArgs(arguments, 1).concat(src, src.data);
+
+	do {
+		var evs = targ.onemit;
+		var fn = evs ? evs[evName] : null;
+
+		if (fn) {
+			fn.apply(targ, args);
+			break;
+		}
+	} while (targ = targ.parent());
+
+	if (onemit[evName])
+		{ onemit[evName].apply(targ, args); }
+}
+
+var onevent = noop;
+var syncRedraw = false;
+
+function config(newCfg) {
+	onevent = newCfg.onevent || onevent;
+
+	if (newCfg.syncRedraw != null)
+		{ syncRedraw = newCfg.syncRedraw; }
+
+	{
+		if (newCfg.onemit)
+			{ emitCfg(newCfg.onemit); }
+	}
+
+	{
+		if (newCfg.stream)
+			{ streamCfg(newCfg.stream); }
+	}
+}
+
+function unbind(el, type, fn) {
+	el.removeEventListener(type.slice(2), fn, false);
+}
+
+function bind(el, type, fn) {
+	el.addEventListener(type.slice(2), fn, false);
+}
+
+function exec(fn, args, e, node, vm) {
+	var out1 = fn.apply(vm, args.concat([e, node, vm, vm.data])),
+		out2 = vm.onevent(e, node, vm, vm.data, args),
+		out3 = onevent.call(null, e, node, vm, vm.data, args);
+
+	if (out1 === false || out2 === false || out3 === false) {
+		e.preventDefault();
+		e.stopPropagation();
+	}
+}
+
+function handle(e) {
+	var node = e.target._node;
+
+	if (node == null)
+		{ return; }
+
+	var vm = getVm(node);
+
+	var evDef = e.currentTarget._node.attrs["on" + e.type], fn, args;
+
+	if (isArr(evDef)) {
+		fn = evDef[0];
+		args = evDef.slice(1);
+		exec(fn, args, e, node, vm);
+	}
+	else {
+		for (var sel in evDef) {
+			if (e.target.matches(sel)) {
+				var evDef2 = evDef[sel];
+
+				if (isArr(evDef2)) {
+					fn = evDef2[0];
+					args = evDef2.slice(1);
+				}
+				else {
+					fn = evDef2;
+					args = [];
+				}
+
+				exec(fn, args, e, node, vm);
+			}
+		}
+	}
+}
+
+function patchEvent(node, name, nval, oval) {
+	if (nval == oval)
+		{ return; }
+
+	{
+		if (isFunc(nval) && isFunc(oval) && oval.name == nval.name)
+			{ devNotify("INLINE_HANDLER", [node, oval, nval]); }
+
+		if (oval != null && nval != null &&
+			(
+				isArr(oval) != isArr(nval) ||
+				isPlainObj(oval) != isPlainObj(nval) ||
+				isFunc(oval) != isFunc(nval)
+			)
+		) { devNotify("MISMATCHED_HANDLER", [node, oval, nval]); }
+	}
+
+	var el = node.el;
+
+	if (oval == null)
+		{ bind(el, name, isFunc(nval) ? nval : handle); }
+	else {
+		var nIsFn = isFunc(nval);
+
+		if (nIsFn)
+			{ bind(el, name, nval); }
+		if (nIsFn || nval == null)
+			{ unbind(el, name, isFunc(oval) ? oval : handle); }
+	}
+}
+
+function remAttr(node, name, asProp) {
+	if (name[0] === ".") {
+		name = name.substr(1);
+		asProp = true;
+	}
+
+	if (asProp)
+		{ node.el[name] = ""; }
+	else
+		{ node.el.removeAttribute(name); }
+}
+
+// setAttr
+// diff, ".", "on*", bool vals, skip _*, value/checked/selected selectedIndex
+function setAttr(node, name, val, asProp, initial) {
+	var el = node.el;
+
+	if (node.ns != null)
+		{ el.setAttribute(name, val); }
+	else if (name === "class")
+		{ el.className = val; }
+	else if (name === "id" || typeof val === "boolean" || asProp)
+		{ el[name] = val; }
+	else if (name[0] === ".")
+		{ el[name.substr(1)] = val; }
+	else
+		{ el.setAttribute(name, val); }
+}
+
+function patchAttrs(vnode, donor, initial) {
+	var nattrs = vnode.attrs || emptyObj;
+	var oattrs = donor.attrs || emptyObj;
+
+	if (nattrs === oattrs) {
+		{ devNotify("REUSED_ATTRS", [vnode]); }
+	}
+	else {
+		for (var key in nattrs) {
+			var nval = nattrs[key];
+
+			if (nval == null)
+				{ continue; }
+
+			var isDyn = isDynProp(vnode.tag, key);
+			var oval = isDyn ? vnode.el[key] : oattrs[key];
+
+			{
+				nattrs[key] = nval = streamVal(nval, (getVm(vnode) || emptyObj)._stream);
+			}
+
+			if (nval === oval) ;
+			else if (isStyleProp(key))
+				{ patchStyle(vnode, donor); }
+			else if (isSplProp(key)) ;
+			else if (isEvProp(key))
+				{ patchEvent(vnode, key, nval, oval); }
+			else
+				{ setAttr(vnode, key, nval, isDyn, initial); }
+		}
+
+		// TODO: bench style.cssText = "" vs removeAttribute("style")
+		for (var key in oattrs) {
+			if (nattrs[key] == null) {
+				if (isEvProp(key))
+					{ patchEvent(vnode, key, nattrs[key], oattrs[key]); }
+				else if (!isSplProp(key))
+					{ remAttr(vnode, key, isDynProp(vnode.tag, key)); }
+			}
+		}
+	}
+}
+
+function createView(view, data, key, opts) {
+	if (view.type === VVIEW) {
+		data	= view.data;
+		key		= view.key;
+		opts	= view.opts;
+		view	= view.view;
+	}
+
+	return new ViewModel(view, data, key, opts);
+}
+
 var didQueue = [];
 
 function fireHook(hooks, name, o, n, immediate) {
@@ -696,12 +910,6 @@ function drainDidHooks(vm) {
 		while (item = didQueue.shift())
 			{ item[0](item[1], item[2]); }
 	}
-}
-
-function closestVNode(el) {
-	while (el._node == null)
-		{ el = el.parentNode; }
-	return el._node;
 }
 
 function createElement(tag, ns) {
@@ -841,205 +1049,6 @@ function insertBefore(parEl, el, refEl) {
 
 function insertAfter(parEl, el, refEl) {
 	insertBefore(parEl, el, refEl ? nextSib(refEl) : null);
-}
-
-var onemit = {};
-
-function emitCfg(cfg) {
-	assignObj(onemit, cfg);
-}
-
-function emit(evName) {
-	var targ = this,
-		src = targ;
-
-	var args = sliceArgs(arguments, 1).concat(src, src.data);
-
-	do {
-		var evs = targ.onemit;
-		var fn = evs ? evs[evName] : null;
-
-		if (fn) {
-			fn.apply(targ, args);
-			break;
-		}
-	} while (targ = targ.parent());
-
-	if (onemit[evName])
-		{ onemit[evName].apply(targ, args); }
-}
-
-var onevent = noop;
-var syncRedraw = false;
-
-function config(newCfg) {
-	onevent = newCfg.onevent || onevent;
-
-	if (newCfg.syncRedraw != null)
-		{ syncRedraw = newCfg.syncRedraw; }
-
-	{
-		if (newCfg.onemit)
-			{ emitCfg(newCfg.onemit); }
-	}
-
-	{
-		if (newCfg.stream)
-			{ streamCfg(newCfg.stream); }
-	}
-}
-
-function bindEv(el, type, fn) {
-	el[type] = fn;
-}
-
-function exec(fn, args, e, node, vm) {
-	var out = fn.apply(vm, args.concat([e, node, vm, vm.data]));
-
-	// should these respect out === false?
-	vm.onevent(e, node, vm, vm.data, args);
-	onevent.call(null, e, node, vm, vm.data, args);
-
-	if (out === false) {
-		e.preventDefault();
-		e.stopPropagation();
-	}
-}
-
-function handle(e) {
-	var node = closestVNode(e.target);
-	var vm = getVm(node);
-
-	var evDef = e.currentTarget._node.attrs["on" + e.type], fn, args;
-
-	if (isArr(evDef)) {
-		fn = evDef[0];
-		args = evDef.slice(1);
-		exec(fn, args, e, node, vm);
-	}
-	else {
-		for (var sel in evDef) {
-			if (e.target.matches(sel)) {
-				var evDef2 = evDef[sel];
-
-				if (isArr(evDef2)) {
-					fn = evDef2[0];
-					args = evDef2.slice(1);
-				}
-				else {
-					fn = evDef2;
-					args = [];
-				}
-
-				exec(fn, args, e, node, vm);
-			}
-		}
-	}
-}
-
-function patchEvent(node, name, nval, oval) {
-	if (nval === oval)
-		{ return; }
-
-	{
-		if (isFunc(nval) && isFunc(oval) && oval.name == nval.name)
-			{ devNotify("INLINE_HANDLER", [node, oval, nval]); }
-
-		if (oval != null && nval != null &&
-			(
-				isArr(oval) != isArr(nval) ||
-				isPlainObj(oval) != isPlainObj(nval) ||
-				isFunc(oval) != isFunc(nval)
-			)
-		) { devNotify("MISMATCHED_HANDLER", [node, oval, nval]); }
-	}
-
-	var el = node.el;
-
-	if (nval == null || isFunc(nval))
-		{ bindEv(el, name, nval); }
-	else if (oval == null)
-		{ bindEv(el, name, handle); }
-}
-
-function remAttr(node, name, asProp) {
-	if (name[0] === ".") {
-		name = name.substr(1);
-		asProp = true;
-	}
-
-	if (asProp)
-		{ node.el[name] = ""; }
-	else
-		{ node.el.removeAttribute(name); }
-}
-
-// setAttr
-// diff, ".", "on*", bool vals, skip _*, value/checked/selected selectedIndex
-function setAttr(node, name, val, asProp, initial) {
-	var el = node.el;
-
-	if (node.ns != null)
-		{ el.setAttribute(name, val); }
-	else if (name === "class")
-		{ el.className = val; }
-	else if (name === "id" || typeof val === "boolean" || asProp)
-		{ el[name] = val; }
-	else if (name[0] === ".")
-		{ el[name.substr(1)] = val; }
-	else
-		{ el.setAttribute(name, val); }
-}
-
-function patchAttrs(vnode, donor, initial) {
-	var nattrs = vnode.attrs || emptyObj;
-	var oattrs = donor.attrs || emptyObj;
-
-	if (nattrs === oattrs) {
-		{ devNotify("REUSED_ATTRS", [vnode]); }
-	}
-	else {
-		for (var key in nattrs) {
-			var nval = nattrs[key];
-
-			if (nval == null)
-				{ continue; }
-
-			var isDyn = isDynProp(vnode.tag, key);
-			var oval = isDyn ? vnode.el[key] : oattrs[key];
-
-			{
-				nattrs[key] = nval = streamVal(nval, (getVm(vnode) || emptyObj)._stream);
-			}
-
-			if (nval === oval) ;
-			else if (isStyleProp(key))
-				{ patchStyle(vnode, donor); }
-			else if (isSplProp(key)) ;
-			else if (isEvProp(key))
-				{ patchEvent(vnode, key, nval, oval); }
-			else
-				{ setAttr(vnode, key, nval, isDyn, initial); }
-		}
-
-		// TODO: bench style.cssText = "" vs removeAttribute("style")
-		for (var key in oattrs) {
-			nattrs[key] == null &&
-			!isSplProp(key) &&
-			remAttr(vnode, key, isDynProp(vnode.tag, key) || isEvProp(key));
-		}
-	}
-}
-
-function createView(view, data, key, opts) {
-	if (view.type === VVIEW) {
-		data	= view.data;
-		key		= view.key;
-		opts	= view.opts;
-		view	= view.view;
-	}
-
-	return new ViewModel(view, data, key, opts);
 }
 
 function hydrateBody(vnode) {
@@ -2245,16 +2254,6 @@ function patch$1(o, n, doRepaint) {
 
 VNodeProto.patch = protoPatch;
 
-/*
-import { h } from "../view/addons/h";
-
-nano.h = h;
-
-import { defineElementSpread } from "../view/addons/defineElementSpread";
-
-nano.defineElementSpread = defineElementSpread;
-*/
-
 function defineElementSpread(tag) {
 	var args = arguments;
 	var len = args.length;
@@ -2530,7 +2529,5 @@ ViewModelProto.attach = protoAttach;
 ViewModelProto.html = vmProtoHtml;
 VNodeProto.html = vProtoHtml;
 
-dev.DEVMODE = DEVMODE;
-
-export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST, config };
+export { DEVMODE, defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST, config };
 //# sourceMappingURL=domvm.dev.es.js.map

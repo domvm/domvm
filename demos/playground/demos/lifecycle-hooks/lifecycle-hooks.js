@@ -29,8 +29,7 @@ function View1(vm, data) {
 		willRemove: function(node) {
 			return new Promise(function(resolve, reject) {
 				node.patch({class: "removing"}, true);
-				node.patch({class: "removed"});
-				node.el.addEventListener("transitionend", resolve);
+				node.patch({class: "removed", ontransitionend: [resolve]});
 			});
 		},
 		didRemove: function(node) {},
@@ -85,8 +84,7 @@ vm.config({hooks: {
 	willUnmount: function(vm) {
 		return new Promise(function(resolve, reject) {
 			vm.node.patch({class: "unmounting"}, true);
-			vm.node.patch({class: "unmounted"});
-			vm.node.el.addEventListener("transitionend", resolve);
+			vm.node.patch({class: "unmounted", ontransitionend: [resolve]});
 		});
 	},
 	didUnmount: function(vm) {},

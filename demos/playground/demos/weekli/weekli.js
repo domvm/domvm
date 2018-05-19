@@ -48,6 +48,7 @@ function CalendarView(vm) {
 		selected[key] = val == null ? !selected[key] : val;
 		markMode = +selected[key];
 		vm.redraw();						// can micro-optim this via vm.patch, with a bit more effort, meh :\
+		return selected[key];
 	}
 
 	// let's expose the api :)
@@ -58,39 +59,44 @@ function CalendarView(vm) {
 	};
 
 	// delegated handlers for template
-	var setSelected = false;
+	var paintWith = false;
 	var mouseIsDown = false;
 
-	var onMousedown = {
-		"*":		function(e, node) { mouseIsDown = true; },
-		".day":		function(e, node) { toggleDay(node.data); },
-		".hour":	function(e, node) { toggleHour(node.data); },
-		".dayhour":	function(e, node) { setDayHour.apply(null, node.data); setSelected = node.attrs.class.indexOf("sel") == -1; },
-	};
+	function setMouseDown() {
+		mouseIsDown = true;
+	}
 
-	var onMouseup = {
-		"*":		function(e, node) { mouseIsDown = false; },
-	};
+	function setMouseUp() {
+		mouseIsDown = false;
+	}
 
-	var onMouseover = {
-		".dayhour":	function(e, node) { mouseIsDown && setDayHour.apply(null, node.data.concat(setSelected)); }
-	};
+	function downDayHour(day, hour) {
+		paintWith = setDayHour(day, hour);
+	}
+
+	function overDayHour(day, hour) {
+		mouseIsDown && setDayHour(day, hour, paintWith);
+	}
 
 	// template
 	return function() {
-		return el("table", {onmousedown: onMousedown, onmouseup: onMouseup, onmouseover: onMouseover}, [
+		return el("table", {onmousedown: setMouseDown, onmouseup: setMouseUp}, [
 			el("tr", [
 				el("th"),
 				days.map(function(day, i) {
-					return el("th.day", {_data: i}, day);
+					return el("th.day", {onmousedown: [toggleDay, i]}, day);
 				})
 			]),
 			hours.map(function(hour) {
 				return el("tr", [
-					el("th.hour", {_data: hour}, hourRange(hour)),
+					el("th.hour", {onmousedown: [toggleHour, hour]}, hourRange(hour)),
 					days.map(function(day, i) {
 						var key = i + ":" + hour;
-						return el("td.dayhour", {class: selected[key] ? "sel" : null, _data: [i, hour]});
+						return el("td.dayhour", {
+							class: selected[key] ? "sel" : null,
+							onmousedown: [downDayHour, i, hour],
+							onmouseover: [overDayHour, i, hour],
+						});
 					})
 				]);
 			})

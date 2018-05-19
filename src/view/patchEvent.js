@@ -1,28 +1,33 @@
 import { isArr, isFunc, isPlainObj } from '../utils';
-import { closestVNode } from './dom';
 import { getVm } from './utils';
 import { onevent } from './config';
 import { devNotify } from "./addons/devmode";
 
-function bindEv(el, type, fn) {
-	el[type] = fn;
+function unbind(el, type, fn) {
+	el.removeEventListener(type.slice(2), fn, false);
+}
+
+function bind(el, type, fn) {
+	el.addEventListener(type.slice(2), fn, false);
 }
 
 function exec(fn, args, e, node, vm) {
-	var out = fn.apply(vm, args.concat([e, node, vm, vm.data]));
+	var out1 = fn.apply(vm, args.concat([e, node, vm, vm.data])),
+		out2 = vm.onevent(e, node, vm, vm.data, args),
+		out3 = onevent.call(null, e, node, vm, vm.data, args);
 
-	// should these respect out === false?
-	vm.onevent(e, node, vm, vm.data, args);
-	onevent.call(null, e, node, vm, vm.data, args);
-
-	if (out === false) {
+	if (out1 === false || out2 === false || out3 === false) {
 		e.preventDefault();
 		e.stopPropagation();
 	}
 }
 
 function handle(e) {
-	var node = closestVNode(e.target);
+	var node = e.target._node;
+
+	if (node == null)
+		return;
+
 	var vm = getVm(node);
 
 	var evDef = e.currentTarget._node.attrs["on" + e.type], fn, args;
@@ -53,7 +58,7 @@ function handle(e) {
 }
 
 export function patchEvent(node, name, nval, oval) {
-	if (nval === oval)
+	if (nval == oval)
 		return;
 
 	if (_DEVMODE) {
@@ -71,8 +76,14 @@ export function patchEvent(node, name, nval, oval) {
 
 	var el = node.el;
 
-	if (nval == null || isFunc(nval))
-		bindEv(el, name, nval);
-	else if (oval == null)
-		bindEv(el, name, handle);
+	if (oval == null)
+		bind(el, name, isFunc(nval) ? nval : handle);
+	else {
+		var nIsFn = isFunc(nval);
+
+		if (nIsFn)
+			bind(el, name, nval);
+		if (nIsFn || nval == null)
+			unbind(el, name, isFunc(oval) ? oval : handle);
+	}
 }

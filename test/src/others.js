@@ -445,4 +445,31 @@ QUnit.module("Various Others", function() {
 
 		assert.deepEqual(vmbody[0].body(), []);
 	});
+
+	// mostly for code coverage
+	QUnit.test('spl prop -> null', function(assert) {
+		var tpl = null;
+
+		function ViewA(vm) {
+			return function() {
+				return tpl;
+			}
+		}
+
+		tpl = el("div", {_data: {}});
+
+		instr.start();
+		var vmA = domvm.createView(ViewA).mount(testyDiv);
+		var callCounts = instr.end();
+		var expcHtml = '<div></div>';
+		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1 });
+
+		tpl = el("div");
+
+		instr.start();
+		vmA.redraw();
+		var callCounts = instr.end();
+		var expcHtml = '<div></div>';
+		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { });
+	});
 });

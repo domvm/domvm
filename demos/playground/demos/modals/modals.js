@@ -93,12 +93,10 @@
 						// must determine if there's a transition to set up hook, assumed yes for now
 						// http://codepen.io/csuwldcat/pen/EempF
 						if (push.settled) {
-							var ev = "transitionend";
-							var patch = function() {
+							var setPatch = function() {
 								node.patch(updAttrs(cfg, push.settled(node)));
-								node.el.removeEventListener(ev, patch);
 							};
-							node.el.addEventListener(ev, patch);
+							node.patch(updAttrs(cfg, {ontransitionend: [setPatch]}));
 						}
 					};
 				}
@@ -111,10 +109,8 @@
 							node.patch(updAttrs(cfg, pop.initial(node)));
 
 						if (pop.delayed) {
-							node.patch(updAttrs(cfg, pop.delayed(node)));		// may need raf wrap
-
 							return new Promise(function(resolve, reject) {
-								node.el.addEventListener("transitionend", resolve);
+								node.patch(updAttrs(cfg, merge(pop.delayed(node), {ontransitionend: [resolve]})));
 							});
 						}
 					};
@@ -254,7 +250,7 @@ var modalC = {
 		onpush: {
 			initial: function(node) { return {style: {height: 600, transform: "rotateZ(-180deg)"}}; },
 			delayed: function(node) { return {style: {color: "blue", height: 200, transform: "none", transition: "250ms"}}; },
-		//	settled: function(node) { return {style: {transform: null, transition: "0s"}}; },
+		//	settled: function(node) { return {style: {border: "1px solid red", transition: "0s"}}; },
 		},
 		onpop: {
 			initial: function(node) { return {style: {height: 600, transform: "rotateZ(-180deg)", transition: "250ms"}}; },
