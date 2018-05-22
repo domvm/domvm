@@ -1231,15 +1231,15 @@ function syncChildren(node, donor) {
 // TODO: also use the state.rgtSib and state.rgtNode bounds, plus reduce LIS range
 function sortDOM(node, parEl, body, state) {
 	var domIdxs = [];
-	// compression micro-opt (instead of Array.prototype.slice.call(...);
-	var kids = domIdxs.slice.call(parEl.childNodes);
 
-	for (var k = 0; k < kids.length; k++) {
-		var n = kids[k]._node;
+	var el = parEl.firstChild;
 
+	// array of new vnode idices in current (old) dom order
+	do  {
+		var n = el._node;
 		if (n.parent === node)
 			{ domIdxs.push(n.idx); }
-	}
+	} while (el = nextSib(el));
 
 	// list of non-movable vnode indices (already in correct order in old dom)
 	var tombs = longestIncreasingSubsequence(domIdxs).map(function (i) { return domIdxs[i]; });
