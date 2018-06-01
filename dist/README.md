@@ -7,13 +7,13 @@
 | [client][5] | 16.0k / 6.5k | `mini`<br> + `attach`<br>                                                                                                                                                                                   | SSR hydration                                                                                                                                        |
 | [server][6] | 17.0k / 6.9k | `mini`<br> + `html`<br>                                                                                                                                                                                     | SSR rendering                                                                                                                                        |
 | [full][7]   | 17.5k / 7.0k | `mini`<br> + `attach`<br> + `html`<br>                                                                                                                                                                      | all the bells and whistles                                                                                                                           |
-| [dev][8]    | 23.3k / 9.3k | `full`<br> + warnings<br>                                                                                                                                                                                   | use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior |
+| [dev][8]    | 23.3k / 9.2k | `full`<br> + warnings<br>                                                                                                                                                                                   | use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior |
 
-[1]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/pico/domvm.pico.min.js
-[2]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/nano/domvm.nano.min.js
-[3]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/micro/domvm.micro.min.js
-[4]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/mini/domvm.mini.min.js
-[5]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/client/domvm.client.min.js
-[6]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/server/domvm.server.min.js
-[7]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/full/domvm.full.min.js
-[8]: https://github.com/leeoniya/domvm/blob/3.x-dev/dist/dev/domvm.dev.min.js
+[1]: https://github.com/domvm/domvm/blob/3.x-dev/dist/pico/domvm.pico.min.js
+[2]: https://github.com/domvm/domvm/blob/3.x-dev/dist/nano/domvm.nano.min.js
+[3]: https://github.com/domvm/domvm/blob/3.x-dev/dist/micro/domvm.micro.min.js
+[4]: https://github.com/domvm/domvm/blob/3.x-dev/dist/mini/domvm.mini.min.js
+[5]: https://github.com/domvm/domvm/blob/3.x-dev/dist/client/domvm.client.min.js
+[6]: https://github.com/domvm/domvm/blob/3.x-dev/dist/server/domvm.server.min.js
+[7]: https://github.com/domvm/domvm/blob/3.x-dev/dist/full/domvm.full.min.js
+[8]: https://github.com/domvm/domvm/blob/3.x-dev/dist/dev/domvm.dev.min.js

@@ -4,7 +4,7 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (3.x-dev, client build)
+* @preserve https://github.com/domvm/domvm (3.x-dev, client build)
 */
 
 // NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.

@@ -105,7 +105,7 @@ function compile(buildName) {
 			"*",
 			"* domvm.js (DOM ViewModel)",
 			"* A thin, fast, dependency-free vdom view layer",
-			"* @preserve https://github.com/leeoniya/domvm (" + ver + ", " + buildName + " build)",
+			"* @preserve https://github.com/domvm/domvm (" + ver + ", " + buildName + " build)",
 			"*/",
 			"",
 		].join("\n");
@@ -188,7 +188,7 @@ function buildDistTable() {
 
 		var path = "dist/" + buildName + "/domvm." + buildName + ".min.js";
 
-		appendix.push("["+(i+1)+"]: https://github.com/leeoniya/domvm/blob/" + branch + "/" + path);
+		appendix.push("["+(i+1)+"]: https://github.com/domvm/domvm/blob/" + branch + "/" + path);
 
 		var minified = fs.readFileSync("./" + path, 'utf8');
 		var gzipped = zlib.gzipSync(minified, {level: 6});

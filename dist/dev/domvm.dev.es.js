@@ -4,7 +4,7 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/leeoniya/domvm (3.x-dev, dev build)
+* @preserve https://github.com/domvm/domvm (3.x-dev, dev build)
 */
 
 // NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
@@ -411,11 +411,11 @@ var DEVMODE = {
 };
 
 function devNotify(key, args) {
-	if (DEVMODE.warnings && isFunc(DEVMODE[key])) {
+	if (isFunc(DEVMODE[key])) {
 		var msgArgs = DEVMODE[key].apply(null, args);
 
 		if (msgArgs) {
-			msgArgs[0] = key + ": " + (DEVMODE.verbose ? msgArgs[0] : "");
+			msgArgs[0] = key + ": " + (msgArgs[0]);
 			console.warn.apply(console, msgArgs);
 		}
 	}
@@ -1773,7 +1773,7 @@ function DOMInstr(withTime) {
 var instr = null;
 
 {
-	if (DEVMODE.mutations) {
+	{
 		instr = new DOMInstr(true);
 	}
 }
@@ -1890,8 +1890,7 @@ function mount(el, isRoot) {
 	var vm = this;
 
 	{
-		if (DEVMODE.mutations)
-			{ instr.start(); }
+		{ instr.start(); }
 	}
 
 	if (isRoot) {
@@ -1919,8 +1918,7 @@ function mount(el, isRoot) {
 		{ drainDidHooks(vm); }
 
 	{
-		if (DEVMODE.mutations)
-			{ console.log(instr.end()); }
+		{ console.log(instr.end()); }
 	}
 
 	return vm;
