@@ -38,7 +38,7 @@ const unitlessProps = {
 };
 
 export function autoPx(name, val) {
-	if (FEAT_AUTOPX) {
+	if (FEAT_AUTO_PX) {
 		// typeof val === 'number' is faster but fails for numeric strings
 		return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
 	}

@@ -1,11 +1,15 @@
 import { emptyObj } from '../utils';
 
+export function isProp(name) {
+	return FEAT_PROP_ATTRS && name[0] === ".";
+}
+
 export function isEvProp(name) {
 	return name[0] === "o" && name[1] === "n";
 }
 
 export function isSplProp(name) {
-	return name[0] === "_";
+	return FEAT_SPL_ATTRS && name[0] === "_";
 }
 
 export function isStyleProp(name) {

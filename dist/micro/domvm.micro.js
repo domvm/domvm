@@ -218,6 +218,10 @@
 	//	return -1;
 	}
 
+	function isProp(name) {
+		return name[0] === ".";
+	}
+
 	function isEvProp(name) {
 		return name[0] === "o" && name[1] === "n";
 	}
@@ -288,7 +292,6 @@
 
 		flags:	0,
 
-		_class:	null,
 		_diff:	null,
 
 		// pending removal on promise resolution
@@ -298,18 +301,11 @@
 
 		idx:	null,
 		parent:	null,
-
-		/*
-		// break out into optional fluent module
-		key:	function(val) { this.key	= val; return this; },
-		ref:	function(val) { this.ref	= val; return this; },		// deep refs
-		data:	function(val) { this.data	= val; return this; },
-		hooks:	function(val) { this.hooks	= val; return this; },		// h("div").hooks()
-		html:	function(val) { this.html	= true; return this.body(val); },
-
-		body:	function(val) { this.body	= val; return this; },
-		*/
 	};
+
+	{
+		VNodeProto._class = null;
+	}
 
 	function defineText(body) {
 		var node = new VNode;
@@ -322,29 +318,29 @@
 
 	var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
 
+	// TODO: id & class should live inside attrs?
+
 	function cssTag(raw) {
-		{
-			var cached = tagCache[raw];
+		var cached = tagCache[raw];
 
-			if (cached == null) {
-				var tag, id, cls, attr;
+		if (cached == null) {
+			var tag, id, cls, attr;
 
-				tagCache[raw] = cached = {
-					tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
-					id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
-					class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
-					attrs:	null,
-				};
+			tagCache[raw] = cached = {
+				tag:	(tag	= raw.match( /^[-\w]+/))		?	tag[0]						: "div",
+				id:		(id		= raw.match( /#([-\w]+)/))		? 	id[1]						: null,
+				class:	(cls	= raw.match(/\.([-\w.]+)/))		?	cls[1].replace(/\./g, " ")	: null,
+				attrs:	null,
+			};
 
-				while (attr = RE_ATTRS.exec(raw)) {
-					if (cached.attrs == null)
-						{ cached.attrs = {}; }
-					cached.attrs[attr[1]] = attr[2] || "";
-				}
+			while (attr = RE_ATTRS.exec(raw)) {
+				if (cached.attrs == null)
+					{ cached.attrs = {}; }
+				cached.attrs[attr[1]] = attr[2] || "";
 			}
-
-			return cached;
 		}
+
+		return cached;
 	}
 
 	// (de)optimization flags
@@ -367,58 +363,69 @@
 
 		node.attrs = attrs || null;
 
-		var parsed = cssTag(tag);
+		{
+			var parsed = cssTag(tag);
 
-		node.tag = parsed.tag;
+			tag = parsed.tag;
 
-		var hasId = parsed.id != null,
-			hasClass = parsed.class != null,
-			hasAttrs = parsed.attrs != null;
+			var hasId = parsed.id != null,
+				hasClass = parsed.class != null,
+				hasAttrs = parsed.attrs != null;
 
-		if (hasId || hasClass || hasAttrs) {
-			var p = node.attrs || {};
+			if (hasId || hasClass || hasAttrs) {
+				var p = node.attrs || {};
 
-			if (hasId && p.id == null)
-				{ p.id = parsed.id; }
+				if (hasId && p.id == null)
+					{ p.id = parsed.id; }
 
-			if (hasClass) {
-				node._class = parsed.class;		// static class
-				p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
+				if (hasClass) {
+					{
+						node._class = parsed.class;		// static class
+						p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
+					}
+				}
+
+				if (hasAttrs) {
+					for (var key in parsed.attrs)
+						{ if (p[key] == null)
+							{ p[key] = parsed.attrs[key]; } }
+				}
+
+				node.attrs = p;
 			}
-			if (hasAttrs) {
-				for (var key in parsed.attrs)
-					{ if (p[key] == null)
-						{ p[key] = parsed.attrs[key]; } }
-			}
-
-			node.attrs = p;
 		}
 
-		var mergedAttrs = node.attrs;
+		node.tag = tag;
 
-		if (mergedAttrs != null) {
-			if (mergedAttrs._key != null)
-				{ node.key = mergedAttrs._key; }
+		if (node.attrs != null) {
+			var mergedAttrs = node.attrs;
 
-			if (mergedAttrs._ref != null)
-				{ node.ref = mergedAttrs._ref; }
+			{
+				if (mergedAttrs._key != null)
+					{ node.key = mergedAttrs._key; }
 
-			if (mergedAttrs._hooks != null)
-				{ node.hooks = mergedAttrs._hooks; }
+				if (mergedAttrs._ref != null)
+					{ node.ref = mergedAttrs._ref; }
 
-			if (mergedAttrs._data != null)
-				{ node.data = mergedAttrs._data; }
+				if (mergedAttrs._hooks != null)
+					{ node.hooks = mergedAttrs._hooks; }
 
-			if (mergedAttrs._flags != null)
-				{ node.flags = mergedAttrs._flags; }
+				if (mergedAttrs._data != null)
+					{ node.data = mergedAttrs._data; }
 
-			if (node.key == null) {
-				if (node.ref != null)
-					{ node.key = node.ref; }
-				else if (mergedAttrs.id != null)
-					{ node.key = mergedAttrs.id; }
-				else if (mergedAttrs.name != null)
-					{ node.key = mergedAttrs.name + (mergedAttrs.type === "radio" || mergedAttrs.type === "checkbox" ? mergedAttrs.value : ""); }
+				if (mergedAttrs._flags != null)
+					{ node.flags = mergedAttrs._flags; }
+			}
+
+			{
+				if (node.key == null) {
+					if (node.ref != null)
+						{ node.key = node.ref; }
+					else if (mergedAttrs.id != null)
+						{ node.key = mergedAttrs.id; }
+					else if (mergedAttrs.name != null)
+						{ node.key = mergedAttrs.name + (mergedAttrs.type === "radio" || mergedAttrs.type === "checkbox" ? mergedAttrs.value : ""); }
+				}
 			}
 		}
 
@@ -684,7 +691,7 @@
 	}
 
 	function remAttr(node, name, asProp) {
-		if (name[0] === ".") {
+		if (isProp(name)) {
 			name = name.substr(1);
 			asProp = true;
 		}
@@ -1795,9 +1802,13 @@
 			var donor = Object.create(o);
 			// fixate orig attrs
 			donor.attrs = assignObj({}, o.attrs);
-			// prepend any fixed shorthand class
-			if (n.class != null && o._class != null)
-				{ n.class = o._class + " " + n.class; }
+
+			{
+				// prepend any fixed shorthand class
+				if (n.class != null && o._class != null)
+					{ n.class = o._class + " " + n.class; }
+			}
+
 			// assign new attrs into live targ node
 			var oattrs = assignObj(o.attrs, n);
 

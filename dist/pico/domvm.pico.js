@@ -211,12 +211,16 @@
 	//	return -1;
 	}
 
+	function isProp(name) {
+		return false;
+	}
+
 	function isEvProp(name) {
 		return name[0] === "o" && name[1] === "n";
 	}
 
 	function isSplProp(name) {
-		return name[0] === "_";
+		return false;
 	}
 
 	function isStyleProp(name) {
@@ -281,7 +285,6 @@
 
 		flags:	0,
 
-		_class:	null,
 		_diff:	null,
 
 		// pending removal on promise resolution
@@ -291,33 +294,31 @@
 
 		idx:	null,
 		parent:	null,
-
-		/*
-		// break out into optional fluent module
-		key:	function(val) { this.key	= val; return this; },
-		ref:	function(val) { this.ref	= val; return this; },		// deep refs
-		data:	function(val) { this.data	= val; return this; },
-		hooks:	function(val) { this.hooks	= val; return this; },		// h("div").hooks()
-		html:	function(val) { this.html	= true; return this.body(val); },
-
-		body:	function(val) { this.body	= val; return this; },
-		*/
 	};
+
+	{
+		assignObj(VNodeProto, {
+			a:	function(val) { this.attrs	= val; return this; },
+			b:	function(val) { this.body	= val; return this; },
+			k:	function(val) { this.key	= val; return this; },
+			r:	function(val) { this.ref	= val; return this; },
+			h:	function(val) { this.hooks	= val; return this; },
+			f:	function(val) { this.flags	= val; return this; },
+			d:	function(val) { this.data	= val; return this; },
+
+		//	e:	function(val) { this.events	= val; return this; },
+		//	s:	function(val) { this.style	= val; return this; },
+		//	t: tag/type
+		//	c: class
+		//	i: id
+		});
+	}
 
 	function defineText(body) {
 		var node = new VNode;
 		node.type = TEXT;
 		node.body = body;
 		return node;
-	}
-
-	var tagObj = {};
-
-	function cssTag(raw) {
-		{
-			tagObj.tag = raw;
-			return tagObj;
-		}
 	}
 
 	// (de)optimization flags
@@ -340,60 +341,7 @@
 
 		node.attrs = attrs || null;
 
-		var parsed = cssTag(tag);
-
-		node.tag = parsed.tag;
-
-		var hasId = parsed.id != null,
-			hasClass = parsed.class != null,
-			hasAttrs = parsed.attrs != null;
-
-		if (hasId || hasClass || hasAttrs) {
-			var p = node.attrs || {};
-
-			if (hasId && p.id == null)
-				{ p.id = parsed.id; }
-
-			if (hasClass) {
-				node._class = parsed.class;		// static class
-				p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
-			}
-			if (hasAttrs) {
-				for (var key in parsed.attrs)
-					{ if (p[key] == null)
-						{ p[key] = parsed.attrs[key]; } }
-			}
-
-			node.attrs = p;
-		}
-
-		var mergedAttrs = node.attrs;
-
-		if (mergedAttrs != null) {
-			if (mergedAttrs._key != null)
-				{ node.key = mergedAttrs._key; }
-
-			if (mergedAttrs._ref != null)
-				{ node.ref = mergedAttrs._ref; }
-
-			if (mergedAttrs._hooks != null)
-				{ node.hooks = mergedAttrs._hooks; }
-
-			if (mergedAttrs._data != null)
-				{ node.data = mergedAttrs._data; }
-
-			if (mergedAttrs._flags != null)
-				{ node.flags = mergedAttrs._flags; }
-
-			if (node.key == null) {
-				if (node.ref != null)
-					{ node.key = node.ref; }
-				else if (mergedAttrs.id != null)
-					{ node.key = mergedAttrs.id; }
-				else if (mergedAttrs.name != null)
-					{ node.key = mergedAttrs.name + (mergedAttrs.type === "radio" || mergedAttrs.type === "checkbox" ? mergedAttrs.value : ""); }
-			}
-		}
+		node.tag = tag;
 
 		if (body != null)
 			{ node.body = body; }
@@ -584,7 +532,7 @@
 	}
 
 	function remAttr(node, name, asProp) {
-		if (name[0] === ".") {
+		if (isProp(name)) {
 			name = name.substr(1);
 			asProp = true;
 		}

@@ -1,4 +1,4 @@
-import { isStyleProp, isSplProp, isEvProp, isDynProp, getVm } from './utils';
+import { isProp, isStyleProp, isSplProp, isEvProp, isDynProp, getVm } from './utils';
 import { isFunc, emptyObj } from '../utils';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
@@ -6,7 +6,7 @@ import { streamVal } from './addons/stream';
 import { devNotify } from "./addons/devmode";
 
 export function remAttr(node, name, asProp) {
-	if (name[0] === ".") {
+	if (isProp(name)) {
 		name = name.substr(1);
 		asProp = true;
 	}
