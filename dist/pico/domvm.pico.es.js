@@ -1617,5 +1617,5 @@ function lazyList(items, cfg) {
 	return self;
 }
 
-export { ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST, config };
+export { ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, KEYED_LIST, LAZY_LIST, config };
 //# sourceMappingURL=domvm.pico.es.js.map

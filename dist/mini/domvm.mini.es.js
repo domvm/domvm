@@ -1922,5 +1922,5 @@ ViewModelProto._stream = null;
 //import { prop } from "../utils";
 //mini.prop = prop;
 
-export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST, config };
+export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, KEYED_LIST, LAZY_LIST, config };
 //# sourceMappingURL=domvm.mini.es.js.map

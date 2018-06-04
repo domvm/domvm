@@ -1877,5 +1877,5 @@ ViewModelProto.body = function() {
 	return nextSubVms(this.node, []);
 };
 
-export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST, config };
+export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, KEYED_LIST, LAZY_LIST, config };
 //# sourceMappingURL=domvm.micro.es.js.map

@@ -1759,7 +1759,6 @@
 	exports.injectElement = injectElement;
 	exports.lazyList = lazyList;
 	exports.FIXED_BODY = FIXED_BODY;
-	exports.DEEP_REMOVE = DEEP_REMOVE;
 	exports.KEYED_LIST = KEYED_LIST;
 	exports.LAZY_LIST = LAZY_LIST;
 	exports.config = config;
