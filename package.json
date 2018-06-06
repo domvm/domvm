@@ -34,7 +34,7 @@
     "google-closure-compiler-js": "*",
     "mocha": "*",
     "node-watch": "*",
-    "nyc": "^12.0.2",
+    "nyc": "*",
     "rollup": "*",
     "rollup-plugin-buble": "*",
     "rollup-plugin-replace": "*",

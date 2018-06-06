@@ -413,11 +413,11 @@
 	};
 
 	function devNotify(key, args) {
-		if (isFunc(DEVMODE[key])) {
+		if (DEVMODE.warnings && isFunc(DEVMODE[key])) {
 			var msgArgs = DEVMODE[key].apply(null, args);
 
 			if (msgArgs) {
-				msgArgs[0] = key + ": " + (msgArgs[0]);
+				msgArgs[0] = key + ": " + (DEVMODE.verbose ? msgArgs[0] : "");
 				console.warn.apply(console, msgArgs);
 			}
 		}
@@ -1786,7 +1786,7 @@
 	var instr = null;
 
 	{
-		{
+		if (DEVMODE.mutations) {
 			instr = new DOMInstr(true);
 		}
 	}
@@ -1903,7 +1903,8 @@
 		var vm = this;
 
 		{
-			{ instr.start(); }
+			if (DEVMODE.mutations)
+				{ instr.start(); }
 		}
 
 		if (isRoot) {
@@ -1931,7 +1932,8 @@
 			{ drainDidHooks(vm); }
 
 		{
-			{ console.log(instr.end()); }
+			if (DEVMODE.mutations)
+				{ console.log(instr.end()); }
 		}
 
 		return vm;
