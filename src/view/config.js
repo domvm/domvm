@@ -6,7 +6,9 @@ export let onevent = noop;
 export let syncRedraw = false;
 
 export function config(newCfg) {
-	onevent = newCfg.onevent || onevent;
+	if (FEAT_ONEVENT) {
+		onevent = newCfg.onevent || onevent;
+	}
 
 	if (newCfg.syncRedraw != null)
 		syncRedraw = newCfg.syncRedraw;

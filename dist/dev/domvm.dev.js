@@ -712,7 +712,9 @@
 	var syncRedraw = false;
 
 	function config(newCfg) {
-		onevent = newCfg.onevent || onevent;
+		{
+			onevent = newCfg.onevent || onevent;
+		}
 
 		if (newCfg.syncRedraw != null)
 			{ syncRedraw = newCfg.syncRedraw; }
@@ -737,9 +739,12 @@
 	}
 
 	function exec(fn, args, e, node, vm) {
-		var out1 = fn.apply(vm, args.concat([e, node, vm, vm.data])),
+		var out1 = fn.apply(vm, args.concat([e, node, vm, vm.data])), out2, out3;
+
+		{
 			out2 = vm.onevent(e, node, vm, vm.data, args),
 			out3 = onevent.call(null, e, node, vm, vm.data, args);
+		}
 
 		if (out1 === false || out2 === false || out3 === false) {
 			e.preventDefault();
@@ -763,20 +768,22 @@
 			exec(fn, args, e, node, vm);
 		}
 		else {
-			for (var sel in evDef) {
-				if (e.target.matches(sel)) {
-					var evDef2 = evDef[sel];
+			{
+				for (var sel in evDef) {
+					if (e.target.matches(sel)) {
+						var evDef2 = evDef[sel];
 
-					if (isArr(evDef2)) {
-						fn = evDef2[0];
-						args = evDef2.slice(1);
-					}
-					else {
-						fn = evDef2;
-						args = [];
-					}
+						if (isArr(evDef2)) {
+							fn = evDef2[0];
+							args = evDef2.slice(1);
+						}
+						else {
+							fn = evDef2;
+							args = [];
+						}
 
-					exec(fn, args, e, node, vm);
+						exec(fn, args, e, node, vm);
+					}
 				}
 			}
 		}
@@ -1137,12 +1144,16 @@
 			var sibNode, tmpSib;
 
 			if (state[sibName] != null) {
-				// skip dom elements not created by domvm
-				if ((sibNode = state[sibName]._node) == null) {
-					{ devNotify("FOREIGN_ELEMENT", [state[sibName]]); }
+				sibNode = state[sibName]._node;
 
-					state[sibName] = advSib(state[sibName]);
-					return;
+				{
+					// skip dom elements not created by domvm
+					if (sibNode == null) {
+						{ devNotify("FOREIGN_ELEMENT", [state[sibName]]); }
+
+						state[sibName] = advSib(state[sibName]);
+						return;
+					}
 				}
 
 				if (parentNode(sibNode) !== node) {
@@ -1830,7 +1841,6 @@
 		opts:	null,
 		node:	null,
 		hooks:	null,
-		onevent: noop,
 		refs:	null,
 		render:	null,
 
@@ -1843,8 +1853,10 @@
 				{ t.init = opts.init; }
 			if (opts.diff)
 				{ t.diff = opts.diff; }
-			if (opts.onevent)
-				{ t.onevent = opts.onevent; }
+			{
+				if (opts.onevent)
+					{ t.onevent = opts.onevent; }
+			}
 
 			// maybe invert assignment order?
 			if (opts.hooks)
@@ -1898,6 +1910,10 @@
 		_redrawAsync: null,
 		_updateAsync: null,
 	};
+
+	{
+		ViewModelProto.onevent = noop;
+	}
 
 	function mount(el, isRoot) {
 		var vm = this;

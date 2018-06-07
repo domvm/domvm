@@ -23,13 +23,17 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 		var sibNode, tmpSib;
 
 		if (state[sibName] != null) {
-			// skip dom elements not created by domvm
-			if ((sibNode = state[sibName]._node) == null) {
-				if (_DEVMODE)
-					devNotify("FOREIGN_ELEMENT", [state[sibName]]);
+			sibNode = state[sibName]._node;
 
-				state[sibName] = advSib(state[sibName]);
-				return;
+			if (FEAT_FOREIGN_ELEMS) {
+				// skip dom elements not created by domvm
+				if (sibNode == null) {
+					if (_DEVMODE)
+						devNotify("FOREIGN_ELEMENT", [state[sibName]]);
+
+					state[sibName] = advSib(state[sibName]);
+					return;
+				}
 			}
 
 			if (parentNode(sibNode) !== node) {

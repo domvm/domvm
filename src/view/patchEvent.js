@@ -12,9 +12,12 @@ function bind(el, type, fn) {
 }
 
 function exec(fn, args, e, node, vm) {
-	var out1 = fn.apply(vm, args.concat([e, node, vm, vm.data])),
+	var out1 = fn.apply(vm, args.concat([e, node, vm, vm.data])), out2, out3;
+
+	if (FEAT_ONEVENT) {
 		out2 = vm.onevent(e, node, vm, vm.data, args),
 		out3 = onevent.call(null, e, node, vm, vm.data, args);
+	}
 
 	if (out1 === false || out2 === false || out3 === false) {
 		e.preventDefault();
@@ -38,20 +41,22 @@ function handle(e) {
 		exec(fn, args, e, node, vm);
 	}
 	else {
-		for (var sel in evDef) {
-			if (e.target.matches(sel)) {
-				var evDef2 = evDef[sel];
+		if (FEAT_EVENT_DELEG) {
+			for (var sel in evDef) {
+				if (e.target.matches(sel)) {
+					var evDef2 = evDef[sel];
 
-				if (isArr(evDef2)) {
-					fn = evDef2[0];
-					args = evDef2.slice(1);
-				}
-				else {
-					fn = evDef2;
-					args = [];
-				}
+					if (isArr(evDef2)) {
+						fn = evDef2[0];
+						args = evDef2.slice(1);
+					}
+					else {
+						fn = evDef2;
+						args = [];
+					}
 
-				exec(fn, args, e, node, vm);
+					exec(fn, args, e, node, vm);
+				}
 			}
 		}
 	}

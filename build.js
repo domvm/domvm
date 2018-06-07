@@ -17,19 +17,19 @@ const AVAIL_FEATS = [
 	"AUTO_PX",
 	"EMIT",
 	"STREAM",
+	"EVENT_DELEG",
+	"ONEVENT",
+	"FOREIGN_ELEMS",
 /*	"RAF_REDRAW",
 	"HOOKS",	// deep_notify_remove, etc
-	"ONEVENT",
-	"EVENT_ATTRS",
+    "EVENT_ATTRS",	// EVENT_PARAMS
 	"REFS",
-	"EVENT_DELEG",
 	"PREPROC_FLATTEN",
 	"PREPROC_MERGE_TEXT",
 	"PREPROC_REMOVE_FALSEY",
 	"DIFF_CMP",	// else diff just returns true/false
 	"SPREAD_DEFINE",
 	"SPREAD_BODY",
-	"FOREIGN_ELEMS"
 	"PARTIAL_KEYS"
 	"exhaustive donor search"
 	// styles, hooks, attrs, events
@@ -54,6 +54,9 @@ function getBuilds(name) {
 			"SPL_ATTRS",
 			"AUTO_KEY",
 			"PROP_ATTRS",
+			"EVENT_DELEG",
+			"ONEVENT",
+			"FOREIGN_ELEMS",
 		],
 	};
 

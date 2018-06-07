@@ -57,7 +57,6 @@ export const ViewModelProto = ViewModel.prototype = {
 	opts:	null,
 	node:	null,
 	hooks:	null,
-	onevent: noop,
 	refs:	null,
 	render:	null,
 
@@ -70,8 +69,10 @@ export const ViewModelProto = ViewModel.prototype = {
 			t.init = opts.init;
 		if (opts.diff)
 			t.diff = opts.diff;
-		if (opts.onevent)
-			t.onevent = opts.onevent;
+		if (FEAT_ONEVENT) {
+			if (opts.onevent)
+				t.onevent = opts.onevent;
+		}
 
 		// maybe invert assignment order?
 		if (opts.hooks)
@@ -125,6 +126,10 @@ export const ViewModelProto = ViewModel.prototype = {
 	_redrawAsync: null,
 	_updateAsync: null,
 };
+
+if (FEAT_ONEVENT) {
+	ViewModelProto.onevent = noop;
+}
 
 function mount(el, isRoot) {
 	var vm = this;
