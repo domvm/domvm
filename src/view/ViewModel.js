@@ -95,37 +95,49 @@ export const ViewModelProto = ViewModel.prototype = {
 		return p.vm;
 	},
 	redraw: function(sync) {
-		if (sync == null)
-			sync = syncRedraw;
-
 		var vm = this;
 
-		if (sync)
+		if (!FEAT_RAF_REDRAW) {
 			vm._redraw(null, null, isHydrated(vm));
-		else
-			(vm._redrawAsync = vm._redrawAsync || raft(_ => vm.redraw(true)))();
+		}
+		else {
+			if (sync == null)
+				sync = syncRedraw;
+
+			if (sync)
+				vm._redraw(null, null, isHydrated(vm));
+			else
+				(vm._redrawAsync = vm._redrawAsync || raft(_ => vm.redraw(true)))();
+		}
 
 		return vm;
 	},
 	update: function(newData, sync) {
-		if (sync == null)
-			sync = syncRedraw;
-
 		var vm = this;
 
-		if (sync)
+		if (!FEAT_RAF_REDRAW) {
 			vm._update(newData, null, null, isHydrated(vm));
-		else
-			(vm._updateAsync = vm._updateAsync || raft(newData => vm.update(newData, true)))(newData);
+		}
+		else {
+			if (sync == null)
+				sync = syncRedraw;
+
+			if (sync)
+				vm._update(newData, null, null, isHydrated(vm));
+			else
+				(vm._updateAsync = vm._updateAsync || raft(newData => vm.update(newData, true)))(newData);
+		}
 
 		return vm;
 	},
 
 	_update: updateSync,
 	_redraw: redrawSync,
-	_redrawAsync: null,
-	_updateAsync: null,
 };
+
+if (FEAT_RAF_REDRAW) {
+	ViewModelProto._redrawAsync = ViewModelProto._updateAsync = null;
+}
 
 if (FEAT_ONEVENT) {
 	ViewModelProto.onevent = noop;

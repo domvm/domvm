@@ -10,18 +10,19 @@ const closure = require('google-closure-compiler-js').compile;
 const AVAIL_FEATS = [
 	"FLUENT_API",
 	"PARSE_TAG",
+	"STATIC_CLASS",
 	"AUTO_KEY",
 	"SPL_ATTRS",
 	"PROP_ATTRS",
-	"STATIC_CLASS",
-	"AUTO_PX",
-	"EMIT",
-	"STREAM",
 	"EVENT_DELEG",
 	"ONEVENT",
 	"FOREIGN_ELEMS",
-/*	"RAF_REDRAW",
-	"HOOKS",	// deep_notify_remove, etc
+	"RAF_REDRAW",
+	"AUTO_PX",
+	"EMIT",
+	"STREAM",
+/*
+	"HOOKS",		// deep_notify_remove, etc
     "EVENT_ATTRS",	// EVENT_PARAMS
 	"REFS",
 	"PREPROC_FLATTEN",
@@ -31,7 +32,7 @@ const AVAIL_FEATS = [
 	"SPREAD_DEFINE",
 	"SPREAD_BODY",
 	"PARTIAL_KEYS"
-	"exhaustive donor search"
+	// exhaustive donor search
 	// styles, hooks, attrs, events
 */
 ];
@@ -51,12 +52,13 @@ function getBuilds(name) {
 		feats: [
 			"PARSE_TAG",
 			"STATIC_CLASS",
-			"SPL_ATTRS",
 			"AUTO_KEY",
+			"SPL_ATTRS",
 			"PROP_ATTRS",
 			"EVENT_DELEG",
 			"ONEVENT",
 			"FOREIGN_ELEMS",
+			"RAF_REDRAW",
 		],
 	};
 
@@ -161,7 +163,7 @@ function compile(buildName) {
 			banner: banner,
 			name: "domvm",
 			format: "es",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
-			sourcemap: true,
+		//	sourcemap: true,
 			file: "./dist/" + buildName + "/domvm." + buildName + ".es.js"
 		});
 
@@ -169,7 +171,7 @@ function compile(buildName) {
 			banner: banner,
 			name: "domvm",
 			format: "umd",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
-			sourcemap: true,
+		//	sourcemap: true,
 			file: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		}).then(b => {
 			console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");

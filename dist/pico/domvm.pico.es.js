@@ -97,27 +97,6 @@ function cmpArr(a, b) {
 	return true;
 }
 
-// https://github.com/darsain/raft
-// rAF throttler, aggregates multiple repeated redraw calls within single animframe
-/* istanbul ignore next */
-function raft(fn) {
-	if (!rAF)
-		{ return fn; }
-
-	var id, ctx, args;
-
-	function call() {
-		id = 0;
-		fn.apply(ctx, args);
-	}
-
-	return function() {
-		ctx = this;
-		args = arguments;
-		if (!id) { id = rAF(call); }
-	};
-}
-
 function curry(fn, args, ctx) {
 	return function() {
 		return fn.apply(ctx, args);
@@ -1269,36 +1248,26 @@ var ViewModelProto = ViewModel.prototype = {
 		return p.vm;
 	},
 	redraw: function(sync) {
-		if (sync == null)
-			{ sync = syncRedraw; }
-
 		var vm = this;
 
-		if (sync)
-			{ vm._redraw(null, null, isHydrated(vm)); }
-		else
-			{ (vm._redrawAsync = vm._redrawAsync || raft(function (_) { return vm.redraw(true); }))(); }
+		{
+			vm._redraw(null, null, isHydrated(vm));
+		}
 
 		return vm;
 	},
 	update: function(newData, sync) {
-		if (sync == null)
-			{ sync = syncRedraw; }
-
 		var vm = this;
 
-		if (sync)
-			{ vm._update(newData, null, null, isHydrated(vm)); }
-		else
-			{ (vm._updateAsync = vm._updateAsync || raft(function (newData) { return vm.update(newData, true); }))(newData); }
+		{
+			vm._update(newData, null, null, isHydrated(vm));
+		}
 
 		return vm;
 	},
 
 	_update: updateSync,
 	_redraw: redrawSync,
-	_redrawAsync: null,
-	_updateAsync: null,
 };
 
 function mount(el, isRoot) {
@@ -1588,4 +1557,3 @@ function lazyList(items, cfg) {
 }
 
 export { ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, KEYED_LIST, LAZY_LIST, config };
-//# sourceMappingURL=domvm.pico.es.js.map
