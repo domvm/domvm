@@ -1,7 +1,7 @@
 import { VVIEW, VMODEL } from '../VTYPES';
 import { createView } from '../createView';
 import { isArr } from '../../utils';
-import { isStyleProp, isSplProp, isEvProp, isDynProp } from '../utils';
+import { isStyleAttr, isSplAttr, isEvAttr, isDynAttr } from '../utils';
 import { patchEvent } from '../patchEvent';
 import { setAttr } from '../patchAttrs';
 import { LAZY_LIST } from '../initElementNode';
@@ -26,10 +26,10 @@ function attach(vnode, withEl) {
 
 	for (var key in nattrs) {
 		var nval = nattrs[key];
-		var isDyn = isDynProp(vnode.tag, key);
+		var isDyn = isDynAttr(vnode.tag, key);
 
-		if (isStyleProp(key) || isSplProp(key)) {}
-		else if (isEvProp(key))
+		if (isStyleAttr(key) || isSplAttr(key)) {}
+		else if (isEvAttr(key))
 			patchEvent(vnode, key, nval);
 		else if (nval != null && isDyn)
 			setAttr(vnode, key, nval, isDyn);

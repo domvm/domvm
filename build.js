@@ -29,7 +29,6 @@ const AVAIL_FEATS = [
 	"PREPROC_MERGE_TEXT",
 	"PREPROC_REMOVE_FALSEY",
 	"DIFF_CMP",	// else diff just returns true/false
-	"SPREAD_DEFINE",
 	"SPREAD_BODY",
 	"PARTIAL_KEYS"
 	// exhaustive donor search

@@ -1,18 +1,18 @@
 import { emptyObj } from '../utils';
 
-export function isProp(name) {
+export function isPropAttr(name) {
 	return FEAT_PROP_ATTRS && name[0] === ".";
 }
 
-export function isEvProp(name) {
+export function isEvAttr(name) {
 	return name[0] === "o" && name[1] === "n";
 }
 
-export function isSplProp(name) {
+export function isSplAttr(name) {
 	return FEAT_SPL_ATTRS && name[0] === "_";
 }
 
-export function isStyleProp(name) {
+export function isStyleAttr(name) {
 	return name === "style";
 }
 
@@ -25,7 +25,7 @@ export function isHydrated(vm) {
 }
 
 // tests interactive props where real val should be compared
-export function isDynProp(tag, attr) {
+export function isDynAttr(tag, attr) {
 //	switch (tag) {
 //		case "input":
 //		case "textarea":

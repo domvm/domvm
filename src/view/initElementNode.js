@@ -1,6 +1,6 @@
 import { ELEMENT } from './VTYPES';
 import { VNode } from './VNode';
-import { cssTag } from './addons/cssTag';
+import { parseTag } from './addons/parseTag';
 import { isPlainObj } from '../utils';
 import { devNotify } from "./addons/devmode";
 
@@ -25,7 +25,7 @@ export function initElementNode(tag, attrs, body, flags) {
 	node.attrs = attrs || null;
 
 	if (FEAT_PARSE_TAG) {
-		var parsed = cssTag(tag);
+		var parsed = parseTag(tag);
 
 		tag = parsed.tag;
 

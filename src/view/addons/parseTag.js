@@ -4,7 +4,7 @@ const RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
 
 // TODO: id & class should live inside attrs?
 
-export function cssTag(raw) {
+export function parseTag(raw) {
 	var cached = tagCache[raw];
 
 	if (cached == null) {

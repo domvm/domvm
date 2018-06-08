@@ -1,4 +1,4 @@
-import { isProp, isStyleProp, isSplProp, isEvProp, isDynProp, getVm } from './utils';
+import { isPropAttr, isStyleAttr, isSplAttr, isEvAttr, isDynAttr, getVm } from './utils';
 import { isFunc, emptyObj } from '../utils';
 import { patchStyle } from './patchStyle';
 import { patchEvent } from './patchEvent';
@@ -6,7 +6,7 @@ import { streamVal } from './addons/stream';
 import { devNotify } from "./addons/devmode";
 
 export function remAttr(node, name, asProp) {
-	if (isProp(name)) {
+	if (isPropAttr(name)) {
 		name = name.substr(1);
 		asProp = true;
 	}
@@ -49,7 +49,7 @@ export function patchAttrs(vnode, donor, initial) {
 			if (nval == null)
 				continue;
 
-			var isDyn = isDynProp(vnode.tag, key);
+			var isDyn = isDynAttr(vnode.tag, key);
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
 
 			if (FEAT_STREAM) {
@@ -57,10 +57,10 @@ export function patchAttrs(vnode, donor, initial) {
 			}
 
 			if (nval === oval) {}
-			else if (isStyleProp(key))
+			else if (isStyleAttr(key))
 				patchStyle(vnode, donor);
-			else if (isSplProp(key)) {}
-			else if (isEvProp(key))
+			else if (isSplAttr(key)) {}
+			else if (isEvAttr(key))
 				patchEvent(vnode, key, nval, oval);
 			else
 				setAttr(vnode, key, nval, isDyn, initial);
@@ -69,10 +69,10 @@ export function patchAttrs(vnode, donor, initial) {
 		// TODO: bench style.cssText = "" vs removeAttribute("style")
 		for (var key in oattrs) {
 			if (nattrs[key] == null) {
-				if (isEvProp(key))
+				if (isEvAttr(key))
 					patchEvent(vnode, key, nattrs[key], oattrs[key]);
-				else if (!isSplProp(key))
-					remAttr(vnode, key, isDynProp(vnode.tag, key));
+				else if (!isSplAttr(key))
+					remAttr(vnode, key, isDynAttr(vnode.tag, key));
 			}
 		}
 	}

@@ -218,19 +218,19 @@
 	//	return -1;
 	}
 
-	function isProp(name) {
+	function isPropAttr(name) {
 		return name[0] === ".";
 	}
 
-	function isEvProp(name) {
+	function isEvAttr(name) {
 		return name[0] === "o" && name[1] === "n";
 	}
 
-	function isSplProp(name) {
+	function isSplAttr(name) {
 		return name[0] === "_";
 	}
 
-	function isStyleProp(name) {
+	function isStyleAttr(name) {
 		return name === "style";
 	}
 
@@ -243,7 +243,7 @@
 	}
 
 	// tests interactive props where real val should be compared
-	function isDynProp(tag, attr) {
+	function isDynAttr(tag, attr) {
 	//	switch (tag) {
 	//		case "input":
 	//		case "textarea":
@@ -330,7 +330,7 @@
 
 	// TODO: id & class should live inside attrs?
 
-	function cssTag(raw) {
+	function parseTag(raw) {
 		var cached = tagCache[raw];
 
 		if (cached == null) {
@@ -444,7 +444,7 @@
 		node.attrs = attrs || null;
 
 		{
-			var parsed = cssTag(tag);
+			var parsed = parseTag(tag);
 
 			tag = parsed.tag;
 
@@ -821,7 +821,7 @@
 	}
 
 	function remAttr(node, name, asProp) {
-		if (isProp(name)) {
+		if (isPropAttr(name)) {
 			name = name.substr(1);
 			asProp = true;
 		}
@@ -863,7 +863,7 @@
 				if (nval == null)
 					{ continue; }
 
-				var isDyn = isDynProp(vnode.tag, key);
+				var isDyn = isDynAttr(vnode.tag, key);
 				var oval = isDyn ? vnode.el[key] : oattrs[key];
 
 				{
@@ -871,10 +871,10 @@
 				}
 
 				if (nval === oval) ;
-				else if (isStyleProp(key))
+				else if (isStyleAttr(key))
 					{ patchStyle(vnode, donor); }
-				else if (isSplProp(key)) ;
-				else if (isEvProp(key))
+				else if (isSplAttr(key)) ;
+				else if (isEvAttr(key))
 					{ patchEvent(vnode, key, nval, oval); }
 				else
 					{ setAttr(vnode, key, nval, isDyn, initial); }
@@ -883,10 +883,10 @@
 			// TODO: bench style.cssText = "" vs removeAttribute("style")
 			for (var key in oattrs) {
 				if (nattrs[key] == null) {
-					if (isEvProp(key))
+					if (isEvAttr(key))
 						{ patchEvent(vnode, key, nattrs[key], oattrs[key]); }
-					else if (!isSplProp(key))
-						{ remAttr(vnode, key, isDynProp(vnode.tag, key)); }
+					else if (!isSplAttr(key))
+						{ remAttr(vnode, key, isDynAttr(vnode.tag, key)); }
 				}
 			}
 		}
@@ -2367,10 +2367,10 @@
 
 		for (var key in nattrs) {
 			var nval = nattrs[key];
-			var isDyn = isDynProp(vnode.tag, key);
+			var isDyn = isDynAttr(vnode.tag, key);
 
-			if (isStyleProp(key) || isSplProp(key)) ;
-			else if (isEvProp(key))
+			if (isStyleAttr(key) || isSplAttr(key)) ;
+			else if (isEvAttr(key))
 				{ patchEvent(vnode, key, nval); }
 			else if (nval != null && isDyn)
 				{ setAttr(vnode, key, nval, isDyn); }
@@ -2510,7 +2510,7 @@
 
 				if (hasAttrs) {
 					for (var pname in attrs) {
-						if (isEvProp(pname) || isProp(pname) || isSplProp(pname) || dynProps === false && isDynProp(node.tag, pname))
+						if (isEvAttr(pname) || isPropAttr(pname) || isSplAttr(pname) || dynProps === false && isDynAttr(node.tag, pname))
 							{ continue; }
 
 						var val = attrs[pname];
