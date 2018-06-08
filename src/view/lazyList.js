@@ -1,4 +1,4 @@
-import { noop, isArr, cmpArr, cmpObj } from '../utils';
+import { noop, isFunc, isArr, cmpArr, cmpObj } from '../utils';
 import { preProc } from './preProc';
 
 export function lazyList(items, cfg) {
@@ -12,14 +12,7 @@ export function lazyList(items, cfg) {
 			return cfg.key(items[i], i);
 		},
 		// default returns 0?
-		diff: function(i, donor) {
-			var newVals = cfg.diff(items[i], i);
-			if (donor == null)
-				return newVals;
-			var oldVals = donor._diff;
-			var same = newVals === oldVals || isArr(oldVals) ? cmpArr(newVals, oldVals) : cmpObj(newVals, oldVals);
-			return same || newVals;
-		},
+		diff: null,
 		tpl: function(i) {
 			return cfg.tpl(items[i], i);
 		},
@@ -36,7 +29,7 @@ export function lazyList(items, cfg) {
 			//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
 			//		vnode2.key = getKey(item);
 
-				vnode2._diff = self.diff(i);			// holds oldVals for cmp
+				vnode2._diff = self.diff.val(i);
 
 				nbody[i] = vnode2;
 
@@ -48,6 +41,33 @@ export function lazyList(items, cfg) {
 			vnode.body = nbody;
 		}
 	};
+
+	if (FEAT_DIFF_CMP) {
+		if (isFunc(cfg.diff)) {
+			self.diff = {
+				val: function(i) {
+					return cfg.diff(items[i]);
+				},
+				cmp: function(i, donor) {
+					var o = donor._diff,
+						n = self.diff.val(i);
+
+					var cmpFn = isArr(o) ? cmpArr : cmpObj;
+					return !(o === n || cmpFn(o, n));
+				}
+			};
+		}
+	}
+	else {
+		self.diff = {
+			val: function(i) {
+				return cfg.diff.val(items[i]);
+			},
+	        cmp: function(i, donor) {
+				return cfg.diff.cmp(donor._diff, self.diff.val(i));
+			}
+		};
+	}
 
 	return self;
 }

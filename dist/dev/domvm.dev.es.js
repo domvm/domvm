@@ -1425,7 +1425,6 @@ function patchChildren(vnode, donor) {
 	for (var i = 0; i < nlen; i++) {
 		if (isLazy) {
 			var remake = false;
-			var diffRes = null;
 
 			if (doFind) {
 				if (isKeyed)
@@ -1436,14 +1435,14 @@ function patchChildren(vnode, donor) {
 
 			if (donor2 != null) {
                 foundIdx = donor2.idx;
-				diffRes = nbody.diff(i, donor2);
 
 				// diff returns same, so cheaply adopt vnode without patching
-				if (diffRes === true) {
+				if (!nbody.diff.cmp(i, donor2)) {
 					node2 = donor2;
 					node2.parent = vnode;
 					node2.idx = i;
 					node2._lis = false;
+				//	node2._diff = nbody.diff.val(i);
 				}
 				// diff returns new diffVals, so generate new vnode & patch
 				else
@@ -1456,7 +1455,7 @@ function patchChildren(vnode, donor) {
 				node2 = nbody.tpl(i);			// what if this is a VVIEW, VMODEL, injected element?
 				preProc(node2, vnode, i);
 
-				node2._diff = diffRes != null ? diffRes : nbody.diff(i);
+				node2._diff = nbody.diff.val(i);
 
 				if (donor2 != null)
 					{ patch(node2, donor2); }
@@ -1845,8 +1844,19 @@ var ViewModelProto = ViewModel.prototype = {
 
 		if (opts.init)
 			{ t.init = opts.init; }
-		if (opts.diff)
-			{ t.diff = opts.diff; }
+		if (opts.diff) {
+			{
+				if (isFunc(opts.diff)) {
+					t.diff = {
+						val: opts.diff,
+						cmp: function(vm, o, n) {
+							var cmpFn = isArr(o) ? cmpArr : cmpObj;
+							return !(o === n || cmpFn(o, n));
+						}
+					};
+				}
+			}
+		}
 		{
 			if (opts.onevent)
 				{ t.onevent = opts.onevent; }
@@ -2004,14 +2014,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	if (vm.diff != null) {
 		oldDiff = vm._diff;
-		vm._diff = newDiff = vm.diff(vm, vm.data);
+		vm._diff = newDiff = vm.diff.val(vm, vm.data);
 
 		if (vold != null) {
-			var cmpFn = isArr(oldDiff) ? cmpArr : cmpObj;
-			var isSame = oldDiff === newDiff || cmpFn(oldDiff, newDiff);
-
-			if (isSame)
-				{ return reParent(vm, vold, newParent, newIdx); }
+            if (!vm.diff.cmp(vm, oldDiff, newDiff))
+                { return reParent(vm, vold, newParent, newIdx); }
 		}
 	}
 
@@ -2202,14 +2209,7 @@ function lazyList(items, cfg) {
 			return cfg.key(items[i], i);
 		},
 		// default returns 0?
-		diff: function(i, donor) {
-			var newVals = cfg.diff(items[i], i);
-			if (donor == null)
-				{ return newVals; }
-			var oldVals = donor._diff;
-			var same = newVals === oldVals || isArr(oldVals) ? cmpArr(newVals, oldVals) : cmpObj(newVals, oldVals);
-			return same || newVals;
-		},
+		diff: null,
 		tpl: function(i) {
 			return cfg.tpl(items[i], i);
 		},
@@ -2226,7 +2226,7 @@ function lazyList(items, cfg) {
 			//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
 			//		vnode2.key = getKey(item);
 
-				vnode2._diff = self.diff(i);			// holds oldVals for cmp
+				vnode2._diff = self.diff.val(i);
 
 				nbody[i] = vnode2;
 
@@ -2238,6 +2238,23 @@ function lazyList(items, cfg) {
 			vnode.body = nbody;
 		}
 	};
+
+	{
+		if (isFunc(cfg.diff)) {
+			self.diff = {
+				val: function(i) {
+					return cfg.diff(items[i]);
+				},
+				cmp: function(i, donor) {
+					var o = donor._diff,
+						n = self.diff.val(i);
+
+					var cmpFn = isArr(o) ? cmpArr : cmpObj;
+					return !(o === n || cmpFn(o, n));
+				}
+			};
+		}
+	}
 
 	return self;
 }

@@ -166,7 +166,6 @@ function patchChildren(vnode, donor) {
 	for (var i = 0; i < nlen; i++) {
 		if (isLazy) {
 			var remake = false;
-			var diffRes = null;
 
 			if (doFind) {
 				if (isKeyed)
@@ -177,14 +176,14 @@ function patchChildren(vnode, donor) {
 
 			if (donor2 != null) {
                 foundIdx = donor2.idx;
-				diffRes = nbody.diff(i, donor2);
 
 				// diff returns same, so cheaply adopt vnode without patching
-				if (diffRes === true) {
+				if (!nbody.diff.cmp(i, donor2)) {
 					node2 = donor2;
 					node2.parent = vnode;
 					node2.idx = i;
 					node2._lis = false;
+				//	node2._diff = nbody.diff.val(i);
 				}
 				// diff returns new diffVals, so generate new vnode & patch
 				else
@@ -197,7 +196,7 @@ function patchChildren(vnode, donor) {
 				node2 = nbody.tpl(i);			// what if this is a VVIEW, VMODEL, injected element?
 				preProc(node2, vnode, i);
 
-				node2._diff = diffRes != null ? diffRes : nbody.diff(i);
+				node2._diff = nbody.diff.val(i);
 
 				if (donor2 != null)
 					patch(node2, donor2);

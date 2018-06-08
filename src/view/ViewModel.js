@@ -67,8 +67,21 @@ export const ViewModelProto = ViewModel.prototype = {
 
 		if (opts.init)
 			t.init = opts.init;
-		if (opts.diff)
-			t.diff = opts.diff;
+		if (opts.diff) {
+			if (FEAT_DIFF_CMP) {
+				if (isFunc(opts.diff)) {
+					t.diff = {
+						val: opts.diff,
+						cmp: function(vm, o, n) {
+							var cmpFn = isArr(o) ? cmpArr : cmpObj;
+							return !(o === n || cmpFn(o, n));
+						}
+					};
+				}
+			}
+			else
+				t.diff = opts.diff;
+		}
 		if (FEAT_ONEVENT) {
 			if (opts.onevent)
 				t.onevent = opts.onevent;
@@ -232,14 +245,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	if (vm.diff != null) {
 		oldDiff = vm._diff;
-		vm._diff = newDiff = vm.diff(vm, vm.data);
+		vm._diff = newDiff = vm.diff.val(vm, vm.data);
 
 		if (vold != null) {
-			var cmpFn = isArr(oldDiff) ? cmpArr : cmpObj;
-			var isSame = oldDiff === newDiff || cmpFn(oldDiff, newDiff);
-
-			if (isSame)
-				return reParent(vm, vold, newParent, newIdx);
+            if (!vm.diff.cmp(vm, oldDiff, newDiff))
+                return reParent(vm, vold, newParent, newIdx);
 		}
 	}
 
