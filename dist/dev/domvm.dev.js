@@ -519,7 +519,7 @@
 				}, 16);
 			}
 			// todo: attrs.contenteditable === "true"?
-			else if (/^(?:input|textarea|select|datalist|keygen|output)$/.test(node.tag) && node.key == null)
+			else if (/^(?:input|textarea|select|datalist|output)$/.test(node.tag) && node.key == null)
 				{ devNotify("UNKEYED_INPUT", [node]); }
 		}
 
