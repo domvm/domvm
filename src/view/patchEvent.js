@@ -35,13 +35,13 @@ function handle(e) {
 
 	var evDef = e.currentTarget._node.attrs["on" + e.type], fn, args;
 
-	if (isArr(evDef)) {
-		fn = evDef[0];
-		args = evDef.slice(1);
-		exec(fn, args, e, node, vm);
-	}
-	else {
-		if (FEAT_EVENT_DELEG) {
+	if (FEAT_EVENT_DELEG) {
+		if (isArr(evDef)) {
+			fn = evDef[0];
+			args = evDef.slice(1);
+			exec(fn, args, e, node, vm);
+		}
+		else {
 			for (var sel in evDef) {
 				if (e.target.matches(sel)) {
 					var evDef2 = evDef[sel];
@@ -59,6 +59,11 @@ function handle(e) {
 				}
 			}
 		}
+	}
+	else {
+		fn = evDef[0];
+		args = evDef.slice(1);
+		exec(fn, args, e, node, vm);
 	}
 }
 

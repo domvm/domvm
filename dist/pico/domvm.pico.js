@@ -441,7 +441,7 @@
 
 		var evDef = e.currentTarget._node.attrs["on" + e.type], fn, args;
 
-		if (isArr(evDef)) {
+		{
 			fn = evDef[0];
 			args = evDef.slice(1);
 			exec(fn, args, e, node, vm);
