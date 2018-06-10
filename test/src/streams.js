@@ -1,32 +1,36 @@
-QUnit.module("streams", function() {
-	domvm.config({
-		stream: {
-			val: function(v, accum) {
-				if (flyd.isStream(v)) {
-					accum.push(v);
-					return v();
-				}
-				else
-					return v;
-			},
-			on: function(accum, vm) {
-				let calls = 0;
-
-				const s = flyd.combine(function() {
-					if (++calls == 2) {
-						vm.redraw();
-						s.end(true);
+var streamHooks = {
+	before: function() {
+		domvm.config({
+			stream: {
+				val: function(v, accum) {
+					if (flyd.isStream(v)) {
+						accum.push(v);
+						return v();
 					}
-				}, accum);
+					else
+						return v;
+				},
+				on: function(accum, vm) {
+					let calls = 0;
 
-				return s;
-			},
-			off: function(s) {
-				s.end(true);
+					const s = flyd.combine(function() {
+						if (++calls == 2) {
+							vm.redraw();
+							s.end(true);
+						}
+					}, accum);
+
+					return s;
+				},
+				off: function(s) {
+					s.end(true);
+				}
 			}
-		}
-	});
+		});
+	}
+};
 
+QUnit.module("streams", streamHooks, function() {
 	QUnit.test('render', function(assert) {
 		function View() {
 			return function() {
