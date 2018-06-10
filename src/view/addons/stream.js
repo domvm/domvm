@@ -1,6 +1,6 @@
-import { noop } from "../../utils";
+import { noop, retArg0 } from "../../utils";
 
-export let streamVal = noop;
+export let streamVal = retArg0;
 export let streamOn = noop;
 export let streamOff = noop;
 

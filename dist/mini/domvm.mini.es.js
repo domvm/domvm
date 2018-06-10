@@ -29,6 +29,8 @@ var rAF = win.requestAnimationFrame;
 var emptyObj = {};
 
 function noop() {}
+function retArg0(a) { return a; }
+
 var isArr = Array.isArray;
 
 function isPlainObj(val) {
@@ -308,7 +310,7 @@ function defineText(body) {
 	return node;
 }
 
-var streamVal = noop;
+var streamVal = retArg0;
 var streamOn = noop;
 var streamOff = noop;
 
