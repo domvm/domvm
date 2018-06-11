@@ -1,7 +1,7 @@
 import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
 import { createView } from '../createView';
 import { isArr } from '../../utils';
-import { isEvProp, isDynProp } from '../utils';
+import { isPropAttr, isEvAttr, isDynAttr, isSplAttr } from '../utils';
 import { autoPx } from './autoPx';
 import { LAZY_LIST } from '../initElementNode';
 
@@ -117,7 +117,7 @@ function html(node, dynProps) {
 
 			if (hasAttrs) {
 				for (var pname in attrs) {
-					if (isEvProp(pname) || pname[0] === "." || pname[0] === "_" || dynProps === false && isDynProp(node.tag, pname))
+					if (isEvAttr(pname) || isPropAttr(pname) || isSplAttr(pname) || dynProps === false && isDynAttr(node.tag, pname))
 						continue;
 
 					var val = attrs[pname];

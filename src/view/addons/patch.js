@@ -20,9 +20,13 @@ export function patch(o, n, doRepaint) {
 		var donor = Object.create(o);
 		// fixate orig attrs
 		donor.attrs = assignObj({}, o.attrs);
-		// prepend any fixed shorthand class
-		if (n.class != null && o._class != null)
-			n.class = o._class + " " + n.class;
+
+		if (FEAT_STATIC_CLASS) {
+			// prepend any fixed shorthand class
+			if (n.class != null && o._class != null)
+				n.class = o._class + " " + n.class;
+		}
+
 		// assign new attrs into live targ node
 		var oattrs = assignObj(o.attrs, n);
 

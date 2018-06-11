@@ -1,3 +1,5 @@
+import { assignObj } from '../utils';
+
 export function VNode() {}
 
 export const VNodeProto = VNode.prototype = {
@@ -22,7 +24,6 @@ export const VNodeProto = VNode.prototype = {
 
 	flags:	0,
 
-	_class:	null,
 	_diff:	null,
 
 	// pending removal on promise resolution
@@ -32,15 +33,26 @@ export const VNodeProto = VNode.prototype = {
 
 	idx:	null,
 	parent:	null,
-
-	/*
-	// break out into optional fluent module
-	key:	function(val) { this.key	= val; return this; },
-	ref:	function(val) { this.ref	= val; return this; },		// deep refs
-	data:	function(val) { this.data	= val; return this; },
-	hooks:	function(val) { this.hooks	= val; return this; },		// h("div").hooks()
-	html:	function(val) { this.html	= true; return this.body(val); },
-
-	body:	function(val) { this.body	= val; return this; },
-	*/
 };
+
+if (FEAT_STATIC_CLASS) {
+	VNodeProto._class = null;
+}
+
+if (FEAT_FLUENT_API) {
+	assignObj(VNodeProto, {
+		a:	function(val) { this.attrs	= val; return this; },
+		b:	function(val) { this.body	= val; return this; },
+		k:	function(val) { this.key	= val; return this; },
+		r:	function(val) { this.ref	= val; return this; },
+		h:	function(val) { this.hooks	= val; return this; },
+		f:	function(val) { this.flags	= val; return this; },
+		d:	function(val) { this.data	= val; return this; },
+
+	//	e:	function(val) { this.events	= val; return this; },
+	//	s:	function(val) { this.style	= val; return this; },
+	//	t: tag/type
+	//	c: class
+	//	i: id
+	})
+}

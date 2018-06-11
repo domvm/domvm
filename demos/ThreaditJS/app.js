@@ -71,12 +71,12 @@ function ThreaditView(vm, deps) {
 	return function() {
 		return el(".body", [
 			el("p.head_links", [
-				el("a", {href: "https://github.com/leeoniya/domvm/tree/master/demos/threaditjs"}, "Source"),
+				el("a", {href: "https://github.com/domvm/domvm/tree/master/demos/threaditjs"}, "Source"),
 				tx(" | "),
 				el("a", {href: "http://threaditjs.com"}, "ThreaditJS Home")
 			]),
 			el("h2", [
-				el("a", {href: "http://leeoniya.github.io/domvm/demos/threaditjs/"}, "ThreaditJS: domvm")
+				el("a", {href: "http://domvm.github.io/domvm/demos/threaditjs/"}, "ThreaditJS: domvm")
 			]),
 			el(".main", [
 				V2

@@ -10,6 +10,8 @@ export const emptyObj = {};
 
 export function noop() {};
 
+export function retArg0(a) { return a; }
+
 export const isArr = Array.isArray;
 
 export function isPlainObj(val) {

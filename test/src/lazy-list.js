@@ -32,7 +32,7 @@ QUnit.module("lazyList", function() {
 			});
 
 			return el("div", {_flags: domvm.LAZY_LIST}, items.map(function(item) {
-				return el("p", {_data: item.id, class: store.selected === item.id ? 'selected' : null}, [
+				return el("p", {class: store.selected === item.id ? 'selected' : null}, [
 					el("em", item.text),
 				])
 			}));

@@ -3,7 +3,7 @@
 * All rights reserved. (MIT Licensed)
 *
 * A DOM instrumenting helper for debugging
-* https://github.com/leeoniya/domvm
+* https://github.com/domvm/domvm
 */
 ( // Module boilerplate to support commonjs, browser globals and AMD.
   (typeof module === "object" && typeof module.exports === "object" && function (m) { module.exports = m(); }) ||

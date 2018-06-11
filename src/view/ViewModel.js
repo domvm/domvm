@@ -57,7 +57,6 @@ export const ViewModelProto = ViewModel.prototype = {
 	opts:	null,
 	node:	null,
 	hooks:	null,
-	onevent: noop,
 	refs:	null,
 	render:	null,
 
@@ -68,10 +67,25 @@ export const ViewModelProto = ViewModel.prototype = {
 
 		if (opts.init)
 			t.init = opts.init;
-		if (opts.diff)
-			t.diff = opts.diff;
-		if (opts.onevent)
-			t.onevent = opts.onevent;
+		if (opts.diff) {
+			if (FEAT_DIFF_CMP) {
+				if (isFunc(opts.diff)) {
+					t.diff = {
+						val: opts.diff,
+						cmp: function(vm, o, n) {
+							var cmpFn = isArr(o) ? cmpArr : cmpObj;
+							return !(o === n || cmpFn(o, n));
+						}
+					};
+				}
+			}
+			else
+				t.diff = opts.diff;
+		}
+		if (FEAT_ONEVENT) {
+			if (opts.onevent)
+				t.onevent = opts.onevent;
+		}
 
 		// maybe invert assignment order?
 		if (opts.hooks)
@@ -94,37 +108,53 @@ export const ViewModelProto = ViewModel.prototype = {
 		return p.vm;
 	},
 	redraw: function(sync) {
-		if (sync == null)
-			sync = syncRedraw;
-
 		var vm = this;
 
-		if (sync)
+		if (!FEAT_RAF_REDRAW) {
 			vm._redraw(null, null, isHydrated(vm));
-		else
-			(vm._redrawAsync = vm._redrawAsync || raft(_ => vm.redraw(true)))();
+		}
+		else {
+			if (sync == null)
+				sync = syncRedraw;
+
+			if (sync)
+				vm._redraw(null, null, isHydrated(vm));
+			else
+				(vm._redrawAsync = vm._redrawAsync || raft(_ => vm.redraw(true)))();
+		}
 
 		return vm;
 	},
 	update: function(newData, sync) {
-		if (sync == null)
-			sync = syncRedraw;
-
 		var vm = this;
 
-		if (sync)
+		if (!FEAT_RAF_REDRAW) {
 			vm._update(newData, null, null, isHydrated(vm));
-		else
-			(vm._updateAsync = vm._updateAsync || raft(newData => vm.update(newData, true)))(newData);
+		}
+		else {
+			if (sync == null)
+				sync = syncRedraw;
+
+			if (sync)
+				vm._update(newData, null, null, isHydrated(vm));
+			else
+				(vm._updateAsync = vm._updateAsync || raft(newData => vm.update(newData, true)))(newData);
+		}
 
 		return vm;
 	},
 
 	_update: updateSync,
 	_redraw: redrawSync,
-	_redrawAsync: null,
-	_updateAsync: null,
 };
+
+if (FEAT_RAF_REDRAW) {
+	ViewModelProto._redrawAsync = ViewModelProto._updateAsync = null;
+}
+
+if (FEAT_ONEVENT) {
+	ViewModelProto.onevent = noop;
+}
 
 function mount(el, isRoot) {
 	var vm = this;
@@ -215,14 +245,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	if (vm.diff != null) {
 		oldDiff = vm._diff;
-		vm._diff = newDiff = vm.diff(vm, vm.data);
+		vm._diff = newDiff = vm.diff.val(vm, vm.data);
 
 		if (vold != null) {
-			var cmpFn = isArr(oldDiff) ? cmpArr : cmpObj;
-			var isSame = oldDiff === newDiff || cmpFn(oldDiff, newDiff);
-
-			if (isSame)
-				return reParent(vm, vold, newParent, newIdx);
+            if (!vm.diff.cmp(vm, oldDiff, newDiff))
+                return reParent(vm, vold, newParent, newIdx);
 		}
 	}
 

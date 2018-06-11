@@ -8,7 +8,7 @@
     "framework"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/leeoniya/domvm",
+  "homepage": "https://github.com/domvm/domvm",
   "author": "Leon Sorokin <leeoniya@gmail.com>",
   "version": "3.3.2",
   "main": "./dist/full/domvm.full.min.js",
@@ -27,7 +27,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/leeoniya/domvm.git"
+    "url": "https://github.com/domvm/domvm.git"
   },
   "devDependencies": {
     "buble": "*",
@@ -41,7 +41,7 @@
     "undom": "*"
   },
   "bugs": {
-    "url": "https://github.com/leeoniya/domvm/issues"
+    "url": "https://github.com/domvm/domvm/issues"
   },
   "dependencies": {}
 }

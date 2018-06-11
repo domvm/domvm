@@ -7,57 +7,105 @@ const execSync = require('child_process').execSync;
 const zlib = require('zlib');
 const closure = require('google-closure-compiler-js').compile;
 
+const AVAIL_FEATS = [
+	"FLUENT_API",
+	"PARSE_TAG",
+	"STATIC_CLASS",
+	"AUTO_KEY",
+	"SPL_ATTRS",
+	"PROP_ATTRS",
+	"EVENT_DELEG",
+	"ONEVENT",
+	"DIFF_CMP",
+	"FOREIGN_ELEMS",
+	"RAF_REDRAW",
+	"AUTO_PX",
+	"EMIT",
+	"STREAM",
+/*
+	"HOOKS",		// deep_notify_remove, etc
+    "EVENT_ATTRS",	// EVENT_PARAMS
+	"REFS",
+	"PREPROC_FLATTEN",
+	"PREPROC_MERGE_TEXT",
+	"PREPROC_REMOVE_FALSEY",
+	"DIFF_CMP",	// else diff just returns true/false
+	"SPREAD_BODY",
+	"PARTIAL_KEYS"
+	// exhaustive donor search
+	// styles, hooks, attrs, events
+*/
+];
+
 function getBuilds(name) {
-	return [
-		{
-			build: "pico",
-			contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>element injection<br>innerHTML<br>vnode refs<br>css objects<br>svg<br>global onevent<br>diff<br>lazyList<br>",
-			descr: "view core<br><br>**This build is unstable by design; features that get decoupled<br>can move to nano+ builds at any commit!**",
-			feats: [],
-		},
-		{
-			build: "nano",
-			contents: "+ `selectorTag`<br> + `patch`<br>",
-			descr: "`\"input[type=checkbox].some-class\"`<br>`vnode.patch({class: ..., style...})`",
-			feats: ["CSSTAG"],
-		},
-		{
-			build: "micro",
-			contents: "+ `emit`<br> + `body`<br> + `autoPx`<br> + `defineElementSpread`<br> + `defineSvgElementSpread`<br>",
-			descr: "`vm.emit('myNotif', arg1, arg2...)`<br>`vm.body()`<br>`{style: {width: 20}}`",
-			feats: ["CSSTAG","AUTOPX","EMIT"],
-		},
-		{
-			build: "mini",
-			contents: "+ `stream`<br>",
-			descr: "view reactivity",
-			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
-		},
-		{
-			build: "client",
-			contents: "`mini`<br> + `attach`<br>",
-			descr: "SSR hydration",
-			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
-		},
-		{
-			build: "server",
-			contents: "`mini`<br> + `html`<br>",
-			descr: "SSR rendering",
-			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
-		},
-		{
-			build: "full",
-			contents: "`mini`<br> + `attach`<br> + `html`<br>",
-			descr: "all the bells and whistles",
-			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
-		},
-		{
-			build: "dev",
-			contents: "`full`<br> + warnings<br>",
-			descr: "use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior",
-			feats: ["CSSTAG","AUTOPX","EMIT","STREAM"],
-		},
-	].filter(b => name != null ? b.build === name : true);
+	const pico = {
+		build: "pico",
+		contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>element injection<br>innerHTML<br>vnode refs<br>css objects<br>svg<br>global onevent<br>diff<br>lazyList<br>",
+		descr: "view core<br><br>**This build is unstable by design; features that get decoupled<br>can move to nano+ builds at any commit!**",
+		feats: ["FLUENT_API"],
+	};
+
+	const nano = {
+		build: "nano",
+		contents: "+ `selectorTag`<br> + `patch`<br>",
+		descr: "`\"input[type=checkbox].some-class\"`<br>`vnode.patch({class: ..., style...})`",
+		feats: [
+			"PARSE_TAG",
+			"STATIC_CLASS",
+			"AUTO_KEY",
+			"SPL_ATTRS",
+			"PROP_ATTRS",
+			"EVENT_DELEG",
+			"ONEVENT",
+			"DIFF_CMP",
+			"FOREIGN_ELEMS",
+			"RAF_REDRAW",
+		],
+	};
+
+	const micro = {
+		build: "micro",
+		contents: "+ `emit`<br> + `body`<br> + `autoPx`<br> + `defineElementSpread`<br> + `defineSvgElementSpread`<br>",
+		descr: "`vm.emit('myNotif', arg1, arg2...)`<br>`vm.body()`<br>`{style: {width: 20}}`",
+		feats: nano.feats.concat("AUTO_PX","EMIT"),
+	};
+
+	const mini = {
+		build: "mini",
+		contents: "+ `stream`<br>",
+		descr: "view reactivity",
+		feats: micro.feats.concat("STREAM"),
+	};
+
+	const client = {
+		build: "client",
+		contents: "`mini`<br> + `attach`<br>",
+		descr: "SSR hydration",
+		feats: mini.feats,
+	};
+
+	const server = {
+		build: "server",
+		contents: "`mini`<br> + `html`<br>",
+		descr: "SSR rendering",
+		feats: mini.feats,
+	};
+
+	const full = {
+		build: "full",
+		contents: "`mini`<br> + `attach`<br> + `html`<br>",
+		descr: "all the bells and whistles",
+		feats: mini.feats,
+	};
+
+	const dev = {
+		build: "dev",
+		contents: "`full`<br> + warnings<br>",
+		descr: "use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior",
+		feats: mini.feats,
+	};
+
+	return [pico, nano, micro, mini, client, server, full, dev].filter(b => name != null ? b.build === name : true);
 }
 
 var args = process.argv.slice(2);
@@ -79,16 +127,18 @@ function compile(buildName) {
 
 	var feats = buildCfg.feats;
 
+	var repls = {
+		_DEVMODE: buildName === "dev",
+	};
+
+	AVAIL_FEATS.forEach(function(f) {
+		repls["FEAT_" + f] = feats.indexOf(f) != -1;
+	});
+
 	rollup({
 		input: buildFile,
 		plugins: [
-			replace({
-				_DEVMODE:		buildName === "dev",
-				FEAT_CSSTAG:	feats.indexOf("CSSTAG") != -1,
-				FEAT_AUTOPX:	feats.indexOf("AUTOPX") != -1,
-				FEAT_EMIT:		feats.indexOf("EMIT") != -1,
-				FEAT_STREAM:	feats.indexOf("STREAM") != -1,
-			}),
+			replace(repls),
 			buble(),
 		],
 	})
@@ -105,7 +155,7 @@ function compile(buildName) {
 			"*",
 			"* domvm.js (DOM ViewModel)",
 			"* A thin, fast, dependency-free vdom view layer",
-			"* @preserve https://github.com/leeoniya/domvm (" + ver + ", " + buildName + " build)",
+			"* @preserve https://github.com/domvm/domvm (" + ver + ", " + buildName + " build)",
 			"*/",
 			"",
 		].join("\n");
@@ -114,7 +164,7 @@ function compile(buildName) {
 			banner: banner,
 			name: "domvm",
 			format: "es",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
-			sourcemap: true,
+		//	sourcemap: true,
 			file: "./dist/" + buildName + "/domvm." + buildName + ".es.js"
 		});
 
@@ -122,7 +172,7 @@ function compile(buildName) {
 			banner: banner,
 			name: "domvm",
 			format: "umd",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
-			sourcemap: true,
+		//	sourcemap: true,
 			file: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		}).then(b => {
 			console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
@@ -188,7 +238,7 @@ function buildDistTable() {
 
 		var path = "dist/" + buildName + "/domvm." + buildName + ".min.js";
 
-		appendix.push("["+(i+1)+"]: https://github.com/leeoniya/domvm/blob/" + branch + "/" + path);
+		appendix.push("["+(i+1)+"]: https://github.com/domvm/domvm/blob/" + branch + "/" + path);
 
 		var minified = fs.readFileSync("./" + path, 'utf8');
 		var gzipped = zlib.gzipSync(minified, {level: 6});

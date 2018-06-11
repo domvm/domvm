@@ -15,10 +15,6 @@ function parentNode(node) {
 	return node.parent;
 }
 
-function cmpElNodeIdx(a, b) {
-	return a._node.idx - b._node.idx;
-}
-
 const BREAK = 1;
 const BREAK_ALL = 2;
 
@@ -27,13 +23,17 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 		var sibNode, tmpSib;
 
 		if (state[sibName] != null) {
-			// skip dom elements not created by domvm
-			if ((sibNode = state[sibName]._node) == null) {
-				if (_DEVMODE)
-					devNotify("FOREIGN_ELEMENT", [state[sibName]]);
+			sibNode = state[sibName]._node;
 
-				state[sibName] = advSib(state[sibName]);
-				return;
+			if (FEAT_FOREIGN_ELEMS) {
+				// skip dom elements not created by domvm
+				if (sibNode == null) {
+					if (_DEVMODE)
+						devNotify("FOREIGN_ELEMENT", [state[sibName]]);
+
+					state[sibName] = advSib(state[sibName]);
+					return;
+				}
 			}
 
 			if (parentNode(sibNode) !== node) {
@@ -135,15 +135,15 @@ export function syncChildren(node, donor) {
 // TODO: also use the state.rgtSib and state.rgtNode bounds, plus reduce LIS range
 function sortDOM(node, parEl, body, state) {
 	var domIdxs = [];
-	// compression micro-opt (instead of Array.prototype.slice.call(...);
-	var kids = domIdxs.slice.call(parEl.childNodes);
 
-	for (var k = 0; k < kids.length; k++) {
-		var n = kids[k]._node;
+	var el = parEl.firstChild;
 
+	// array of new vnode idices in current (old) dom order
+	do  {
+		var n = el._node;
 		if (n.parent === node)
 			domIdxs.push(n.idx);
-	}
+	} while (el = nextSib(el));
 
 	// list of non-movable vnode indices (already in correct order in old dom)
 	var tombs = longestIncreasingSubsequence(domIdxs).map(i => domIdxs[i]);

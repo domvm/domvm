@@ -14,6 +14,6 @@ export { injectElement } from "../view/injectElement";
 
 export { lazyList } from '../view/lazyList';
 
-export { FIXED_BODY, DEEP_REMOVE, KEYED_LIST, LAZY_LIST } from "../view/initElementNode";
+export { FIXED_BODY, KEYED_LIST, LAZY_LIST } from "../view/initElementNode";
 
 export { config } from '../view/config';

@@ -1,6 +1,6 @@
 import { ELEMENT } from './VTYPES';
 import { VNode } from './VNode';
-import { cssTag } from './addons/cssTag';
+import { parseTag } from './addons/parseTag';
 import { isPlainObj } from '../utils';
 import { devNotify } from "./addons/devmode";
 
@@ -24,58 +24,73 @@ export function initElementNode(tag, attrs, body, flags) {
 
 	node.attrs = attrs || null;
 
-	var parsed = cssTag(tag);
+	if (FEAT_PARSE_TAG) {
+		var parsed = parseTag(tag);
 
-	node.tag = parsed.tag;
+		tag = parsed.tag;
 
-	var hasId = parsed.id != null,
-		hasClass = parsed.class != null,
-		hasAttrs = parsed.attrs != null;
+		var hasId = parsed.id != null,
+			hasClass = parsed.class != null,
+			hasAttrs = parsed.attrs != null;
 
-	if (hasId || hasClass || hasAttrs) {
-		var p = node.attrs || {};
+		if (hasId || hasClass || hasAttrs) {
+			var p = node.attrs || {};
 
-		if (hasId && p.id == null)
-			p.id = parsed.id;
+			if (hasId && p.id == null)
+				p.id = parsed.id;
 
-		if (hasClass) {
-			node._class = parsed.class;		// static class
-			p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
+			if (hasClass) {
+				if (FEAT_STATIC_CLASS) {
+					node._class = parsed.class;		// static class
+					p.class = parsed.class + (p.class != null ? (" " + p.class) : "");
+				}
+				else {
+					if (p.class == null)
+						p.class = parsed.class;
+				}
+			}
+
+			if (hasAttrs) {
+				for (var key in parsed.attrs)
+					if (p[key] == null)
+						p[key] = parsed.attrs[key];
+			}
+
+			node.attrs = p;
 		}
-		if (hasAttrs) {
-			for (var key in parsed.attrs)
-				if (p[key] == null)
-					p[key] = parsed.attrs[key];
-		}
-
-		node.attrs = p;
 	}
 
-	var mergedAttrs = node.attrs;
+	node.tag = tag;
 
-	if (mergedAttrs != null) {
-		if (mergedAttrs._key != null)
-			node.key = mergedAttrs._key;
+	if (node.attrs != null) {
+		var mergedAttrs = node.attrs;
 
-		if (mergedAttrs._ref != null)
-			node.ref = mergedAttrs._ref;
+		if (FEAT_SPL_ATTRS) {
+			if (mergedAttrs._key != null)
+				node.key = mergedAttrs._key;
 
-		if (mergedAttrs._hooks != null)
-			node.hooks = mergedAttrs._hooks;
+			if (mergedAttrs._ref != null)
+				node.ref = mergedAttrs._ref;
 
-		if (mergedAttrs._data != null)
-			node.data = mergedAttrs._data;
+			if (mergedAttrs._hooks != null)
+				node.hooks = mergedAttrs._hooks;
 
-		if (mergedAttrs._flags != null)
-			node.flags = mergedAttrs._flags;
+			if (mergedAttrs._data != null)
+				node.data = mergedAttrs._data;
 
-		if (node.key == null) {
-			if (node.ref != null)
-				node.key = node.ref;
-			else if (mergedAttrs.id != null)
-				node.key = mergedAttrs.id;
-			else if (mergedAttrs.name != null)
-				node.key = mergedAttrs.name + (mergedAttrs.type === "radio" || mergedAttrs.type === "checkbox" ? mergedAttrs.value : "");
+			if (mergedAttrs._flags != null)
+				node.flags = mergedAttrs._flags;
+		}
+
+		if (FEAT_AUTO_KEY) {
+			if (node.key == null) {
+				if (node.ref != null)
+					node.key = node.ref;
+				else if (mergedAttrs.id != null)
+					node.key = mergedAttrs.id;
+				else if (mergedAttrs.name != null)
+					node.key = mergedAttrs.name + (mergedAttrs.type === "radio" || mergedAttrs.type === "checkbox" ? mergedAttrs.value : "");
+			}
 		}
 	}
 
@@ -89,7 +104,7 @@ export function initElementNode(tag, attrs, body, flags) {
 			}, 16);
 		}
 		// todo: attrs.contenteditable === "true"?
-		else if (/^(?:input|textarea|select|datalist|keygen|output)$/.test(node.tag) && node.key == null)
+		else if (/^(?:input|textarea|select|datalist|output)$/.test(node.tag) && node.key == null)
 			devNotify("UNKEYED_INPUT", [node]);
 	}
 

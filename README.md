@@ -1,4 +1,4 @@
-<h2><a href="https://github.com/leeoniya/domvm">domvm (DOM ViewModel)</a><img src="domvm.png" alt="domvm logo" height="64" align="right"></h2>
+<h2><a href="https://github.com/domvm/domvm">domvm (DOM ViewModel)</a><img src="domvm.png" alt="domvm logo" height="64" align="right"></h2>
 
 A thin, fast, dependency-free vdom view layer _(MIT Licensed)_
 
@@ -11,7 +11,7 @@ Like jQuery, it'll happily fit into any existing codebase without introducing ne
 - It's zero-dependency and requires no compilation or tooling; one `<script>` tag is all that's needed.
 - It's small: [~6k gz](/dist/README.md), fast: [just 15%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts-results/table.html) slower vs painfully imperative vanilla DOM code. [2x faster SSR](/demos/bench/ssr) vs React v16.
 - Its entire, practical API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
-- It's well-suited for building [simple widgets](https://leeoniya.github.io/domvm/demos/playground/#calendar) and [complex, fault-tolerant applications](https://leeoniya.github.io/domvm/demos/ThreaditJS).
+- It's well-suited for building [simple widgets](https://domvm.github.io/domvm/demos/playground/#calendar) and [complex, fault-tolerant applications](https://domvm.github.io/domvm/demos/ThreaditJS).
 - Supports down to IE9 with some tiny shims: [Promise](https://github.com/RubenVerborgh/promiscuous), [requestAnimationFrame](https://gist.github.com/paulirish/1579671), [matchesSelector](https://gist.github.com/elijahmanor/6452535).
 
 To use domvm you should be comfortable with JavaScript and the DOM; the following code should be fairly self-explanatory:
@@ -31,7 +31,7 @@ domvm.createView(HelloView, data).mount(document.body);
 ```
 
 ---
-### [Demo Playground](https://leeoniya.github.io/domvm/demos)
+### [Demo Playground](https://domvm.github.io/domvm/demos)
 
 ![demo playground](/playground.png)
 
@@ -60,7 +60,7 @@ domvm.createView(HelloView, data).mount(document.body);
 - [Extending ViewModel & VNode](#extending-viewmodel--vnode)
 - [Isomorphism & SSR](#isomorphism--ssr)
 - [Optimizations](#optimizations)
-- WIP: https://github.com/leeoniya/domvm/issues/156
+- WIP: https://github.com/domvm/domvm/issues/156
 
 ---
 ### What domvm Is Not
@@ -70,7 +70,7 @@ This gives you the freedom to choose libs you already know or prefer for common 
 domvm provides a small, common surface for integration of routers, streams and immutable libs.
 Some minimalist libs that work well:
 
-- Routing: [domvm-router](https://github.com/leeoniya/domvm-router), [riot/route](https://github.com/riot/route), [rlite](https://github.com/chrisdavies/rlite), [navigo](https://github.com/krasimir/navigo)
+- Routing: [domvm-router](https://github.com/domvm/domvm-router), [riot/route](https://github.com/riot/route), [rlite](https://github.com/chrisdavies/rlite), [navigo](https://github.com/krasimir/navigo)
 - Ajax/fetch/XHR: [xr](https://github.com/radiosilence/xr), [alite](https://github.com/chrisdavies/alite)
 - Streams: [flyd](https://github.com/paldepind/flyd), [xstream](https://github.com/staltz/xstream)
 - Immutable stores: [Freezer](https://github.com/arqex/freezer), [MobX](https://github.com/mobxjs/mobx)
@@ -87,12 +87,12 @@ domvm comes in [several builds](/dist) of increasing size and features. The `nan
 ---
 ### Changelog
 
-Changes between versions are documented in [Releases](https://github.com/leeoniya/domvm/releases).
+Changes between versions are documented in [Releases](https://github.com/domvm/domvm/releases).
 
 ---
 ### Tests
 
-- Tests run in a browser: https://leeoniya.github.io/domvm/test/
+- Tests run in a browser: https://domvm.github.io/domvm/test/
 - Coverage reports are generated via `npm run covtest && npm run covreport`
 - Current coverage is [85% - 90%](/test/coverage.txt)
 
@@ -222,7 +222,7 @@ el("ul",
 #### JSX
 
 While not all of domvm's features can be accommodated by JSX syntax, it's possible to cover a fairly large subset via a `defineElementSpread` pragma.
-Please refer to demos and examples in the [JSX wiki](https://github.com/leeoniya/domvm/wiki/JSX).
+Please refer to demos and examples in the [JSX wiki](https://github.com/domvm/domvm/wiki/JSX).
 
 ---
 ### Views
@@ -368,7 +368,7 @@ This can simplify sub-view internals when externally-defined opts are passed in,
 
 #### ES6/ES2015 Classes
 
-Class views are not supported because domvm avoids use of `this` in its public APIs. To keep all functions pure, each is invoked with a `vm` argument. Not only does this compress better, but it also avoids much ambiguity. Everything that can be done with classes can be done better with domvm's plain object views, ES6 modules, `Object.assign()` and/or `Object.create()`. See [#194](https://github.com/leeoniya/domvm/issues/194#issuecomment-352231381) & [#147](https://github.com/leeoniya/domvm/issues/147#issuecomment-307845459) for more details.
+Class views are not supported because domvm avoids use of `this` in its public APIs. To keep all functions pure, each is invoked with a `vm` argument. Not only does this compress better, but it also avoids much ambiguity. Everything that can be done with classes can be done better with domvm's plain object views, ES6 modules, `Object.assign()` and/or `Object.create()`. See [#194](https://github.com/domvm/domvm/issues/194#issuecomment-352231381) & [#147](https://github.com/domvm/domvm/issues/147#issuecomment-307845459) for more details.
 
 TODO: create Wiki page showing ES6 class equivalents:
 
@@ -401,7 +401,7 @@ Sub-views carry a bit of performance overhead and should be used when the follow
 - Isolated redraw (as a perf optimization)
 - Synchronized redraw of disjoint views
 
-As an example, the distinction can be discussed in terms of the [calendar demo](https://leeoniya.github.io/domvm/demos/playground/#calendar). Its implementation is a single monolithic view with internal sub-template generating functions. Some may prefer to split up the months into a sub-view called MonthView, which would bring the total view count to 13. Others may be tempted to split each day into a DayView, but this would be a mistake as it would create 504 + 12 + 1 views, each incuring a slight performance hit for no reason.
+As an example, the distinction can be discussed in terms of the [calendar demo](https://domvm.github.io/domvm/demos/playground/#calendar). Its implementation is a single monolithic view with internal sub-template generating functions. Some may prefer to split up the months into a sub-view called MonthView, which would bring the total view count to 13. Others may be tempted to split each day into a DayView, but this would be a mistake as it would create 504 + 12 + 1 views, each incuring a slight performance hit for no reason.
 
 The general advice is, restrict your views to complex, building-block-level, stateful components and use sub-template generators for readability and DRY purposes; a button should not be a view.
 
@@ -478,7 +478,7 @@ Notes:
 Is calling `vm.redraw()` everywhere a nuisance to you?
 
 There's an easy way to implement autoredraw yourself via a global or vm-level `onevent` which fires after all **fancy** [event listeners](#event-listeners).
-The [onevent demo](https://leeoniya.github.io/domvm/demos/playground/#onevent) demonstrates a basic full app autoredraw:
+The [onevent demo](https://domvm.github.io/domvm/demos/playground/#onevent) demonstrates a basic full app autoredraw:
 
 ```js
 domvm.config({
@@ -540,7 +540,7 @@ domvm.config({
 - `on` accepts the accumulater array (now filled with streams) and returns a dependent stream that will invoke `vm.redraw()` once and end (ignoring initial stream creation). this can also be implemented via a `.drop(1).take(1).map(...)` pattern, if supported by your stream lib (see https://github.com/paldepind/flyd/issues/176#issuecomment-385141469). called once per redraw.
 - `off` accepts the dependent stream created by `on` and ends it. called once per unmount.
 
-An extensive demo can be found in the [streams playground](https://leeoniya.github.io/domvm/demos/playground/#streams).
+An extensive demo can be found in the [streams playground](https://domvm.github.io/domvm/demos/playground/#streams).
 
 Notes:
 
@@ -606,7 +606,7 @@ In contrast to other libs, keys in domvm are more flexible and often already imp
 ---
 ### Hello World++
 
-**Try it:** https://leeoniya.github.io/domvm/demos/playground/#stepper1
+**Try it:** https://domvm.github.io/domvm/demos/playground/#stepper1
 
 ```js
 var el = domvm.defineElement;                       // element VNode creator
@@ -650,7 +650,7 @@ The end result is a lightly-coupled domain model that:
 
 It is *this* fully capable, view-augmented domain model that domvm's author considers a truely reusable "component".
 
-**Try it:** https://leeoniya.github.io/domvm/demos/playground/#stepper2
+**Try it:** https://domvm.github.io/domvm/demos/playground/#stepper2
 
 ```js
 var el = domvm.defineElement;
@@ -740,7 +740,7 @@ domvm.config({
 ---
 ### Lifecycle Hooks
 
-**Demo:** [lifecycle-hooks](https://leeoniya.github.io/domvm/demos/playground/#lifecycle-hooks) different hooks animate in/out with different colors.
+**Demo:** [lifecycle-hooks](https://domvm.github.io/domvm/demos/playground/#lifecycle-hooks) different hooks animate in/out with different colors.
 
 #### Node-level
 
@@ -781,7 +781,7 @@ However, the position of any inserted third-party DOM element amongst its siblin
 #### will/didInsert Hooks
 
 You can use normal DOM methods to insert elements into elements managed by domvm by using [will/didInsert hooks](#lifecycle-hooks).
-See the [Embed Tweets](https://leeoniya.github.io/domvm/demos/playground/#embed-tweets) demo.
+See the [Embed Tweets](https://domvm.github.io/domvm/demos/playground/#embed-tweets) demo.
 
 #### injectElement
 
@@ -839,17 +839,17 @@ Notes:
 
 - `target` must be the DOM element which corresponds to the top-level/root virtual node of the view you're attaching
 - Whitespace in the generated HTML is significant; indented, formatted or pretty-printed markup will *not* attach properly
-- The HTML parsing spec requires that an implicit `<tbody>` DOM node is created if `<tr>`s are nested directly within `<table>`. This causes problems when no corresponding `<tbody>` is defined in the vtree. Therefore, when attaching tables via SSR, it is necessary to explicitly define `<tbody>` vnodes via `el("tbody",...)` and avoid creating `<tr>` children of `<table>` nodes. See [Issue #192](https://github.com/leeoniya/domvm/issues/192#issuecomment-350600764)
+- The HTML parsing spec requires that an implicit `<tbody>` DOM node is created if `<tr>`s are nested directly within `<table>`. This causes problems when no corresponding `<tbody>` is defined in the vtree. Therefore, when attaching tables via SSR, it is necessary to explicitly define `<tbody>` vnodes via `el("tbody",...)` and avoid creating `<tr>` children of `<table>` nodes. See [Issue #192](https://github.com/domvm/domvm/issues/192#issuecomment-350600764)
 
 ---
 ### Optimizations
 
 Before you continue...
 
-- Recognize that domvm with no optimizations is able to rebuild and diff a full vtree and reconcile a DOM of 3,000 nodes in < 1.5ms. See [0% dbmonster bench](https://leeoniya.github.io/domvm/demos/bench/dbmonster/).
+- Recognize that domvm with no optimizations is able to rebuild and diff a full vtree and reconcile a DOM of 3,000 nodes in < 1.5ms. See [0% dbmonster bench](https://domvm.github.io/domvm/demos/bench/dbmonster/).
 - Make sure you've read and understood [Sub-views vs Sub-templates](#sub-views-vs-sub-templates).
 - Ensure you're not manually caching & reusing old vnodes or holding references to them in your app code. They're meant to be discarded by the GC; let them go.
-- Profile your code to be certain that domvm is the bottleneck and not something else in your app. e.g. [Issue #173](https://github.com/leeoniya/domvm/issues/173).
+- Profile your code to be certain that domvm is the bottleneck and not something else in your app. e.g. [Issue #173](https://github.com/domvm/domvm/issues/173).
   - When using the DEVMODE build, are the logged DOM operations close to what you expect?
   - Are you rendering an enormous DOM that's already difficult for browsers to deal with? Run `document.querySelectorAll("*").length` in the devtools console. Live node counts over 10,000 should be evaluated for refactoring.
   - Are you calling `vm.redraw()` from unthrottled event listeners such as `mousemove`, `scroll`, `resize`, `drag`, `touchmove`?
@@ -924,8 +924,8 @@ Notes:
 
 If you intend to do a simple diff of an object by its identity, then it's preferable to return it wrapped in an array to avoid domvm also diffing all of its enumerable keys when `oldObj !== newObj`.
 This is a micro-optimization and will not affect the resulting behavior.
-You can see the simple diffing logic [here](https://github.com/leeoniya/domvm/blob/e7299cc42077ae1750ae8de1f753042570ce63f9/src/view/ViewModel.js#L214-L220).
-Also, see [Issue #148](https://github.com/leeoniya/domvm/issues/148).
+You can see the simple diffing logic [here](https://github.com/domvm/domvm/blob/e7299cc42077ae1750ae8de1f753042570ce63f9/src/view/ViewModel.js#L214-L220).
+Also, see [Issue #148](https://github.com/domvm/domvm/issues/148).
 
 #### VNode Patching
 
@@ -956,7 +956,7 @@ vDiv.patch(makeDiv("bar"));
 
 `vnode.patch(vnode|attrs, doRepaint)` can be called with a `doRepaint = true` arg to force a DOM update.
 This is typically useful in cases when a CSS transition must start from a new state and should not be batched with any followup `patch()` calls.
-You can see this used in the [lifecycle-hooks demo](https://leeoniya.github.io/domvm/demos/playground/#lifecycle-hooks).
+You can see this used in the [lifecycle-hooks demo](https://domvm.github.io/domvm/demos/playground/#lifecycle-hooks).
 
 #### Fixed Structures
 
@@ -1017,7 +1017,7 @@ To these lists, you will need:
 - Create a `domvm.lazyList()` iterator/generator using the above.
 - Set the appropriate flags on the list parent (`domvm.KEYED_LIST`, `domvm.LAZY_LIST`) and each list item (`{_key: ...}`)
 
-While a bit involved, the resulting code is quite terse and not as daunting as it sounds: https://leeoniya.github.io/domvm/demos/playground/#lazy-list
+While a bit involved, the resulting code is quite terse and not as daunting as it sounds: https://domvm.github.io/domvm/demos/playground/#lazy-list
 
 #### Special Attrs
 
