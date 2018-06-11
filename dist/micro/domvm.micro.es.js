@@ -1302,15 +1302,13 @@ function patchChildren(vnode, donor) {
 			if (donor2 != null) {
                 foundIdx = donor2.idx;
 
-				// diff returns same, so cheaply adopt vnode without patching
 				if (!nbody.diff.cmp(i, donor2)) {
+					// almost same as reParent() in ViewModel
 					node2 = donor2;
 					node2.parent = vnode;
 					node2.idx = i;
 					node2._lis = false;
-				//	node2._diff = nbody.diff.val(i);
 				}
-				// diff returns new diffVals, so generate new vnode & patch
 				else
 					{ remake = true; }
 			}
