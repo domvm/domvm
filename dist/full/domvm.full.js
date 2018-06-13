@@ -2201,3 +2201,4 @@
 	Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
+//# sourceMappingURL=domvm.full.js.map

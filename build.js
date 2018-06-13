@@ -172,7 +172,7 @@ function compile(buildName) {
 			banner: banner,
 			name: "domvm",
 			format: "umd",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
-		//	sourcemap: true,
+			sourcemap: buildName == 'full',
 			file: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		}).then(b => {
 			console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
