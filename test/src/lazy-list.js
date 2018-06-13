@@ -1,5 +1,5 @@
 QUnit.module("lazyList", function() {
-	var el = domvm.defineElement, vm;
+	var el = domvm.defineElement, list = domvm.list, vm;
 
 	var store = {
 		selected: "b",
@@ -11,14 +11,12 @@ QUnit.module("lazyList", function() {
 	};
 
 	function View1() {
-		return function() {
-			var items = domvm.lazyList(store.items, {
-				key:  function(item) { return item.id; },
-				diff: function(item) { return [store.selected === item.id, item.text]; },
-			});
+		var diff = function(item) { return [store.selected === item.id, item.text]; };
+		var key = function(item) { return item.id; };
 
-			return el("div", {_flags: domvm.KEYED_LIST | domvm.LAZY_LIST}, items.map(function(item) {
-				return el("p", {class: store.selected === item.id ? 'selected' : null, _key: item.id}, [
+		return function() {
+			return el("div", list(store.items, diff, key).map(function(item) {
+				return el("p", {class: store.selected === item.id ? 'selected' : null, _key: key(item)}, [
 					el("em", item.text),
 				])
 			}));
@@ -26,12 +24,10 @@ QUnit.module("lazyList", function() {
 	}
 
 	function View2() {
-		return function() {
-			var items = domvm.lazyList(store.items, {
-				diff: function(item) { return [store.selected === item.id, item.text]; },
-			});
+		var diff = function(item) { return [store.selected === item.id, item.text]; };
 
-			return el("div", {_flags: domvm.LAZY_LIST}, items.map(function(item) {
+		return function() {
+			return el("div", list(store.items, diff).map(function(item) {
 				return el("p", {class: store.selected === item.id ? 'selected' : null}, [
 					el("em", item.text),
 				])
@@ -133,12 +129,10 @@ QUnit.module("lazyList", function() {
 
 	QUnit.test('Attach', function(assert) {
 		function View3() {
-			return function() {
-				var items = domvm.lazyList(store.items, {
-					diff: function(item) { return [store.selected === item.id, item.text]; },
-				});
+			var diff = function(item) { return [store.selected === item.id, item.text]; };
 
-				return el("div", {_flags: domvm.LAZY_LIST}, items.map(function(item) {
+			return function() {
+				return el("div", list(store.items, diff).map(function(item) {
 					return el("p", item.text)
 				}));
 			};

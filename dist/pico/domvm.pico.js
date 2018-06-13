@@ -278,6 +278,67 @@
 		return node;
 	}
 
+	function List(items, diff, key) {
+		var self = this, tpl;
+
+		var len = items.length;
+
+		self.flags = LAZY_LIST;
+
+		self.items = items;
+
+		self.length = len;
+
+		self.key = function (i) { return null; };
+
+		self.diff = {
+			val: function(i) {
+				return diff.val(items[i]);
+			},
+			cmp: function(i, donor) {
+				return diff.cmp(donor._diff, self.diff.val(i));
+			}
+		};
+
+		// TODO: auto-import diff and keygen into some vtypes?
+		self.tpl = function (i) { return tpl(items[i], i); };
+
+		self.map = function (tpl0) {
+			tpl = tpl0;
+			return self;
+		};
+
+		self.body = function(vnode) {
+			var nbody = Array(len);
+
+			for (var i = 0; i < len; i++) {
+				var vnode2 = self.tpl(i);
+
+			//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
+			//		vnode2.key = getKey(item);
+
+				vnode2._diff = self.diff.val(i);
+
+				nbody[i] = vnode2;
+
+				// run preproc pass (should this be just preProc in above loop?) bench
+				preProc(vnode2, vnode, i);
+			}
+
+			// replace List with generated body
+			vnode.body = nbody;
+		};
+
+		if (key != null) {
+			self.flags |= KEYED_LIST;
+			self.key = function (i) { return key(items[i], i); };
+		}
+	}
+
+	function list(items, diff, key) {
+		return new List(items, diff, key);
+	}
+
 	// (de)optimization flags
 
 	// forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
@@ -300,8 +361,14 @@
 
 		node.tag = tag;
 
-		if (body != null)
-			{ node.body = body; }
+		if (body != null) {
+			node.body = body;
+
+			// replace rather than append flags since lists should not have
+			// FIXED_BODY, and DEEP_REMOVE is appended later in preProc
+			if (body instanceof List)
+				{ node.flags = body.flags; }
+		}
 
 		return node;
 	}
@@ -1484,61 +1551,6 @@
 		return node;
 	}
 
-	function lazyList(items, cfg) {
-		var len = items.length;
-
-		var self = {
-			items: items,
-			length: len,
-			// defaults to returning item identity (or position?)
-			key: function(i) {
-				return cfg.key(items[i], i);
-			},
-			// default returns 0?
-			diff: null,
-			tpl: function(i) {
-				return cfg.tpl(items[i], i);
-			},
-			map: function(tpl) {
-				cfg.tpl = tpl;
-				return self;
-			},
-			body: function(vnode) {
-				var nbody = Array(len);
-
-				for (var i = 0; i < len; i++) {
-					var vnode2 = self.tpl(i);
-
-				//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
-				//		vnode2.key = getKey(item);
-
-					vnode2._diff = self.diff.val(i);
-
-					nbody[i] = vnode2;
-
-					// run preproc pass (should this be just preProc in above loop?) bench
-					preProc(vnode2, vnode, i);
-				}
-
-				// replace List with generated body
-				vnode.body = nbody;
-			}
-		};
-
-		{
-			self.diff = {
-				val: function(i) {
-					return cfg.diff.val(items[i]);
-				},
-		        cmp: function(i, donor) {
-					return cfg.diff.cmp(donor._diff, self.diff.val(i));
-				}
-			};
-		}
-
-		return self;
-	}
-
 	exports.ViewModel = ViewModel;
 	exports.VNode = VNode;
 	exports.createView = createView;
@@ -1549,10 +1561,9 @@
 	exports.defineView = defineView;
 	exports.injectView = injectView;
 	exports.injectElement = injectElement;
-	exports.lazyList = lazyList;
+	exports.list = list;
 	exports.FIXED_BODY = FIXED_BODY;
 	exports.KEYED_LIST = KEYED_LIST;
-	exports.LAZY_LIST = LAZY_LIST;
 	exports.config = config;
 
 	Object.defineProperty(exports, '__esModule', { value: true });
