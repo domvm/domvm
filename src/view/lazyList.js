@@ -1,5 +1,5 @@
 import { noop, isFunc, isArr, cmpArr, cmpObj } from '../utils';
-import { preProc } from './preProc';
+import { preProcBody } from './preProc';
 import { LAZY_LIST, KEYED_LIST } from './initElementNode';
 
 export function List(items, diff, key) {
@@ -33,7 +33,7 @@ export function List(items, diff, key) {
 	};
 
 	self.body = function(vnode) {
-		var nbody = Array(len);
+		var nbody = [];
 
 		for (var i = 0; i < len; i++) {
 			var vnode2 = self.tpl(i);
@@ -43,14 +43,13 @@ export function List(items, diff, key) {
 
 			vnode2._diff = self.diff.val(i);
 
-			nbody[i] = vnode2;
-
-			// run preproc pass (should this be just preProc in above loop?) bench
-			preProc(vnode2, vnode, i);
+			nbody.push(vnode2);
 		}
 
 		// replace List with generated body
 		vnode.body = nbody;
+
+		preProcBody(vnode);
 	};
 
 	if (key != null) {
