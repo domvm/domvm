@@ -809,12 +809,27 @@ function config(newCfg) {
 	}
 }
 
-function unbind(el, type, fn) {
-	el.removeEventListener(type.slice(2), fn, false);
+var registry = {};
+
+function listen(ontype) {
+	if (registry[ontype]) { return; }
+	registry[ontype] = true;
+	bind(doc, ontype, handle, true);
 }
 
-function bind(el, type, fn) {
-	el.addEventListener(type.slice(2), fn, false);
+/*
+function unlisten(ontype) {
+	if (registry[ontype])
+		doc.removeEventListener(ontype.slice(2), handle, USE_CAPTURE);
+}
+*/
+
+function unbind(el, type, fn, capt) {
+	el.removeEventListener(type.slice(2), fn, capt);
+}
+
+function bind(el, type, fn, capt) {
+	el.addEventListener(type.slice(2), fn, capt);
 }
 
 function exec(fn, args, e, node, vm) {
@@ -831,41 +846,29 @@ function exec(fn, args, e, node, vm) {
 	}
 }
 
+function closestEvDef(type, node) {
+	var ontype = "on" + type, evDef, attrs;
+
+	while (node) {
+		if (attrs = node.attrs) {
+			if ((evDef = attrs[ontype]) && isArr(evDef))
+				{ return evDef; }
+		}
+		node = node.parent;
+	}
+
+	return null;
+}
+
 function handle(e) {
 	var node = e.target._node;
 
 	if (node == null)
 		{ return; }
 
-	var vm = getVm(node);
+	var evDef = closestEvDef(e.type, node);
 
-	var evDef = e.currentTarget._node.attrs["on" + e.type], fn, args;
-
-	{
-		if (isArr(evDef)) {
-			fn = evDef[0];
-			args = evDef.slice(1);
-			exec(fn, args, e, node, vm);
-		}
-		else {
-			for (var sel in evDef) {
-				if (e.target.matches(sel)) {
-					var evDef2 = evDef[sel];
-
-					if (isArr(evDef2)) {
-						fn = evDef2[0];
-						args = evDef2.slice(1);
-					}
-					else {
-						fn = evDef2;
-						args = [];
-					}
-
-					exec(fn, args, e, node, vm);
-				}
-			}
-		}
-	}
+	evDef && exec(evDef[0], evDef.slice(1), e, node, getVm(node));
 }
 
 function patchEvent(node, name, nval, oval) {
@@ -887,16 +890,13 @@ function patchEvent(node, name, nval, oval) {
 
 	var el = node.el;
 
-	if (oval == null)
-		{ bind(el, name, isFunc(nval) ? nval : handle); }
-	else {
-		var nIsFn = isFunc(nval);
+	if (isFunc(nval))
+		{ bind(el, name, nval, false); }
+	else if (nval != null)
+		{ listen(name); }
 
-		if (nIsFn)
-			{ bind(el, name, nval); }
-		if (nIsFn || nval == null)
-			{ unbind(el, name, isFunc(oval) ? oval : handle); }
-	}
+	if (isFunc(oval))
+		{ unbind(el, name, oval, false); }
 }
 
 function remAttr(node, name, asProp) {

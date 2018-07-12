@@ -241,7 +241,7 @@ QUnit.module("Events", function() {
 
 		reset();
 	});
-
+/*
 	QUnit.test("Fancy (delegated)", function(assert) {
 		tpl = el("div", {onclick: {"*": click1, "input": click1}}, [el("input")]);
 
@@ -326,4 +326,5 @@ QUnit.module("Events", function() {
 
 		reset();
 	});
+*/
 });
