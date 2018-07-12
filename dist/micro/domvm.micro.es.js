@@ -376,7 +376,8 @@ function List(items, diff, key) {
 		//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
 		//		vnode2.key = getKey(item);
 
-			vnode2._diff = self.diff.val(i);
+			if (vnode2.type != VVIEW)
+				{ vnode2._diff = self.diff.val(i); }
 
 			nbody.push(vnode2);
 		}
@@ -1400,12 +1401,17 @@ function patchChildren(vnode, donor) {
 
 			if (remake) {
 				node2 = nbody.tpl(i);			// what if this is a VVIEW, VMODEL, injected element?
-				preProc(node2, vnode, i);
 
-				node2._diff = nbody.diff.val(i);
+				if (node2.type === VVIEW)
+					{ node2 = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false).node; }
+				else {
+					preProc(node2, vnode, i);
 
-				if (donor2 != null)
-					{ patch(node2, donor2); }
+					node2._diff = nbody.diff.val(i);
+
+					if (donor2 != null)
+						{ patch(node2, donor2); }
+				}
 			}
 
 			nbodyNew[i] = node2;

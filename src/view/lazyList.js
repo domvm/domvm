@@ -1,3 +1,4 @@
+import { VVIEW } from './VTYPES';
 import { noop, isFunc, isArr, cmpArr, cmpObj } from '../utils';
 import { preProcBody } from './preProc';
 import { LAZY_LIST, KEYED_LIST } from './initElementNode';
@@ -41,7 +42,8 @@ export function List(items, diff, key) {
 		//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
 		//		vnode2.key = getKey(item);
 
-			vnode2._diff = self.diff.val(i);
+			if (vnode2.type != VVIEW)
+				vnode2._diff = self.diff.val(i);
 
 			nbody.push(vnode2);
 		}
