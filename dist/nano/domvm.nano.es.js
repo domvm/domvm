@@ -1426,8 +1426,6 @@ function ViewModel(view, data, key, opts) {
 var ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
 
-	_diff:	null,	// diff cache
-
 	init:	null,
 	view:	null,
 	key:	null,
@@ -1584,13 +1582,16 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vm = this;
 	var isMounted = vm.node && vm.node.el && vm.node.el.parentNode;
 
-	var vold = vm.node, oldDiff, newDiff;
+	var doDiff = vm.diff != null,
+		vold = vm.node,
+		oldDiff,
+		newDiff;
 
-	if (vm.diff != null) {
-		oldDiff = vm._diff;
-		vm._diff = newDiff = vm.diff.val(vm, vm.data);
+	if (doDiff) {
+		newDiff = vm.diff.val(vm, vm.data);
 
 		if (vold != null) {
+			oldDiff = vold._diff;
             if (!vm.diff.cmp(vm, oldDiff, newDiff))
                 { return reParent(vm, vold, newParent, newIdx); }
 		}
@@ -1602,6 +1603,9 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	if (vnew === vold)
 		{ return reParent(vm, vold, newParent, newIdx); }
+
+	if (doDiff)
+		{ vnew._diff = newDiff; }
 
 	// todo: test result of willRedraw hooks before clearing refs
 	vm.refs = null;
