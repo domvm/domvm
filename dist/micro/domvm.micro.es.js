@@ -1369,7 +1369,7 @@ function patchChildren(vnode, donor) {
 
 	if (isLazy) {
 		var fnode2 = {key: null};
-		var nbodyNew = Array(nlen);
+		var nbodyNew = vnode.body = Array(nlen);
 	}
 
 	for (var i = 0; i < nlen; i++) {
@@ -1402,8 +1402,12 @@ function patchChildren(vnode, donor) {
 			if (remake) {
 				node2 = nbody.tpl(i);			// what if this is a VVIEW, VMODEL, injected element?
 
-				if (node2.type === VVIEW)
-					{ node2 = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false).node; }
+				if (node2.type === VVIEW) {
+					if (donor2 != null)
+						{ node2 = donor2.vm._update(node2.data, vnode, i).node; }
+					else
+						{ node2 = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false).node; }
+				}
 				else {
 					preProc(node2, vnode, i);
 
@@ -1476,10 +1480,6 @@ function patchChildren(vnode, donor) {
 					{ fromIdx++; } }
 		}
 	}
-
-	// replace List w/ new body
-	if (isLazy)
-		{ vnode.body = nbodyNew; }
 
 	domSync && syncChildren(vnode, donor);
 }
