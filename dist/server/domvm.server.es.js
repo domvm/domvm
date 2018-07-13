@@ -136,45 +136,48 @@ function curry(fn, args, ctx) {
 // https://en.wikipedia.org/wiki/Longest_increasing_subsequence
 // impl borrowed from https://github.com/ivijs/ivi
 function longestIncreasingSubsequence(a) {
-	var p = a.slice();
-	var result = [];
-	result.push(0);
-	var u;
-	var v;
+	var p = a.slice(),
+		result = [0],
+		n = 0, u, v, j;
 
-	for (var i = 0, il = a.length; i < il; ++i) {
-		var j = result[result.length - 1];
-		if (a[j] < a[i]) {
+	for (var i = 0; i < a.length; ++i) {
+		var k = a[i];
+
+		if (k === -1)
+			{ continue; }
+
+		j = result[n];
+
+		if (a[j] < k) {
 			p[i] = j;
-			result.push(i);
+			result[++n] = i;
 			continue;
 		}
 
 		u = 0;
-		v = result.length - 1;
+		v = n;
 
 		while (u < v) {
-			var c = ((u + v) / 2) | 0;
-			if (a[result[c]] < a[i]) {
-				u = c + 1;
-			} else {
-				v = c;
-			}
+			j = ((u + v) / 2) | 0;
+
+			if (a[result[j]] < k)
+				{ u = j + 1; }
+			else
+				{ v = j; }
 		}
 
-		if (a[i] < a[result[u]]) {
-			if (u > 0) {
-				p[i] = result[u - 1];
-			}
+		if (k < a[result[u]]) {
+			if (u > 0)
+				{ p[i] = result[u - 1]; }
+
 			result[u] = i;
 		}
 	}
 
-	u = result.length;
-	v = result[u - 1];
+	v = result[n];
 
-	while (u-- > 0) {
-		result[u] = v;
+	while (n >= 0) {
+		result[n--] = v;
 		v = p[v];
 	}
 
