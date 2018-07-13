@@ -985,11 +985,11 @@ Lazy lists allow for old vtree reuse in the absence of changes at the vnode leve
 This mostly saves on memory allocations. Lazy lists may be created for both, keyed and non-keyed lists.
 To these lists, you will need:
 
-- A list-item generating function, which you should have anyways as the callback passed to a `Array.map` iterator.
+- A list-item generating function, which you should have anyways as the callback passed to a `Array.map` iterator. Only `defineElement()` and `defineView()` nodes are currently supported.
 - For keyed lists, a key-generating function that allows for matching up proper items in the old vtree.
 - A `diff` function which allows a lazy list to determine if an item has changed and needs a new vnode generated or can have its vnode reused.
-- Create a `domvm.lazyList()` iterator/generator using the above.
-- Set the appropriate flags on the list parent (`domvm.KEYED_LIST`, `domvm.LAZY_LIST`) and each list item (`{_key: ...}`)
+- Create a `domvm.list()` iterator/generator using the above.
+- Provide `{_key: key}` for `defineElement()` vnodes or `vw(ItemView, item, key)` for `defineView()` vnodes.
 
 While a bit involved, the resulting code is quite terse and not as daunting as it sounds: https://domvm.github.io/domvm/demos/playground/#lazy-list
 
