@@ -1419,11 +1419,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	var vnew = vm.render.call(vm, vm, vm.data, oldDiff, newDiff);
 
-	if (vnew === vold)
-		{ return reParent(vm, vold, newParent, newIdx); }
-
 	if (doDiff)
 		{ vnew._diff = newDiff; }
+
+	if (vnew === vold)
+		{ return reParent(vm, vold, newParent, newIdx); }
 
 	// todo: test result of willRedraw hooks before clearing refs
 	vm.refs = null;
