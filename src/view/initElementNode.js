@@ -3,6 +3,7 @@ import { VNode } from './VNode';
 import { parseTag } from './addons/parseTag';
 import { isPlainObj } from '../utils';
 import { devNotify } from "./addons/devmode";
+import { List } from "./lazyList";
 
 // (de)optimization flags
 
@@ -94,8 +95,14 @@ export function initElementNode(tag, attrs, body, flags) {
 		}
 	}
 
-	if (body != null)
+	if (body != null) {
 		node.body = body;
+
+		// replace rather than append flags since lists should not have
+		// FIXED_BODY, and DEEP_REMOVE is appended later in preProc
+		if (body instanceof List)
+			node.flags = body.flags;
+	}
 
 	if (_DEVMODE) {
 		if (node.tag === "svg") {

@@ -136,45 +136,48 @@ function curry(fn, args, ctx) {
 // https://en.wikipedia.org/wiki/Longest_increasing_subsequence
 // impl borrowed from https://github.com/ivijs/ivi
 function longestIncreasingSubsequence(a) {
-	var p = a.slice();
-	var result = [];
-	result.push(0);
-	var u;
-	var v;
+	var p = a.slice(),
+		result = [0],
+		n = 0, u, v, j;
 
-	for (var i = 0, il = a.length; i < il; ++i) {
-		var j = result[result.length - 1];
-		if (a[j] < a[i]) {
+	for (var i = 0; i < a.length; ++i) {
+		var k = a[i];
+
+		if (k === -1)
+			{ continue; }
+
+		j = result[n];
+
+		if (a[j] < k) {
 			p[i] = j;
-			result.push(i);
+			result[++n] = i;
 			continue;
 		}
 
 		u = 0;
-		v = result.length - 1;
+		v = n;
 
 		while (u < v) {
-			var c = ((u + v) / 2) | 0;
-			if (a[result[c]] < a[i]) {
-				u = c + 1;
-			} else {
-				v = c;
-			}
+			j = ((u + v) / 2) | 0;
+
+			if (a[result[j]] < k)
+				{ u = j + 1; }
+			else
+				{ v = j; }
 		}
 
-		if (a[i] < a[result[u]]) {
-			if (u > 0) {
-				p[i] = result[u - 1];
-			}
+		if (k < a[result[u]]) {
+			if (u > 0)
+				{ p[i] = result[u - 1]; }
+
 			result[u] = i;
 		}
 	}
 
-	u = result.length;
-	v = result[u - 1];
+	v = result[n];
 
-	while (u-- > 0) {
-		result[u] = v;
+	while (n >= 0) {
+		result[n--] = v;
 		v = p[v];
 	}
 
@@ -349,6 +352,84 @@ function parseTag(raw) {
 	return cached;
 }
 
+function List(items, diff, key) {
+	var self = this, tpl;
+
+	var len = items.length;
+
+	self.flags = LAZY_LIST;
+
+	self.items = items;
+
+	self.length = len;
+
+	self.key = function (i) { return null; };
+
+	self.diff = {
+		val: function(i) {
+			return diff.val(items[i]);
+		},
+		cmp: function(i, donor) {
+			return diff.cmp(donor._diff, self.diff.val(i));
+		}
+	};
+
+	// TODO: auto-import diff and keygen into some vtypes?
+	self.tpl = function (i) { return tpl(items[i], i); };
+
+	self.map = function (tpl0) {
+		tpl = tpl0;
+		return self;
+	};
+
+	self.body = function(vnode) {
+		var nbody = [];
+
+		for (var i = 0; i < len; i++) {
+			var vnode2 = self.tpl(i);
+
+		//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
+		//		vnode2.key = getKey(item);
+
+			if (vnode2.type != VVIEW)
+				{ vnode2._diff = self.diff.val(i); }
+
+			nbody.push(vnode2);
+		}
+
+		// replace List with generated body
+		vnode.body = nbody;
+
+		preProcBody(vnode);
+	};
+
+	if (key != null) {
+		self.flags |= KEYED_LIST;
+		self.key = function (i) { return key(items[i], i); };
+	}
+
+	{
+		if (isFunc(diff)) {
+			self.diff = {
+				val: function(i) {
+					return diff(items[i]);
+				},
+				cmp: function(i, donor) {
+					var o = donor._diff,
+						n = self.diff.val(i);
+
+					var cmpFn = isArr(o) ? cmpArr : cmpObj;
+					return !(o === n || cmpFn(o, n));
+				}
+			};
+		}
+	}
+}
+
+function list(items, diff, key) {
+	return new List(items, diff, key);
+}
+
 // (de)optimization flags
 
 // forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
@@ -435,8 +516,14 @@ function initElementNode(tag, attrs, body, flags) {
 		}
 	}
 
-	if (body != null)
-		{ node.body = body; }
+	if (body != null) {
+		node.body = body;
+
+		// replace rather than append flags since lists should not have
+		// FIXED_BODY, and DEEP_REMOVE is appended later in preProc
+		if (body instanceof List)
+			{ node.flags = body.flags; }
+	}
 
 	return node;
 }
@@ -638,12 +725,27 @@ function config(newCfg) {
 	}
 }
 
-function unbind(el, type, fn) {
-	el.removeEventListener(type.slice(2), fn, false);
+var registry = {};
+
+function listen(ontype) {
+	if (registry[ontype]) { return; }
+	registry[ontype] = true;
+	bind(doc, ontype, handle, true);
 }
 
-function bind(el, type, fn) {
-	el.addEventListener(type.slice(2), fn, false);
+/*
+function unlisten(ontype) {
+	if (registry[ontype])
+		doc.removeEventListener(ontype.slice(2), handle, USE_CAPTURE);
+}
+*/
+
+function unbind(el, type, fn, capt) {
+	el.removeEventListener(type.slice(2), fn, capt);
+}
+
+function bind(el, type, fn, capt) {
+	el.addEventListener(type.slice(2), fn, capt);
 }
 
 function exec(fn, args, e, node, vm) {
@@ -660,41 +762,29 @@ function exec(fn, args, e, node, vm) {
 	}
 }
 
+function closestEvDef(type, node) {
+	var ontype = "on" + type, evDef, attrs;
+
+	while (node) {
+		if (attrs = node.attrs) {
+			if ((evDef = attrs[ontype]) && isArr(evDef))
+				{ return evDef; }
+		}
+		node = node.parent;
+	}
+
+	return null;
+}
+
 function handle(e) {
 	var node = e.target._node;
 
 	if (node == null)
 		{ return; }
 
-	var vm = getVm(node);
+	var evDef = closestEvDef(e.type, node);
 
-	var evDef = e.currentTarget._node.attrs["on" + e.type], fn, args;
-
-	{
-		if (isArr(evDef)) {
-			fn = evDef[0];
-			args = evDef.slice(1);
-			exec(fn, args, e, node, vm);
-		}
-		else {
-			for (var sel in evDef) {
-				if (e.target.matches(sel)) {
-					var evDef2 = evDef[sel];
-
-					if (isArr(evDef2)) {
-						fn = evDef2[0];
-						args = evDef2.slice(1);
-					}
-					else {
-						fn = evDef2;
-						args = [];
-					}
-
-					exec(fn, args, e, node, vm);
-				}
-			}
-		}
-	}
+	evDef && exec(evDef[0], evDef.slice(1), e, node, getVm(node));
 }
 
 function patchEvent(node, name, nval, oval) {
@@ -703,16 +793,13 @@ function patchEvent(node, name, nval, oval) {
 
 	var el = node.el;
 
-	if (oval == null)
-		{ bind(el, name, isFunc(nval) ? nval : handle); }
-	else {
-		var nIsFn = isFunc(nval);
+	if (isFunc(nval))
+		{ bind(el, name, nval, false); }
+	else if (nval != null)
+		{ listen(name); }
 
-		if (nIsFn)
-			{ bind(el, name, nval); }
-		if (nIsFn || nval == null)
-			{ unbind(el, name, isFunc(oval) ? oval : handle); }
-	}
+	if (isFunc(oval))
+		{ unbind(el, name, oval, false); }
 }
 
 function remAttr(node, name, asProp) {
@@ -873,8 +960,6 @@ function _removeChild(parEl, el, immediate) {
 			for (var i = 0; i < node.body.length; i++)
 				{ _removeChild(el, node.body[i].el); }
 		}
-		else
-			{ deepUnref(node); }
 	}
 
 	delete el._node;
@@ -906,30 +991,11 @@ function removeChild(parEl, el) {
 		{ _removeChild(parEl, el); }
 }
 
-function deepUnref(node) {
-	var obody = node.body;
-
-	for (var i = 0; i < obody.length; i++) {
-		var o2 = obody[i];
-
-		if (o2.el != null)
-			{ delete o2.el._node; }
-
-		if (o2.vm != null)
-			{ o2.vm.node = null; }
-
-		if (isArr(o2.body))
-			{ deepUnref(o2); }
-	}
-}
-
 function clearChildren(parent) {
 	var parEl = parent.el;
 
-	if ((parent.flags & DEEP_REMOVE) === 0) {
-		isArr(parent.body) && deepUnref(parent);
-		parEl.textContent = null;
-	}
+	if ((parent.flags & DEEP_REMOVE) === 0)
+		{ parEl.textContent = null; }
 	else {
 		var el = parEl.firstChild;
 
@@ -1313,7 +1379,7 @@ function patchChildren(vnode, donor) {
 
 	if (isLazy) {
 		var fnode2 = {key: null};
-		var nbodyNew = Array(nlen);
+		var nbodyNew = vnode.body = Array(nlen);
 	}
 
 	for (var i = 0; i < nlen; i++) {
@@ -1345,12 +1411,21 @@ function patchChildren(vnode, donor) {
 
 			if (remake) {
 				node2 = nbody.tpl(i);			// what if this is a VVIEW, VMODEL, injected element?
-				preProc(node2, vnode, i);
 
-				node2._diff = nbody.diff.val(i);
+				if (node2.type === VVIEW) {
+					if (donor2 != null)
+						{ node2 = donor2.vm._update(node2.data, vnode, i).node; }
+					else
+						{ node2 = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false).node; }
+				}
+				else {
+					preProc(node2, vnode, i);
 
-				if (donor2 != null)
-					{ patch(node2, donor2); }
+					node2._diff = nbody.diff.val(i);
+
+					if (donor2 != null)
+						{ patch(node2, donor2); }
+				}
 			}
 
 			nbodyNew[i] = node2;
@@ -1416,10 +1491,6 @@ function patchChildren(vnode, donor) {
 		}
 	}
 
-	// replace List w/ new body
-	if (isLazy)
-		{ vnode.body = nbodyNew; }
-
 	domSync && syncChildren(vnode, donor);
 }
 
@@ -1450,8 +1521,6 @@ function ViewModel(view, data, key, opts) {
 
 var ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
-
-	_diff:	null,	// diff cache
 
 	init:	null,
 	view:	null,
@@ -1619,13 +1688,16 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var vm = this;
 	var isMounted = vm.node && vm.node.el && vm.node.el.parentNode;
 
-	var vold = vm.node, oldDiff, newDiff;
+	var doDiff = vm.diff != null,
+		vold = vm.node,
+		oldDiff,
+		newDiff;
 
-	if (vm.diff != null) {
-		oldDiff = vm._diff;
-		vm._diff = newDiff = vm.diff.val(vm, vm.data);
+	if (doDiff) {
+		newDiff = vm.diff.val(vm, vm.data);
 
 		if (vold != null) {
+			oldDiff = vold._diff;
             if (!vm.diff.cmp(vm, oldDiff, newDiff))
                 { return reParent(vm, vold, newParent, newIdx); }
 		}
@@ -1634,6 +1706,9 @@ function redrawSync(newParent, newIdx, withDOM) {
 	isMounted && fireHook(vm.hooks, "willRedraw", vm, vm.data);
 
 	var vnew = vm.render.call(vm, vm, vm.data, oldDiff, newDiff);
+
+	if (doDiff)
+		{ vnew._diff = newDiff; }
 
 	if (vnew === vold)
 		{ return reParent(vm, vold, newParent, newIdx); }
@@ -1797,67 +1872,6 @@ function injectElement(el) {
 	node.type = ELEMENT;
 	node.el = node.key = el;
 	return node;
-}
-
-function lazyList(items, cfg) {
-	var len = items.length;
-
-	var self = {
-		items: items,
-		length: len,
-		// defaults to returning item identity (or position?)
-		key: function(i) {
-			return cfg.key(items[i], i);
-		},
-		// default returns 0?
-		diff: null,
-		tpl: function(i) {
-			return cfg.tpl(items[i], i);
-		},
-		map: function(tpl) {
-			cfg.tpl = tpl;
-			return self;
-		},
-		body: function(vnode) {
-			var nbody = Array(len);
-
-			for (var i = 0; i < len; i++) {
-				var vnode2 = self.tpl(i);
-
-			//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
-			//		vnode2.key = getKey(item);
-
-				vnode2._diff = self.diff.val(i);
-
-				nbody[i] = vnode2;
-
-				// run preproc pass (should this be just preProc in above loop?) bench
-				preProc(vnode2, vnode, i);
-			}
-
-			// replace List with generated body
-			vnode.body = nbody;
-		}
-	};
-
-	{
-		if (isFunc(cfg.diff)) {
-			self.diff = {
-				val: function(i) {
-					return cfg.diff(items[i]);
-				},
-				cmp: function(i, donor) {
-					var o = donor._diff,
-						n = self.diff.val(i);
-
-					var cmpFn = isArr(o) ? cmpArr : cmpObj;
-					return !(o === n || cmpFn(o, n));
-				}
-			};
-		}
-	}
-
-	return self;
 }
 
 function protoPatch(n, doRepaint) {
@@ -2128,4 +2142,4 @@ function html(node, dynProps) {
 ViewModelProto.html = vmProtoHtml;
 VNodeProto.html = vProtoHtml;
 
-export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, lazyList, FIXED_BODY, KEYED_LIST, LAZY_LIST, config };
+export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, list, FIXED_BODY, KEYED_LIST, config };

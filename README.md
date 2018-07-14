@@ -165,8 +165,6 @@ el("input",  {type: "checkbox", ".checked": true})          // set property inst
 
 el("button", {onclick: myFn}, "Hello")                      // event handlers
 el("button", {onclick: [myFn, arg1, arg2]}, "Hello")        // parameterized
-el("ul",     {onclick: {".item": myFn}}, ...)               // delegated
-el("ul",     {onclick: {".item": [myFn, arg1, arg2]}}, ...) // delegated & parameterized
 
 el("p",      {style: "font-size: 10pt;"}, "Hello")          // style can be a string
 el("p",      {style: {fontSize: "10pt"}}, "Hello")          // or an object (camelCase only)
@@ -418,36 +416,16 @@ function filter(e) {
 el("input", {oninput: filter});
 ```
 
-**Fancy** listeners are executed by a proxy handler and offer additonal features:
+**Parameterized** listeners are defined using arrays and executed by a proxy handler. They:
 
-- Can handle event delegation
 - Can pass through additional args and receive `(...args, e, node, vm, data)`
 - Will invoke global and vm-level `onevent` callbacks
 - Will call `e.preventDefault()` & `e.stopPropagation()` if `false` is returned
-
-Listeners defined using an object are used for event delegation:
-
-```js
-function rowClick(e, node, vm, data) {}
-function cellClick(e, node, vm, data) {}
-
-el("table", {onclick: {"tr": rowClick, "td": cellClick}}, ...);
-```
-
-Arrays can be used to pass additional args to parameterized listeners:
 
 ```js
 function cellClick(foo, bar, e, node, vm, data) {}
 
 el("td", {onclick: [cellClick, "foo", "bar"]}, "moo");
-```
-
-Delegated and parameterized features can be combined:
-
-```js
-function cellClick(foo, bar, e, node, vm, data) {}
-
-el("table", {onclick: {"td": [cellClick, "foo", "bar"]}}, ...);
 ```
 
 View-level and global `onevent` callbacks:
@@ -468,16 +446,12 @@ vm.config({
 });
 ```
 
-Notes:
-
-- Fancy args always reflect the origin of the event in the vtree
-
 ---
 ### Autoredraw
 
 Is calling `vm.redraw()` everywhere a nuisance to you?
 
-There's an easy way to implement autoredraw yourself via a global or vm-level `onevent` which fires after all **fancy** [event listeners](#event-listeners).
+There's an easy way to implement autoredraw yourself via a global or vm-level `onevent` which fires after all **parameterized** [event listeners](#event-listeners).
 The [onevent demo](https://domvm.github.io/domvm/demos/playground/#onevent) demonstrates a basic full app autoredraw:
 
 ```js
@@ -709,7 +683,7 @@ var it = setInterval(function() {
 Emit is similar to DOM events, but works explicitly within the vdom tree and is user-triggerd.
 Calling `vm.emit(evName, ...args)` on a view will trigger an event that bubbles up through the view hierarchy.
 When an emit listener is matched, it is invoked and the bubbling stops.
-Like fancy events, the `vm` and `data` args reflect the originating view of the event.
+Like parameterized events, the `vm` and `data` args reflect the originating view of the event.
 
 ```js
 // listen
@@ -1011,11 +985,11 @@ Lazy lists allow for old vtree reuse in the absence of changes at the vnode leve
 This mostly saves on memory allocations. Lazy lists may be created for both, keyed and non-keyed lists.
 To these lists, you will need:
 
-- A list-item generating function, which you should have anyways as the callback passed to a `Array.map` iterator.
+- A list-item generating function, which you should have anyways as the callback passed to a `Array.map` iterator. Only `defineElement()` and `defineView()` nodes are currently supported.
 - For keyed lists, a key-generating function that allows for matching up proper items in the old vtree.
 - A `diff` function which allows a lazy list to determine if an item has changed and needs a new vnode generated or can have its vnode reused.
-- Create a `domvm.lazyList()` iterator/generator using the above.
-- Set the appropriate flags on the list parent (`domvm.KEYED_LIST`, `domvm.LAZY_LIST`) and each list item (`{_key: ...}`)
+- Create a `domvm.list()` iterator/generator using the above.
+- Provide `{_key: key}` for `defineElement()` vnodes or `vw(ItemView, item, key)` for `defineView()` vnodes.
 
 While a bit involved, the resulting code is quite terse and not as daunting as it sounds: https://domvm.github.io/domvm/demos/playground/#lazy-list
 

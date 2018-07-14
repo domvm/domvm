@@ -35,19 +35,6 @@ Element.prototype.matches = function(sel) {
 	return sel == "*" || sel == this.nodeName.toLowerCase();
 };
 
-Element.prototype.dispatchEvent = function(event) {
-	let t = event.target = this,
-		c = event.cancelable,
-		l, i;
-	do {
-		l = t.__handlers && t.__handlers[(event.type).toLowerCase()];
-		if (l && (event.currentTarget = t)) for (i=l.length; i--; ) {
-			if ((l[i].call(t, event)===false || event._end) && c) break;
-		}
-	} while (event.bubbles && !(c && event._stop) && (t=t.parentNode));
-	return !event.defaultPrevented;
-};
-
 function findById(par, id) {
 	for (var i = 0; i < par.childNodes.length; i++) {
 		var n = par.childNodes[i];

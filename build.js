@@ -40,14 +40,14 @@ const AVAIL_FEATS = [
 function getBuilds(name) {
 	const pico = {
 		build: "pico",
-		contents: "dom recycling<br>lifecycle hooks<br>event delegation<br>parameterized handlers<br>sub-views<br>element injection<br>innerHTML<br>vnode refs<br>css objects<br>svg<br>global onevent<br>diff<br>lazyList<br>",
+		contents: "fluent api<br>dom recycling<br>lifecycle hooks<br>parameterized handlers<br>sub-views<br>element injection<br>innerHTML<br>vnode refs<br>css objects<br>svg<br>diff<br>lazy list<br>",
 		descr: "view core<br><br>**This build is unstable by design; features that get decoupled<br>can move to nano+ builds at any commit!**",
 		feats: ["FLUENT_API"],
 	};
 
 	const nano = {
 		build: "nano",
-		contents: "+ `selectorTag`<br> + `patch`<br>",
+		contents: "- fluent api<br>+ special attrs<br>+ prop attrs<br>+ tag parsing<br>+ vnode patching<br>+ class merging<br>+ auto keying<br>+ global onevent<br>+ object/array diff<br>+ foreign elem skipping<br>+ raf-debounced redraw",
 		descr: "`\"input[type=checkbox].some-class\"`<br>`vnode.patch({class: ..., style...})`",
 		feats: [
 			"PARSE_TAG",
@@ -55,7 +55,6 @@ function getBuilds(name) {
 			"AUTO_KEY",
 			"SPL_ATTRS",
 			"PROP_ATTRS",
-			"EVENT_DELEG",
 			"ONEVENT",
 			"DIFF_CMP",
 			"FOREIGN_ELEMS",
@@ -172,7 +171,7 @@ function compile(buildName) {
 			banner: banner,
 			name: "domvm",
 			format: "umd",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
-		//	sourcemap: true,
+			sourcemap: buildName == 'full',
 			file: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		}).then(b => {
 			console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");

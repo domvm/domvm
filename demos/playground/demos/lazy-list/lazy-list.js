@@ -1,14 +1,13 @@
-var el = (tag, arg1, arg2, flags) => domvm.defineElement(tag, arg1, arg2, domvm.FIXED_BODY);
+const el = (tag, arg1, arg2, flags) => domvm.defineElement(tag, arg1, arg2, domvm.FIXED_BODY);
+const list = domvm.list;
 
 function View(vm, store) {
-	return () => {
-		var items = domvm.lazyList(store.items, {
-			key:  item => item.id,
-			diff: item => [store.selected === item.id, item.text],
-		});
+	const key = item => item.id;
+	const diff = item => [store.selected === item.id, item.text];
 
-		return el("div", {_flags: domvm.KEYED_LIST | domvm.LAZY_LIST}, items.map(item =>
-			el("p", {class: store.selected === item.id ? 'selected' : null, _key: item.id}, [		// items.key(item)
+	return () => {
+		return el("div", list(store.items, diff, key).map(item =>
+			el("p", {class: store.selected === item.id ? 'selected' : null, _key: key(item)}, [		// items.key(item)
 				el("em", item.text),
 			])
 		));
@@ -55,14 +54,11 @@ setTimeout(function() {
 }, 5000);
 
 function View2(vm, store) {
-	return () => {
-		var items = domvm.lazyList(store.items, {
-			key:  item => item.id,
-			diff: item => [store.selected === item.id, item.text],
-		});
+	const diff = item => [store.selected === item.id, item.text];
 
-		return el("div", {_flags: domvm.LAZY_LIST}, items.map(item =>
-			el("p", {_data: item.id, class: store.selected === item.id ? 'selected' : null}, [		// items.key(item)
+	return () => {
+		return el("div", list(store.items, diff).map(item =>
+			el("p", {_data: item.id, class: store.selected === item.id ? 'selected' : null}, [
 				el("em", item.text),
 			])
 		));
