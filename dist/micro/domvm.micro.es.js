@@ -932,8 +932,6 @@ function _removeChild(parEl, el, immediate) {
 			for (var i = 0; i < node.body.length; i++)
 				{ _removeChild(el, node.body[i].el); }
 		}
-		else
-			{ deepUnref(node); }
 	}
 
 	delete el._node;
@@ -965,30 +963,11 @@ function removeChild(parEl, el) {
 		{ _removeChild(parEl, el); }
 }
 
-function deepUnref(node) {
-	var obody = node.body;
-
-	for (var i = 0; i < obody.length; i++) {
-		var o2 = obody[i];
-
-		if (o2.el != null)
-			{ delete o2.el._node; }
-
-		if (o2.vm != null)
-			{ o2.vm.node = null; }
-
-		if (isArr(o2.body))
-			{ deepUnref(o2); }
-	}
-}
-
 function clearChildren(parent) {
 	var parEl = parent.el;
 
-	if ((parent.flags & DEEP_REMOVE) === 0) {
-		isArr(parent.body) && deepUnref(parent);
-		parEl.textContent = null;
-	}
+	if ((parent.flags & DEEP_REMOVE) === 0)
+		{ parEl.textContent = null; }
 	else {
 		var el = parEl.firstChild;
 
