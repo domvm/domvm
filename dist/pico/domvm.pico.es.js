@@ -165,16 +165,8 @@ function binaryFindLarger(item, list) {
 //	return -1;
 }
 
-function isPropAttr(name) {
-	return false;
-}
-
 function isEvAttr(name) {
 	return name[0] === "o" && name[1] === "n";
-}
-
-function isSplAttr(name) {
-	return false;
 }
 
 function isStyleAttr(name) {
@@ -551,10 +543,6 @@ function patchEvent(node, name, nval, oval) {
 }
 
 function remAttr(node, name, asProp) {
-	if (isPropAttr(name)) {
-		name = name.substr(1);
-		asProp = true;
-	}
 
 	if (asProp)
 		{ node.el[name] = ""; }
@@ -597,7 +585,6 @@ function patchAttrs(vnode, donor, initial) {
 			if (nval === oval) ;
 			else if (isStyleAttr(key))
 				{ patchStyle(vnode, donor); }
-			else if (isSplAttr(key)) ;
 			else if (isEvAttr(key))
 				{ patchEvent(vnode, key, nval, oval); }
 			else
@@ -609,8 +596,7 @@ function patchAttrs(vnode, donor, initial) {
 			if (nattrs[key] == null) {
 				if (isEvAttr(key))
 					{ patchEvent(vnode, key, nattrs[key], oattrs[key]); }
-				else if (!isSplAttr(key))
-					{ remAttr(vnode, key, isDynAttr(vnode.tag, key)); }
+				else { remAttr(vnode, key, isDynAttr(vnode.tag, key)); }
 			}
 		}
 	}
