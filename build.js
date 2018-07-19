@@ -5,7 +5,7 @@ const fs = require('fs');
 const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
 const zlib = require('zlib');
-const closure = require('google-closure-compiler-js').compile;
+const ClosureCompiler = require('closure-compiler-js-prebuilt');
 
 const AVAIL_FEATS = [
 	"FLUENT_API",
@@ -194,17 +194,7 @@ function squish(buildName, start) {
 	//	warningLevel: 'VERBOSE',
 	};
 
-	var compiled = closure(flags).compiledCode.replace('this,function(){','this,function(){"use strict";');
-
-	// workaround for https://github.com/google/closure-compiler-js/issues/79
-	var chars = {
-		'\\x3d': '=',
-		'\\x3c': '<',
-		'\\x3e': '>',
-		'\\x26': '&',
-	};
-
-	compiled = compiled.replace(/\\x3d|\\x3c|\\x3e|\\x26/g, m => chars[m]);
+	const compiled = new ClosureCompiler(flags).run().compiledCode;
 
 	fs.writeFileSync(dst, compiled, 'utf8');
 
