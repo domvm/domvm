@@ -10,7 +10,7 @@
   "license": "MIT",
   "homepage": "https://github.com/domvm/domvm",
   "author": "Leon Sorokin <leeoniya@gmail.com>",
-  "version": "3.4.2",
+  "version": "3.4.3",
   "main": "./dist/full/domvm.full.min.js",
   "module": "./dist/full/domvm.full.es.js",
   "jsnext:main": "./dist/full/domvm.full.es.js",
