@@ -20,6 +20,12 @@
     "watch": "node watch.js",
     "build": "node build.js"
   },
+  "files": [
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "dist"
+  ],
   "nyc": {
     "require": [
       "./test/init-spec.js"
