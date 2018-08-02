@@ -1,10 +1,10 @@
-export const ENV_DOM = typeof window !== "undefined";
+const ENV_DOM = typeof window !== "undefined";
 
-export const win = ENV_DOM ? window : {};
 export const doc = ENV_DOM ? document : {};
-export const nav = ENV_DOM ? navigator : {};
 
-const rAF = win.requestAnimationFrame;
+if (FEAT_RAF_REDRAW) {
+	var rAF = (ENV_DOM ? window : {}).requestAnimationFrame;
+}
 
 export const emptyObj = {};
 

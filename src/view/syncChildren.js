@@ -1,4 +1,4 @@
-import { win, emptyObj, longestIncreasingSubsequence, binaryFindLarger } from '../utils';
+import { emptyObj, longestIncreasingSubsequence, binaryFindLarger } from '../utils';
 import { hydrate } from './hydrate';
 import { prevSib, nextSib, insertBefore, insertAfter, removeChild } from './dom';
 import { devNotify } from "./addons/devmode";
