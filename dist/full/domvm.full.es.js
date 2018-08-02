@@ -21,10 +21,11 @@ var VMODEL		= 5;
 
 var ENV_DOM = typeof window !== "undefined";
 
-var win = ENV_DOM ? window : {};
 var doc = ENV_DOM ? document : {};
 
-var rAF = win.requestAnimationFrame;
+{
+	var rAF = (ENV_DOM ? window : {}).requestAnimationFrame;
+}
 
 var emptyObj = {};
 
