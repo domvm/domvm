@@ -1173,7 +1173,7 @@
 			}
 			else if (type2 === VMODEL) {
 				var vm = vnode2.vm;
-				vm._redraw(vnode, i);					// , false
+				vm._update(vnode2.data, vnode, i);		// , false
 				type2 = vm.node.type;
 				insertBefore(vnode.el, vm.node.el);		// , hydrate(vm.node)
 			}
@@ -2271,8 +2271,9 @@
 	}
 
 	// placeholder for injected ViewModels
-	function VModel(vm) {
+	function VModel(vm, data) {
 		this.vm = vm;
+		this.data = data;
 	}
 
 	VModel.prototype = {
@@ -2280,15 +2281,11 @@
 
 		type: VMODEL,
 		vm: null,
+		data: null,
 	};
 
-	function injectView(vm) {
-	//	if (vm.node == null)
-	//		vm._redraw(null, null, false);
-
-	//	return vm.node;
-
-		return new VModel(vm);
+	function injectView(vm, data) {
+		return new VModel(vm, data);
 	}
 
 	function injectElement(el) {
@@ -2437,7 +2434,7 @@
 				if (v.type === VVIEW)
 					{ v = createView(v.view, v.data, v.key, v.opts)._redraw(vnode, i, false).node; }
 				else if (v.type === VMODEL)
-					{ v = v.node || v._redraw(vnode, i, false).node; }
+					{ v = v.vm.node || v.vm._update(v.data, vnode, i, false).node; }
 
 				{
 					if (vnode.tag === "table" && v.tag === "tr") {

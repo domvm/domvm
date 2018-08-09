@@ -471,4 +471,40 @@ QUnit.module("Imperative VMs", function() {
 		var expcHtml = '<h2><strong>1</strong><strong>2</strong></h2>';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, {   createElement: 1, textContent: 1, insertBefore: 1, nodeValue: 1 });
 	});
+
+	QUnit.test("Update imperative views with new data", function(assert) {
+		var vm2 = domvm.createView(View2, {foo: 0});
+
+		var newData = false;
+
+		function View1() {
+			return function() {
+				return el("div", [
+					iv(vm2, newData ? {foo: 1} : null)
+				]);
+			};
+		}
+
+		function View2() {
+			return function(vm, data) {
+				return el("strong", data.foo);
+			};
+		}
+
+		instr.start();
+		var vm = domvm.createView(View1).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><strong>0</strong></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
+
+		newData = true;
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><strong>1</strong></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { nodeValue: 1 });
+	});
 });

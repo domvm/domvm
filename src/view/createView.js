@@ -1,4 +1,4 @@
-import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from './VTYPES';
+import { VVIEW } from './VTYPES';
 import { ViewModel } from './ViewModel';
 
 export function createView(view, data, key, opts) {

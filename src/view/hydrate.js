@@ -21,7 +21,7 @@ export function hydrateBody(vnode) {
 		}
 		else if (type2 === VMODEL) {
 			var vm = vnode2.vm;
-			vm._redraw(vnode, i);					// , false
+			vm._update(vnode2.data, vnode, i);		// , false
 			type2 = vm.node.type;
 			insertBefore(vnode.el, vm.node.el);		// , hydrate(vm.node)
 		}
