@@ -31,10 +31,6 @@ Object.defineProperty(Element.prototype, "textContent", {
 	},
 });
 
-Element.prototype.matches = function(sel) {
-	return sel == "*" || sel == this.nodeName.toLowerCase();
-};
-
 function findById(par, id) {
 	for (var i = 0; i < par.childNodes.length; i++) {
 		var n = par.childNodes[i];
