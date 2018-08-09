@@ -382,4 +382,93 @@ QUnit.module("Imperative VMs", function() {
 		var expcHtml = '<div><div><div>1: Hello World!</div></div><div></div></div>';
 		evalOut(assert, appView.node.el, appView.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, removeChild: 1, textContent: 2 });
 	});
+
+	// GC...
+	// TODO: deeper tests than just direct children injections
+	QUnit.test("Unref .node of unmounted sub-vms", function(assert) {
+		var rendSub = true;
+
+		var vm2 = domvm.createView(View2);
+
+		function View1() {
+			return function() {
+				return el("div", [
+					rendSub && iv(vm2)
+				]);
+			};
+		}
+
+		function View2() {
+			var iter = 0;
+
+			return function() {
+				return el("strong", iter++);
+			};
+		}
+
+		var rendSub2 = true;
+		var vm2_2 = domvm.createView(View2);
+		var vm2_3 = domvm.createView(View2);
+
+		function View3() {
+			return function() {
+				return el("h2", [
+					rendSub2 && iv(vm2_2),
+					iv(vm2_3),
+				]);
+			};
+		}
+
+		instr.start();
+		var vm = domvm.createView(View1).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><strong>0</strong></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, insertBefore: 2, textContent: 1 });
+
+		rendSub = false;
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { textContent: 1 });
+		assert.equal(vm2.node, null, ".node set to null on fast clear");
+
+		rendSub = true;
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<div><strong>1</strong></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, insertBefore: 1, textContent: 1 });
+
+		instr.start();
+		var vm = domvm.createView(View3).mount(testyDiv);
+		var callCounts = instr.end();
+
+		var expcHtml = '<h2><strong>0</strong><strong>0</strong></h2>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 3, insertBefore: 3, textContent: 2 });
+
+		rendSub2 = false;
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<h2><strong>1</strong></h2>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 1, nodeValue: 1 });
+		assert.equal(vm2_2.node, null, ".node set to null on single removeChild");
+
+		rendSub2 = true;
+
+		instr.start();
+		vm.redraw();
+		var callCounts = instr.end();
+
+		var expcHtml = '<h2><strong>1</strong><strong>2</strong></h2>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, {   createElement: 1, textContent: 1, insertBefore: 1, nodeValue: 1 });
+	});
 });

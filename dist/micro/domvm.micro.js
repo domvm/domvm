@@ -931,14 +931,30 @@
 		return wuRes || wrRes;
 	}
 
+	function deepUnref(node, self) {
+		if (self) {
+			var vm = node.vm;
+
+			if (vm != null)
+				{ vm.node = null; }
+		}
+
+		var obody = node.body;
+
+		if (isArr(obody)) {
+			for (var i = 0; i < obody.length; i++)
+				{ deepUnref(obody[i], true); }
+		}
+	}
+
 	function _removeChild(parEl, el, immediate) {
 		var node = el._node, vm = node.vm;
 
-		if (isArr(node.body)) {
-			if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE) {
-				for (var i = 0; i < node.body.length; i++)
-					{ _removeChild(el, node.body[i].el); }
-			}
+		deepUnref(node, true);
+
+		if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE) {
+			for (var i = 0; i < node.body.length; i++)
+				{ _removeChild(el, node.body[i].el); }
 		}
 
 		delete el._node;
@@ -973,8 +989,10 @@
 	function clearChildren(parent) {
 		var parEl = parent.el;
 
-		if ((parent.flags & DEEP_REMOVE) === 0)
-			{ parEl.textContent = null; }
+		if ((parent.flags & DEEP_REMOVE) === 0) {
+			deepUnref(parent, false);
+			parEl.textContent = null;
+		}
 		else {
 			var el = parEl.firstChild;
 
