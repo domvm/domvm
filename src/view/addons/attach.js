@@ -46,7 +46,7 @@ function attach(vnode, withEl) {
 			if (v.type === VVIEW)
 				v = createView(v.view, v.data, v.key, v.opts)._redraw(vnode, i, false).node;
 			else if (v.type === VMODEL)
-				v = v.node || v._redraw(vnode, i, false).node;
+				v = v.vm.node || v.vm._update(v.data, vnode, i, false).node;
 
 			if (_DEVMODE) {
 				if (vnode.tag === "table" && v.tag === "tr") {

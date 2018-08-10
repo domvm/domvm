@@ -1,3 +1,5 @@
+// TODO: domvm.list w/vw() nodes
+
 QUnit.module("lazyList", function() {
 	var el = domvm.defineElement, list = domvm.list, vm;
 

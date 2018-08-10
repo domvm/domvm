@@ -12,7 +12,7 @@ Like jQuery, it'll happily fit into any existing codebase without introducing ne
 - It's small: [~6k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/results-ui/table.html) slower vs painfully imperative vanilla DOM code. [2x faster SSR](/demos/bench/ssr) vs React v16.
 - Its entire, practical API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
 - It's well-suited for building [simple widgets](https://domvm.github.io/domvm/demos/playground/#calendar) and [complex, fault-tolerant applications](https://domvm.github.io/domvm/demos/ThreaditJS).
-- Supports down to IE9 with some tiny shims: [Promise](https://github.com/RubenVerborgh/promiscuous), [requestAnimationFrame](https://gist.github.com/paulirish/1579671), [matchesSelector](https://gist.github.com/elijahmanor/6452535).
+- Supports down to IE9 with some tiny shims: [Promise](https://github.com/RubenVerborgh/promiscuous), [requestAnimationFrame](https://gist.github.com/paulirish/1579671).
 
 To use domvm you should be comfortable with JavaScript and the DOM; the following code should be fairly self-explanatory:
 
@@ -188,7 +188,7 @@ el("h1", [                                                  // attrs object is o
 el("#ui", [
     vw(NavBarView, navbar),                                 // sub-view w/data
     vw(PanelView, panel, "panelA"),                         // sub-view w/data & key
-    iv(someOtherView),                                      // injected external ViewModel
+    iv(someOtherVM, newData),                               // injected external ViewModel
 ])
 
 // special _* props
