@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "buble": "*",
-    "closure-compiler-js-prebuilt": "git://github.com/domvm/closure-compiler-js-prebuilt.git#20180716.0.0",
+    "closure-compiler-js-prebuilt": "git://github.com/domvm/closure-compiler-js-prebuilt.git#20180805.0.0",
     "mocha": "*",
     "node-watch": "*",
     "nyc": "*",
