@@ -479,10 +479,10 @@ QUnit.module("Imperative VMs", function() {
 		function View4() {
 			return function() {
 				return el("div", [
-					el("div", [
-						rendSub4 && iv(vm5),
-						iv(vm7),
-					])
+					rendSub4 && el("div", [
+						iv(vm5),
+					]),
+					iv(vm7),
 				]);
 			};
 		}
@@ -505,7 +505,7 @@ QUnit.module("Imperative VMs", function() {
 		var vm = domvm.createView(View4).mount(testyDiv);
 		var callCounts = instr.end();
 
-		var expcHtml = '<div><div><div><div>hi</div></div><div>hi</div></div></div>';
+		var expcHtml = '<div><div><div><div>hi</div></div></div><div>hi</div></div>';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 5, insertBefore: 5, textContent: 2 });
 
 		rendSub4 = false;
@@ -514,7 +514,7 @@ QUnit.module("Imperative VMs", function() {
 		vm.redraw();
 		var callCounts = instr.end();
 
-		var expcHtml = '<div><div><div>hi</div></div></div>';
+		var expcHtml = '<div><div>hi</div></div>';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 1 });
 		assert.equal(vm5.node, null, ".node set to null on single removeChild");
 		assert.equal(vm6.node, null, ".node set to null on single removeChild");
