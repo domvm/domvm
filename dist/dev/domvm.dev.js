@@ -1067,7 +1067,7 @@
 			var vm = node.vm;
 
 			if (vm != null)
-				{ vm.node = null; }
+				{ vm.node = vm.refs = null; }
 		}
 
 		var obody = node.body;

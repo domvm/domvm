@@ -479,8 +479,10 @@ QUnit.module("Imperative VMs", function() {
 		function View4() {
 			return function() {
 				return el("div", [
-					rendSub4 && iv(vm5),
-					iv(vm7),
+					el("div", [
+						rendSub4 && iv(vm5),
+						iv(vm7),
+					])
 				]);
 			};
 		}
@@ -495,7 +497,7 @@ QUnit.module("Imperative VMs", function() {
 
 		function View6() {
 			return function() {
-				return el("div", "hi");
+				return el("div", {_ref: "hi"}, "hi");
 			};
 		}
 
@@ -503,8 +505,8 @@ QUnit.module("Imperative VMs", function() {
 		var vm = domvm.createView(View4).mount(testyDiv);
 		var callCounts = instr.end();
 
-		var expcHtml = '<div><div><div>hi</div></div><div>hi</div></div>';
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 4, insertBefore: 4, textContent: 2 });
+		var expcHtml = '<div><div><div><div>hi</div></div><div>hi</div></div></div>';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 5, insertBefore: 5, textContent: 2 });
 
 		rendSub4 = false;
 
@@ -512,10 +514,11 @@ QUnit.module("Imperative VMs", function() {
 		vm.redraw();
 		var callCounts = instr.end();
 
-		var expcHtml = '<div><div>hi</div></div>';
+		var expcHtml = '<div><div><div>hi</div></div></div>';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeChild: 1 });
 		assert.equal(vm5.node, null, ".node set to null on single removeChild");
 		assert.equal(vm6.node, null, ".node set to null on single removeChild");
+		assert.equal(vm6.refs, null, ".refs set to null on single removeChild");
 	});
 
 	QUnit.test("Update imperative views with new data", function(assert) {
