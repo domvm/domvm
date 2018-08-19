@@ -1730,7 +1730,7 @@
 
 		isMounted && fireHook(vm.hooks, "willRedraw", vm, vm.data);
 
-		var vnew = vm.render.call(vm, vm, vm.data, oldDiff, newDiff);
+		var vnew = vm.render.call(vm, vm, vm.data, vm.key, newParent, newIdx);
 
 		if (doDiff)
 			{ vnew._diff = newDiff; }
