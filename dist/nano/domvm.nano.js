@@ -354,8 +354,8 @@
 		self.key = function (i) { return null; };
 
 		self.diff = {
-			val: function(i) {
-				return diff.val(items[i]);
+			val: function(i, newParent) {
+				return diff.val(items[i], newParent);
 			},
 			cmp: function(i, donor) {
 				return diff.cmp(donor._diff, self.diff.val(i));
@@ -380,7 +380,7 @@
 			//		vnode2.key = getKey(item);
 
 				if (vnode2.type != VVIEW)
-					{ vnode2._diff = self.diff.val(i); }
+					{ vnode2._diff = self.diff.val(i, vnode); }
 
 				nbody.push(vnode2);
 			}
@@ -1338,7 +1338,7 @@
 					else {
 						preProc(node2, vnode, i);
 
-						node2._diff = nbody.diff.val(i);
+						node2._diff = nbody.diff.val(i, vnode);
 
 						if (donor2 != null)
 							{ patch(node2, donor2); }
@@ -1601,7 +1601,7 @@
 			newDiff;
 
 		if (doDiff) {
-			newDiff = vm.diff.val(vm, vm.data);
+			newDiff = vm.diff.val(vm, vm.data, vm.key, newParent, newIdx);
 
 			if (vold != null) {
 				oldDiff = vold._diff;

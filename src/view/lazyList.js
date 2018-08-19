@@ -17,8 +17,8 @@ export function List(items, diff, key) {
 	self.key = i => null;
 
 	self.diff = {
-		val: function(i) {
-			return diff.val(items[i]);
+		val: function(i, newParent) {
+			return diff.val(items[i], newParent);
 		},
 		cmp: function(i, donor) {
 			return diff.cmp(donor._diff, self.diff.val(i));
@@ -43,7 +43,7 @@ export function List(items, diff, key) {
 		//		vnode2.key = getKey(item);
 
 			if (vnode2.type != VVIEW)
-				vnode2._diff = self.diff.val(i);
+				vnode2._diff = self.diff.val(i, vnode);
 
 			nbody.push(vnode2);
 		}

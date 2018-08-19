@@ -245,7 +245,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		newDiff;
 
 	if (doDiff) {
-		newDiff = vm.diff.val(vm, vm.data);
+		newDiff = vm.diff.val(vm, vm.data, vm.key, newParent, newIdx);
 
 		if (vold != null) {
 			oldDiff = vold._diff;
