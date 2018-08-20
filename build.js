@@ -147,6 +147,8 @@ function compile(buildName) {
 
 		var ver = branch.indexOf("-dev") != -1 ? branch : "v" + pkg.version;
 
+		var preserve = "https://github.com/domvm/domvm (" + ver + ", " + buildName + " build)";
+
 		var banner = [
 			"/**",
 			"* Copyright (c) " + new Date().getFullYear() + ", Leon Sorokin",
@@ -154,7 +156,7 @@ function compile(buildName) {
 			"*",
 			"* domvm.js (DOM ViewModel)",
 			"* A thin, fast, dependency-free vdom view layer",
-			"* @preserve https://github.com/domvm/domvm (" + ver + ", " + buildName + " build)",
+			"* @preserve " + preserve,
 			"*/",
 			"",
 		].join("\n");
@@ -175,14 +177,14 @@ function compile(buildName) {
 			file: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		}).then(b => {
 			console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
-			squish(buildName, start);
+			squish(buildName, preserve, start);
 		});
 	}).catch(function(err) {
 		console.log(err);
 	})
 }
 
-function squish(buildName, start) {
+function squish(buildName, preserve, start) {
 	var src = "dist/" + buildName + "/domvm." + buildName + ".js";
 	var dst = "dist/" + buildName + "/domvm." + buildName + ".min.js";
 
@@ -249,7 +251,7 @@ function squish(buildName, start) {
 
 	const compiled = UglifyJS.minify(fs.readFileSync(src, 'utf8'), opts).code;
 
-	fs.writeFileSync(dst, compiled, 'utf8');
+	fs.writeFileSync(dst, "// " + preserve + "\n" + compiled, 'utf8');
 
 	buildDistTable();
 
