@@ -5,7 +5,7 @@ const fs = require('fs');
 const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
 const zlib = require('zlib');
-const ClosureCompiler = require('closure-compiler-js-prebuilt');
+const UglifyJS = require('uglify-js');
 
 const AVAIL_FEATS = [
 	"FLUENT_API",
@@ -186,21 +186,74 @@ function squish(buildName, start) {
 	var src = "dist/" + buildName + "/domvm." + buildName + ".js";
 	var dst = "dist/" + buildName + "/domvm." + buildName + ".min.js";
 
-	const flags = {
-		jsCode: [{src: fs.readFileSync(src, 'utf8')}],
-		languageIn: 'ECMASCRIPT5_STRICT',
-		languageOut: 'ECMASCRIPT5',
-		compilationLevel: 'SIMPLE',
-	//	warningLevel: 'VERBOSE',
+	// from docs (https://github.com/mishoo/UglifyJS2)
+	var compressDefaults = {
+		arguments: true,
+		booleans: true,
+		collapse_vars: true,
+		comparisons: true,
+		conditionals: true,
+		dead_code: true,
+		directives: true,
+		drop_console: false,
+		drop_debugger: true,
+		evaluate: true,
+		expression: false,
+		global_defs: {},
+		hoist_funs: false,
+		hoist_props: true,
+		hoist_vars: false,
+		if_return: true,
+		inline: 3,
+		join_vars: true,
+		keep_fargs: true,
+		keep_fnames: false,
+		keep_infinity: false,
+		loops: true,
+		negate_iife: true,
+		passes: 1,
+		properties: true,
+		pure_funcs: null,
+		pure_getters: "strict",
+		reduce_funcs: true,
+		reduce_vars: true,
+		sequences: true,
+		side_effects: true,
+		switches: true,
+		toplevel: false,
+		top_retain: null,
+		typeofs: true,
+		unsafe: false,
+		unsafe_comps: false,
+		unsafe_Function: false,
+		unsafe_math: false,
+		unsafe_proto: false,
+		unsafe_regexp: false,
+		unsafe_undefined: false,
+		unused: true,
+		warnings: false,
 	};
 
-	const compiled = new ClosureCompiler(flags).run().compiledCode;
+	const opts = {
+		compress: Object.assign({}, compressDefaults, {
+			booleans: false,
+			inline: 0,
+			keep_fargs: false,
+			hoist_props: false,
+			loops: false,
+			reduce_funcs: false,
+			unsafe: true,
+			unsafe_math: true,
+		}),
+	};
+
+	const compiled = UglifyJS.minify(fs.readFileSync(src, 'utf8'), opts).code;
 
 	fs.writeFileSync(dst, compiled, 'utf8');
 
 	buildDistTable();
 
-	console.log((+new Date - start) + "ms: Closure done (build: " + buildName + ")");
+	console.log((+new Date - start) + "ms: UglifyJS done (build: " + buildName + ")");
 }
 
 function padRight(str, padStr, len) {
