@@ -187,7 +187,7 @@ function squish(buildName, start) {
 	var dst = "dist/" + buildName + "/domvm." + buildName + ".min.js";
 
 	// from docs (https://github.com/mishoo/UglifyJS2)
-	var compressDefaults = {
+	const compressDefaults = {
 		arguments: true,
 		booleans: true,
 		collapse_vars: true,
