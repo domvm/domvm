@@ -502,21 +502,22 @@
 		if (out1 === false || out2 === false || out3 === false) {
 			e.preventDefault();
 			e.stopPropagation();
+			return false;
 		}
 	}
 
-	function closestEvDef(type, node) {
-		var ontype = "on" + type, evDef, attrs;
+	function ancestEvDefs(type, node) {
+		var ontype = "on" + type, evDef, attrs, evDefs = [];
 
 		while (node) {
 			if (attrs = node.attrs) {
 				if ((evDef = attrs[ontype]) && isArr(evDef))
-					{ return evDef; }
+					{ evDefs.unshift(evDef); }
 			}
 			node = node.parent;
 		}
 
-		return null;
+		return evDefs;
 	}
 
 	function handle(e) {
@@ -525,9 +526,16 @@
 		if (node == null)
 			{ return; }
 
-		var evDef = closestEvDef(e.type, node);
+		var evDefs = ancestEvDefs(e.type, node);
 
-		evDef && exec(evDef[0], evDef.slice(1), e, node, getVm(node));
+		var vm = getVm(node);
+
+		for (var i = 0; i < evDefs.length; i++) {
+			var res = exec(evDefs[i][0], evDefs[i].slice(1), e, node, vm);
+
+			if (res === false)
+				{ break; }
+		}
 	}
 
 	function patchEvent(node, name, nval, oval) {
