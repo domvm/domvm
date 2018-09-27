@@ -320,16 +320,6 @@
 		return node;
 	}
 
-	var streamVal = retArg0;
-	var streamOn = noop;
-	var streamOff = noop;
-
-	function streamCfg(cfg) {
-		streamVal = cfg.val;
-		streamOn = cfg.on;
-		streamOff = cfg.off;
-	}
-
 	var tagCache = {};
 
 	var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
@@ -357,84 +347,6 @@
 		}
 
 		return cached;
-	}
-
-	function List(items, diff, key) {
-		var self = this, tpl;
-
-		var len = items.length;
-
-		self.flags = LAZY_LIST;
-
-		self.items = items;
-
-		self.length = len;
-
-		self.key = function (i) { return null; };
-
-		self.diff = {
-			val: function(i, newParent) {
-				return diff.val(items[i], newParent);
-			},
-			cmp: function(i, donor) {
-				return diff.cmp(donor._diff, self.diff.val(i));
-			}
-		};
-
-		// TODO: auto-import diff and keygen into some vtypes?
-		self.tpl = function (i) { return tpl(items[i], i); };
-
-		self.map = function (tpl0) {
-			tpl = tpl0;
-			return self;
-		};
-
-		self.body = function(vnode) {
-			var nbody = [];
-
-			for (var i = 0; i < len; i++) {
-				var vnode2 = self.tpl(i);
-
-			//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
-			//		vnode2.key = getKey(item);
-
-				if (vnode2.type != VVIEW)
-					{ vnode2._diff = self.diff.val(i, vnode); }
-
-				nbody.push(vnode2);
-			}
-
-			// replace List with generated body
-			vnode.body = nbody;
-
-			preProcBody(vnode);
-		};
-
-		if (key != null) {
-			self.flags |= KEYED_LIST;
-			self.key = function (i) { return key(items[i], i); };
-		}
-
-		{
-			if (isFunc(diff)) {
-				self.diff = {
-					val: function(i) {
-						return diff(items[i]);
-					},
-					cmp: function(i, donor) {
-						var o = donor._diff,
-							n = self.diff.val(i);
-
-						var cmpFn = isArr(o) ? cmpArr : cmpObj;
-						return !(o === n || cmpFn(o, n));
-					}
-				};
-			}
-		}
-	}
-
-	function list(items, diff, key) {
-		return new List(items, diff, key);
 	}
 
 	// (de)optimization flags
@@ -535,6 +447,94 @@
 		return node;
 	}
 
+	function List(items, diff, key) {
+		var self = this, tpl;
+
+		var len = items.length;
+
+		self.flags = LAZY_LIST;
+
+		self.items = items;
+
+		self.length = len;
+
+		self.key = function (i) { return null; };
+
+		self.diff = {
+			val: function(i, newParent) {
+				return diff.val(items[i], newParent);
+			},
+			cmp: function(i, donor) {
+				return diff.cmp(donor._diff, self.diff.val(i));
+			}
+		};
+
+		// TODO: auto-import diff and keygen into some vtypes?
+		self.tpl = function (i) { return tpl(items[i], i); };
+
+		self.map = function (tpl0) {
+			tpl = tpl0;
+			return self;
+		};
+
+		self.body = function(vnode) {
+			var nbody = [];
+
+			for (var i = 0; i < len; i++) {
+				var vnode2 = self.tpl(i);
+
+			//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
+			//		vnode2.key = getKey(item);
+
+				if (vnode2.type != VVIEW)
+					{ vnode2._diff = self.diff.val(i, vnode); }
+
+				nbody.push(vnode2);
+			}
+
+			// replace List with generated body
+			vnode.body = nbody;
+
+			preProcBody(vnode);
+		};
+
+		if (key != null) {
+			self.flags |= KEYED_LIST;
+			self.key = function (i) { return key(items[i], i); };
+		}
+
+		{
+			if (isFunc(diff)) {
+				self.diff = {
+					val: function(i) {
+						return diff(items[i]);
+					},
+					cmp: function(i, donor) {
+						var o = donor._diff,
+							n = self.diff.val(i);
+
+						var cmpFn = isArr(o) ? cmpArr : cmpObj;
+						return !(o === n || cmpFn(o, n));
+					}
+				};
+			}
+		}
+	}
+
+	function list(items, diff, key) {
+		return new List(items, diff, key);
+	}
+
+	var streamVal = retArg0;
+	var streamOn = noop;
+	var streamOff = noop;
+
+	function streamCfg(cfg) {
+		streamVal = cfg.val;
+		streamOn = cfg.on;
+		streamOff = cfg.off;
+	}
+
 	function setRef(vm, name, node) {
 		var path = ("refs." + name).split(".");
 		deepSet(vm, path, node);
@@ -569,7 +569,10 @@
 		else if (vnew.body === "")
 			{ vnew.body = null; }
 		else {
-			vnew.body = streamVal(vnew.body, getVm(vnew)._stream);
+			{ vnew.body = streamVal(vnew.body, getVm(vnew)._stream); }
+
+			if (vnew.body != null && !(vnew.body instanceof List))
+				{ vnew.body = "" + vnew.body; }
 		}
 	}
 

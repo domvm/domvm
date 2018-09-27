@@ -270,6 +270,40 @@
 		return node;
 	}
 
+	// (de)optimization flags
+
+	// forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
+	var DEEP_REMOVE = 1 << 0;
+	// prevents inserting/removing/reordering of children
+	var FIXED_BODY = 1 << 1;
+	// enables fast keyed lookup of children via binary search, expects homogeneous keyed body
+	var KEYED_LIST = 1 << 2;
+	// indicates an vnode match/diff/recycler function for body
+	var LAZY_LIST = 1 << 3;
+
+	function initElementNode(tag, attrs, body, flags) {
+		var node = new VNode;
+
+		node.type = ELEMENT;
+
+		node.flags = flags || 0;
+
+		node.attrs = attrs || null;
+
+		node.tag = tag;
+
+		if (body != null) {
+			node.body = body;
+
+			// replace rather than append flags since lists should not have
+			// FIXED_BODY, and DEEP_REMOVE is appended later in preProc
+			if (body instanceof List)
+				{ node.flags = body.flags; }
+		}
+
+		return node;
+	}
+
 	function List(items, diff, key) {
 		var self = this, tpl;
 
@@ -331,40 +365,6 @@
 		return new List(items, diff, key);
 	}
 
-	// (de)optimization flags
-
-	// forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
-	var DEEP_REMOVE = 1 << 0;
-	// prevents inserting/removing/reordering of children
-	var FIXED_BODY = 1 << 1;
-	// enables fast keyed lookup of children via binary search, expects homogeneous keyed body
-	var KEYED_LIST = 1 << 2;
-	// indicates an vnode match/diff/recycler function for body
-	var LAZY_LIST = 1 << 3;
-
-	function initElementNode(tag, attrs, body, flags) {
-		var node = new VNode;
-
-		node.type = ELEMENT;
-
-		node.flags = flags || 0;
-
-		node.attrs = attrs || null;
-
-		node.tag = tag;
-
-		if (body != null) {
-			node.body = body;
-
-			// replace rather than append flags since lists should not have
-			// FIXED_BODY, and DEEP_REMOVE is appended later in preProc
-			if (body instanceof List)
-				{ node.flags = body.flags; }
-		}
-
-		return node;
-	}
-
 	function setRef(vm, name, node) {
 		var path = ("refs." + name).split(".");
 		deepSet(vm, path, node);
@@ -398,6 +398,11 @@
 			{ preProcBody(vnew); }
 		else if (vnew.body === "")
 			{ vnew.body = null; }
+		else {
+
+			if (vnew.body != null && !(vnew.body instanceof List))
+				{ vnew.body = "" + vnew.body; }
+		}
 	}
 
 	function preProcBody(vnew) {
