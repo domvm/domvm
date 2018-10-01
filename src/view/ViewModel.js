@@ -245,7 +245,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 		newDiff;
 
 	if (doDiff) {
-		newDiff = vm.diff.val(vm, vm.data);
+		newDiff = vm.diff.val(vm, vm.data, vm.key, newParent, newIdx);
 
 		if (vold != null) {
 			oldDiff = vold._diff;
@@ -256,7 +256,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	isMounted && fireHook(vm.hooks, "willRedraw", vm, vm.data);
 
-	var vnew = vm.render.call(vm, vm, vm.data, oldDiff, newDiff);
+	var vnew = vm.render.call(vm, vm, vm.data, vm.key, newParent, newIdx);
 
 	if (doDiff)
 		vnew._diff = newDiff;

@@ -347,84 +347,6 @@
 		return cached;
 	}
 
-	function List(items, diff, key) {
-		var self = this, tpl;
-
-		var len = items.length;
-
-		self.flags = LAZY_LIST;
-
-		self.items = items;
-
-		self.length = len;
-
-		self.key = function (i) { return null; };
-
-		self.diff = {
-			val: function(i) {
-				return diff.val(items[i]);
-			},
-			cmp: function(i, donor) {
-				return diff.cmp(donor._diff, self.diff.val(i));
-			}
-		};
-
-		// TODO: auto-import diff and keygen into some vtypes?
-		self.tpl = function (i) { return tpl(items[i], i); };
-
-		self.map = function (tpl0) {
-			tpl = tpl0;
-			return self;
-		};
-
-		self.body = function(vnode) {
-			var nbody = [];
-
-			for (var i = 0; i < len; i++) {
-				var vnode2 = self.tpl(i);
-
-			//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
-			//		vnode2.key = getKey(item);
-
-				if (vnode2.type != VVIEW)
-					{ vnode2._diff = self.diff.val(i); }
-
-				nbody.push(vnode2);
-			}
-
-			// replace List with generated body
-			vnode.body = nbody;
-
-			preProcBody(vnode);
-		};
-
-		if (key != null) {
-			self.flags |= KEYED_LIST;
-			self.key = function (i) { return key(items[i], i); };
-		}
-
-		{
-			if (isFunc(diff)) {
-				self.diff = {
-					val: function(i) {
-						return diff(items[i]);
-					},
-					cmp: function(i, donor) {
-						var o = donor._diff,
-							n = self.diff.val(i);
-
-						var cmpFn = isArr(o) ? cmpArr : cmpObj;
-						return !(o === n || cmpFn(o, n));
-					}
-				};
-			}
-		}
-	}
-
-	function list(items, diff, key) {
-		return new List(items, diff, key);
-	}
-
 	// (de)optimization flags
 
 	// forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
@@ -523,6 +445,84 @@
 		return node;
 	}
 
+	function List(items, diff, key) {
+		var self = this, tpl;
+
+		var len = items.length;
+
+		self.flags = LAZY_LIST;
+
+		self.items = items;
+
+		self.length = len;
+
+		self.key = function (i) { return null; };
+
+		self.diff = {
+			val: function(i, newParent) {
+				return diff.val(items[i], newParent);
+			},
+			cmp: function(i, donor) {
+				return diff.cmp(donor._diff, self.diff.val(i));
+			}
+		};
+
+		// TODO: auto-import diff and keygen into some vtypes?
+		self.tpl = function (i) { return tpl(items[i], i); };
+
+		self.map = function (tpl0) {
+			tpl = tpl0;
+			return self;
+		};
+
+		self.body = function(vnode) {
+			var nbody = [];
+
+			for (var i = 0; i < len; i++) {
+				var vnode2 = self.tpl(i);
+
+			//	if ((vnode.flags & KEYED_LIST) === KEYED_LIST && self. != null)
+			//		vnode2.key = getKey(item);
+
+				if (vnode2.type != VVIEW)
+					{ vnode2._diff = self.diff.val(i, vnode); }
+
+				nbody.push(vnode2);
+			}
+
+			// replace List with generated body
+			vnode.body = nbody;
+
+			preProcBody(vnode);
+		};
+
+		if (key != null) {
+			self.flags |= KEYED_LIST;
+			self.key = function (i) { return key(items[i], i); };
+		}
+
+		{
+			if (isFunc(diff)) {
+				self.diff = {
+					val: function(i) {
+						return diff(items[i]);
+					},
+					cmp: function(i, donor) {
+						var o = donor._diff,
+							n = self.diff.val(i);
+
+						var cmpFn = isArr(o) ? cmpArr : cmpObj;
+						return !(o === n || cmpFn(o, n));
+					}
+				};
+			}
+		}
+	}
+
+	function list(items, diff, key) {
+		return new List(items, diff, key);
+	}
+
 	function setRef(vm, name, node) {
 		var path = ("refs." + name).split(".");
 		deepSet(vm, path, node);
@@ -556,6 +556,11 @@
 			{ preProcBody(vnew); }
 		else if (vnew.body === "")
 			{ vnew.body = null; }
+		else {
+
+			if (vnew.body != null && !(vnew.body instanceof List))
+				{ vnew.body = "" + vnew.body; }
+		}
 	}
 
 	function preProcBody(vnew) {
@@ -742,21 +747,22 @@
 		if (out1 === false || out2 === false || out3 === false) {
 			e.preventDefault();
 			e.stopPropagation();
+			return false;
 		}
 	}
 
-	function closestEvDef(type, node) {
-		var ontype = "on" + type, evDef, attrs;
+	function ancestEvDefs(type, node) {
+		var ontype = "on" + type, evDef, attrs, evDefs = [];
 
 		while (node) {
 			if (attrs = node.attrs) {
 				if ((evDef = attrs[ontype]) && isArr(evDef))
-					{ return evDef; }
+					{ evDefs.unshift(evDef); }
 			}
 			node = node.parent;
 		}
 
-		return null;
+		return evDefs;
 	}
 
 	function handle(e) {
@@ -765,9 +771,16 @@
 		if (node == null)
 			{ return; }
 
-		var evDef = closestEvDef(e.type, node);
+		var evDefs = ancestEvDefs(e.type, node);
 
-		evDef && exec(evDef[0], evDef.slice(1), e, node, getVm(node));
+		var vm = getVm(node);
+
+		for (var i = 0; i < evDefs.length; i++) {
+			var res = exec(evDefs[i][0], evDefs[i].slice(1), e, node, vm);
+
+			if (res === false)
+				{ break; }
+		}
 	}
 
 	function patchEvent(node, name, nval, oval) {
@@ -1418,7 +1431,7 @@
 					else {
 						preProc(node2, vnode, i);
 
-						node2._diff = nbody.diff.val(i);
+						node2._diff = nbody.diff.val(i, vnode);
 
 						if (donor2 != null)
 							{ patch(node2, donor2); }
@@ -1686,7 +1699,7 @@
 			newDiff;
 
 		if (doDiff) {
-			newDiff = vm.diff.val(vm, vm.data);
+			newDiff = vm.diff.val(vm, vm.data, vm.key, newParent, newIdx);
 
 			if (vold != null) {
 				oldDiff = vold._diff;
@@ -1697,7 +1710,7 @@
 
 		isMounted && fireHook(vm.hooks, "willRedraw", vm, vm.data);
 
-		var vnew = vm.render.call(vm, vm, vm.data, oldDiff, newDiff);
+		var vnew = vm.render.call(vm, vm, vm.data, vm.key, newParent, newIdx);
 
 		if (doDiff)
 			{ vnew._diff = newDiff; }

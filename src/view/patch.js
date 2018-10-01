@@ -202,7 +202,7 @@ function patchChildren(vnode, donor) {
 				else {
 					preProc(node2, vnode, i);
 
-					node2._diff = nbody.diff.val(i);
+					node2._diff = nbody.diff.val(i, vnode);
 
 					if (donor2 != null)
 						patch(node2, donor2);

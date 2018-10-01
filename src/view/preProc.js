@@ -1,6 +1,7 @@
 import { TEXT, VVIEW, VMODEL } from './VTYPES';
 import { defineText } from './defineText';
 import { isVal, isArr, isFunc, insertArr, deepSet } from '../utils';
+import { List } from './lazyList';
 import { getVm } from './utils';
 import { streamVal } from './addons/stream';
 import { DEEP_REMOVE } from './initElementNode';
@@ -39,8 +40,12 @@ export function preProc(vnew, parent, idx, ownVm) {
 		preProcBody(vnew);
 	else if (vnew.body === "")
 		vnew.body = null;
-	else if (FEAT_STREAM) {
-		vnew.body = streamVal(vnew.body, getVm(vnew)._stream);
+	else {
+		if (FEAT_STREAM)
+			vnew.body = streamVal(vnew.body, getVm(vnew)._stream);
+
+		if (vnew.body != null && !(vnew.body instanceof List))
+			vnew.body = "" + vnew.body;
 	}
 }
 
