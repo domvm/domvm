@@ -39,7 +39,7 @@
     "mocha": "^5.2.0",
     "node-watch": "^0.5.8",
     "nyc": "^13.0.1",
-    "rollup": "^0.66.2",
+    "rollup": "^0.66.4",
     "rollup-plugin-buble": "^0.19.2",
     "rollup-plugin-replace": "^2.0.0",
     "uglify-js": "^3.4.9",
