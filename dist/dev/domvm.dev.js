@@ -1013,7 +1013,12 @@
 			if (fn) {
 				if (name[0] === "d" && name[1] === "i" && name[2] === "d") {	// did*
 					//	console.log(name + " should queue till repaint", o, n);
-					immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
+					if (immediate) {
+						repaint(o.parent);
+						fn(o, n);
+					}
+					else
+						{ didQueue.push([fn, o, n]); }
 				}
 				else {		// will*
 					//	console.log(name + " may delay by promise", o, n);
@@ -2414,6 +2419,8 @@
 
 		attach(vm.node, el);
 
+		drainDidHooks(vm);
+
 		return vm;
 	}
 	// very similar to hydrate, TODO: dry
@@ -2454,6 +2461,14 @@
 				}
 
 				attach(v, c);
+
+				var vm = v.vm;
+
+				vm != null && fireHook(vm.hooks, "willMount", vm, vm.data);
+				fireHook(v.hooks, "willInsert", v);
+				fireHook(v.hooks, "didInsert", v);
+				vm != null && fireHook(vm.hooks, "didMount", vm, vm.data);
+
 			} while ((c = c.nextSibling) && (v = vnode.body[++i]))
 		}
 	}
@@ -2464,7 +2479,14 @@
 		if (vm.node == null)
 			{ vm._redraw(null, null, false); }
 
-		return html(vm.node, dynProps);
+		var markup = html(vm.node, dynProps);
+
+		// prevents mem leaks from unbounded queue growth (for SSR)
+		// maybe not necessary since majority of hooks fire via DOM ops, which don't run on the server.
+		// vm/"update" and vnode/"recycle" hooks only run during 2nd redraw() pass.
+		didQueue.length = 0;
+
+		return markup;
 	}
 	function vProtoHtml(dynProps) {
 		return html(this, dynProps);

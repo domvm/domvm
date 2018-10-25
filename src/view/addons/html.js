@@ -4,6 +4,7 @@ import { isArr } from '../../utils';
 import { isPropAttr, isEvAttr, isDynAttr, isSplAttr } from '../utils';
 import { autoPx } from './autoPx';
 import { LAZY_LIST } from '../initElementNode';
+import { didQueue } from "../hooks";
 
 export function vmProtoHtml(dynProps) {
 	var vm = this;
@@ -11,7 +12,14 @@ export function vmProtoHtml(dynProps) {
 	if (vm.node == null)
 		vm._redraw(null, null, false);
 
-	return html(vm.node, dynProps);
+	var markup = html(vm.node, dynProps);
+
+	// prevents mem leaks from unbounded queue growth (for SSR)
+	// maybe not necessary since majority of hooks fire via DOM ops, which don't run on the server.
+	// vm/"update" and vnode/"recycle" hooks only run during 2nd redraw() pass.
+	didQueue.length = 0;
+
+	return markup;
 };
 
 export function vProtoHtml(dynProps) {

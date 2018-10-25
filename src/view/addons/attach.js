@@ -5,6 +5,7 @@ import { isStyleAttr, isSplAttr, isEvAttr, isDynAttr } from '../utils';
 import { patchEvent } from '../patchEvent';
 import { setAttr } from '../patchAttrs';
 import { LAZY_LIST } from '../initElementNode';
+import { fireHook, drainDidHooks } from "../hooks";
 import { devNotify, DEVMODE } from "./devmode";
 
 export function protoAttach(el) {
@@ -13,6 +14,8 @@ export function protoAttach(el) {
 		vm._redraw(null, null, false)
 
 	attach(vm.node, el);
+
+	drainDidHooks(vm);
 
 	return vm;
 };
@@ -55,6 +58,14 @@ function attach(vnode, withEl) {
 			}
 
 			attach(v, c);
+
+			var vm = v.vm;
+
+			vm != null && fireHook(vm.hooks, "willMount", vm, vm.data);
+			fireHook(v.hooks, "willInsert", v);
+			fireHook(v.hooks, "didInsert", v);
+			vm != null && fireHook(vm.hooks, "didMount", vm, vm.data);
+
 		} while ((c = c.nextSibling) && (v = vnode.body[++i]))
 	}
 }

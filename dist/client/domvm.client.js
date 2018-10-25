@@ -910,7 +910,12 @@
 			if (fn) {
 				if (name[0] === "d" && name[1] === "i" && name[2] === "d") {	// did*
 					//	console.log(name + " should queue till repaint", o, n);
-					immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
+					if (immediate) {
+						repaint(o.parent);
+						fn(o, n);
+					}
+					else
+						{ didQueue.push([fn, o, n]); }
 				}
 				else {		// will*
 					//	console.log(name + " may delay by promise", o, n);
@@ -2015,6 +2020,8 @@
 
 		attach(vm.node, el);
 
+		drainDidHooks(vm);
+
 		return vm;
 	}
 	// very similar to hydrate, TODO: dry
@@ -2049,6 +2056,14 @@
 					{ v = v.vm.node || v.vm._update(v.data, vnode, i, false).node; }
 
 				attach(v, c);
+
+				var vm = v.vm;
+
+				vm != null && fireHook(vm.hooks, "willMount", vm, vm.data);
+				fireHook(v.hooks, "willInsert", v);
+				fireHook(v.hooks, "didInsert", v);
+				vm != null && fireHook(vm.hooks, "didMount", vm, vm.data);
+
 			} while ((c = c.nextSibling) && (v = vnode.body[++i]))
 		}
 	}

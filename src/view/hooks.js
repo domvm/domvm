@@ -10,7 +10,12 @@ export function fireHook(hooks, name, o, n, immediate) {
 		if (fn) {
 			if (name[0] === "d" && name[1] === "i" && name[2] === "d") {	// did*
 				//	console.log(name + " should queue till repaint", o, n);
-				immediate ? repaint(o.parent) && fn(o, n) : didQueue.push([fn, o, n]);
+				if (immediate) {
+					repaint(o.parent);
+					fn(o, n);
+				}
+				else
+					didQueue.push([fn, o, n]);
 			}
 			else {		// will*
 				//	console.log(name + " may delay by promise", o, n);
