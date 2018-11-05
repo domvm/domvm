@@ -165,6 +165,7 @@ function compile(buildName) {
 			banner: banner,
 			name: "domvm",
 			format: "es",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
+			esModule: false,
 		//	sourcemap: true,
 			file: "./dist/" + buildName + "/domvm." + buildName + ".es.js"
 		});
@@ -172,7 +173,17 @@ function compile(buildName) {
 		bundle.write({
 			banner: banner,
 			name: "domvm",
+			format: "cjs",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
+			esModule: false,
+		//	sourcemap: true,
+			file: "./dist/" + buildName + "/domvm." + buildName + ".cjs.js"
+		});
+
+		bundle.write({
+			banner: banner,
+			name: "domvm",
 			format: "umd",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
+			esModule: false,
 			sourcemap: buildName == 'full',
 			file: "./dist/" + buildName + "/domvm." + buildName + ".js"
 		}).then(b => {

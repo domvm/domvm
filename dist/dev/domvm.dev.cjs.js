@@ -4,8 +4,10 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/domvm/domvm (v3.4.7-dev, server build)
+* @preserve https://github.com/domvm/domvm (v3.4.7-dev, dev build)
 */
+
+'use strict';
 
 // NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 // There are some places that test <= COMMENT to assert if node is a VNode
@@ -343,6 +345,76 @@ function parseTag(raw) {
 	return cached;
 }
 
+var DEVMODE = {
+	warnings: true,
+
+	verbose: true,
+
+	mutations: true,
+
+	DATA_REPLACED: function(vm, oldData, newData) {
+		if (isFunc(vm.view) && vm.view.length > 1) {
+			var msg = "A view's data was replaced. The data originally passed to the view closure during init is now stale. You may want to rely only on the data passed to render() or vm.data.";
+			return [msg, vm, oldData, newData];
+		}
+	},
+
+	UNKEYED_INPUT: function(vnode) {
+		return ["Unkeyed <input> detected. Consider adding a name, id, _key, or _ref attr to avoid accidental DOM recycling between different <input> types.", vnode];
+	},
+
+	UNMOUNTED_REDRAW: function(vm) {
+		return ["Invoking redraw() of an unmounted (sub)view may result in errors.", vm];
+	},
+
+	INLINE_HANDLER: function(vnode, oval, nval) {
+		return ["Anonymous event handlers get re-bound on each redraw, consider defining them outside of templates for better reuse.", vnode, oval, nval];
+	},
+
+	MISMATCHED_HANDLER: function(vnode, oval, nval) {
+		return ["Patching of different event handler styles is not fully supported for performance reasons. Ensure that handlers are defined using the same style.", vnode, oval, nval];
+	},
+
+	SVG_WRONG_FACTORY: function(vnode) {
+		return ["<svg> defined using domvm.defineElement. Use domvm.defineSvgElement for <svg> & child nodes.", vnode];
+	},
+
+	FOREIGN_ELEMENT: function(el) {
+		return ["domvm stumbled upon an element in its DOM that it didn't create, which may be problematic. You can inject external elements into the vtree using domvm.injectElement.", el];
+	},
+
+	REUSED_ATTRS: function(vnode) {
+		return ["Attrs objects may only be reused if they are truly static, as a perf optimization. Mutating & reusing them will have no effect on the DOM due to 0 diff.", vnode];
+	},
+
+	ADJACENT_TEXT: function(vnode, text1, text2) {
+		return ["Adjacent text nodes will be merged. Consider concatentating them yourself in the template for improved perf.", vnode, text1, text2];
+	},
+
+	ARRAY_FLATTENED: function(vnode, array) {
+		return ["Arrays within templates will be flattened. When they are leading or trailing, it's easy and more performant to just .concat() them in the template.", vnode, array];
+	},
+
+	ALREADY_HYDRATED: function(vm) {
+		return ["A child view failed to mount because it was already hydrated. Make sure not to invoke vm.redraw() or vm.update() on unmounted views.", vm];
+	},
+
+	ATTACH_IMPLICIT_TBODY: function(vnode, vchild) {
+		return ["<table><tr> was detected in the vtree, but the DOM will be <table><tbody><tr> after HTML's implicit parsing. You should create the <tbody> vnode explicitly to avoid SSR/attach() failures.", vnode, vchild];
+	}
+};
+
+function devNotify(key, args) {
+	if (DEVMODE.warnings && isFunc(DEVMODE[key])) {
+		var msgArgs = DEVMODE[key].apply(null, args);
+
+		if (msgArgs) {
+			msgArgs[0] = key + ": " + (DEVMODE.verbose ? msgArgs[0] : "");
+			console.warn.apply(console, msgArgs);
+		}
+	}
+}
+
 // (de)optimization flags
 
 // forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
@@ -436,6 +508,17 @@ function initElementNode(tag, attrs, body, flags) {
 		// FIXED_BODY, and DEEP_REMOVE is appended later in preProc
 		if (body instanceof List)
 			{ node.flags = body.flags; }
+	}
+
+	{
+		if (node.tag === "svg") {
+			setTimeout(function() {
+				node.ns == null && devNotify("SVG_WRONG_FACTORY", [node]);
+			}, 16);
+		}
+		// todo: attrs.contenteditable === "true"?
+		else if (/^(?:input|textarea|select|datalist|output)$/.test(node.tag) && node.key == null)
+			{ devNotify("UNKEYED_INPUT", [node]); }
 	}
 
 	return node;
@@ -581,6 +664,10 @@ function preProcBody(vnew) {
 			{ body.splice(i--, 1); }
 		// flatten arrays
 		else if (isArr(node2)) {
+			{
+				if (i === 0 || i === body.length - 1)
+					{ devNotify("ARRAY_FLATTENED", [vnew, node2]); }
+			}
 			insertArr(body, node2, i--, 1);
 		}
 		else {
@@ -593,6 +680,9 @@ function preProcBody(vnew) {
 					{ body.splice(i--, 1); }
 				// merge with previous text node
 				else if (i > 0 && body[i-1].type === TEXT) {
+					{
+						devNotify("ADJACENT_TEXT", [vnew, body[i-1].body, node2.body]);
+					}
 					body[i-1].body += node2.body;
 					body.splice(i--, 1);
 				}
@@ -803,6 +893,19 @@ function patchEvent(node, name, nval, oval) {
 	if (nval == oval)
 		{ return; }
 
+	{
+		if (isFunc(nval) && isFunc(oval) && oval.name == nval.name)
+			{ devNotify("INLINE_HANDLER", [node, oval, nval]); }
+
+		if (oval != null && nval != null &&
+			(
+				isArr(oval) != isArr(nval) ||
+				isPlainObj(oval) != isPlainObj(nval) ||
+				isFunc(oval) != isFunc(nval)
+			)
+		) { devNotify("MISMATCHED_HANDLER", [node, oval, nval]); }
+	}
+
 	var el = node.el;
 
 	if (isFunc(nval))
@@ -847,7 +950,9 @@ function patchAttrs(vnode, donor, initial) {
 	var nattrs = vnode.attrs || emptyObj;
 	var oattrs = donor.attrs || emptyObj;
 
-	if (nattrs === oattrs) ;
+	if (nattrs === oattrs) {
+		{ devNotify("REUSED_ATTRS", [vnode]); }
+	}
 	else {
 		for (var key in nattrs) {
 			var nval = nattrs[key];
@@ -1143,6 +1248,7 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 			{
 				// skip dom elements not created by domvm
 				if (sibNode == null) {
+					{ devNotify("FOREIGN_ELEMENT", [state[sibName]]); }
 
 					state[sibName] = advSib(state[sibName]);
 					return;
@@ -1175,6 +1281,10 @@ function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNode
 			state[invSibName] = tmpSib;
 		}
 		else {
+			{
+				if (state[nodeName].vm != null)
+					{ devNotify("ALREADY_HYDRATED", [state[nodeName].vm]); }
+			}
 
 			if (lis && state[sibName] != null)
 				{ return lisMove(advSib, advNode, insert, sibName, nodeName, parEl, body, sibNode, state); }
@@ -1529,6 +1639,270 @@ function patchChildren(vnode, donor) {
 	domSync && syncChildren(vnode, donor);
 }
 
+function DOMInstr(withTime) {
+	var isEdge = navigator.userAgent.indexOf("Edge") !== -1;
+	var isIE = navigator.userAgent.indexOf("Trident/") !== -1;
+
+	var getDescr = Object.getOwnPropertyDescriptor;
+	var defProp = Object.defineProperty;
+
+	var nodeProto = Node.prototype;
+	var textContent = getDescr(nodeProto, "textContent");
+	var nodeValue = getDescr(nodeProto, "nodeValue");
+
+	var htmlProto = HTMLElement.prototype;
+	var innerText = getDescr(htmlProto, "innerText");
+
+	var elemProto	= Element.prototype;
+	var innerHTML	= getDescr(!isIE ? elemProto : htmlProto, "innerHTML");
+	var className	= getDescr(!isIE ? elemProto : htmlProto, "className");
+	var id			= getDescr(!isIE ? elemProto : htmlProto, "id");
+
+	var styleProto	= CSSStyleDeclaration.prototype;
+
+	var cssText		= getDescr(styleProto, "cssText");
+
+	var inpProto = HTMLInputElement.prototype;
+	var areaProto = HTMLTextAreaElement.prototype;
+	var selProto = HTMLSelectElement.prototype;
+	var optProto = HTMLOptionElement.prototype;
+
+	var inpChecked = getDescr(inpProto, "checked");
+	var inpVal = getDescr(inpProto, "value");
+
+	var areaVal = getDescr(areaProto, "value");
+
+	var selVal = getDescr(selProto, "value");
+	var selIndex = getDescr(selProto, "selectedIndex");
+
+	var optSel = getDescr(optProto, "selected");
+
+	// onclick, onkey*, etc..
+
+	// var styleProto = CSSStyleDeclaration.prototype;
+	// var setProperty = getDescr(styleProto, "setProperty");
+
+	var origOps = {
+		"document.createElement": null,
+		"document.createElementNS": null,
+		"document.createTextNode": null,
+		"document.createComment": null,
+		"document.createDocumentFragment": null,
+
+		"DocumentFragment.prototype.insertBefore": null,		// appendChild
+
+		"Element.prototype.appendChild": null,
+		"Element.prototype.removeChild": null,
+		"Element.prototype.insertBefore": null,
+		"Element.prototype.replaceChild": null,
+		"Element.prototype.remove": null,
+
+		"Element.prototype.setAttribute": null,
+		"Element.prototype.setAttributeNS": null,
+		"Element.prototype.removeAttribute": null,
+		"Element.prototype.removeAttributeNS": null,
+
+		// assign?
+		// dataset, classlist, any props like .onchange
+
+		// .style.setProperty, .style.cssText
+	};
+
+	var counts = {};
+	var start = null;
+
+	function ctxName(opName) {
+		var opPath = opName.split(".");
+		var o = window;
+		while (opPath.length > 1)
+			{ o = o[opPath.shift()]; }
+
+		return {ctx: o, last: opPath[0]};
+	}
+
+	for (var opName in origOps) {
+		var p = ctxName(opName);
+
+		if (origOps[opName] === null)
+			{ origOps[opName] = p.ctx[p.last]; }
+
+		(function(opName, opShort) {
+			counts[opShort] = 0;
+			p.ctx[opShort] = function() {
+				counts[opShort]++;
+				return origOps[opName].apply(this, arguments);
+			};
+		})(opName, p.last);
+	}
+
+	counts.textContent = 0;
+	defProp(nodeProto, "textContent", {
+		set: function(s) {
+			counts.textContent++;
+			textContent.set.call(this, s);
+		},
+	});
+
+	counts.nodeValue = 0;
+	defProp(nodeProto, "nodeValue", {
+		set: function(s) {
+			counts.nodeValue++;
+			nodeValue.set.call(this, s);
+		},
+	});
+
+	counts.innerText = 0;
+	defProp(htmlProto, "innerText", {
+		set: function(s) {
+			counts.innerText++;
+			innerText.set.call(this, s);
+		},
+	});
+
+	counts.innerHTML = 0;
+	defProp(!isIE ? elemProto : htmlProto, "innerHTML", {
+		set: function(s) {
+			counts.innerHTML++;
+			innerHTML.set.call(this, s);
+		},
+	});
+
+	counts.className = 0;
+	defProp(!isIE ? elemProto : htmlProto, "className", {
+		set: function(s) {
+			counts.className++;
+			className.set.call(this, s);
+		},
+	});
+
+	counts.cssText = 0;
+	defProp(styleProto, "cssText", {
+		set: function(s) {
+			counts.cssText++;
+			cssText.set.call(this, s);
+		},
+	});
+
+	counts.id = 0;
+	defProp(!isIE ? elemProto : htmlProto, "id", {
+		set: function(s) {
+			counts.id++;
+			id.set.call(this, s);
+		},
+	});
+
+	counts.checked = 0;
+	defProp(inpProto, "checked", {
+		set: function(s) {
+			counts.checked++;
+			inpChecked.set.call(this, s);
+		},
+	});
+
+	counts.value = 0;
+	defProp(inpProto, "value", {
+		set: function(s) {
+			counts.value++;
+			inpVal.set.call(this, s);
+		},
+	});
+
+	defProp(areaProto, "value", {
+		set: function(s) {
+			counts.value++;
+			areaVal.set.call(this, s);
+		},
+	});
+
+	defProp(selProto, "value", {
+		set: function(s) {
+			counts.value++;
+			selVal.set.call(this, s);
+		},
+	});
+
+	counts.selectedIndex = 0;
+	defProp(selProto, "selectedIndex", {
+		set: function(s) {
+			counts.selectedIndex++;
+			selIndex.set.call(this, s);
+		},
+	});
+
+	counts.selected = 0;
+	defProp(optProto, "selected", {
+		set: function(s) {
+			counts.selected++;
+			optSel.set.call(this, s);
+		},
+	});
+
+	/*
+	counts.setProperty = 0;
+	defProp(styleProto, "setProperty", {
+		set: function(s) {
+			counts.setProperty++;
+			setProperty.set.call(this, s);
+		},
+	});
+	*/
+
+	function reset() {
+		for (var i in counts)
+			{ counts[i] = 0; }
+	}
+
+	this.start = function() {
+		start = +new Date;
+	};
+
+	this.end = function() {
+		var _time = +new Date - start;
+		start = null;
+/*
+		for (var opName in origOps) {
+			var p = ctxName(opName);
+			p.ctx[p.last] = origOps[opName];
+		}
+
+		defProp(nodeProto, "textContent", textContent);
+		defProp(nodeProto, "nodeValue", nodeValue);
+		defProp(htmlProto, "innerText", innerText);
+		defProp(!isIE ? elemProto : htmlProto, "innerHTML", innerHTML);
+		defProp(!isIE ? elemProto : htmlProto, "className", className);
+		defProp(!isIE ? elemProto : htmlProto, "id", id);
+		defProp(inpProto,  "checked", inpChecked);
+		defProp(inpProto,  "value", inpVal);
+		defProp(areaProto, "value", areaVal);
+		defProp(selProto,  "value", selVal);
+		defProp(selProto,  "selectedIndex", selIndex);
+		defProp(optProto,  "selected", optSel);
+	//	defProp(styleProto, "setProperty", setProperty);
+		defProp(styleProto, "cssText", cssText);
+*/
+		var out = {};
+
+		for (var i in counts)
+			{ if (counts[i] > 0)
+				{ out[i] = counts[i]; } }
+
+		reset();
+
+		if (withTime)
+			{ out._time = _time; }
+
+		return out;
+	};
+}
+
+var instr = null;
+
+{
+	if (DEVMODE.mutations) {
+		instr = new DOMInstr(true);
+	}
+}
+
 // view + key serve as the vm's unique identity
 function ViewModel(view, data, key, opts) {
 	var vm = this;
@@ -1660,6 +2034,11 @@ var ViewModelProto = ViewModel.prototype = {
 function mount(el, isRoot) {
 	var vm = this;
 
+	{
+		if (DEVMODE.mutations)
+			{ instr.start(); }
+	}
+
 	if (isRoot) {
 		clearChildren({el: el, flags: 0});
 
@@ -1683,6 +2062,11 @@ function mount(el, isRoot) {
 
 	if (el)
 		{ drainDidHooks(vm); }
+
+	{
+		if (DEVMODE.mutations)
+			{ console.log(instr.end()); }
+	}
 
 	return vm;
 }
@@ -1722,6 +2106,15 @@ function redrawSync(newParent, newIdx, withDOM) {
 	var isRedrawRoot = newParent == null;
 	var vm = this;
 	var isMounted = vm.node && vm.node.el && vm.node.el.parentNode;
+
+	{
+		// was mounted (has node and el), but el no longer has parent (unmounted)
+		if (isRedrawRoot && vm.node && vm.node.el && !vm.node.el.parentNode)
+			{ devNotify("UNMOUNTED_REDRAW", [vm]); }
+
+		if (isRedrawRoot && DEVMODE.mutations && isMounted)
+			{ instr.start(); }
+	}
 
 	var doDiff = vm.diff != null,
 		vold = vm.node,
@@ -1808,6 +2201,11 @@ function redrawSync(newParent, newIdx, withDOM) {
 	if (isRedrawRoot && isMounted)
 		{ drainDidHooks(vm); }
 
+	{
+		if (isRedrawRoot && DEVMODE.mutations && isMounted)
+			{ console.log(instr.end()); }
+	}
+
 	return vm;
 }
 
@@ -1818,6 +2216,9 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 
 	if (newData != null) {
 		if (vm.data !== newData) {
+			{
+				devNotify("DATA_REPLACED", [vm, vm.data, newData]);
+			}
 			fireHook(vm.hooks, "willUpdate", vm, newData);
 			vm.data = newData;
 		}
@@ -2007,6 +2408,67 @@ ViewModelProto._stream = null;
 //import { prop } from "../utils";
 //mini.prop = prop;
 
+function protoAttach(el) {
+	var vm = this;
+	if (vm.node == null)
+		{ vm._redraw(null, null, false); }
+
+	attach(vm.node, el);
+
+	drainDidHooks(vm);
+
+	return vm;
+}
+// very similar to hydrate, TODO: dry
+function attach(vnode, withEl) {
+	vnode.el = withEl;
+	withEl._node = vnode;
+
+	var nattrs = vnode.attrs;
+
+	for (var key in nattrs) {
+		var nval = nattrs[key];
+		var isDyn = isDynAttr(vnode.tag, key);
+
+		if (isStyleAttr(key) || isSplAttr(key)) ;
+		else if (isEvAttr(key))
+			{ patchEvent(vnode, key, nval); }
+		else if (nval != null && isDyn)
+			{ setAttr(vnode, key, nval, isDyn); }
+	}
+
+	if ((vnode.flags & LAZY_LIST) === LAZY_LIST)
+		{ vnode.body.body(vnode); }
+
+	if (isArr(vnode.body) && vnode.body.length > 0) {
+		var c = withEl.firstChild;
+		var i = 0;
+		var v = vnode.body[i];
+		do {
+			if (v.type === VVIEW)
+				{ v = createView(v.view, v.data, v.key, v.opts)._redraw(vnode, i, false).node; }
+			else if (v.type === VMODEL)
+				{ v = v.vm.node || v.vm._update(v.data, vnode, i, false).node; }
+
+			{
+				if (vnode.tag === "table" && v.tag === "tr") {
+					devNotify("ATTACH_IMPLICIT_TBODY", [vnode, v]);
+				}
+			}
+
+			attach(v, c);
+
+			var vm = v.vm;
+
+			vm != null && fireHook(vm.hooks, "willMount", vm, vm.data);
+			fireHook(v.hooks, "willInsert", v);
+			fireHook(v.hooks, "didInsert", v);
+			vm != null && fireHook(vm.hooks, "didMount", vm, vm.data);
+
+		} while ((c = c.nextSibling) && (v = vnode.body[++i]))
+	}
+}
+
 function vmProtoHtml(dynProps) {
 	var vm = this;
 
@@ -2178,7 +2640,24 @@ function html(node, dynProps) {
 	return out;
 }
 
+ViewModelProto.attach = protoAttach;
 ViewModelProto.html = vmProtoHtml;
 VNodeProto.html = vProtoHtml;
 
-export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, list, FIXED_BODY, KEYED_LIST, config };
+exports.DEVMODE = DEVMODE;
+exports.defineElementSpread = defineElementSpread;
+exports.defineSvgElementSpread = defineSvgElementSpread;
+exports.ViewModel = ViewModel;
+exports.VNode = VNode;
+exports.createView = createView;
+exports.defineElement = defineElement;
+exports.defineSvgElement = defineSvgElement;
+exports.defineText = defineText;
+exports.defineComment = defineComment;
+exports.defineView = defineView;
+exports.injectView = injectView;
+exports.injectElement = injectElement;
+exports.list = list;
+exports.FIXED_BODY = FIXED_BODY;
+exports.KEYED_LIST = KEYED_LIST;
+exports.config = config;

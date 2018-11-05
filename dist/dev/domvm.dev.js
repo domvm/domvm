@@ -4,7 +4,7 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/domvm/domvm (3.x-dev, dev build)
+* @preserve https://github.com/domvm/domvm (v3.4.7-dev, dev build)
 */
 
 (function (global, factory) {
@@ -2665,7 +2665,5 @@
 	exports.FIXED_BODY = FIXED_BODY;
 	exports.KEYED_LIST = KEYED_LIST;
 	exports.config = config;
-
-	Object.defineProperty(exports, '__esModule', { value: true });
 
 })));

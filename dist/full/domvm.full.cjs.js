@@ -4,8 +4,10 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/domvm/domvm (v3.4.7-dev, server build)
+* @preserve https://github.com/domvm/domvm (v3.4.7-dev, full build)
 */
+
+'use strict';
 
 // NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 // There are some places that test <= COMMENT to assert if node is a VNode
@@ -2007,6 +2009,61 @@ ViewModelProto._stream = null;
 //import { prop } from "../utils";
 //mini.prop = prop;
 
+function protoAttach(el) {
+	var vm = this;
+	if (vm.node == null)
+		{ vm._redraw(null, null, false); }
+
+	attach(vm.node, el);
+
+	drainDidHooks(vm);
+
+	return vm;
+}
+// very similar to hydrate, TODO: dry
+function attach(vnode, withEl) {
+	vnode.el = withEl;
+	withEl._node = vnode;
+
+	var nattrs = vnode.attrs;
+
+	for (var key in nattrs) {
+		var nval = nattrs[key];
+		var isDyn = isDynAttr(vnode.tag, key);
+
+		if (isStyleAttr(key) || isSplAttr(key)) ;
+		else if (isEvAttr(key))
+			{ patchEvent(vnode, key, nval); }
+		else if (nval != null && isDyn)
+			{ setAttr(vnode, key, nval, isDyn); }
+	}
+
+	if ((vnode.flags & LAZY_LIST) === LAZY_LIST)
+		{ vnode.body.body(vnode); }
+
+	if (isArr(vnode.body) && vnode.body.length > 0) {
+		var c = withEl.firstChild;
+		var i = 0;
+		var v = vnode.body[i];
+		do {
+			if (v.type === VVIEW)
+				{ v = createView(v.view, v.data, v.key, v.opts)._redraw(vnode, i, false).node; }
+			else if (v.type === VMODEL)
+				{ v = v.vm.node || v.vm._update(v.data, vnode, i, false).node; }
+
+			attach(v, c);
+
+			var vm = v.vm;
+
+			vm != null && fireHook(vm.hooks, "willMount", vm, vm.data);
+			fireHook(v.hooks, "willInsert", v);
+			fireHook(v.hooks, "didInsert", v);
+			vm != null && fireHook(vm.hooks, "didMount", vm, vm.data);
+
+		} while ((c = c.nextSibling) && (v = vnode.body[++i]))
+	}
+}
+
 function vmProtoHtml(dynProps) {
 	var vm = this;
 
@@ -2178,7 +2235,23 @@ function html(node, dynProps) {
 	return out;
 }
 
+ViewModelProto.attach = protoAttach;
 ViewModelProto.html = vmProtoHtml;
 VNodeProto.html = vProtoHtml;
 
-export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, list, FIXED_BODY, KEYED_LIST, config };
+exports.defineElementSpread = defineElementSpread;
+exports.defineSvgElementSpread = defineSvgElementSpread;
+exports.ViewModel = ViewModel;
+exports.VNode = VNode;
+exports.createView = createView;
+exports.defineElement = defineElement;
+exports.defineSvgElement = defineSvgElement;
+exports.defineText = defineText;
+exports.defineComment = defineComment;
+exports.defineView = defineView;
+exports.injectView = injectView;
+exports.injectElement = injectElement;
+exports.list = list;
+exports.FIXED_BODY = FIXED_BODY;
+exports.KEYED_LIST = KEYED_LIST;
+exports.config = config;

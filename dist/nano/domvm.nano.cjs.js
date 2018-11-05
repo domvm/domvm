@@ -4,8 +4,10 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/domvm/domvm (v3.4.7-dev, server build)
+* @preserve https://github.com/domvm/domvm (v3.4.7-dev, nano build)
 */
+
+'use strict';
 
 // NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 // There are some places that test <= COMMENT to assert if node is a VNode
@@ -30,8 +32,6 @@ var doc = ENV_DOM ? document : {};
 var emptyObj = {};
 
 function noop() {}
-function retArg0(a) { return a; }
-
 var isArr = Array.isArray;
 
 function isPlainObj(val) {
@@ -76,13 +76,6 @@ function deepSet(targ, path, val) {
 		else
 			{ targ[seg] = targ = targ[seg] || {}; }
 	}
-}
-
-function sliceArgs(args, offs) {
-	var arr = [];
-	for (var i = offs; i < args.length; i++)
-		{ arr.push(args[i]); }
-	return arr;
 }
 
 function cmpObj(a, b) {
@@ -519,16 +512,6 @@ function list(items, diff, key) {
 	return new List(items, diff, key);
 }
 
-var streamVal = retArg0;
-var streamOn = noop;
-var streamOff = noop;
-
-function streamCfg(cfg) {
-	streamVal = cfg.val;
-	streamOn = cfg.on;
-	streamOff = cfg.off;
-}
-
 function setRef(vm, name, node) {
 	var path = ("refs." + name).split(".");
 	deepSet(vm, path, node);
@@ -563,7 +546,6 @@ function preProc(vnew, parent, idx, ownVm) {
 	else if (vnew.body === "")
 		{ vnew.body = null; }
 	else {
-		{ vnew.body = streamVal(vnew.body, getVm(vnew)._stream); }
 
 		if (vnew.body != null && !(vnew.body instanceof List))
 			{ vnew.body = "" + vnew.body; }
@@ -605,50 +587,8 @@ function preProcBody(vnew) {
 	}
 }
 
-var unitlessProps = {
-	animationIterationCount: true,
-	boxFlex: true,
-	boxFlexGroup: true,
-	boxOrdinalGroup: true,
-	columnCount: true,
-	flex: true,
-	flexGrow: true,
-	flexPositive: true,
-	flexShrink: true,
-	flexNegative: true,
-	flexOrder: true,
-	gridRow: true,
-	gridColumn: true,
-	order: true,
-	lineClamp: true,
-
-	borderImageOutset: true,
-	borderImageSlice: true,
-	borderImageWidth: true,
-	fontWeight: true,
-	lineHeight: true,
-	opacity: true,
-	orphans: true,
-	tabSize: true,
-	widows: true,
-	zIndex: true,
-	zoom: true,
-
-	fillOpacity: true,
-	floodOpacity: true,
-	stopOpacity: true,
-	strokeDasharray: true,
-	strokeDashoffset: true,
-	strokeMiterlimit: true,
-	strokeOpacity: true,
-	strokeWidth: true
-};
-
 function autoPx(name, val) {
-	{
-		// typeof val === 'number' is faster but fails for numeric strings
-		return !isNaN(val) && !unitlessProps[name] ? (val + "px") : val;
-	}
+	{ return val; }
 }
 
 // assumes if styles exist both are objects or both are strings
@@ -662,10 +602,6 @@ function patchStyle(n, o) {
 	else {
 		for (var nn in ns) {
 			var nv = ns[nn];
-
-			{
-				ns[nn] = nv = streamVal(nv, getVm(n)._stream);
-			}
 
 			if (os == null || nv != null && nv !== os[nn])
 				{ n.el.style[nn] = autoPx(nn, nv); }
@@ -681,32 +617,6 @@ function patchStyle(n, o) {
 	}
 }
 
-var onemit = {};
-
-function emitCfg(cfg) {
-	assignObj(onemit, cfg);
-}
-
-function emit(evName) {
-	var targ = this,
-		src = targ;
-
-	var args = sliceArgs(arguments, 1).concat(src, src.data);
-
-	do {
-		var evs = targ.onemit;
-		var fn = evs ? evs[evName] : null;
-
-		if (fn) {
-			fn.apply(targ, args);
-			break;
-		}
-	} while (targ = targ.parent());
-
-	if (onemit[evName])
-		{ onemit[evName].apply(targ, args); }
-}
-
 var onevent = noop;
 var syncRedraw = false;
 
@@ -717,16 +627,6 @@ function config(newCfg) {
 
 	if (newCfg.syncRedraw != null)
 		{ syncRedraw = newCfg.syncRedraw; }
-
-	{
-		if (newCfg.onemit)
-			{ emitCfg(newCfg.onemit); }
-	}
-
-	{
-		if (newCfg.stream)
-			{ streamCfg(newCfg.stream); }
-	}
 }
 
 var registry = {};
@@ -857,10 +757,6 @@ function patchAttrs(vnode, donor, initial) {
 
 			var isDyn = isDynAttr(vnode.tag, key);
 			var oval = isDyn ? vnode.el[key] : oattrs[key];
-
-			{
-				nattrs[key] = nval = streamVal(nval, (getVm(vnode) || emptyObj)._stream);
-			}
 
 			if (nval === oval) ;
 			else if (isStyleAttr(key))
@@ -1597,11 +1493,6 @@ var ViewModelProto = ViewModel.prototype = {
 		// maybe invert assignment order?
 		if (opts.hooks)
 			{ t.hooks = assignObj(t.hooks || {}, opts.hooks); }
-
-		{
-			if (opts.onemit)
-				{ t.onemit = assignObj(t.onemit || {}, opts.onemit); }
-		}
 	},
 	parent: function() {
 		return getVm(this.node.parent);
@@ -1691,11 +1582,6 @@ function mount(el, isRoot) {
 function unmount(asSub) {
 	var vm = this;
 
-	{
-		streamOff(vm._stream);
-		vm._stream = null;
-	}
-
 	var node = vm.node;
 	var parEl = node.el.parentNode;
 
@@ -1757,10 +1643,6 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 	vm.node = vnew;
 
-	{
-		vm._stream = [];
-	}
-
 	if (newParent) {
 		preProc(vnew, newParent, newIdx, vm);
 		newParent.body[newIdx] = vnew;
@@ -1796,11 +1678,6 @@ function redrawSync(newParent, newIdx, withDOM) {
 		}
 		else
 			{ hydrate(vnew); }
-	}
-
-	{
-		streamVal(vm.data, vm._stream);
-		vm._stream = streamOn(vm._stream, vm);
 	}
 
 	isMounted && fireHook(vm.hooks, "didRedraw", vm, vm.data);
@@ -1951,234 +1828,17 @@ function patch$1(o, n, doRepaint) {
 
 VNodeProto.patch = protoPatch;
 
-function defineElementSpread(tag) {
-	var args = arguments;
-	var len = args.length;
-	var body, attrs;
-
-	if (len > 1) {
-		var bodyIdx = 1;
-
-		if (isPlainObj(args[1])) {
-			attrs = args[1];
-			bodyIdx = 2;
-		}
-
-		if (len === bodyIdx + 1 && !(args[bodyIdx] instanceof VNode) && !(args[bodyIdx] instanceof VView) && !(args[bodyIdx] instanceof VModel))
-			{ body = args[bodyIdx]; }
-		else
-			{ body = sliceArgs(args, bodyIdx); }
-	}
-
-	return initElementNode(tag, attrs, body);
-}
-
-function defineSvgElementSpread() {
-	var n = defineElementSpread.apply(null, arguments);
-	n.ns = SVG_NS;
-	return n;
-}
-
-function nextSubVms(n, accum) {
-	var body = n.body;
-
-	if (isArr(body)) {
-		for (var i = 0; i < body.length; i++) {
-			var n2 = body[i];
-
-			if (n2.vm != null)
-				{ accum.push(n2.vm); }
-			else
-				{ nextSubVms(n2, accum); }
-		}
-	}
-
-	return accum;
-}
-
-ViewModelProto.emit = emit;
-ViewModelProto.onemit = null;
-ViewModelProto.body = function() {
-	return nextSubVms(this.node, []);
-};
-
-ViewModelProto._stream = null;
-
-//import { prop } from "../utils";
-//mini.prop = prop;
-
-function vmProtoHtml(dynProps) {
-	var vm = this;
-
-	if (vm.node == null)
-		{ vm._redraw(null, null, false); }
-
-	var markup = html(vm.node, dynProps);
-
-	// prevents mem leaks from unbounded queue growth (for SSR)
-	// maybe not necessary since majority of hooks fire via DOM ops, which don't run on the server.
-	// vm/"update" and vnode/"recycle" hooks only run during 2nd redraw() pass.
-	didQueue.length = 0;
-
-	return markup;
-}
-function vProtoHtml(dynProps) {
-	return html(this, dynProps);
-}
-function camelDash(val) {
-	return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-}
-
-function styleStr(css) {
-	var style = "";
-
-	for (var pname in css) {
-		if (css[pname] != null)
-			{ style += camelDash(pname) + ": " + autoPx(pname, css[pname]) + '; '; }
-	}
-
-	return style;
-}
-
-function toStr(val) {
-	return val == null ? '' : ''+val;
-}
-
-var voidTags = {
-    area: true,
-    base: true,
-    br: true,
-    col: true,
-    command: true,
-    embed: true,
-    hr: true,
-    img: true,
-    input: true,
-    keygen: true,
-    link: true,
-    meta: true,
-    param: true,
-    source: true,
-    track: true,
-	wbr: true
-};
-
-function escHtml(s) {
-	s = toStr(s);
-
-	for (var i = 0, out = ''; i < s.length; i++) {
-		switch (s[i]) {
-			case '&': out += '&amp;';  break;
-			case '<': out += '&lt;';   break;
-			case '>': out += '&gt;';   break;
-		//	case '"': out += '&quot;'; break;
-		//	case "'": out += '&#039;'; break;
-		//	case '/': out += '&#x2f;'; break;
-			default:  out += s[i];
-		}
-	}
-
-	return out;
-}
-
-function escQuotes(s) {
-	s = toStr(s);
-
-	for (var i = 0, out = ''; i < s.length; i++)
-		{ out += s[i] === '"' ? '&quot;' : s[i]; }		// also &?
-
-	return out;
-}
-
-function eachHtml(arr, dynProps) {
-	var buf = '';
-	for (var i = 0; i < arr.length; i++)
-		{ buf += html(arr[i], dynProps); }
-	return buf;
-}
-
-var innerHTML = ".innerHTML";
-
-function html(node, dynProps) {
-	var out, style;
-
-	switch (node.type) {
-		case VVIEW:
-			out = createView(node.view, node.data, node.key, node.opts).html(dynProps);
-			break;
-		case VMODEL:
-			out = node.vm.html();
-			break;
-		case ELEMENT:
-			if (node.el != null && node.tag == null) {
-				out = node.el.outerHTML;		// pre-existing dom elements (does not currently account for any props applied to them)
-				break;
-			}
-
-			var buf = "";
-
-			buf += "<" + node.tag;
-
-			var attrs = node.attrs,
-				hasAttrs = attrs != null;
-
-			if (hasAttrs) {
-				for (var pname in attrs) {
-					if (isEvAttr(pname) || isPropAttr(pname) || isSplAttr(pname) || dynProps === false && isDynAttr(node.tag, pname))
-						{ continue; }
-
-					var val = attrs[pname];
-
-					if (pname === "style" && val != null) {
-						style = typeof val === "object" ? styleStr(val) : val;
-						continue;
-					}
-
-					if (val === true)
-						{ buf += " " + escHtml(pname) + '=""'; }
-					else if (val === false) ;
-					else if (val != null)
-						{ buf += " " + escHtml(pname) + '="' + escQuotes(val) + '"'; }
-				}
-
-				if (style != null)
-					{ buf += ' style="' + escQuotes(style.trim()) + '"'; }
-			}
-
-			// if body-less svg node, auto-close & return
-			if (node.body == null && node.ns != null && node.tag !== "svg")
-				{ return buf + "/>"; }
-			else
-				{ buf += ">"; }
-
-			if (!voidTags[node.tag]) {
-				if (hasAttrs && attrs[innerHTML] != null)
-					{ buf += attrs[innerHTML]; }
-				else if (isArr(node.body))
-					{ buf += eachHtml(node.body, dynProps); }
-				else if ((node.flags & LAZY_LIST) === LAZY_LIST) {
-					node.body.body(node);
-					buf += eachHtml(node.body, dynProps);
-				}
-				else
-					{ buf += escHtml(node.body); }
-
-				buf += "</" + node.tag + ">";
-			}
-			out = buf;
-			break;
-		case TEXT:
-			out = escHtml(node.body);
-			break;
-		case COMMENT:
-			out = "<!--" + escHtml(node.body) + "-->";
-			break;
-	}
-
-	return out;
-}
-
-ViewModelProto.html = vmProtoHtml;
-VNodeProto.html = vProtoHtml;
-
-export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, list, FIXED_BODY, KEYED_LIST, config };
+exports.ViewModel = ViewModel;
+exports.VNode = VNode;
+exports.createView = createView;
+exports.defineElement = defineElement;
+exports.defineSvgElement = defineSvgElement;
+exports.defineText = defineText;
+exports.defineComment = defineComment;
+exports.defineView = defineView;
+exports.injectView = injectView;
+exports.injectElement = injectElement;
+exports.list = list;
+exports.FIXED_BODY = FIXED_BODY;
+exports.KEYED_LIST = KEYED_LIST;
+exports.config = config;

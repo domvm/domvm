@@ -7,6 +7,8 @@
 * @preserve https://github.com/domvm/domvm (v3.4.7-dev, server build)
 */
 
+'use strict';
+
 // NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 // There are some places that test <= COMMENT to assert if node is a VNode
 
@@ -2181,4 +2183,19 @@ function html(node, dynProps) {
 ViewModelProto.html = vmProtoHtml;
 VNodeProto.html = vProtoHtml;
 
-export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, list, FIXED_BODY, KEYED_LIST, config };
+exports.defineElementSpread = defineElementSpread;
+exports.defineSvgElementSpread = defineSvgElementSpread;
+exports.ViewModel = ViewModel;
+exports.VNode = VNode;
+exports.createView = createView;
+exports.defineElement = defineElement;
+exports.defineSvgElement = defineSvgElement;
+exports.defineText = defineText;
+exports.defineComment = defineComment;
+exports.defineView = defineView;
+exports.injectView = injectView;
+exports.injectElement = injectElement;
+exports.list = list;
+exports.FIXED_BODY = FIXED_BODY;
+exports.KEYED_LIST = KEYED_LIST;
+exports.config = config;
