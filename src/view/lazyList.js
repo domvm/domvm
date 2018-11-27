@@ -1,5 +1,5 @@
 import { VVIEW } from './VTYPES';
-import { noop, isFunc, isArr, cmpArr, cmpObj } from '../utils';
+import { noop, isFunc, areDiff } from '../utils';
 import { preProcBody } from './preProc';
 import { LAZY_LIST, KEYED_LIST } from './initElementNode';
 
@@ -69,8 +69,7 @@ export function List(items, diff, key) {
 					var o = donor._diff,
 						n = self.diff.val(i);
 
-					var cmpFn = isArr(o) ? cmpArr : cmpObj;
-					return !(o === n || cmpFn(o, n));
+					return areDiff(o, n);
 				}
 			};
 		}

@@ -904,7 +904,6 @@ Notes:
 
 If you intend to do a simple diff of an object by its identity, then it's preferable to return it wrapped in an array to avoid domvm also diffing all of its enumerable keys when `oldObj !== newObj`.
 This is a micro-optimization and will not affect the resulting behavior.
-You can see the simple diffing logic [here](https://github.com/domvm/domvm/blob/e7299cc42077ae1750ae8de1f753042570ce63f9/src/view/ViewModel.js#L214-L220).
 Also, see [Issue #148](https://github.com/domvm/domvm/issues/148).
 
 #### VNode Patching

@@ -105,6 +105,10 @@ function cmpArr(a, b) {
 	return true;
 }
 
+function areDiff(o, n) {
+	return !(o === n || (isArr(o) ? cmpArr(o, n) : isPlainObj(o) ? cmpObj(o, n) : false));
+}
+
 // https://github.com/darsain/raft
 // rAF throttler, aggregates multiple repeated redraw calls within single animframe
 /* istanbul ignore next */
@@ -505,8 +509,7 @@ function List(items, diff, key) {
 					var o = donor._diff,
 						n = self.diff.val(i);
 
-					var cmpFn = isArr(o) ? cmpArr : cmpObj;
-					return !(o === n || cmpFn(o, n));
+					return areDiff(o, n);
 				}
 			};
 		}
@@ -1556,8 +1559,7 @@ var ViewModelProto = ViewModel.prototype = {
 					t.diff = {
 						val: opts.diff,
 						cmp: function(vm, o, n) {
-							var cmpFn = isArr(o) ? cmpArr : cmpObj;
-							return !(o === n || cmpFn(o, n));
+							return areDiff(o, n);
 						}
 					};
 				}

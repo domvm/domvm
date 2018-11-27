@@ -1,7 +1,7 @@
 import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
-import { isArr, isPlainObj, isFunc, isProm, cmpArr, cmpObj, assignObj, curry, raft, noop } from "../utils";
+import { isArr, isPlainObj, areDiff, isFunc, isProm, assignObj, curry, raft, noop } from "../utils";
 import { repaint, isHydrated, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
@@ -71,8 +71,7 @@ export const ViewModelProto = ViewModel.prototype = {
 					t.diff = {
 						val: opts.diff,
 						cmp: function(vm, o, n) {
-							var cmpFn = isArr(o) ? cmpArr : cmpObj;
-							return !(o === n || cmpFn(o, n));
+							return areDiff(o, n);
 						}
 					};
 				}

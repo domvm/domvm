@@ -91,6 +91,10 @@ export function cmpArr(a, b) {
 	return true;
 }
 
+export function areDiff(o, n) {
+	return !(o === n || (isArr(o) ? cmpArr(o, n) : isPlainObj(o) ? cmpObj(o, n) : false));
+}
+
 // https://github.com/darsain/raft
 // rAF throttler, aggregates multiple repeated redraw calls within single animframe
 /* istanbul ignore next */
