@@ -1929,6 +1929,10 @@ function ViewModel(view, data, key, opts) {
 	vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
 }
 
+function dfltCmp(vm, o, n) {
+	return areDiff(o, n);
+}
+
 var ViewModelProto = ViewModel.prototype = {
 	constructor: ViewModel,
 
@@ -1956,9 +1960,7 @@ var ViewModelProto = ViewModel.prototype = {
 				if (isFunc(opts.diff)) {
 					t.diff = {
 						val: opts.diff,
-						cmp: function(vm, o, n) {
-							return areDiff(o, n);
-						}
+						cmp: dfltCmp,
 					};
 				}
 			}
