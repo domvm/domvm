@@ -321,8 +321,8 @@
 			val: function(i, newParent) {
 				return diff.val(items[i], newParent);
 			},
-			cmp: function(i, donor) {
-				return diff.cmp(donor._diff, self.diff.val(i));
+			eq: function(i, donor) {
+				return diff.eq(donor._diff, self.diff.val(i));
 			}
 		};
 
@@ -1156,7 +1156,7 @@
 				if (donor2 != null) {
 	                foundIdx = donor2.idx;
 
-					if (!nbody.diff.cmp(i, donor2)) {
+					if (nbody.diff.eq(i, donor2)) {
 						// almost same as reParent() in ViewModel
 						node2 = donor2;
 						node2.parent = vnode;
@@ -1414,7 +1414,7 @@
 
 			if (vold != null) {
 				oldDiff = vold._diff;
-	            if (!vm.diff.cmp(vm, oldDiff, newDiff))
+	            if (vm.diff.eq(vm, oldDiff, newDiff))
 	                { return reParent(vm, vold, newParent, newIdx); }
 			}
 		}

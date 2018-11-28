@@ -69,7 +69,7 @@ export function sliceArgs(args, offs) {
 	return arr;
 }
 
-export function cmpObj(a, b) {
+export function eqObj(a, b) {
 	for (var i in a)
 		if (a[i] !== b[i])
 			return false;
@@ -77,7 +77,7 @@ export function cmpObj(a, b) {
 	return true;
 }
 
-export function cmpArr(a, b) {
+export function eqArr(a, b) {
 	const alen = a.length;
 
 	/* istanbul ignore if */
@@ -91,8 +91,8 @@ export function cmpArr(a, b) {
 	return true;
 }
 
-export function areDiff(o, n) {
-	return !(o === n || (isArr(o) ? cmpArr(o, n) : isPlainObj(o) ? cmpObj(o, n) : false));
+export function eq(o, n) {
+	return o === n || (isArr(o) ? eqArr(o, n) : isPlainObj(o) ? eqObj(o, n) : false);
 }
 
 // https://github.com/darsain/raft

@@ -89,7 +89,7 @@
 		return arr;
 	}
 
-	function cmpObj(a, b) {
+	function eqObj(a, b) {
 		for (var i in a)
 			{ if (a[i] !== b[i])
 				{ return false; } }
@@ -97,7 +97,7 @@
 		return true;
 	}
 
-	function cmpArr(a, b) {
+	function eqArr(a, b) {
 		var alen = a.length;
 
 		/* istanbul ignore if */
@@ -111,8 +111,8 @@
 		return true;
 	}
 
-	function areDiff(o, n) {
-		return !(o === n || (isArr(o) ? cmpArr(o, n) : isPlainObj(o) ? cmpObj(o, n) : false));
+	function eq(o, n) {
+		return o === n || (isArr(o) ? eqArr(o, n) : isPlainObj(o) ? eqObj(o, n) : false);
 	}
 
 	// https://github.com/darsain/raft
@@ -466,8 +466,8 @@
 			val: function(i, newParent) {
 				return diff.val(items[i], newParent);
 			},
-			cmp: function(i, donor) {
-				return diff.cmp(donor._diff, self.diff.val(i));
+			eq: function(i, donor) {
+				return diff.eq(donor._diff, self.diff.val(i));
 			}
 		};
 
@@ -511,11 +511,11 @@
 					val: function(i) {
 						return diff(items[i]);
 					},
-					cmp: function(i, donor) {
+					eq: function(i, donor) {
 						var o = donor._diff,
 							n = self.diff.val(i);
 
-						return areDiff(o, n);
+						return eq(o, n);
 					}
 				};
 			}
@@ -1414,7 +1414,7 @@
 				if (donor2 != null) {
 	                foundIdx = donor2.idx;
 
-					if (!nbody.diff.cmp(i, donor2)) {
+					if (nbody.diff.eq(i, donor2)) {
 						// almost same as reParent() in ViewModel
 						node2 = donor2;
 						node2.parent = vnode;
@@ -1537,8 +1537,8 @@
 		vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
 	}
 
-	function dfltCmp(vm, o, n) {
-		return areDiff(o, n);
+	function dfltEq(vm, o, n) {
+		return eq(o, n);
 	}
 
 	var ViewModelProto = ViewModel.prototype = {
@@ -1568,7 +1568,7 @@
 					if (isFunc(opts.diff)) {
 						t.diff = {
 							val: opts.diff,
-							cmp: dfltCmp,
+							eq: dfltEq,
 						};
 					}
 				}
@@ -1712,7 +1712,7 @@
 
 			if (vold != null) {
 				oldDiff = vold._diff;
-	            if (!vm.diff.cmp(vm, oldDiff, newDiff))
+	            if (vm.diff.eq(vm, oldDiff, newDiff))
 	                { return reParent(vm, vold, newParent, newIdx); }
 			}
 		}

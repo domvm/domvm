@@ -1,5 +1,5 @@
 import { VVIEW } from './VTYPES';
-import { noop, isFunc, areDiff } from '../utils';
+import { noop, isFunc, eq } from '../utils';
 import { preProcBody } from './preProc';
 import { LAZY_LIST, KEYED_LIST } from './initElementNode';
 
@@ -20,8 +20,8 @@ export function List(items, diff, key) {
 		val: function(i, newParent) {
 			return diff.val(items[i], newParent);
 		},
-		cmp: function(i, donor) {
-			return diff.cmp(donor._diff, self.diff.val(i));
+		eq: function(i, donor) {
+			return diff.eq(donor._diff, self.diff.val(i));
 		}
 	};
 
@@ -65,11 +65,11 @@ export function List(items, diff, key) {
 				val: function(i) {
 					return diff(items[i]);
 				},
-				cmp: function(i, donor) {
+				eq: function(i, donor) {
 					var o = donor._diff,
 						n = self.diff.val(i);
 
-					return areDiff(o, n);
+					return eq(o, n);
 				}
 			};
 		}

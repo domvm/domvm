@@ -1,7 +1,7 @@
 import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
-import { isArr, isPlainObj, areDiff, isFunc, isProm, assignObj, curry, raft, noop } from "../utils";
+import { isArr, isPlainObj, eq, isFunc, isProm, assignObj, curry, raft, noop } from "../utils";
 import { repaint, isHydrated, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
@@ -43,8 +43,8 @@ export function ViewModel(view, data, key, opts) {
 	vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
 }
 
-function dfltCmp(vm, o, n) {
-	return areDiff(o, n);
+function dfltEq(vm, o, n) {
+	return eq(o, n);
 }
 
 export const ViewModelProto = ViewModel.prototype = {
@@ -74,7 +74,7 @@ export const ViewModelProto = ViewModel.prototype = {
 				if (isFunc(opts.diff)) {
 					t.diff = {
 						val: opts.diff,
-						cmp: dfltCmp,
+						eq: dfltEq,
 					};
 				}
 			}
@@ -250,7 +250,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 		if (vold != null) {
 			oldDiff = vold._diff;
-            if (!vm.diff.cmp(vm, oldDiff, newDiff))
+            if (vm.diff.eq(vm, oldDiff, newDiff))
                 return reParent(vm, vold, newParent, newIdx);
 		}
 	}
