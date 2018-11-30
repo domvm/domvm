@@ -99,7 +99,13 @@ function eqArr(a, b) {
 }
 
 function eq(o, n) {
-	return o === n || (isArr(o) ? eqArr(o, n) : isPlainObj(o) ? eqObj(o, n) : false);
+    return (
+		o === n ? true :						// eqv
+		n == null || o == null ? false :		// null & undefined
+		isArr(o) ? eqArr(o, n) :				// assumes n is also Array
+		isPlainObj(o) ? eqObj(o, n) :			// assumes n is also Object
+		false
+	);
 }
 
 // https://github.com/darsain/raft
