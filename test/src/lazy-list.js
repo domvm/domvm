@@ -269,7 +269,7 @@ QUnit.module("lazyList vw()", function() {
 	}
 
 	function SubView1(vm) {
-		vm.config({
+		vm.cfg({
 			diff: function(vm, item) {
 				return diff(item);
 			}

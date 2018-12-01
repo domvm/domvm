@@ -70,7 +70,7 @@ QUnit.module("Model replace & vm.diff()", function() {
 		var redraws = 0;
 
 		function ViewA(vm, model) {
-			vm.config({
+			vm.cfg({
 				diff: function(vm, model) {
 					return [model.class, model.text];
 				}

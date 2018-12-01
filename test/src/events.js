@@ -50,14 +50,14 @@ QUnit.module("Events", function() {
 		return false;
 	}
 
-	domvm.config({
+	domvm.cfg({
 		onevent: function(e, node, vm, data, args) {
 			counts.globalOnArgs = Array.prototype.slice.call(arguments);
 		}
 	});
 
 	function View(vm) {
-		vm.config({
+		vm.cfg({
 			onevent: function(e, node, vm, data, args) {
 				counts.vmOnArgs = Array.prototype.slice.call(arguments);
 			}

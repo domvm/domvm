@@ -20,7 +20,7 @@ FilterableProductTable.prototype = {
 };
 
 function FilterableProductTableView(vm, filtTable) {
-	vm.config({
+	vm.cfg({
 		onemit: {
 			filterChange: function() {
 				filtTable.filter();

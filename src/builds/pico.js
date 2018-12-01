@@ -16,4 +16,4 @@ export { list } from '../view/lazyList';
 
 export { FIXED_BODY, KEYED_LIST } from "../view/initElementNode";
 
-export { config } from '../view/config';
+export { config, config as cfg } from '../view/config';

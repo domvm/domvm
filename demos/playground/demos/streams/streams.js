@@ -1,4 +1,4 @@
-domvm.config({
+domvm.cfg({
 	stream: {
 		val: function(v, accum) {
 			if (flyd.isStream(v)) {

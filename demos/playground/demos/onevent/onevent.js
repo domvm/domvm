@@ -22,7 +22,7 @@ function View() {
 
 domvm.createView(View).mount(document.body);
 
-domvm.config({
+domvm.cfg({
 	onevent: function(e, node, vm, data, args) {
 		vm.root().redraw();
 	}

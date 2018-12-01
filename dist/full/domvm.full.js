@@ -1554,7 +1554,7 @@
 
 		if (opts) {
 			vm.opts = opts;
-			vm.config(opts);
+			vm.cfg(opts);
 		}
 
 		var out = isPlainObj(view) ? view : view.call(vm, vm, data, key, opts);
@@ -1563,7 +1563,7 @@
 			{ vm.render = out; }
 		else {
 			vm.render = out.render;
-			vm.config(out);
+			vm.cfg(out);
 		}
 
 		vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
@@ -1571,6 +1571,37 @@
 
 	function dfltEq(vm, o, n) {
 		return eq(o, n);
+	}
+
+	function cfg(opts) {
+		var t = this;
+
+		if (opts.init)
+			{ t.init = opts.init; }
+		if (opts.diff) {
+			if (isFunc(opts.diff)) {
+				t.diff = {
+					val: opts.diff,
+					eq: dfltEq,
+				};
+			}
+			else
+				{ t.diff = opts.diff; }
+		}
+
+		{
+			if (opts.onevent)
+				{ t.onevent = opts.onevent; }
+		}
+
+		// maybe invert assignment order?
+		if (opts.hooks)
+			{ t.hooks = assignObj(t.hooks || {}, opts.hooks); }
+
+		{
+			if (opts.onemit)
+				{ t.onemit = assignObj(t.onemit || {}, opts.onemit); }
+		}
 	}
 
 	var ViewModelProto = ViewModel.prototype = {
@@ -1590,36 +1621,8 @@
 
 		mount: mount,
 		unmount: unmount,
-		config: function(opts) {
-			var t = this;
-
-			if (opts.init)
-				{ t.init = opts.init; }
-			if (opts.diff) {
-				if (isFunc(opts.diff)) {
-					t.diff = {
-						val: opts.diff,
-						eq: dfltEq,
-					};
-				}
-				else
-					{ t.diff = opts.diff; }
-			}
-
-			{
-				if (opts.onevent)
-					{ t.onevent = opts.onevent; }
-			}
-
-			// maybe invert assignment order?
-			if (opts.hooks)
-				{ t.hooks = assignObj(t.hooks || {}, opts.hooks); }
-
-			{
-				if (opts.onemit)
-					{ t.onemit = assignObj(t.onemit || {}, opts.onemit); }
-			}
-		},
+		cfg: cfg,
+		config: cfg,
 		parent: function() {
 			return getVm(this.node.parent);
 		},
@@ -2270,6 +2273,7 @@
 	exports.FIXED_BODY = FIXED_BODY;
 	exports.KEYED_LIST = KEYED_LIST;
 	exports.config = config;
+	exports.cfg = config;
 
 })));
 //# sourceMappingURL=domvm.full.js.map

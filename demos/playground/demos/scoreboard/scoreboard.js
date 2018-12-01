@@ -6,7 +6,7 @@ function Scoreboard(vm, players) {
 		lastPos = new WeakMap(),
 		curPos = new WeakMap();
 
-	vm.config({hooks: {
+	vm.cfg({hooks: {
 		didRedraw: function() {
 			for (var i in vm.refs.player) {
 				var ref = vm.refs.player[i];

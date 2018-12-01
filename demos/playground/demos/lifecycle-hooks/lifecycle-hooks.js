@@ -48,7 +48,7 @@ function View1(vm, data) {
 }
 
 function View2(vm) {
-	vm.config({hooks: {
+	vm.cfg({hooks: {
 		willRedraw:	function() { /*console.log("willRedraw", vm);		*/},
 		didRedraw:	function() { /*console.log("didRedraw", vm);		*/},
 		willMount:	function() { /*console.log("willMount", vm);		*/},
@@ -70,7 +70,7 @@ var data = [
 var vm = domvm.createView(View1, data);
 
 // view-level hooks
-vm.config({hooks: {
+vm.cfg({hooks: {
 	willRedraw: function(vm) {},
 	didRedraw: function(vm) {
 		vm.node.patch({class: "redrawn"}, true);

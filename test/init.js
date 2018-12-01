@@ -1,6 +1,6 @@
 QUnit.config.reorder = false;
 
-domvm.config({
+domvm.cfg({
 	syncRedraw: true
 });
 

@@ -1,13 +1,13 @@
 QUnit.module("flags/DEEP_REMOVE", function() {
 	var hooks = {
 		willUnmount: function(vm) {
-			console.log("willUnmount", vm);
+			console.log("willUnmount", vm.view.name);
 		}
 	};
 
 	var _hooks = {
 		willRemove: function(node) {
-			console.log("willRemove", node);
+			console.log("willRemove", node.tag + ":" + node.body);
 		}
 	};
 
@@ -37,7 +37,7 @@ QUnit.module("flags/DEEP_REMOVE", function() {
 		bHooks2 = true;
 
 	function ViewB(vm) {
-		bHooks && vm.config({hooks: hooks});
+		bHooks && vm.cfg({hooks: hooks});
 
 		return function() {
 			return el("div", [

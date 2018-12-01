@@ -17,7 +17,7 @@ QUnit.module("Lifecycle hooks", function() {
 		var didUnmount = -1;
 
 		function A(vm) {
-			vm.config({hooks: {
+			vm.cfg({hooks: {
 				willMount: function(vm) {
 					willMount = i++;
 				},
@@ -74,7 +74,7 @@ QUnit.module("Lifecycle hooks", function() {
 
 	QUnit.test('willUpdate (root/explicit)', function(assert) {
 		function A(vm, model) {
-			vm.config({hooks: {
+			vm.cfg({hooks: {
 				willUpdate: function(vm, newModel) {
 					model = newModel;
 				}
@@ -104,7 +104,7 @@ QUnit.module("Lifecycle hooks", function() {
 
 	QUnit.test('willUpdate (sub-view/implicit)', function(assert) {
 		function B(vm, model) {
-			vm.config({hooks: {
+			vm.cfg({hooks: {
 				willUpdate: function(vm, newModel) {
 					model = newModel;
 				}
@@ -118,7 +118,7 @@ QUnit.module("Lifecycle hooks", function() {
 		}
 
 		function C(vm, model) {
-			vm.config({hooks: {
+			vm.cfg({hooks: {
 				willUpdate: function(vm, newModel) {
 					model = newModel;
 				}

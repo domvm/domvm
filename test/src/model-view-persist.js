@@ -6,7 +6,7 @@ QUnit.module("Model-view persistence, vm init, DOM reuse", function() {
 	function ViewA(vm) {
 		vmA = vm;
 /*
-		vm.config({hooks: {
+		vm.cfg({hooks: {
 			willUnmount: function() {
 				console.log("willUnmount");
 			},

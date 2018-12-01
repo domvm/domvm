@@ -10,7 +10,7 @@ QUnit.module("emit()", function() {
 	function ViewA(vm) {
 		vmA = vm;
 
-		vm.config({
+		vm.cfg({
 			onemit: {
 				"abc": function() { data.abc += "a"; },
 				"ab": function() { data.ab += "a"; },
@@ -31,7 +31,7 @@ QUnit.module("emit()", function() {
 	function ViewB(vm) {
 		vmB = vm;
 
-		vm.config({
+		vm.cfg({
 			onemit: {
 				"abc": function() { data.abc += "b"; },
 				"ab": function() { data.ab += "b"; },
@@ -52,7 +52,7 @@ QUnit.module("emit()", function() {
 	function ViewC(vm) {
 		vmC = vm;
 
-		vm.config({
+		vm.cfg({
 			onemit: {
 				"abc": function() { data.abc += "c"; },
 				"bc": function() { data.bc += "c"; },
@@ -134,7 +134,7 @@ QUnit.module("emit()", function() {
 		}
 
 		function ViewX(vm) {
-			vm.config({
+			vm.cfg({
 				onemit: {
 					testEv: function(arg1, arg2) {
 						assert.equal(arg1, "arg1", "Arg1");

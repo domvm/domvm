@@ -23,7 +23,7 @@ function VirtualList(vm) {
 		vm.redraw();
 	}
 
-	vm.config({
+	vm.cfg({
 		hooks: {
 			didRedraw: resize,
 			didMount: function() {
