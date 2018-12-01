@@ -1962,15 +1962,16 @@ var ViewModelProto = ViewModel.prototype = {
 		if (opts.init)
 			{ t.init = opts.init; }
 		if (opts.diff) {
-			{
-				if (isFunc(opts.diff)) {
-					t.diff = {
-						val: opts.diff,
-						eq: dfltEq,
-					};
-				}
+			if (isFunc(opts.diff)) {
+				t.diff = {
+					val: opts.diff,
+					eq: dfltEq,
+				};
 			}
+			else
+				{ t.diff = opts.diff; }
 		}
+
 		{
 			if (opts.onevent)
 				{ t.onevent = opts.onevent; }

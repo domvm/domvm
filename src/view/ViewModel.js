@@ -70,17 +70,16 @@ export const ViewModelProto = ViewModel.prototype = {
 		if (opts.init)
 			t.init = opts.init;
 		if (opts.diff) {
-			if (FEAT_DIFF_CMP) {
-				if (isFunc(opts.diff)) {
-					t.diff = {
-						val: opts.diff,
-						eq: dfltEq,
-					};
-				}
+			if (FEAT_DIFF_CMP && isFunc(opts.diff)) {
+				t.diff = {
+					val: opts.diff,
+					eq: dfltEq,
+				};
 			}
 			else
 				t.diff = opts.diff;
 		}
+
 		if (FEAT_ONEVENT) {
 			if (opts.onevent)
 				t.onevent = opts.onevent;
