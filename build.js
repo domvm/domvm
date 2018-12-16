@@ -136,6 +136,11 @@ function compile(buildName) {
 
 	rollup({
 		input: buildFile,
+		onwarn: (warning, warn) => {
+			if (warning.code === 'CIRCULAR_DEPENDENCY')
+				return;
+			warn(warning)
+		},
 		plugins: [
 			replace(repls),
 			buble(),
