@@ -1746,8 +1746,10 @@ function redrawSync(newParent, newIdx, withDOM) {
 
 		if (vold != null) {
 			oldDiff = vold._diff;
-            if (vm.diff.eq(vm, oldDiff, newDiff))
-                { return reParent(vm, vold, newParent, newIdx); }
+			if (vm.diff.eq(vm, oldDiff, newDiff)) {
+				vold._diff = newDiff;
+				return reParent(vm, vold, newParent, newIdx);
+			}
 		}
 	}
 

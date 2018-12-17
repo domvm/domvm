@@ -1,40 +1,33 @@
 var el = domvm.defineElement;
 
-var idle = false;
-
 function View(vm) {
 	return {
-		diff: function(vm) {
-			return {idle: idle};
-		},
-		hooks: {
-			didRedraw: function() {
-				console.log("didRedraw");
-			}
-		},
-		render: function(vm, model, o, n) {
-			if (o && o.idle != n.idle) {
-				if (n.idle)
-					vm.node.patch({class: "yyy", style: "display: none;"});
-				else
-					vm.node.patch({class: "xxx", style: "display: block;"});
+		diff: {
+			val: (vm, data) => data.idle,
+			eq: (vm, oldIdle, newIdle) => {
+				if (oldIdle != newIdle) {
+					vm.node.patch(
+						newIdle ?
+						{class: "yyy", style: "display: none;"} :
+						{class: "xxx", style: null}
+					);
+				}
 
-				return vm.node;
-			}
-
+				return true;
+			},
+		},
+		render: function(vm, data) {
 			return el(".moo", "HI");
 		}
 	};
 }
 
-var vm = domvm.createView(View).mount(document.body);
+var vm = domvm.createView(View, {idle: false}).mount(document.body);
 
 setTimeout(function() {
-	idle = true;
-	vm.redraw();
+	vm.update({idle: true});
 }, 1000);
 
 setTimeout(function() {
-	idle = false;
-	vm.redraw();
+	vm.update({idle: false});
 }, 3000);
