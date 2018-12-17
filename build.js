@@ -5,7 +5,7 @@ const fs = require('fs');
 const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
 const zlib = require('zlib');
-const UglifyJS = require('uglify-js');
+const Terser = require('terser');
 
 const AVAIL_FEATS = [
 	"FLUENT_API",
@@ -204,7 +204,7 @@ function squish(buildName, preserve, start) {
 	var src = "dist/" + buildName + "/domvm." + buildName + ".js";
 	var dst = "dist/" + buildName + "/domvm." + buildName + ".min.js";
 
-	// from docs (https://github.com/mishoo/UglifyJS2)
+	// from docs (https://github.com/terser-js/terser)
 	const compressDefaults = {
 		arguments: true,
 		booleans: true,
@@ -265,13 +265,13 @@ function squish(buildName, preserve, start) {
 		}),
 	};
 
-	const compiled = UglifyJS.minify(fs.readFileSync(src, 'utf8'), opts).code;
+	const compiled = Terser.minify(fs.readFileSync(src, 'utf8'), opts).code;
 
 	fs.writeFileSync(dst, "// " + preserve + "\n" + compiled, 'utf8');
 
 	buildDistTable();
 
-	console.log((+new Date - start) + "ms: UglifyJS done (build: " + buildName + ")");
+	console.log((+new Date - start) + "ms: Terser done (build: " + buildName + ")");
 }
 
 function padRight(str, padStr, len) {

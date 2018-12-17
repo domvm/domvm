@@ -10,8 +10,8 @@
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	(factory((global.domvm = {})));
-}(this, (function (exports) { 'use strict';
+	factory(global.domvm = {});
+}(typeof self !== 'undefined' ? self : this, function (exports) { 'use strict';
 
 	// NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 	// There are some places that test <= COMMENT to assert if node is a VNode
@@ -28,10 +28,6 @@
 	var ENV_DOM = typeof window !== "undefined";
 
 	var doc = ENV_DOM ? document : {};
-
-	{
-		var rAF = (ENV_DOM ? window : {}).requestAnimationFrame;
-	}
 
 	var emptyObj = {};
 
@@ -121,27 +117,6 @@
 			isPlainObj(o) ? eqObj(o, n) :			// assumes n is also Object
 			false
 		);
-	}
-
-	// https://github.com/darsain/raft
-	// rAF throttler, aggregates multiple repeated redraw calls within single animframe
-	/* istanbul ignore next */
-	function raft(fn) {
-		if (!rAF)
-			{ return fn; }
-
-		var id, ctx, args;
-
-		function call() {
-			id = 0;
-			fn.apply(ctx, args);
-		}
-
-		return function() {
-			ctx = this;
-			args = arguments;
-			if (!id) { id = rAF(call); }
-		};
 	}
 
 	function curry(fn, args, ctx) {
@@ -1095,7 +1070,7 @@
 			}
 			else if (type2 === VMODEL) {
 				var vm = vnode2.vm;
-				vm._update(vnode2.data, vnode, i);		// , false
+				vm._update(vnode2.data, vnode, i, true, true);
 				type2 = vm.node.type;
 				insertBefore(vnode.el, vm.node.el);		// , hydrate(vm.node)
 			}
@@ -1464,7 +1439,7 @@
 
 					if (node2.type === VVIEW) {
 						if (donor2 != null)
-							{ node2 = donor2.vm._update(node2.data, vnode, i).node; }
+							{ node2 = donor2.vm._update(node2.data, vnode, i, true, true).node; }
 						else
 							{ node2 = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false).node; }
 					}
@@ -1494,7 +1469,7 @@
 				else if (type2 === VVIEW) {
 					if (donor2 = doFind && find(node2, obody, fromIdx)) {		// update/moveTo
 						foundIdx = donor2.idx;
-						donor2.vm._update(node2.data, vnode, i);		// withDOM
+						donor2.vm._update(node2.data, vnode, i, true, true);
 					}
 					else
 						{ createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
@@ -1516,7 +1491,7 @@
 						hasDOM = false;
 					}
 
-					vm._update(node2.data, vnode, i, hasDOM);
+					vm._update(node2.data, vnode, i, hasDOM, true);
 				}
 			}
 
@@ -1543,6 +1518,30 @@
 
 		domSync && syncChildren(vnode, donor);
 	}
+
+	//if (true) {
+		var redrawQueue = new Set();
+		var rafId = 0;
+
+		function drainQueue() {
+			redrawQueue.forEach(function (vm) {
+				// don't redraw if vm was unmounted
+				if (vm.node == null)
+					{ return; }
+
+				// don't redraw if an ancestor is also enqueued
+				var parVm = vm;
+				while (parVm = parVm.parent()) {
+					if (redrawQueue.has(parVm))
+						{ return; }
+				}
+
+				vm.redraw(true);
+			});
+
+			redrawQueue.clear();
+			rafId = 0;
+		}
 
 	// view + key serve as the vm's unique identity
 	function ViewModel(view, data, key, opts) {
@@ -1643,8 +1642,12 @@
 
 				if (sync)
 					{ vm._redraw(null, null, isHydrated(vm)); }
-				else
-					{ (vm._redrawAsync = vm._redrawAsync || raft(function (_) { return vm.redraw(true); }))(); }
+				else {
+					redrawQueue.add(this);
+
+					if (rafId === 0)
+						{ rafId = requestAnimationFrame(drainQueue); }
+				}
 			}
 
 			return vm;
@@ -1656,10 +1659,10 @@
 				if (sync == null)
 					{ sync = syncRedraw; }
 
-				if (sync)
-					{ vm._update(newData, null, null, isHydrated(vm)); }
-				else
-					{ (vm._updateAsync = vm._updateAsync || raft(function (newData) { return vm.update(newData, true); }))(newData); }
+				vm._update(newData, null, null, isHydrated(vm), sync);
+
+				if (!sync)
+					{ vm.redraw(); }
 			}
 
 			return vm;
@@ -1668,10 +1671,6 @@
 		_update: updateSync,
 		_redraw: redrawSync,
 	};
-
-	{
-		ViewModelProto._redrawAsync = ViewModelProto._updateAsync = null;
-	}
 
 	{
 		ViewModelProto.onevent = noop;
@@ -1832,8 +1831,7 @@
 	}
 
 	// this also doubles as moveTo
-	// TODO? @withRedraw (prevent redraw from firing)
-	function updateSync(newData, newParent, newIdx, withDOM) {
+	function updateSync(newData, newParent, newIdx, withDOM, withRedraw) {
 		var vm = this;
 
 		if (newData != null) {
@@ -1843,7 +1841,7 @@
 			}
 		}
 
-		return vm._redraw(newParent, newIdx, withDOM);
+		return withRedraw ? vm._redraw(newParent, newIdx, withDOM) : vm;
 	}
 
 	function defineElement(tag, arg1, arg2, flags) {
@@ -2219,4 +2217,4 @@
 	exports.config = config;
 	exports.cfg = config;
 
-})));
+}));

@@ -195,7 +195,7 @@ function patchChildren(vnode, donor) {
 
 				if (node2.type === VVIEW) {
 					if (donor2 != null)
-						node2 = donor2.vm._update(node2.data, vnode, i).node;
+						node2 = donor2.vm._update(node2.data, vnode, i, true, true).node;
 					else
 						node2 = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false).node;
 				}
@@ -230,7 +230,7 @@ function patchChildren(vnode, donor) {
 			else if (type2 === VVIEW) {
 				if (donor2 = doFind && find(node2, obody, fromIdx)) {		// update/moveTo
 					foundIdx = donor2.idx;
-					donor2.vm._update(node2.data, vnode, i);		// withDOM
+					donor2.vm._update(node2.data, vnode, i, true, true);
 				}
 				else
 					createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
@@ -252,7 +252,7 @@ function patchChildren(vnode, donor) {
 					hasDOM = false;
 				}
 
-				vm._update(node2.data, vnode, i, hasDOM);
+				vm._update(node2.data, vnode, i, hasDOM, true);
 			}
 		}
 

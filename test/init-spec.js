@@ -10,6 +10,10 @@ global.MouseEvent = Event;
 
 global.HTMLElement = Element;
 
+global.window.requestAnimationFrame = function(fn) {
+	fn();
+};
+
 Object.defineProperty(Element.prototype, "value", {
 	configurable: true,
 	set: function(s) {
@@ -66,6 +70,10 @@ assert.async = function() { return function() {} };
 assert.ok = assert.equal = assert.deepEqual = function() {};
 
 global.domvm = require('../dist/full/domvm.full.js');
+
+domvm.cfg({
+	syncRedraw: true
+});
 
 global.QUnit = {
 	module: function(name, fn) {

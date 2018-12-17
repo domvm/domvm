@@ -1,14 +1,39 @@
 import { patch } from "./patch";
 import { hydrate } from "./hydrate";
 import { preProc } from "./preProc";
-import { isArr, isPlainObj, eq, isFunc, isProm, assignObj, curry, raft, noop } from "../utils";
-import { repaint, isHydrated, getVm } from "./utils";
+import { isPlainObj, eq, isFunc, assignObj, noop } from "../utils";
+import { isHydrated, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
 import { streamVal, streamOn, streamOff } from './addons/stream';
 import { syncRedraw } from './config';
 import { devNotify, DEVMODE } from "./addons/devmode";
 import { DOMInstr } from "./addons/dominstr";
+
+//if (FEAT_RAF_REDRAW) {
+	var redrawQueue = new Set();
+	var rafId = 0;
+
+	function drainQueue() {
+		redrawQueue.forEach(vm => {
+			// don't redraw if vm was unmounted
+			if (vm.node == null)
+				return;
+
+			// don't redraw if an ancestor is also enqueued
+			var parVm = vm;
+			while (parVm = parVm.parent()) {
+				if (redrawQueue.has(parVm))
+					return;
+			}
+
+			vm.redraw(true);
+		});
+
+		redrawQueue.clear();
+		rafId = 0;
+	}
+//}
 
 var instr = null;
 
@@ -120,8 +145,12 @@ export const ViewModelProto = ViewModel.prototype = {
 
 			if (sync)
 				vm._redraw(null, null, isHydrated(vm));
-			else
-				(vm._redrawAsync = vm._redrawAsync || raft(_ => vm.redraw(true)))();
+			else {
+				redrawQueue.add(this);
+
+				if (rafId === 0)
+					rafId = requestAnimationFrame(drainQueue);
+			}
 		}
 
 		return vm;
@@ -136,10 +165,10 @@ export const ViewModelProto = ViewModel.prototype = {
 			if (sync == null)
 				sync = syncRedraw;
 
-			if (sync)
-				vm._update(newData, null, null, isHydrated(vm));
-			else
-				(vm._updateAsync = vm._updateAsync || raft(newData => vm.update(newData, true)))(newData);
+			vm._update(newData, null, null, isHydrated(vm), sync);
+
+			if (!sync)
+				vm.redraw();
 		}
 
 		return vm;
@@ -148,10 +177,6 @@ export const ViewModelProto = ViewModel.prototype = {
 	_update: updateSync,
 	_redraw: redrawSync,
 };
-
-if (FEAT_RAF_REDRAW) {
-	ViewModelProto._redrawAsync = ViewModelProto._updateAsync = null;
-}
 
 if (FEAT_ONEVENT) {
 	ViewModelProto.onevent = noop;
@@ -336,8 +361,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 }
 
 // this also doubles as moveTo
-// TODO? @withRedraw (prevent redraw from firing)
-function updateSync(newData, newParent, newIdx, withDOM) {
+function updateSync(newData, newParent, newIdx, withDOM, withRedraw) {
 	var vm = this;
 
 	if (newData != null) {
@@ -350,5 +374,5 @@ function updateSync(newData, newParent, newIdx, withDOM) {
 		}
 	}
 
-	return vm._redraw(newParent, newIdx, withDOM);
+	return withRedraw ? vm._redraw(newParent, newIdx, withDOM) : vm;
 }

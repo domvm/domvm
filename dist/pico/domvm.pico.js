@@ -10,8 +10,8 @@
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	(factory((global.domvm = {})));
-}(this, (function (exports) { 'use strict';
+	factory(global.domvm = {});
+}(typeof self !== 'undefined' ? self : this, function (exports) { 'use strict';
 
 	// NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 	// There are some places that test <= COMMENT to assert if node is a VNode
@@ -814,7 +814,7 @@
 			}
 			else if (type2 === VMODEL) {
 				var vm = vnode2.vm;
-				vm._update(vnode2.data, vnode, i);		// , false
+				vm._update(vnode2.data, vnode, i, true, true);
 				type2 = vm.node.type;
 				insertBefore(vnode.el, vm.node.el);		// , hydrate(vm.node)
 			}
@@ -1174,7 +1174,7 @@
 
 					if (node2.type === VVIEW) {
 						if (donor2 != null)
-							{ node2 = donor2.vm._update(node2.data, vnode, i).node; }
+							{ node2 = donor2.vm._update(node2.data, vnode, i, true, true).node; }
 						else
 							{ node2 = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false).node; }
 					}
@@ -1204,7 +1204,7 @@
 				else if (type2 === VVIEW) {
 					if (donor2 = doFind && find(node2, obody, fromIdx)) {		// update/moveTo
 						foundIdx = donor2.idx;
-						donor2.vm._update(node2.data, vnode, i);		// withDOM
+						donor2.vm._update(node2.data, vnode, i, true, true);
 					}
 					else
 						{ createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
@@ -1226,7 +1226,7 @@
 						hasDOM = false;
 					}
 
-					vm._update(node2.data, vnode, i, hasDOM);
+					vm._update(node2.data, vnode, i, hasDOM, true);
 				}
 			}
 
@@ -1487,8 +1487,7 @@
 	}
 
 	// this also doubles as moveTo
-	// TODO? @withRedraw (prevent redraw from firing)
-	function updateSync(newData, newParent, newIdx, withDOM) {
+	function updateSync(newData, newParent, newIdx, withDOM, withRedraw) {
 		var vm = this;
 
 		if (newData != null) {
@@ -1498,7 +1497,7 @@
 			}
 		}
 
-		return vm._redraw(newParent, newIdx, withDOM);
+		return withRedraw ? vm._redraw(newParent, newIdx, withDOM) : vm;
 	}
 
 	function defineElement(tag, arg1, arg2, flags) {
@@ -1597,4 +1596,4 @@
 	exports.config = config;
 	exports.cfg = config;
 
-})));
+}));

@@ -1,10 +1,6 @@
-const ENV_DOM = typeof window !== "undefined";
+export const ENV_DOM = typeof window !== "undefined";
 
 export const doc = ENV_DOM ? document : {};
-
-if (FEAT_RAF_REDRAW) {
-	var rAF = (ENV_DOM ? window : {}).requestAnimationFrame;
-}
 
 export const emptyObj = {};
 
@@ -99,27 +95,6 @@ export function eq(o, n) {
 		isPlainObj(o) ? eqObj(o, n) :			// assumes n is also Object
 		false
 	);
-}
-
-// https://github.com/darsain/raft
-// rAF throttler, aggregates multiple repeated redraw calls within single animframe
-/* istanbul ignore next */
-export function raft(fn) {
-	if (!rAF)
-		return fn;
-
-	var id, ctx, args;
-
-	function call() {
-		id = 0;
-		fn.apply(ctx, args);
-	}
-
-	return function() {
-		ctx = this;
-		args = arguments;
-		if (!id) id = rAF(call);
-	};
 }
 
 export function curry(fn, args, ctx) {
