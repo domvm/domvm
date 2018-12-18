@@ -25,9 +25,9 @@ export function fireHook(hooks, name, o, n, immediate) {
 	}
 }
 
-export function drainDidHooks(vm) {
+export function drainDidHooks(vm, doRepaint) {
 	if (didQueue.length) {
-		repaint(vm.node);
+		doRepaint && repaint(vm.node);
 
 		var item;
 		while (item = didQueue.shift())

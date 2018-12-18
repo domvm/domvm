@@ -44,6 +44,6 @@ export function patch(o, n, doRepaint) {
 		o.parent.body[o.idx] = n;
 		fullPatch(n, o);
 		doRepaint && repaint(n);
-		drainDidHooks(getVm(n));
+		drainDidHooks(getVm(n), false);
 	}
 }

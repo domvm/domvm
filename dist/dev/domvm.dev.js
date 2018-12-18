@@ -4,7 +4,7 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/domvm/domvm (v3.4.7, dev build)
+* @preserve https://github.com/domvm/domvm (v3.4.8-dev, dev build)
 */
 
 (function (global, factory) {
@@ -1012,9 +1012,9 @@
 		}
 	}
 
-	function drainDidHooks(vm) {
+	function drainDidHooks(vm, doRepaint) {
 		if (didQueue.length) {
-			repaint(vm.node);
+			doRepaint && repaint(vm.node);
 
 			var item;
 			while (item = didQueue.shift())
@@ -2079,7 +2079,7 @@
 		}
 
 		if (el)
-			{ drainDidHooks(vm); }
+			{ drainDidHooks(vm, true); }
 
 		{
 			if (DEVMODE.mutations)
@@ -2107,7 +2107,7 @@
 		node.el = null;
 
 		if (!asSub)
-			{ drainDidHooks(vm); }
+			{ drainDidHooks(vm, true); }
 	}
 
 	function reParent(vm, vold, newParent, newIdx) {
@@ -2219,7 +2219,7 @@
 		isMounted && fireHook(vm.hooks, "didRedraw", vm, vm.data);
 
 		if (isRedrawRoot && isMounted)
-			{ drainDidHooks(vm); }
+			{ drainDidHooks(vm, true); }
 
 		{
 			if (isRedrawRoot && DEVMODE.mutations && isMounted)
@@ -2365,7 +2365,7 @@
 			o.parent.body[o.idx] = n;
 			patch(n, o);
 			doRepaint && repaint(n);
-			drainDidHooks(getVm(n));
+			drainDidHooks(getVm(n), false);
 		}
 	}
 
@@ -2434,7 +2434,7 @@
 
 		attach(vm.node, el);
 
-		drainDidHooks(vm);
+		drainDidHooks(vm, false);
 
 		return vm;
 	}

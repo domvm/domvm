@@ -212,7 +212,7 @@ function mount(el, isRoot) {
 	}
 
 	if (el)
-		drainDidHooks(vm);
+		drainDidHooks(vm, true);
 
 	if (_DEVMODE) {
 		if (DEVMODE.mutations)
@@ -240,7 +240,7 @@ function unmount(asSub) {
 	node.el = null;
 
 	if (!asSub)
-		drainDidHooks(vm);
+		drainDidHooks(vm, true);
 }
 
 function reParent(vm, vold, newParent, newIdx) {
@@ -352,7 +352,7 @@ function redrawSync(newParent, newIdx, withDOM) {
 	isMounted && fireHook(vm.hooks, "didRedraw", vm, vm.data);
 
 	if (isRedrawRoot && isMounted)
-		drainDidHooks(vm);
+		drainDidHooks(vm, true);
 
 	if (_DEVMODE) {
 		if (isRedrawRoot && DEVMODE.mutations && isMounted)

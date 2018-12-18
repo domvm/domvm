@@ -15,7 +15,7 @@ export function protoAttach(el) {
 
 	attach(vm.node, el);
 
-	drainDidHooks(vm);
+	drainDidHooks(vm, false);
 
 	return vm;
 };

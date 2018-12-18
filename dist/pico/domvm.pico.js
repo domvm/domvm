@@ -4,7 +4,7 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/domvm/domvm (v3.4.7, pico build)
+* @preserve https://github.com/domvm/domvm (v3.4.8-dev, pico build)
 */
 
 (function (global, factory) {
@@ -653,9 +653,9 @@
 		}
 	}
 
-	function drainDidHooks(vm) {
+	function drainDidHooks(vm, doRepaint) {
 		if (didQueue.length) {
-			repaint(vm.node);
+			doRepaint && repaint(vm.node);
 
 			var item;
 			while (item = didQueue.shift())
@@ -1371,7 +1371,7 @@
 		}
 
 		if (el)
-			{ drainDidHooks(vm); }
+			{ drainDidHooks(vm, true); }
 
 		return vm;
 	}
@@ -1389,7 +1389,7 @@
 		node.el = null;
 
 		if (!asSub)
-			{ drainDidHooks(vm); }
+			{ drainDidHooks(vm, true); }
 	}
 
 	function reParent(vm, vold, newParent, newIdx) {
@@ -1483,7 +1483,7 @@
 		isMounted && fireHook(vm.hooks, "didRedraw", vm, vm.data);
 
 		if (isRedrawRoot && isMounted)
-			{ drainDidHooks(vm); }
+			{ drainDidHooks(vm, true); }
 
 		return vm;
 	}
