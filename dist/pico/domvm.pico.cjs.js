@@ -1332,7 +1332,7 @@ var ViewModelProto = ViewModel.prototype = {
 		var vm = this;
 
 		{
-			vm._update(newData, null, null, isHydrated(vm));
+			vm._update(newData, null, null, isHydrated(vm), true);
 		}
 
 		return vm;

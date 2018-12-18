@@ -159,7 +159,7 @@ export const ViewModelProto = ViewModel.prototype = {
 		var vm = this;
 
 		if (!FEAT_RAF_REDRAW) {
-			vm._update(newData, null, null, isHydrated(vm));
+			vm._update(newData, null, null, isHydrated(vm), true);
 		}
 		else {
 			if (sync == null)
