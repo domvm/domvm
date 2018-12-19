@@ -9,10 +9,10 @@ domvm is a flexible, pure-js view layer for building high performance web applic
 Like jQuery, it'll happily fit into any existing codebase without introducing new tooling or requiring major architectural changes.
 
 - It's zero-dependency and requires no compilation or tooling; one `<script>` tag is all that's needed.
-- It's small: [~6k gz](/dist/README.md), fast: [just 10%](https://rawgit.com/krausest/js-framework-benchmark/master/webdriver-ts-results/table.html) slower vs painfully imperative vanilla DOM code. [2x faster SSR](/demos/bench/ssr) vs React v16.
+- It's small: [~6k gz](/dist/README.md), fast: [just 20%](https://krausest.github.io/js-framework-benchmark/current.html) slower vs painfully imperative vanilla DOM code. [2x faster SSR](/demos/bench/ssr) vs React v16.
 - Its entire, practical API can be mastered in under 1 hour by both, OO graybeards and FRP hipsters. Obvious explicit behavior, debuggable plain JS templates, optional statefulness and interchangable imperative/declarative components.
 - It's well-suited for building [simple widgets](https://domvm.github.io/domvm/demos/playground/#calendar) and [complex, fault-tolerant applications](https://domvm.github.io/domvm/demos/ThreaditJS).
-- Supports down to IE9 with some tiny shims: [Promise](https://github.com/RubenVerborgh/promiscuous), [requestAnimationFrame](https://gist.github.com/paulirish/1579671).
+- Supports down to IE11 with a tiny [Promise shim](https://github.com/RubenVerborgh/promiscuous).
 
 To use domvm you should be comfortable with JavaScript and the DOM; the following code should be fairly self-explanatory:
 
