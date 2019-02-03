@@ -110,7 +110,7 @@
 	}
 
 	function eq(o, n) {
-	    return (
+		return (
 			o === n ? true :						// eqv
 			n == null || o == null ? false :		// null & undefined
 			isArr(o) ? eqArr(o, n) :				// assumes n is also Array
@@ -1643,7 +1643,7 @@
 				if (sync)
 					{ vm._redraw(null, null, isHydrated(vm)); }
 				else {
-					redrawQueue.add(this);
+					redrawQueue.add(vm);
 
 					if (rafId === 0)
 						{ rafId = requestAnimationFrame(drainQueue); }

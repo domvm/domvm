@@ -88,7 +88,7 @@ export function eqArr(a, b) {
 }
 
 export function eq(o, n) {
-    return (
+	return (
 		o === n ? true :						// eqv
 		n == null || o == null ? false :		// null & undefined
 		isArr(o) ? eqArr(o, n) :				// assumes n is also Array

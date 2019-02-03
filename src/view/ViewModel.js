@@ -146,7 +146,7 @@ export const ViewModelProto = ViewModel.prototype = {
 			if (sync)
 				vm._redraw(null, null, isHydrated(vm));
 			else {
-				redrawQueue.add(this);
+				redrawQueue.add(vm);
 
 				if (rafId === 0)
 					rafId = requestAnimationFrame(drainQueue);
