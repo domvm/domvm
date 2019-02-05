@@ -601,6 +601,7 @@ function patchStyle(n, o) {
 
 var onevent = noop;
 var syncRedraw = false;
+var didRedraws = noop;
 
 function config(newCfg) {
 	{
@@ -609,6 +610,9 @@ function config(newCfg) {
 
 	if (newCfg.syncRedraw != null)
 		{ syncRedraw = newCfg.syncRedraw; }
+
+	if (newCfg.didRedraws != null)
+		{ didRedraws = newCfg.didRedraws; }
 }
 
 var registry = {};
@@ -1427,6 +1431,7 @@ function patchChildren(vnode, donor) {
 			vm.redraw(true);
 		});
 
+		didRedraws(redrawQueue);
 		redrawQueue.clear();
 		rafId = 0;
 	}

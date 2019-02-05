@@ -6,7 +6,7 @@ import { isHydrated, getVm } from "./utils";
 import { insertBefore, removeChild, nextSib, clearChildren } from "./dom";
 import { drainDidHooks, fireHook } from "./hooks";
 import { streamVal, streamOn, streamOff } from './addons/stream';
-import { syncRedraw } from './config';
+import { syncRedraw, didRedraws } from './config';
 import { devNotify, DEVMODE } from "./addons/devmode";
 import { DOMInstr } from "./addons/dominstr";
 
@@ -30,6 +30,7 @@ import { DOMInstr } from "./addons/dominstr";
 			vm.redraw(true);
 		});
 
+		didRedraws(redrawQueue);
 		redrawQueue.clear();
 		rafId = 0;
 	}

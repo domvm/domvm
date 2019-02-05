@@ -471,11 +471,15 @@
 	}
 
 	var syncRedraw = false;
+	var didRedraws = noop;
 
 	function config(newCfg) {
 
 		if (newCfg.syncRedraw != null)
 			{ syncRedraw = newCfg.syncRedraw; }
+
+		if (newCfg.didRedraws != null)
+			{ didRedraws = newCfg.didRedraws; }
 	}
 
 	var registry = {};
