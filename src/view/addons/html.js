@@ -1,4 +1,4 @@
-import { ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
+import { UNMANAGED, ELEMENT, TEXT, COMMENT, VVIEW, VMODEL } from '../VTYPES';
 import { createView } from '../createView';
 import { isArr } from '../../utils';
 import { isPropAttr, isEvAttr, isDynAttr, isSplAttr } from '../utils';
@@ -111,6 +111,7 @@ function html(node, dynProps) {
 			out = node.vm.html();
 			break;
 		case ELEMENT:
+		case UNMANAGED:
 			if (node.el != null && node.tag == null) {
 				out = node.el.outerHTML;		// pre-existing dom elements (does not currently account for any props applied to them)
 				break;

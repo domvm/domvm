@@ -13,6 +13,7 @@
 // There are some places that test <= COMMENT to assert if node is a VNode
 
 // VNode types
+var UNMANAGED	= 0;
 var ELEMENT	= 1;
 var TEXT		= 2;
 var COMMENT	= 3;
@@ -1922,7 +1923,7 @@ function injectView(vm, data) {
 
 function injectElement(el) {
 	var node = new VNode;
-	node.type = ELEMENT;
+	node.type = UNMANAGED;
 	node.el = node.key = el;
 	return node;
 }
@@ -2131,6 +2132,7 @@ function html(node, dynProps) {
 			out = node.vm.html();
 			break;
 		case ELEMENT:
+		case UNMANAGED:
 			if (node.el != null && node.tag == null) {
 				out = node.el.outerHTML;		// pre-existing dom elements (does not currently account for any props applied to them)
 				break;

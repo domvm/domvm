@@ -2,6 +2,7 @@
 // There are some places that test <= COMMENT to assert if node is a VNode
 
 // VNode types
+export const UNMANAGED	= 0;
 export const ELEMENT	= 1;
 export const TEXT		= 2;
 export const COMMENT	= 3;
