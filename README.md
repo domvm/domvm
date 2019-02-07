@@ -311,7 +311,7 @@ If you need to *replace* a view's data (as with immutable structures), you shoul
 vm.update(newData, sync);
 ```
 
-Of course, you can nest views. This can be done either declaratively or via injection of any already-initialized view:
+Views can be nested either declaratively or by injecting an already-initialized view:
 
 ```js
 var el = domvm.defineElement,
@@ -323,7 +323,7 @@ function ViewA(vm) {
         return el("div", [
             el("strong", dataA.test),
             vw(ViewB, dataA.dataB),               // implicit/declarative view
-            iv(data.viewC),                         // injected explicit view
+            iv(data.viewC),                       // injected explicit view
         ]);
     };
 }
@@ -354,6 +354,10 @@ var dataA = {
 
 var vmA = cv(ViewA, dataA).mount(document.body);
 ```
+
+Notes:
+
+- `render()` must return a single dom vnode. There is no support yet for views returning fragments/arrays, other views or `null`. These capabilities do not add much value to domvm's API (see [Issue #207](https://github.com/domvm/domvm/issues/207)).
 
 #### Options
 
