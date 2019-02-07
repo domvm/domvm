@@ -17,7 +17,8 @@ Like jQuery, it'll happily fit into any existing codebase without introducing ne
 To use domvm you should be comfortable with JavaScript and the DOM; the following code should be fairly self-explanatory:
 
 ```js
-var el = domvm.defineElement;
+var el = domvm.defineElement,
+    cv = domvm.createView;
 
 var HelloView = {
     render: function(vm, data) {
@@ -27,7 +28,7 @@ var HelloView = {
 
 var data = {name: "Leon"};
 
-domvm.createView(HelloView, data).mount(document.body);
+var vm = cv(HelloView, data).mount(document.body);
 ```
 
 ---
@@ -149,7 +150,8 @@ var el = domvm.defineElement,
     sv = domvm.defineSvgElement,
     vw = domvm.defineView,
     iv = domvm.injectView,
-    ie = domvm.injectElement;
+    ie = domvm.injectElement,
+    cv = domvm.createView;
 ```
 
 Using `defineText` is not required since domvm will convert all numbers and strings into `defineText` vnodes automatically.
@@ -284,7 +286,7 @@ var data = {
     firstName: "Leon"
 };
 
-var vm = domvm.createView(MyView, data);
+var vm = cv(MyView, data);
 
 vm.mount(document.body);            // appends into target
 ```
@@ -347,15 +349,15 @@ var dataA = {
     dataB: {
         test2: 456,
     },
-    viewC: domvm.createView(ViewC, dataC),
+    viewC: cv(ViewC, dataC),
 };
 
-var vmA = domvm.createView(ViewA, dataA).mount(document.body);
+var vmA = cv(ViewA, dataA).mount(document.body);
 ```
 
 #### Options
 
-`domvm.createView` and `domvm.defineView` have four arguments: `(view, data, key, opts)`.
+`cv` and `domvm.defineView` have four arguments: `(view, data, key, opts)`.
 The fourth `opts` arg can be used to pass in any additional data into the view constructor/init without having to cram it into `data`.
 Several reserved options are handled automatically by domvm that correspond to existing `vm.config({...})` options (documented in other sections):
 
@@ -476,7 +478,7 @@ Another way to implement view reactivity and autoredraw is by using streams. By 
 
 domvm's templates support streams in the following contexts:
 
-- view data: `vw(MyView, dataStream...)` and `domvm.createView(MyView, dataStream...)`
+- view data: `vw(MyView, dataStream...)` and `cv(MyView, dataStream...)`
 - simple body: `el("#total", cartTotalStream)`
 - attr value: `el("input[type=checkbox]", {checked: checkedStream})`
 - css value: `el("div", {style: {background: colorStream}})`
@@ -611,7 +613,7 @@ var stepper = {                                     // some external model/data/
     value: 1
 };
 
-var vm = domvm.createView(StepperView, stepper);    // create ViewModel, passing model
+var vm = cv(StepperView, stepper);    // create ViewModel, passing model
 
 vm.mount(document.body);                            // mount into document
 ```
@@ -645,7 +647,7 @@ function Stepper() {
         this.view.redraw();
     };
 
-    this.view = domvm.createView(StepperView, this);
+    this.view = cv(StepperView, this);
 }
 
 function StepperView(vm, stepper) {
@@ -811,10 +813,10 @@ function View() {
 var data = {name: "Leon"};
 
 // return this generated <body>Hello Leon</body> from the server
-var html = domvm.createView(View, data).html();
+var html = cv(View, data).html();
 
 // then hydrate on the client to bind event handlers, etc.
-var vm = domvm.createView(View, data).attach(document.body);
+var vm = cv(View, data).attach(document.body);
 ```
 
 Notes:
