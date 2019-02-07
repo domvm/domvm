@@ -408,7 +408,11 @@ Sub-views carry a bit of performance overhead and should be used when the follow
 - Isolated redraw (as a perf optimization)
 - Synchronized redraw of disjoint views
 
-As an example, the distinction can be discussed in terms of the [calendar demo](https://domvm.github.io/domvm/demos/playground/#calendar). Its implementation is a single monolithic view with internal sub-template generating functions. Some may prefer to split up the months into a sub-view called MonthView, which would bring the total view count to 13. Others may be tempted to split each day into a DayView, but this would be a mistake as it would create 504 + 12 + 1 views, each incuring a slight performance hit for no reason.
+As an example, the distinction can be discussed in terms of the [calendar demo](https://domvm.github.io/domvm/demos/playground/#calendar).
+Its implementation is a single monolithic view with internal sub-template generating functions.
+Some may prefer to split up the months into a sub-view called MonthView, which would bring the total view count to 13.
+Others may be tempted to split each day into a DayView, but this would be a mistake as it would create 504 + 12 + 1 views, each incuring a slight performance hit for no reason.
+On the other hand, if you have a full-page month view with 31 days and multiple interactive events in the day cells, then 31 sub-views are well-justified.
 
 The general advice is, restrict your views to complex, building-block-level, stateful components and use sub-template generators for readability and DRY purposes; a button should not be a view.
 
