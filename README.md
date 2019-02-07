@@ -130,7 +130,7 @@ Due to the runtime nature of DEVMODE heuristics, some warnings may be false posi
 While not DEVMODE-specific, you may find it useful to toggle always-sychronous redraw during testing and benchmarks:
 
 ```js
-domvm.config({
+domvm.cfg({
     syncRedraw: true
 });
 ```
@@ -361,9 +361,9 @@ Notes:
 
 #### Options
 
-`cv` and `domvm.defineView` have four arguments: `(view, data, key, opts)`.
+`cv` and `vw` have four arguments: `(view, data, key, opts)`.
 The fourth `opts` arg can be used to pass in any additional data into the view constructor/init without having to cram it into `data`.
-Several reserved options are handled automatically by domvm that correspond to existing `vm.config({...})` options (documented in other sections):
+Several reserved options are handled automatically by domvm that correspond to existing `vm.cfg({...})` options (documented in other sections):
 
 - `init` (same as using `{init:...}` in views defs)
 - `diff`
@@ -371,7 +371,7 @@ Several reserved options are handled automatically by domvm that correspond to e
 - `onevent`
 - `onemit`
 
-This can simplify sub-view internals when externally-defined opts are passed in, avoiding some boilerplate inside views, eg. `vm.config({hooks: opts.hooks})`.
+This can simplify sub-view internals when externally-defined opts are passed in, avoiding some boilerplate inside views, eg. `vm.cfg({hooks: opts.hooks})`.
 
 #### ES6/ES2015 Classes
 
@@ -441,14 +441,14 @@ View-level and global `onevent` callbacks:
 
 ```js
 // global
-domvm.config({
+domvm.cfg({
     onevent: function(e, node, vm, data, args) {
         // ...
     }
 });
 
 // vm-level
-vm.config({
+vm.cfg({
     onevent: function(e, node, vm, data, args) {
         // ...
     }
@@ -464,7 +464,7 @@ There's an easy way to implement autoredraw yourself via a global or vm-level `o
 The [onevent demo](https://domvm.github.io/domvm/demos/playground/#onevent) demonstrates a basic full app autoredraw:
 
 ```js
-domvm.config({
+domvm.cfg({
     onevent: function(e, node, vm, data, args) {
         vm.root().redraw();
     }
@@ -490,7 +490,7 @@ domvm's templates support streams in the following contexts:
 A stream adapter for [flyd](https://github.com/paldepind/flyd) looks like this:
 
 ```js
-domvm.config({
+domvm.cfg({
     stream: {
         val: function(v, accum) {
             if (flyd.isStream(v)) {
@@ -696,7 +696,7 @@ Like parameterized events, the `vm` and `data` args reflect the originating view
 
 ```js
 // listen
-vm.config({
+vm.cfg({
     onemit: {
         myEvent: function(arg1, arg2, vm, data) {
             // ... do stuff
@@ -711,7 +711,7 @@ vm.emit("myEvent", arg1, arg2);
 There is also a global emit listener which fires for all emit events.
 
 ```js
-domvm.config({
+domvm.cfg({
     onemit: {
         myEvent: function(arg1, arg2, vm, data) {
             // ... do stuff
@@ -738,7 +738,7 @@ While not required, it is strongly advised that your hook-handling vnodes are [u
 
 #### View-level
 
-Usage: `vm.config({hooks: {willMount: ...}})` or `return {render: ..., hooks: {willMount: ...}}`
+Usage: `vm.cfg({hooks: {willMount: ...}})` or `return {render: ..., hooks: {willMount: ...}}`
 
 - `willUpdate(vm, data)` - before views's data is replaced
 - `will`/`didRedraw(vm, data)`
@@ -878,12 +878,12 @@ The mechanism for determining if changes may exist is up to you, including cachi
 
 #### View Change Assessment
 
-Similar to React's `shouldComponentUpdate()`, `vm.config({diff:...})` is able to short-circuit redraw calls.
+Similar to React's `shouldComponentUpdate()`, `vm.cfg({diff:...})` is able to short-circuit redraw calls.
 It provides a caching layer that does shallow comparison before every `render()` call and may return an array or object to shallow-compare for changes.
 
 ```js
 function View(vm) {
-    vm.config({
+    vm.cfg({
         diff: function(vm, data) {
             return [data.foo.bar, data.baz];
         }
