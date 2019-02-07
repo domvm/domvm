@@ -200,6 +200,8 @@ el("p", {_data: {foo: 123}}, "Some text")                   // per-node data (fa
 el("p", {_ref: "myParag"}, "Some text")                     // named refs (vm.refs.myParag)
 el("p", {_ref: "pets.james"}, "Some text")                  // namespaced (vm.refs.pets.james)
 
+el("p", {_hooks: {willRemove: ...}}, "Some text")           // lifecycle hooks
+
 el("div", {_flags: ...}, "Some text")                       // optimization flags
 ```
 
