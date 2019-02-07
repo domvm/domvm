@@ -429,7 +429,7 @@ function filter(e) {
 el("input", {oninput: filter});
 ```
 
-**Parameterized** listeners are defined using arrays and executed by a proxy handler. They:
+**Parameterized** listeners are defined using arrays and executed by a single, document-level, capturing proxy handler. They:
 
 - Can pass through additional args and receive `(...args, e, node, vm, data)`
 - Will invoke global and vm-level `onevent` callbacks
