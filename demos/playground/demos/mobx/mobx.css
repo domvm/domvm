@@ -1,0 +1,15 @@
+.section {
+	margin-left: 1em;
+}
+
+input[type=text] {
+	width: 10em;
+}
+
+#limit {
+	width: 3em;
+}
+
+#listWrapper {
+	margin-top: 1em;
+}

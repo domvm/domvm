@@ -4,14 +4,14 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/domvm/domvm (v3.4.8, client build)
+* @preserve https://github.com/domvm/domvm (v3.4.9-dev, client build)
 */
 
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	factory(global.domvm = {});
-}(typeof self !== 'undefined' ? self : this, function (exports) { 'use strict';
+	(global = global || self, factory(global.domvm = {}));
+}(this, function (exports) { 'use strict';
 
 	// NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 	// There are some places that test <= COMMENT to assert if node is a VNode
