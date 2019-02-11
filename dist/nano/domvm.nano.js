@@ -299,7 +299,7 @@
 
 	var tagCache = {};
 
-	var RE_ATTRS = /\[(\w+)(?:=(\w+))?\]/g;
+	var RE_ATTRS = /\[(\w+)(?:=([-+\w.,]+))?\]/g;
 
 	// TODO: id & class should live inside attrs?
 

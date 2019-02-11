@@ -8,14 +8,14 @@ QUnit.module("Attrs/props", function() {
 	// todo dataMoo or deep ".dataset.*" .value? console.log(vm.node.el.onclick._fn);
 	QUnit.test("Create", function(assert) {
 		var onclick = function() {};
-		tpl = el("input#foo.bar.baz", {type: "text", style: {fontFamily: "Arial", fontSize: 12}, disabled: true, custom: "abc", custom2: null, custom3: "", custom4: "foo", onclick: onclick});
+		tpl = el("input#foo.bar.baz[min=-1]", {type: "text", style: {fontFamily: "Arial", fontSize: 12}, disabled: true, custom: "abc", custom2: null, custom3: "", custom4: "foo", onclick: onclick});
 
 		instr.start();
 		vm = domvm.createView(View).mount(testyDiv);		// todo: create test container
 		var callCounts = instr.end();
 
-		var expcHtml = '<input type="text" disabled="" custom="abc" custom3="" custom4="foo" id="foo" class="bar baz" style="font-family: Arial; font-size: 12px;">';
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { id: 1, className: 1, createElement: 1, insertBefore: 1, setAttribute: 4, addEventListener: 1 });
+		var expcHtml = '<input type="text" disabled="" custom="abc" custom3="" custom4="foo" id="foo" class="bar baz" min="-1" style="font-family: Arial; font-size: 12px;">';
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { id: 1, className: 1, createElement: 1, insertBefore: 1, setAttribute: 5, addEventListener: 1 });
 	});
 
 	// TODO: can 'id' or 'name' be allowed to change for recycling since they implicitly double as keys?
@@ -28,7 +28,7 @@ QUnit.module("Attrs/props", function() {
 		var callCounts = instr.end();
 
 		var expcHtml = '<input type="text" custom="xyz" custom2="..." id="foo" style="padding: 10px;">';
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeAttribute: 3, setAttribute: 2, removeEventListener: 1 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeAttribute: 4, setAttribute: 2, removeEventListener: 1 });
 	});
 
 
