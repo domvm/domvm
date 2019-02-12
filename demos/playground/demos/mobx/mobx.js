@@ -48,7 +48,7 @@ var appState = observable({
 });
 
 
-var AppView = observer({
+var AppView = observer("AppView", {
 	init: function(vm) {
 		// To limit the number of displayed users in the user interface.
 		// We create a new boxed observable so that render() can react to its changes.
@@ -71,7 +71,7 @@ var AppView = observer({
 			usersState.setCar(4, val === "" ? false : val);
 	},
 	render: function(vm) {
-		console.log("Render: AppView");
+		console.log("  Render: AppView");
 
 		var users = usersState.users,
 			lastUserName = users[users.length - 1].name,
@@ -131,7 +131,7 @@ var AppView = observer({
 
 var UsersListView = observer(function UsersListView() {
 	return function(vm, data) {  // The render() function
-		console.log("Render: UsersListView");
+		console.log("  Render: UsersListView");
 
 		var state = data.state,
 			users = appState.hideNoCar ? state.usersWithCar : state.users,
@@ -140,10 +140,11 @@ var UsersListView = observer(function UsersListView() {
 			users = users.filter((user, i) => i < limitResults);
 		var displayed = users.length,
 			total = state.users.length;
-		// Because this list is dynamic, we MUST key the views.
-		// Here we use the user name which is unique:
 		return el("div", [
-			el("ul", users.map((user) => vw(UserView, user, user.name))),
+			// Here we MUST key the UserViews because the list is dynamic!
+			// See doc: Keying views (https://github.com/domvm/domvm-mobx#keying-views--important-)
+			// We use the user name because it uniquely identifies each user:
+			el("ul#list", users.map((user) => vw(UserView, user, user.name))),
 			el("div.section", "(Users displayed: " + displayed + "/" + total + ")")
 		]);
 	};
@@ -152,7 +153,7 @@ var UsersListView = observer(function UsersListView() {
 var UserView = observer(function UserView(vm) {
 	return {
 		render: function(vm, user) {
-			console.log("Render: UserView");
+			console.log("  Render: UserView");
 
 			var car = user.car !== false ? "a " + user.car : "no";
 			return el("li", "Name: " + user.name + ". Has " + car + " car.");
@@ -164,7 +165,7 @@ var UserView = observer(function UserView(vm) {
 
 var raf = requestAnimationFrame;
 
-console.log("Action: Mounting AppView...");
+console.log("# Action: Mounting AppView...");
 
 var app = domvm.createView(AppView, usersState).mount(document.body);
 
@@ -175,42 +176,42 @@ var step = 0;
 var interval = setInterval(() => {
 	switch (step) {
 		case 1:
-			console.log("=> Action 1: Changing car of first user to Ferrari...");
+			console.log("# Action 1: Changing car of first user to Ferrari...");
 
 			usersState.users[0].car = "Ferrari";
 
 			raf(() => console.log('> Only 1 "UserView" has been re-rendered.'));
 			break;
 		case 2:
-			console.log("=> Action 2: Changing car of last user to none...");
+			console.log("# Action 2: Changing car of last user to none...");
 
 			usersState.users[4].car = false;
 
 			raf(() => console.log('> Only the "AppView" and 1 "UserView" have been re-rendered.'));
 			break;
 		case 3:
-			console.log("=> Action 3: Changing name of first user to Jessica...");
+			console.log("# Action 3: Changing name of first user to Jessica...");
 
 			usersState.users[0].name = "Jessica";
 
 			raf(() => console.log('> Only the "UsersListView" and 1 "UserView" has been re-rendered.'));
 			break;
 		case 4:
-			console.log("=> Action 4: Limiting the number of displayed users to 3...");
+			console.log("# Action 4: Limiting the number of displayed users to 3...");
 
 			app.limitResults.set(3);
 
 			raf(() => console.log('> Only the "AppView" and the "UsersListView" have been re-rendered.'));
 			break;
 		case 5:
-			console.log("=> Action 5: Removing limit on number of displayed users...");
+			console.log("# Action 5: Removing limit on number of displayed users...");
 
 			app.limitResults.set(-1);
 
 			raf(() => console.log('> Only the "AppView", the "UsersListView" and 2 "UserView" have been re-rendered.'));
 			break;
 		case 6:
-			console.log("=> Action 6: Hide users without car...");
+			console.log("# Action 6: Hide users without car...");
 
 			appState.hideNoCar = true;
 
@@ -218,7 +219,7 @@ var interval = setInterval(() => {
 
 			clearInterval(interval);
 
-			raf(() => console.log('=> END'));
+			raf(() => console.log('# END'));
 			break;
 	}
 	step++;

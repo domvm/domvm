@@ -13,3 +13,9 @@ input[type=text] {
 #listWrapper {
 	margin-top: 1em;
 }
+
+#list {
+	padding-top: 1em;
+	padding-bottom: 1em;
+	background: #ddd;
+}
