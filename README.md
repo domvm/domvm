@@ -291,12 +291,12 @@ var vm = cv(MyView, data);
 vm.mount(document.body);            // appends into target
 ```
 
-By default, `.mount(container)` will append the view into the container. Alternatively, to replace an existing placeholder element:
+By default, `.mount(container)` will append the view into the container. Alternatively, to use an existing placeholder element:
 
 ```js
 var placeholder = document.getElementById("widget");
 
-vm.mount(placeholder, true);        // replaces placeholder
+vm.mount(placeholder, true);        // empties & assimilates placeholder
 ```
 
 When your data changes, you can request to redraw the view, optionally passing a boolean `sync` flag to force a synchronous redraw.
