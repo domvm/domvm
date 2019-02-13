@@ -1,6 +1,6 @@
 const tagCache = {};
 
-const RE_ATTRS = /\[(\w+)(?:=([-+\w.,]+))?\]/g;
+const RE_ATTRS = /\[([^=\]]+)=?([^\]]+)?\]/g;
 
 // TODO: id & class should live inside attrs?
 
