@@ -18,7 +18,7 @@ function isFunc(val) {	// See: https://github.com/domvm/domvm/blob/3.4.8/src/uti
 
 
 // DESIGN:
-// 
+//
 // We create a new MobX Reaction for each observer domvm vm (ViewModel).
 // The Reaction is used to track the observables used by the render() method. It becomes stale
 // when one of the tracked observables changes. Upon becoming stale, the default becameStale() hook
@@ -36,7 +36,7 @@ function isFunc(val) {	// See: https://github.com/domvm/domvm/blob/3.4.8/src/uti
 // - There is no way to know that a vm is being reused before the execution of its diff()
 //	 method (the willMount() hook is fired after the diff() and the render() methods).
 // - The Reaction must be destroyed explicitly to prevent wasting computations and resources.
-// 
+//
 // Links:
 // - domvm ViewModel: https://github.com/domvm/domvm/blob/master/src/view/ViewModel.js
 // - MobX Reaction: https://github.com/mobxjs/mobx/blob/5.6.0/src/core/reaction.ts
@@ -50,9 +50,9 @@ function isFunc(val) {	// See: https://github.com/domvm/domvm/blob/3.4.8/src/uti
 function initvm(vm, reactionName) {
 	// Uncomment if you need to find all unkeyed vm:
 	//if (vm.key === undefined) console.warn("Unkeyed reactive view:", reactionName, vm);
-	
+
 	var hooks = vm.hooks || (vm.hooks = {});
-	
+
 	vm._mobxObserver = {
 		// The reaction name, for debugging:
 		name: reactionName,
@@ -67,13 +67,13 @@ function initvm(vm, reactionName) {
 		// The original hook willUnmount():
 		willUnmount: hooks.willUnmount,
 	};
-	
+
 	// The user can prevent the default becameStale() if he did setup its own function,
 	// or if he did set it to false (note: this also checks for null because domvm often
 	// uses null for undefined):
 	if (hooks.becameStale == undefined)
 		hooks.becameStale = becameStale;
-	
+
 	var valFn = vm.diff ? vm.diff.val : noop;
 	vm.config({diff: {val: valFn, eq: eq}});	// "vm.config()" has an alias "vm.cfg()" since domvm v3.4.7
 	vm.render = render;
@@ -83,18 +83,18 @@ function initvm(vm, reactionName) {
 // Creates the observer Reaction:
 function setReaction(vm) {
 	var observerData = vm._mobxObserver;
-	
+
 	// Useful during development:
 	if (observerData.reaction)
 		throw Error("Reaction already set.");
-	
+
 	observerData.stale = true;
 	observerData.reaction = new mobx.Reaction(observerData.name, function() {
 		observerData.stale = true;
 		if (vm.hooks.becameStale)
 			vm.hooks.becameStale(vm, vm.data);
 	});
-	
+
 	// The reaction should be started right after creation. (See: https://github.com/mobxjs/mobx/blob/5.6.0/src/core/reaction.ts#L35)
 	// But it doesn't seem to be mandatory... ?
 	// Not doing it, as that would trigger becameStale() and a vm.redraw() right now !
@@ -105,11 +105,11 @@ function setReaction(vm) {
 // Destroys the observer Reaction:
 function unsetReaction(vm) {
 	var observerData = vm._mobxObserver;
-	
+
 	// Useful during development:
 	if (!observerData.reaction)
 		throw Error("Reaction already unset.");
-	
+
 	observerData.reaction.dispose();
 	observerData.reaction = undefined;
 }
@@ -122,10 +122,10 @@ function becameStale(vm) {
 // The diff.eq() assigned to each observer vm:
 function eq(vm) {
 	var observerData = vm._mobxObserver;
-	
+
 	if (observerData.stale)
 		return false;	// Re-render.
-	else if(observerData.eq)
+	else if (observerData.eq)
 		return observerData.eq.apply(this, arguments); // Let diff() choose.
 	else
 		return true;	// By default: no re-render.
@@ -137,11 +137,11 @@ function render(vm) {
 		that = this,
 		args = arguments,
 		result;
-	
+
 	// If vm was unmounted and is now being reused:
 	if (!observerData.reaction)
 		setReaction(vm);
-	
+
 	// Note: the following is allowed to run by MobX even if the reaction is not stale:
 	observerData.reaction.track(function() {
 		mobx._allowStateChanges(false, function() {
@@ -149,14 +149,14 @@ function render(vm) {
 		});
 	});
 	observerData.stale = false;
-	
+
 	return result;
 }
 
 // The willUnmount() wrapper assigned to each observer vm's hooks:
 function willUnmount(vm) {
 	unsetReaction(vm);
-	
+
 	var _willUnmount = vm._mobxObserver.willUnmount;
 	if (_willUnmount)
 		_willUnmount.apply(this, arguments);
@@ -186,21 +186,21 @@ function observer(name, view) {
 	// If no name provided for the observer:
 	if (view === undefined) {
 		view = name;
-		
+
 		// Generate friendly name for debugging (See: https://github.com/infernojs/inferno/blob/master/packages/inferno-mobx/src/observer.ts#L105)
 		name = view.displayName || view.name || (view.constructor && (view.constructor.displayName || view.constructor.name)) || '<View>';
 	}
-	
+
 	// The name for the MobX Reaction, for debugging:
 	var reactionName = name + ".render()";
-	
-	
+
+
 	// We need to hook into the init() of the vm, just after that init() is executed,
 	// so that all the vm.config(...) have been executed on the vm.
 	// This is a bit complex depending on the type of the view.
 	// Refer to the ViewModel constructor for details:
 	//	 https://github.com/domvm/domvm/blob/3.4.8/src/view/ViewModel.js#L48
-	
+
 	if (isPlainObj(view)) {
 		// view is an object: just set our own init on it.
 		wrapInit(view, reactionName);
@@ -211,7 +211,7 @@ function observer(name, view) {
 		view = (function(view) {
 			return function(vm) {
 				var out = view.apply(this, arguments);
-				
+
 				if (isFunc(out))
 					wrapInit(vm, reactionName);
 				else {
@@ -219,12 +219,12 @@ function observer(name, view) {
 					// we want to wrap init only once:
 					wrapInitOnce(out, reactionName);
 				}
-				
+
 				return out;
 			};
 		})(view);
 	}
-	
+
 	return view;
 }
 
@@ -239,7 +239,7 @@ domvm.config({
 	didRedraws: function forceRedrawOfStaledObservers(redrawQueue) {
 		// We want to redraw the children after the parents, so we sort them by depth:
 		var byDepth = [];
-		
+
 		// Sorting:
 		redrawQueue.forEach(function(vm) {
 			// Only keep staled domvm-mobx observers (and check they were not unmounted)
@@ -248,13 +248,13 @@ domvm.config({
 					parVm = vm;
 				while (parVm = parVm.parent())
 					depth++;
-			
+
 				if (!byDepth[depth])
 					byDepth[depth] = [];
 				byDepth[depth].push(vm);
 			}
 		});
-		
+
 		// Re-rendering in order:
 		for (var d = 0; d < byDepth.length; d++) {
 			if (byDepth[d]) {
