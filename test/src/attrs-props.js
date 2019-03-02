@@ -14,7 +14,7 @@ QUnit.module("Attrs/props", function() {
 		vm = domvm.createView(View).mount(testyDiv);		// todo: create test container
 		var callCounts = instr.end();
 
-		var expcHtml = '<input type="text" disabled="" custom="abc" custom3="" custom4="foo" id="foo" class="bar baz" min="-1" style="font-family: Arial; font-size: 12px;">';
+		var expcHtml = '<input type="text" disabled custom="abc" custom3="" custom4="foo" id="foo" class="bar baz" min="-1" style="font-family: Arial; font-size: 12px;">';
 		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { id: 1, className: 1, createElement: 1, insertBefore: 1, setAttribute: 5, addEventListener: 1 });
 	});
 

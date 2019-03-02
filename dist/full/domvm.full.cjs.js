@@ -2213,7 +2213,7 @@ function html(node, dynProps) {
 					}
 
 					if (val === true)
-						{ buf += " " + escHtml(pname) + '=""'; }
+						{ buf += " " + escHtml(pname); }
 					else if (val === false) ;
 					else if (val != null)
 						{ buf += " " + escHtml(pname) + '="' + escQuotes(val) + '"'; }
