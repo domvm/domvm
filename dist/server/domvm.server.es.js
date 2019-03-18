@@ -4,7 +4,7 @@
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/domvm/domvm (v3.4.9, server build)
+* @preserve https://github.com/domvm/domvm (v3.4.10-dev, server build)
 */
 
 // NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
@@ -2027,13 +2027,13 @@ ViewModelProto._stream = null;
 //import { prop } from "../utils";
 //mini.prop = prop;
 
-function vmProtoHtml(dynProps) {
+function vmProtoHtml(dynProps, par, idx) {
 	var vm = this;
 
 	if (vm.node == null)
-		{ vm._redraw(null, null, false); }
+		{ vm._redraw(par, idx, false); }
 
-	var markup = html(vm.node, dynProps);
+	var markup = html(vm.node, dynProps, par, idx);
 
 	// prevents mem leaks from unbounded queue growth (for SSR)
 	// maybe not necessary since majority of hooks fire via DOM ops, which don't run on the server.
@@ -2042,8 +2042,8 @@ function vmProtoHtml(dynProps) {
 
 	return markup;
 }
-function vProtoHtml(dynProps) {
-	return html(this, dynProps);
+function vProtoHtml(dynProps, par, idx) {
+	return html(this, dynProps, par, idx);
 }
 function camelDash(val) {
 	return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
@@ -2110,24 +2110,24 @@ function escQuotes(s) {
 	return out;
 }
 
-function eachHtml(arr, dynProps) {
+function eachHtml(arr, dynProps, par) {
 	var buf = '';
 	for (var i = 0; i < arr.length; i++)
-		{ buf += html(arr[i], dynProps); }
+		{ buf += html(arr[i], dynProps, par, i); }
 	return buf;
 }
 
 var innerHTML = ".innerHTML";
 
-function html(node, dynProps) {
+function html(node, dynProps, par, idx) {
 	var out, style;
 
 	switch (node.type) {
 		case VVIEW:
-			out = createView(node.view, node.data, node.key, node.opts).html(dynProps);
+			out = createView(node.view, node.data, node.key, node.opts).html(dynProps, par, idx);
 			break;
 		case VMODEL:
-			out = node.vm.html();
+			out = node.vm.html(dynProps, par, idx);
 			break;
 		case ELEMENT:
 		case UNMANAGED:
@@ -2176,10 +2176,10 @@ function html(node, dynProps) {
 				if (hasAttrs && attrs[innerHTML] != null)
 					{ buf += attrs[innerHTML]; }
 				else if (isArr(node.body))
-					{ buf += eachHtml(node.body, dynProps); }
+					{ buf += eachHtml(node.body, dynProps, node); }
 				else if ((node.flags & LAZY_LIST) === LAZY_LIST) {
 					node.body.body(node);
-					buf += eachHtml(node.body, dynProps);
+					buf += eachHtml(node.body, dynProps, node);
 				}
 				else
 					{ buf += escHtml(node.body); }
