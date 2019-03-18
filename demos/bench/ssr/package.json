@@ -2,17 +2,16 @@
   "dependencies": {
     "benchmark": "^2.1.4",
     "cliff": "^0.1.10",
-    "domvm": "^3.4.7",
-    "inferno": "^7.0.5",
-    "inferno-component": "^7.0.5",
-    "inferno-server": "^7.0.5",
+    "inferno": "^7.1.10",
+    "inferno-component": "^7.1.10",
+    "inferno-server": "^7.1.10",
     "preact": "^8.4.2",
     "preact-render-to-string": "^4.1.0",
-    "react": "^16.7.0",
-    "react-dom": "^16.7.0",
+    "react": "^16.8.4",
+    "react-dom": "^16.8.4",
     "vidom": "^0.11.0",
-    "vue": "^2.5.21",
-    "vue-server-renderer": "^2.5.21"
+    "vue": "^2.6.9",
+    "vue-server-renderer": "^2.6.9"
   },
   "scripts": {
     "start": "set NODE_ENV=production&&node index.js"

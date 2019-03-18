@@ -1,4 +1,4 @@
-var domvm = require('../node_modules/domvm/dist/server/domvm.server.min.js');
+var domvm = require('../../../../dist/server/domvm.server.cjs.js');
 
 var el = domvm.defineElement,
     vw = domvm.defineView;
@@ -14,7 +14,7 @@ function mkArr(count, fn, frag) {
 
 function App(vm, data) {
   return () =>
-    el('.app', [
+    el('div', {class: "app"}, [
       vw(Header, data),
       vw(Content, data),
       vw(Footer, data),
@@ -23,16 +23,16 @@ function App(vm, data) {
 
 function Header(vm, data) {
   return () =>
-    el('.header', mkArr(data.childrenNum, i =>
+    el('div', {class: "header"}, mkArr(data.childrenNum, i =>
       el('div', { id : 'header-' + i })
     ))
 }
 
 function Content(vm, data) {
   return () =>
-    el('.content', mkArr(data.childrenNum, i => [
+    el('div', {class: "content"}, mkArr(data.childrenNum, i => [
       el('b', 'bold' + i),
-      el('span.link', [
+      el('span', {class: "link"}, [
         vw(Link, { href : '/', value : 'link-' + i })
       ]),
       el('i', 'italic' + i),
@@ -53,7 +53,7 @@ function Link(vm, data) {
 
 function Footer(vm, data) {
   return () =>
-    el('.footer', mkArr(data.childrenNum, i =>
+    el('div', {class: "footer"}, mkArr(data.childrenNum, i =>
       el('div', { id : 'footer-' + i })
     ))
 }
