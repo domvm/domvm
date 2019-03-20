@@ -1852,20 +1852,20 @@
 
 	VNodeProto.patch = protoPatch;
 
-	exports.ViewModel = ViewModel;
+	exports.FIXED_BODY = FIXED_BODY;
+	exports.KEYED_LIST = KEYED_LIST;
 	exports.VNode = VNode;
+	exports.ViewModel = ViewModel;
+	exports.cfg = config;
+	exports.config = config;
 	exports.createView = createView;
+	exports.defineComment = defineComment;
 	exports.defineElement = defineElement;
 	exports.defineSvgElement = defineSvgElement;
 	exports.defineText = defineText;
-	exports.defineComment = defineComment;
 	exports.defineView = defineView;
-	exports.injectView = injectView;
 	exports.injectElement = injectElement;
+	exports.injectView = injectView;
 	exports.list = list;
-	exports.FIXED_BODY = FIXED_BODY;
-	exports.KEYED_LIST = KEYED_LIST;
-	exports.config = config;
-	exports.cfg = config;
 
 }));

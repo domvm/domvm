@@ -2084,4 +2084,4 @@ function attach(vnode, withEl) {
 
 ViewModelProto.attach = protoAttach;
 
-export { defineElementSpread, defineSvgElementSpread, ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, list, FIXED_BODY, KEYED_LIST, config, config as cfg };
+export { FIXED_BODY, KEYED_LIST, VNode, ViewModel, config as cfg, config, createView, defineComment, defineElement, defineElementSpread, defineSvgElement, defineSvgElementSpread, defineText, defineView, injectElement, injectView, list };

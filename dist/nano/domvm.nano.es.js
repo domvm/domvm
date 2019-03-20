@@ -1846,4 +1846,4 @@ function patch$1(o, n, doRepaint) {
 
 VNodeProto.patch = protoPatch;
 
-export { ViewModel, VNode, createView, defineElement, defineSvgElement, defineText, defineComment, defineView, injectView, injectElement, list, FIXED_BODY, KEYED_LIST, config, config as cfg };
+export { FIXED_BODY, KEYED_LIST, VNode, ViewModel, config as cfg, config, createView, defineComment, defineElement, defineSvgElement, defineText, defineView, injectElement, injectView, list };

@@ -39,9 +39,9 @@
     "mocha": "^6.0.2",
     "node-watch": "^0.6.0",
     "nyc": "^13.3.0",
-    "rollup": "^1.6.0",
+    "rollup": "^1.7.0",
     "rollup-plugin-buble": "^0.19.6",
-    "rollup-plugin-replace": "^2.1.0",
+    "rollup-plugin-replace": "^2.1.1",
     "terser": "^3.17.0",
     "undom": "^0.4.0"
   },
