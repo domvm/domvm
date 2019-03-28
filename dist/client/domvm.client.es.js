@@ -2070,15 +2070,14 @@ function attach(vnode, withEl) {
 				{ v = v.vm.node || v.vm._update(v.data, vnode, i, false, true).node; }
 
 			attach(v, c);
+		} while ((c = c.nextSibling) && (v = vnode.body[++i]));
 
-			var vm = v.vm;
+		var vm = vnode.vm;
 
-			vm != null && fireHook(vm.hooks, "willMount", vm, vm.data);
-			fireHook(v.hooks, "willInsert", v);
-			fireHook(v.hooks, "didInsert", v);
-			vm != null && fireHook(vm.hooks, "didMount", vm, vm.data);
-
-		} while ((c = c.nextSibling) && (v = vnode.body[++i]))
+		vm != null && fireHook(vm.hooks, "willMount", vm, vm.data);
+		fireHook(vnode.hooks, "willInsert", vnode);
+		fireHook(vnode.hooks, "didInsert", vnode);
+		vm != null && fireHook(vm.hooks, "didMount", vm, vm.data);
 	}
 }
 
