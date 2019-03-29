@@ -1753,6 +1753,12 @@
 			oldDiff,
 			newDiff;
 
+		// when redrawing a sub-vm in-place, re-pass old parent & old idx
+		if (vold != null && isRedrawRoot) {
+			newParent = vold.parent;
+			newIdx = vold.idx;
+		}
+
 		if (doDiff) {
 			newDiff = vm.diff.val(vm, vm.data, vm.key, newParent, newIdx);
 
