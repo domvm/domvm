@@ -76,7 +76,7 @@ export function patch(vnode, donor) {
 	}
 
 	if (vnode.attrs != null || donor.attrs != null)
-		patchAttrs(vnode, donor, false);
+		patchAttrs(vnode, donor);
 
 	// patch events
 

@@ -19,7 +19,7 @@ export function remAttr(node, name, asProp) {
 
 // setAttr
 // diff, ".", "on*", bool vals, skip _*, value/checked/selected selectedIndex
-export function setAttr(node, name, val, asProp, initial) {
+export function setAttr(node, name, val, asProp) {
 	var el = node.el;
 
 	if (node.ns != null)
@@ -34,7 +34,7 @@ export function setAttr(node, name, val, asProp, initial) {
 		el.setAttribute(name, val);
 }
 
-export function patchAttrs(vnode, donor, initial) {
+export function patchAttrs(vnode, donor) {
 	const nattrs = vnode.attrs || emptyObj;
 	const oattrs = donor.attrs || emptyObj;
 

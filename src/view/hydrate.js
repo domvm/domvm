@@ -38,7 +38,7 @@ export function hydrate(vnode, withEl) {
 		//		vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS);
 
 			if (vnode.attrs != null)
-				patchAttrs(vnode, emptyObj, true);
+				patchAttrs(vnode, emptyObj);
 
 			if ((vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList
 				vnode.body.body(vnode);

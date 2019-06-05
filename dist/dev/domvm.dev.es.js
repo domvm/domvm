@@ -918,7 +918,7 @@ function remAttr(node, name, asProp) {
 
 // setAttr
 // diff, ".", "on*", bool vals, skip _*, value/checked/selected selectedIndex
-function setAttr(node, name, val, asProp, initial) {
+function setAttr(node, name, val, asProp) {
 	var el = node.el;
 
 	if (node.ns != null)
@@ -933,7 +933,7 @@ function setAttr(node, name, val, asProp, initial) {
 		{ el.setAttribute(name, val); }
 }
 
-function patchAttrs(vnode, donor, initial) {
+function patchAttrs(vnode, donor) {
 	var nattrs = vnode.attrs || emptyObj;
 	var oattrs = donor.attrs || emptyObj;
 
@@ -961,7 +961,7 @@ function patchAttrs(vnode, donor, initial) {
 			else if (isEvAttr(key))
 				{ patchEvent(vnode, key, nval, oval); }
 			else
-				{ setAttr(vnode, key, nval, isDyn, initial); }
+				{ setAttr(vnode, key, nval, isDyn); }
 		}
 
 		// TODO: bench style.cssText = "" vs removeAttribute("style")
@@ -1189,7 +1189,7 @@ function hydrate(vnode, withEl) {
 		//		vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS);
 
 			if (vnode.attrs != null)
-				{ patchAttrs(vnode, emptyObj, true); }
+				{ patchAttrs(vnode, emptyObj); }
 
 			if ((vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList
 				{ vnode.body.body(vnode); }
@@ -1431,7 +1431,7 @@ function patch(vnode, donor) {
 	}
 
 	if (vnode.attrs != null || donor.attrs != null)
-		{ patchAttrs(vnode, donor, false); }
+		{ patchAttrs(vnode, donor); }
 
 	// patch events
 
