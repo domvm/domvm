@@ -205,7 +205,7 @@ function binaryFindLarger(item, list) {
 }
 
 function isPropAttr(name) {
-	return name[0] === ".";
+	return  name[0] === ".";
 }
 
 function isEvAttr(name) {
@@ -213,7 +213,7 @@ function isEvAttr(name) {
 }
 
 function isSplAttr(name) {
-	return name[0] === "_";
+	return  name[0] === "_";
 }
 
 function isStyleAttr(name) {
@@ -1554,7 +1554,7 @@ function cfg(opts) {
 	if (opts.init)
 		{ t.init = opts.init; }
 	if (opts.diff) {
-		if (isFunc(opts.diff)) {
+		if ( isFunc(opts.diff)) {
 			t.diff = {
 				val: opts.diff,
 				eq: dfltEq,

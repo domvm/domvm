@@ -249,7 +249,6 @@ function squish(buildName, preserve, start) {
 		unsafe_regexp: false,
 		unsafe_undefined: false,
 		unused: true,
-		warnings: false,
 	};
 
 	const opts = {
