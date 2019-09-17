@@ -501,6 +501,26 @@
 		return new List(items, diff, key);
 	}
 
+	var onevent = noop;
+	var syncRedraw = false;
+	var didRedraws = noop;
+	var onvnode = noop;
+
+	function config(newCfg) {
+		{
+			onevent = newCfg.onevent || onevent;
+		}
+
+		if (newCfg.onvnode != null)
+			{ onvnode = newCfg.onvnode; }
+
+		if (newCfg.syncRedraw != null)
+			{ syncRedraw = newCfg.syncRedraw; }
+
+		if (newCfg.didRedraws != null)
+			{ didRedraws = newCfg.didRedraws; }
+	}
+
 	function setRef(vm, name, node) {
 		var path = ("refs." + name).split(".");
 		deepSet(vm, path, node);
@@ -513,6 +533,10 @@
 
 	// vnew, vold
 	function preProc(vnew, parent, idx, ownVm) {
+		// the body of TEXT nodes can technically still mutate after this call if there
+		// are adjacent text nodes ahead that will be merged back into this one
+		onvnode(vnew, parent, idx, ownVm);
+
 		if (vnew.type === VMODEL || vnew.type === VVIEW)
 			{ return; }
 
@@ -556,7 +580,7 @@
 			}
 			else {
 				if (node2.type == null)
-					{ body[i] = node2 = defineText(""+node2); }
+					{ body[i] = node2 = defineText(node2); }
 
 				if (node2.type === TEXT) {
 					// remove empty text nodes
@@ -604,22 +628,6 @@
 				}
 			}
 		}
-	}
-
-	var onevent = noop;
-	var syncRedraw = false;
-	var didRedraws = noop;
-
-	function config(newCfg) {
-		{
-			onevent = newCfg.onevent || onevent;
-		}
-
-		if (newCfg.syncRedraw != null)
-			{ syncRedraw = newCfg.syncRedraw; }
-
-		if (newCfg.didRedraws != null)
-			{ didRedraws = newCfg.didRedraws; }
 	}
 
 	var registry = {};

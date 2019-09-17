@@ -6,6 +6,7 @@ import { getVm } from './utils';
 import { streamVal } from './addons/stream';
 import { DEEP_REMOVE } from './initElementNode';
 import { devNotify } from "./addons/devmode";
+import { onvnode } from "./config";
 
 function setRef(vm, name, node) {
 	var path = ("refs." + name).split(".");
@@ -19,6 +20,10 @@ function setDeepRemove(node) {
 
 // vnew, vold
 export function preProc(vnew, parent, idx, ownVm) {
+	// the body of TEXT nodes can technically still mutate after this call if there
+	// are adjacent text nodes ahead that will be merged back into this one
+	onvnode(vnew, parent, idx, ownVm);
+
 	if (vnew.type === VMODEL || vnew.type === VVIEW)
 		return;
 
@@ -68,7 +73,7 @@ export function preProcBody(vnew) {
 		}
 		else {
 			if (node2.type == null)
-				body[i] = node2 = defineText(""+node2);
+				body[i] = node2 = defineText(node2);
 
 			if (node2.type === TEXT) {
 				// remove empty text nodes

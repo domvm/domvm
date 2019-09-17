@@ -36,13 +36,13 @@
     "url": "https://github.com/domvm/domvm.git"
   },
   "devDependencies": {
-    "mocha": "^6.1.4",
-    "node-watch": "^0.6.2",
+    "mocha": "^6.2.0",
+    "node-watch": "^0.6.3",
     "nyc": "^14.1.1",
-    "rollup": "^1.16.3",
-    "rollup-plugin-buble": "^0.19.6",
+    "rollup": "^1.21.4",
+    "rollup-plugin-buble": "^0.19.8",
     "rollup-plugin-replace": "^2.2.0",
-    "terser": "^4.0.1",
+    "terser": "^4.3.1",
     "undom": "^0.4.0"
   },
   "bugs": {

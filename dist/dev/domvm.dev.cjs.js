@@ -597,6 +597,62 @@ function streamCfg(cfg) {
 	streamOff = cfg.off;
 }
 
+var onemit = {};
+
+function emitCfg(cfg) {
+	assignObj(onemit, cfg);
+}
+
+function emit(evName) {
+	var targ = this,
+		src = targ;
+
+	var args = sliceArgs(arguments, 1).concat(src, src.data);
+
+	do {
+		var evs = targ.onemit;
+		var fn = evs ? evs[evName] : null;
+
+		if (fn) {
+			fn.apply(targ, args);
+			break;
+		}
+	} while (targ = targ.parent());
+
+	if (onemit[evName])
+		{ onemit[evName].apply(targ, args); }
+}
+
+var onevent = noop;
+var syncRedraw = false;
+var didRedraws = noop;
+var onvnode = noop;
+
+function config(newCfg) {
+	{
+		onevent = newCfg.onevent || onevent;
+	}
+
+	if (newCfg.onvnode != null)
+		{ onvnode = newCfg.onvnode; }
+
+	if (newCfg.syncRedraw != null)
+		{ syncRedraw = newCfg.syncRedraw; }
+
+	if (newCfg.didRedraws != null)
+		{ didRedraws = newCfg.didRedraws; }
+
+	{
+		if (newCfg.onemit)
+			{ emitCfg(newCfg.onemit); }
+	}
+
+	{
+		if (newCfg.stream)
+			{ streamCfg(newCfg.stream); }
+	}
+}
+
 function setRef(vm, name, node) {
 	var path = ("refs." + name).split(".");
 	deepSet(vm, path, node);
@@ -609,6 +665,10 @@ function setDeepRemove(node) {
 
 // vnew, vold
 function preProc(vnew, parent, idx, ownVm) {
+	// the body of TEXT nodes can technically still mutate after this call if there
+	// are adjacent text nodes ahead that will be merged back into this one
+	onvnode(vnew, parent, idx, ownVm);
+
 	if (vnew.type === VMODEL || vnew.type === VVIEW)
 		{ return; }
 
@@ -657,7 +717,7 @@ function preProcBody(vnew) {
 		}
 		else {
 			if (node2.type == null)
-				{ body[i] = node2 = defineText(""+node2); }
+				{ body[i] = node2 = defineText(node2); }
 
 			if (node2.type === TEXT) {
 				// remove empty text nodes
@@ -753,58 +813,6 @@ function patchStyle(n, o) {
 					{ n.el.style[on] = ""; }
 			}
 		}
-	}
-}
-
-var onemit = {};
-
-function emitCfg(cfg) {
-	assignObj(onemit, cfg);
-}
-
-function emit(evName) {
-	var targ = this,
-		src = targ;
-
-	var args = sliceArgs(arguments, 1).concat(src, src.data);
-
-	do {
-		var evs = targ.onemit;
-		var fn = evs ? evs[evName] : null;
-
-		if (fn) {
-			fn.apply(targ, args);
-			break;
-		}
-	} while (targ = targ.parent());
-
-	if (onemit[evName])
-		{ onemit[evName].apply(targ, args); }
-}
-
-var onevent = noop;
-var syncRedraw = false;
-var didRedraws = noop;
-
-function config(newCfg) {
-	{
-		onevent = newCfg.onevent || onevent;
-	}
-
-	if (newCfg.syncRedraw != null)
-		{ syncRedraw = newCfg.syncRedraw; }
-
-	if (newCfg.didRedraws != null)
-		{ didRedraws = newCfg.didRedraws; }
-
-	{
-		if (newCfg.onemit)
-			{ emitCfg(newCfg.onemit); }
-	}
-
-	{
-		if (newCfg.stream)
-			{ streamCfg(newCfg.stream); }
 	}
 }
 

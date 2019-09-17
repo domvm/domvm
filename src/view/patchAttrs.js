@@ -63,7 +63,7 @@ export function patchAttrs(vnode, donor) {
 			else if (isEvAttr(key))
 				patchEvent(vnode, key, nval, oval);
 			else
-				setAttr(vnode, key, nval, isDyn, initial);
+				setAttr(vnode, key, nval, isDyn);
 		}
 
 		// TODO: bench style.cssText = "" vs removeAttribute("style")
