@@ -215,7 +215,7 @@ var domvm = (function (exports) {
 	}
 
 	function repaint(node) {
-		node && node.el && node.el.offsetHeight;
+		node && node.el && node.el.getBoundingClientRect();
 	}
 
 	function isHydrated(vm) {

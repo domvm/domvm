@@ -35,6 +35,8 @@ Object.defineProperty(Element.prototype, "textContent", {
 	},
 });
 
+Element.prototype.getBoundingClientRect = function() {};
+
 function findById(par, id) {
 	for (var i = 0; i < par.childNodes.length; i++) {
 		var n = par.childNodes[i];
