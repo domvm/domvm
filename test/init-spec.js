@@ -69,7 +69,7 @@ assert.propEqual = assert.expect = function() {};
 assert.async = function() { return function() {} };
 assert.ok = assert.equal = assert.deepEqual = function() {};
 
-global.domvm = require('../dist/full/domvm.full.js');
+global.domvm = require('../dist/full/domvm.full.cjs.js');
 
 domvm.cfg({
 	syncRedraw: true

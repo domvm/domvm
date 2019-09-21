@@ -7,11 +7,8 @@
 * @preserve https://github.com/domvm/domvm (v3.4.12, client build)
 */
 
-(function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-	typeof define === 'function' && define.amd ? define(['exports'], factory) :
-	(global = global || self, factory(global.domvm = {}));
-}(this, function (exports) { 'use strict';
+var domvm = (function (exports) {
+	'use strict';
 
 	// NOTE: if adding a new *VNode* type, make it < COMMENT and renumber rest.
 	// There are some places that test <= COMMENT to assert if node is a VNode
@@ -2125,4 +2122,6 @@
 	exports.injectView = injectView;
 	exports.list = list;
 
-}));
+	return exports;
+
+}({}));

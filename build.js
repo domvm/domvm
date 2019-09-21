@@ -182,17 +182,17 @@ function compile(buildName) {
 			name: "domvm",
 			format: "cjs",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
 			esModule: false,
-		//	sourcemap: true,
+			sourcemap: buildName == 'full',
 			file: "./dist/" + buildName + "/domvm." + buildName + ".cjs.js"
 		});
 
 		bundle.write({
 			banner: banner,
 			name: "domvm",
-			format: "umd",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
+			format: "iife",		 // output format - 'amd', 'cjs', 'es', 'iife', 'umd'
 			esModule: false,
 			sourcemap: buildName == 'full',
-			file: "./dist/" + buildName + "/domvm." + buildName + ".js"
+			file: "./dist/" + buildName + "/domvm." + buildName + ".iife.js"
 		}).then(b => {
 			console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
 			squish(buildName, preserve, start);
@@ -203,67 +203,20 @@ function compile(buildName) {
 }
 
 function squish(buildName, preserve, start) {
-	var src = "dist/" + buildName + "/domvm." + buildName + ".js";
-	var dst = "dist/" + buildName + "/domvm." + buildName + ".min.js";
-
-	// from docs (https://github.com/terser-js/terser)
-	const compressDefaults = {
-		arguments: true,
-		booleans: true,
-		collapse_vars: true,
-		comparisons: true,
-		conditionals: true,
-		dead_code: true,
-		directives: true,
-		drop_console: false,
-		drop_debugger: true,
-		evaluate: true,
-		expression: false,
-		global_defs: {},
-		hoist_funs: false,
-		hoist_props: true,
-		hoist_vars: false,
-		if_return: true,
-		inline: 3,
-		join_vars: true,
-		keep_fargs: true,
-		keep_fnames: false,
-		keep_infinity: false,
-		loops: true,
-		negate_iife: true,
-		passes: 1,
-		properties: true,
-		pure_funcs: null,
-		pure_getters: "strict",
-		reduce_funcs: true,
-		reduce_vars: true,
-		sequences: true,
-		side_effects: true,
-		switches: true,
-		toplevel: false,
-		top_retain: null,
-		typeofs: true,
-		unsafe: false,
-		unsafe_comps: false,
-		unsafe_Function: false,
-		unsafe_math: false,
-		unsafe_proto: false,
-		unsafe_regexp: false,
-		unsafe_undefined: false,
-		unused: true,
-	};
+	var src = "dist/" + buildName + "/domvm." + buildName + ".iife.js";
+	var dst = "dist/" + buildName + "/domvm." + buildName + ".iife.min.js";
 
 	const opts = {
-		compress: Object.assign({}, compressDefaults, {
-			booleans: false,
+		compress: {
 			inline: 0,
+			passes: 2,
 			keep_fargs: false,
-			hoist_props: false,
-			loops: false,
-			reduce_funcs: false,
+			pure_getters: true,
 			unsafe: true,
+			unsafe_comps: true,
 			unsafe_math: true,
-		}),
+			unsafe_undefined: true,
+		},
 	};
 
 	const compiled = Terser.minify(fs.readFileSync(src, 'utf8'), opts).code;
@@ -297,7 +250,7 @@ function buildDistTable() {
 	builds.forEach(function(build, i) {
 		var buildName = build.build;
 
-		var path = "dist/" + buildName + "/domvm." + buildName + ".min.js";
+		var path = "dist/" + buildName + "/domvm." + buildName + ".iife.min.js";
 
 		appendix.push("["+(i+1)+"]: https://github.com/domvm/domvm/blob/" + branch + "/" + path);
 

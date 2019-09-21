@@ -2294,3 +2294,4 @@ exports.defineView = defineView;
 exports.injectElement = injectElement;
 exports.injectView = injectView;
 exports.list = list;
+//# sourceMappingURL=domvm.full.cjs.js.map

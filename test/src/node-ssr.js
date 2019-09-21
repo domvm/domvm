@@ -1,4 +1,4 @@
-var domvm = require("../../dist/full/domvm.full.js");
+var domvm = require("../../dist/full/domvm.full.cjs.js");
 
 var el = domvm.defineElement;
 
