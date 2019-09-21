@@ -48,9 +48,15 @@ export function preProc(vnew, parent, idx, ownVm) {
 	else {
 		if (FEAT_STREAM)
 			vnew.body = streamVal(vnew.body, getVm(vnew)._stream);
-
-		if (vnew.body != null && !(vnew.body instanceof List))
-			vnew.body = "" + vnew.body;
+		
+		if (FEAT_LAZY_LIST) {
+			if (vnew.body != null && !(vnew.body instanceof List))
+				vnew.body = "" + vnew.body;
+		}
+		else {
+			if (vnew.body != null)
+				vnew.body = "" + vnew.body;
+		}
 	}
 }
 

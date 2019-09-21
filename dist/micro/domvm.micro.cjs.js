@@ -418,10 +418,12 @@ function initElementNode(tag, attrs, body, flags) {
 	if (body != null) {
 		node.body = body;
 
-		// replace rather than append flags since lists should not have
-		// FIXED_BODY, and DEEP_REMOVE is appended later in preProc
-		if (body instanceof List)
-			{ node.flags = body.flags; }
+		{
+			// replace rather than append flags since lists should not have
+			// FIXED_BODY, and DEEP_REMOVE is appended later in preProc
+			if (body instanceof List)
+				{ node.flags = body.flags; }
+		}
 	}
 
 	return node;
@@ -593,9 +595,11 @@ function preProc(vnew, parent, idx, ownVm) {
 	else if (vnew.body === "")
 		{ vnew.body = null; }
 	else {
-
-		if (vnew.body != null && !(vnew.body instanceof List))
-			{ vnew.body = "" + vnew.body; }
+		
+		{
+			if (vnew.body != null && !(vnew.body instanceof List))
+				{ vnew.body = "" + vnew.body; }
+		}
 	}
 }
 
@@ -1072,7 +1076,7 @@ function hydrate(vnode, withEl) {
 			if (vnode.attrs != null)
 				{ patchAttrs(vnode, emptyObj); }
 
-			if ((vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList
+			if ( (vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList
 				{ vnode.body.body(vnode); }
 
 			if (isArr(vnode.body))
@@ -1313,7 +1317,7 @@ function patch(vnode, donor) {
 
 	var oldIsArr = isArr(obody);
 	var newIsArr = isArr(nbody);
-	var lazyList = (vnode.flags & LAZY_LIST) === LAZY_LIST;
+	var lazyList =  (vnode.flags & LAZY_LIST) === LAZY_LIST;
 
 //	var nonEqNewBody = nbody != null && nbody !== obody;
 
@@ -1359,7 +1363,7 @@ function patchChildren(vnode, donor) {
 		nlen		= nbody.length,
 		obody		= donor.body,
 		olen		= obody.length,
-		isLazy		= (vnode.flags & LAZY_LIST) === LAZY_LIST,
+		isLazy		=  (vnode.flags & LAZY_LIST) === LAZY_LIST,
 		isFixed		= (vnode.flags & FIXED_BODY) === FIXED_BODY,
 		isKeyed		= (vnode.flags & KEYED_LIST) === KEYED_LIST,
 		domSync		= !isFixed && vnode.type === ELEMENT,

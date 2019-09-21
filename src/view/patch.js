@@ -82,7 +82,7 @@ export function patch(vnode, donor) {
 
 	var oldIsArr = isArr(obody);
 	var newIsArr = isArr(nbody)
-	var lazyList = (vnode.flags & LAZY_LIST) === LAZY_LIST;
+	var lazyList = FEAT_LAZY_LIST && (vnode.flags & LAZY_LIST) === LAZY_LIST;
 
 //	var nonEqNewBody = nbody != null && nbody !== obody;
 
@@ -132,7 +132,7 @@ function patchChildren(vnode, donor) {
 		nlen		= nbody.length,
 		obody		= donor.body,
 		olen		= obody.length,
-		isLazy		= (vnode.flags & LAZY_LIST) === LAZY_LIST,
+		isLazy		= FEAT_LAZY_LIST && (vnode.flags & LAZY_LIST) === LAZY_LIST,
 		isFixed		= (vnode.flags & FIXED_BODY) === FIXED_BODY,
 		isKeyed		= (vnode.flags & KEYED_LIST) === KEYED_LIST,
 		domSync		= !isFixed && vnode.type === ELEMENT,

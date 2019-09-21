@@ -38,7 +38,7 @@ function attach(vnode, withEl) {
 			setAttr(vnode, key, nval, isDyn);
 	}
 
-	if ((vnode.flags & LAZY_LIST) === LAZY_LIST)
+	if (FEAT_LAZY_LIST && (vnode.flags & LAZY_LIST) === LAZY_LIST)
 		vnode.body.body(vnode);
 
 	if (isArr(vnode.body) && vnode.body.length > 0) {

@@ -40,7 +40,7 @@ export function hydrate(vnode, withEl) {
 			if (vnode.attrs != null)
 				patchAttrs(vnode, emptyObj);
 
-			if ((vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList
+			if (FEAT_LAZY_LIST && (vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList
 				vnode.body.body(vnode);
 
 			if (isArr(vnode.body))

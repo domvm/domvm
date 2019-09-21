@@ -158,7 +158,7 @@ function html(node, dynProps, par, idx) {
 					buf += attrs[innerHTML];
 				else if (isArr(node.body))
 					buf += eachHtml(node.body, dynProps, node);
-				else if ((node.flags & LAZY_LIST) === LAZY_LIST) {
+				else if (FEAT_LAZY_LIST && (node.flags & LAZY_LIST) === LAZY_LIST) {
 					node.body.body(node);
 					buf += eachHtml(node.body, dynProps, node);
 				}

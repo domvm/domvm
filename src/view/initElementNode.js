@@ -98,10 +98,12 @@ export function initElementNode(tag, attrs, body, flags) {
 	if (body != null) {
 		node.body = body;
 
-		// replace rather than append flags since lists should not have
-		// FIXED_BODY, and DEEP_REMOVE is appended later in preProc
-		if (body instanceof List)
-			node.flags = body.flags;
+		if (FEAT_LAZY_LIST) {
+			// replace rather than append flags since lists should not have
+			// FIXED_BODY, and DEEP_REMOVE is appended later in preProc
+			if (body instanceof List)
+				node.flags = body.flags;
+		}
 	}
 
 	if (_DEVMODE) {
