@@ -21,10 +21,10 @@ function DBMonView() {
 					el("tr", [
 							el("td.dbname", db.dbname),
 							el("td.query-count", [
-								el("span", { class: db.lastSample.countClassName }, db.lastSample.nbQueries)
+								el("span", {class: db.lastSample.countClassName}, db.lastSample.nbQueries)
 							])
 						].concat(db.lastSample.topFiveQueries.map(function(query) { return (
-							el("td", { class: query.elapsedClassName }, [
+							el("td", {class: query.elapsedClassName}, [
 								el("span", query.formatElapsed),
 								el(".popover.left", [
 									el(".popover-content", query.query),

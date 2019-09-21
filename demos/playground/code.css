@@ -2,9 +2,9 @@
   font-family: 'Source Code Pro';
   font-style: normal;
   font-weight: 400;
-  src: local('Source Code Pro'), local('SourceCodePro-Regular'),
-       url('source-code-pro-v6-latin-regular.woff2') format('woff2'),
-       url('source-code-pro-v6-latin-regular.woff') format('woff');
+  src: local('Source Code Pro Regular'), local('SourceCodePro-Regular'),
+       url('source-code-pro-v11-latin-regular.woff2') format('woff2'),
+       url('source-code-pro-v11-latin-regular.woff') format('woff');
 }
 
 html {

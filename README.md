@@ -104,7 +104,7 @@ Changes between versions are documented in [Releases](https://github.com/domvm/d
 **Browser**
 
 ```html
-<script src="dist/nano/domvm.nano.min.js"></script>
+<script src="dist/nano/domvm.nano.iife.min.js"></script>
 ```
 
 **Node**
