@@ -217,6 +217,9 @@ function squish(buildName, preserve, start) {
 			unsafe_math: true,
 			unsafe_undefined: true,
 		},
+		output: {
+			comments: /^!/,
+		}
 	};
 
 	const compiled = Terser.minify(fs.readFileSync(src, 'utf8'), opts).code;
