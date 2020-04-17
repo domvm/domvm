@@ -2082,14 +2082,14 @@ var domvm = (function (exports) {
 
 				attach(v, c);
 			} while ((c = c.nextSibling) && (v = vnode.body[++i]));
-
-			var vm = vnode.vm;
-
-			vm != null && fireHook(vm.hooks, "willMount", vm, vm.data);
-			fireHook(vnode.hooks, "willInsert", vnode);
-			fireHook(vnode.hooks, "didInsert", vnode);
-			vm != null && fireHook(vm.hooks, "didMount", vm, vm.data);
 		}
+
+		var vm = vnode.vm;
+
+		vm != null && fireHook(vm.hooks, "willMount", vm, vm.data);
+		fireHook(vnode.hooks, "willInsert", vnode);
+		fireHook(vnode.hooks, "didInsert", vnode);
+		vm != null && fireHook(vm.hooks, "didMount", vm, vm.data);
 	}
 
 	function vmProtoHtml(dynProps, par, idx) {
