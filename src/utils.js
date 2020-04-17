@@ -107,50 +107,47 @@ export function curry(fn, args, ctx) {
 // impl borrowed from https://github.com/ivijs/ivi
 export function longestIncreasingSubsequence(a) {
 	const p = a.slice();
+	// result is instantiated as an empty array to prevent instantiation with CoW backing store.
 	const result = [];
 	result[0] = 0;
 	let n = 0;
+	let i = 0;
 	let u;
 	let v;
 	let j;
 
-	for (let i = 0; i < a.length; ++i) {
+	for (; i < a.length; ++i) {
 		const k = a[i];
-//		if (k > -1) {
-			j = result[n];
-			if (a[j] < k) {
-				p[i] = j;
-				result[++n] = i;
-			} else {
-				u = 0;
-				v = n;
-
-				while (u < v) {
-					j = (u + v) >> 1;
-					if (a[result[j]] < k) {
-						u = j + 1;
-					} else {
-						v = j;
-					}
+		j = result[n];
+		if (a[j] < k) {
+			p[i] = j;
+			result[++n] = i;
+		}
+		else {
+			u = 0;
+			v = n;
+			while (u < v) {
+				j = (u + v) >> 1;
+				if (a[result[j]] < k) {
+					u = j + 1;
 				}
-
-				if (k < a[result[u]]) {
-					if (u > 0) {
-						p[i] = result[u - 1];
-					}
-					result[u] = i;
+				else {
+					v = j;
 				}
 			}
-//		}
+			if (k < a[result[u]]) {
+				if (u > 0) {
+					p[i] = result[u - 1];
+				}
+				result[u] = i;
+			}
+		}
 	}
-
 	v = result[n];
-
 	while (n >= 0) {
 		result[n--] = v;
 		v = p[v];
 	}
-
 	return result;
 }
 
