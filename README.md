@@ -72,7 +72,7 @@ This gives you the freedom to choose libs you already know or prefer for common 
 domvm provides a small, common surface for integration of routers, streams and immutable libs.
 Some minimalist libs that work well:
 
-- Routing: [domvm-router](https://github.com/domvm/domvm-router), [riot/route](https://github.com/riot/route), [rlite](https://github.com/chrisdavies/rlite), [navigo](https://github.com/krasimir/navigo)
+- Routing: [domvm-router](https://github.com/leeoniya/domvm-router), [riot/route](https://github.com/riot/route), [rlite](https://github.com/chrisdavies/rlite), [navigo](https://github.com/krasimir/navigo)
 - Ajax/fetch/XHR: [xr](https://github.com/radiosilence/xr), [alite](https://github.com/chrisdavies/alite)
 - Streams: [flyd](https://github.com/paldepind/flyd), [xstream](https://github.com/staltz/xstream)
 - Immutable stores: [Freezer](https://github.com/arqex/freezer), [MobX](https://github.com/mobxjs/mobx)
