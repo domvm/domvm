@@ -47,7 +47,7 @@ function ancestEvDefs(type, node) {
 	while (node) {
 		if (attrs = node.attrs) {
 			if ((evDef = attrs[ontype]) && isArr(evDef))
-				evDefs.unshift(evDef);
+				evDefs.push(evDef);
 		}
 		node = node.parent;
 	}
