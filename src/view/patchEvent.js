@@ -21,7 +21,6 @@ function exec(fn, args, e, node, vm) {
 
 	if (out1 === false || out2 === false || out3 === false) {
 		e.preventDefault();
-		e.stopPropagation();
 		return false;
 	}
 }
