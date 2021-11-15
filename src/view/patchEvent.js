@@ -3,21 +3,6 @@ import { getVm } from './utils';
 import { onevent } from './config';
 import { devNotify } from "./addons/devmode";
 
-const registry = {};
-
-function listen(ontype) {
-	if (registry[ontype]) return;
-	registry[ontype] = true;
-	bind(doc, ontype, handle, true);
-}
-
-/*
-function unlisten(ontype) {
-	if (registry[ontype])
-		doc.removeEventListener(ontype.slice(2), handle, USE_CAPTURE);
-}
-*/
-
 function unbind(el, type, fn, capt) {
 	el.removeEventListener(type.slice(2), fn, capt);
 }
@@ -49,6 +34,7 @@ function ancestEvDefs(type, node) {
 			if ((evDef = attrs[ontype]) && isArr(evDef))
 				evDefs.push(evDef);
 		}
+        if(node.vm == null) { break; }                                                                                  // stop at vm
 		node = node.parent;
 	}
 
@@ -94,8 +80,14 @@ export function patchEvent(node, name, nval, oval) {
 
 	if (isFunc(nval))
 		bind(el, name, nval, false);
-	else if (nval != null)
-		listen(name);
+	else if (nval != null) {
+		let vmel = getVm(node).node.el;
+        if (!vmel._flag) { vmel._flag = {}; }
+    	if (!vmel._flag[name]) {
+        	vmel._flag[name] = true;
+        	bind(vmel, name, handle, false);
+        }
+    }
 
 	if (isFunc(oval))
 		unbind(el, name, oval, false);
