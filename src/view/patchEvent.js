@@ -81,14 +81,8 @@ export function patchEvent(node, name, nval, oval) {
 
 	if (isFunc(nval))
 		bind(el, name, nval, false);
-	else if (nval != null) {
-		let vmel = getVm(node).node.el;
-        if (!vmel._flag) { vmel._flag = {}; }
-    	if (!vmel._flag[name]) {
-        	vmel._flag[name] = true;
-        	bind(vmel, name, handle, false);
-        }
-    }
+	else if (nval != null)
+    	bind(getVm(node).node.el, name, handle, false);
 
 	if (isFunc(oval))
 		unbind(el, name, oval, false);
