@@ -11,12 +11,13 @@ function bind(el, type, fn, capt) {
 	el.addEventListener(type.slice(2), fn, capt);
 }
 
-function exec(fn, args, e, node, vm) {
+function exec(fn, args, evt, evtnod, hdlnod) {
+    var vm   = getVm(hdlnod);
 	var out1 = fn.apply(vm, args.concat([e, node, vm, vm.data])), out2, out3;
 
 	if (FEAT_ONEVENT) {
-		out2 = vm.onevent(e, node, vm, vm.data, args),
-		out3 = onevent.call(null, e, node, vm, vm.data, args);
+		out2 = vm.onevent(evt, evtnod, vm, vm.data, args),
+		out3 = onevent.call(null, evt, evtnod, vm, vm.data, args);
 	}
 
 	if (out1 === false || out2 === false || out3 === false) {
