@@ -11,16 +11,17 @@ function bind(el, type, fn, capt) {
 	el.addEventListener(type.slice(2), fn, capt);
 }
 
-function exec(fn, args, e, node, vm) {
-	var out1 = fn.apply(vm, args.concat([e, node, vm, vm.data])), out2, out3;
+function exec(fn, args, evt, evtnod, hdlnod) {
+    var vm   = getVm(hdlnod);
+	var out1 = fn.apply(vm, args.concat([evt, evtnod, vm, vm.data])), out2, out3;
 
 	if (FEAT_ONEVENT) {
-		out2 = vm.onevent(e, node, vm, vm.data, args),
-		out3 = onevent.call(null, e, node, vm, vm.data, args);
+		out2 = vm.onevent(evt, evtnod, vm, vm.data, args),
+		out3 = onevent.call(null, evt, evtnod, vm, vm.data, args);
 	}
 
 	if (out1 === false || out2 === false || out3 === false) {
-		e.preventDefault();
+		evt.preventDefault();
 		return false;
 	}
 }
@@ -31,7 +32,7 @@ function ancestEvDefs(type, node) {
 	while (node) {
 		if (attrs = node.attrs) {
 			if ((evDef = attrs[ontype]) && isArr(evDef))
-				evDefs.push(evDef);
+				evDefs.push({ def: evDef, node: node });
 		}
         if(node.vm == null) { break; }                                                                                  // stop at vm
 		node = node.parent;
@@ -48,10 +49,9 @@ function handle(e) {
 
 	var evDefs = ancestEvDefs(e.type, node);
 
-	var vm = getVm(node);
-
 	for (var i = 0; i < evDefs.length; i++) {
-		var res = exec(evDefs[i][0], evDefs[i].slice(1), e, node, vm);
+        var evd = evDefs[i];
+		var res = exec(evd.def[0], evd.def.slice(1), e, node, evd.node);
 
 		if (res === false)
 			break;
