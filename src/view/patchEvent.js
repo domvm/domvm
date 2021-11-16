@@ -3,21 +3,6 @@ import { getVm } from './utils';
 import { onevent } from './config';
 import { devNotify } from "./addons/devmode";
 
-const registry = {};
-
-function listen(ontype) {
-	if (registry[ontype]) return;
-	registry[ontype] = true;
-	bind(doc, ontype, handle, true);
-}
-
-/*
-function unlisten(ontype) {
-	if (registry[ontype])
-		doc.removeEventListener(ontype.slice(2), handle, USE_CAPTURE);
-}
-*/
-
 function unbind(el, type, fn, capt) {
 	el.removeEventListener(type.slice(2), fn, capt);
 }
@@ -41,32 +26,34 @@ function exec(fn, args, e, node, vm) {
 	}
 }
 
-function ancestEvDefs(type, node) {
+function ancestEvDefs(type, tgtnod, vewnod) {
 	var ontype = "on" + type, evDef, attrs, evDefs = [];
 
-	while (node) {
-		if (attrs = node.attrs) {
+	while (tgtnod) {
+		if (attrs = tgtnod.attrs) {
 			if ((evDef = attrs[ontype]) && isArr(evDef))
-				evDefs.push(evDef);
+				evDefs.push({ def: evDef, tgtnod: tgtnod });
 		}
-		node = node.parent;
+        if (tgtnod.vm != null) {
+            if(tgtnod === vewnod) { break; } // stop at the vm for the listener
+            evDefs.length = 0; // otherwise we've crossed a nested VM boundary; reset event handlers
+            }
+		tgtnod = tgtnod.parent;
 	}
-
 	return evDefs;
 }
 
 function handle(e) {
-	var node = e.target._node;
+	var node = e.target._node, vewNode = this._node;
 
 	if (node == null)
 		return;
 
-	var evDefs = ancestEvDefs(e.type, node);
-
-	var vm = getVm(node);
+	var evDefs = ancestEvDefs(e.type, node, vewNode);
 
 	for (var i = 0; i < evDefs.length; i++) {
-		var res = exec(evDefs[i][0], evDefs[i].slice(1), e, node, vm);
+        var evd = evDefs[i];
+		var res = exec(evd.def[0], evd.def.slice(1), e, node, evd.tgtnod);
 
 		if (res === false)
 			break;
@@ -94,8 +81,14 @@ export function patchEvent(node, name, nval, oval) {
 
 	if (isFunc(nval))
 		bind(el, name, nval, false);
-	else if (nval != null)
-		listen(name);
+	else if (nval != null) {
+		let vmel = getVm(node).node.el;
+        if (!vmel._flag) { vmel._flag = {}; }
+    	if (!vmel._flag[name]) {
+        	vmel._flag[name] = true;
+        	bind(vmel, name, handle, false);
+        }
+    }
 
 	if (isFunc(oval))
 		unbind(el, name, oval, false);
