@@ -13,7 +13,7 @@ function bind(el, type, fn, capt) {
 
 function exec(fn, args, evt, evtnod, hdlnod) {
     var vm   = getVm(hdlnod);
-	var out1 = fn.apply(vm, args.concat([evt, evtnod, vm, vm.data])), out2, out3;
+	var out1 = fn.apply(hdlnod.el, args.concat([evt, evtnod, vm, vm.data])), out2, out3;
 
 	if (FEAT_ONEVENT) {
 		out2 = vm.onevent(evt, evtnod, vm, vm.data, args),
