@@ -15,7 +15,7 @@ QUnit.module("Attrs/props", function() {
 		var callCounts = instr.end();
 
 		var expcHtml = '<input type="text" disabled custom="abc" custom3="" custom4="foo" id="foo" class="bar baz" min="-1" style="font-family: Arial; font-size: 12px;">';
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { id: 1, className: 1, createElement: 1, insertBefore: 1, setAttribute: 5, addEventListener: 1 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { id: 1, className: 1, createElement: 1, insertBefore: 1, setAttribute: 5 });
 	});
 
 	// TODO: can 'id' or 'name' be allowed to change for recycling since they implicitly double as keys?
@@ -28,7 +28,7 @@ QUnit.module("Attrs/props", function() {
 		var callCounts = instr.end();
 
 		var expcHtml = '<input type="text" custom="xyz" custom2="..." id="foo" style="padding: 10px;">';
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeAttribute: 4, setAttribute: 2, removeEventListener: 1 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeAttribute: 4, setAttribute: 2 });
 	});
 
 
@@ -223,7 +223,7 @@ QUnit.module("Attrs/props", function() {
 		var callCounts = instr.end();
 
 		var expcHtml = '<div style="color: red;">moo</div>';
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, cssText: 1, textContent: 1, insertBefore: 1, addEventListener: 1 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 1, cssText: 1, textContent: 1, insertBefore: 1 });
 
 		attrs = null;		// or simply {}?
 
@@ -232,7 +232,7 @@ QUnit.module("Attrs/props", function() {
 		var callCounts = instr.end();
 
 		var expcHtml = '<div>moo</div>';
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeAttribute: 1, removeEventListener: 1 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeAttribute: 1 });
 	});
 
 	QUnit.test("Reused static attrs object", function(assert) {
