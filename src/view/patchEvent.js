@@ -3,100 +3,70 @@ import { getVm } from './utils';
 import { onevent } from './config';
 import { devNotify } from "./addons/devmode";
 
-const registry = {};
-
-function listen(ontype) {
-	if (registry[ontype]) return;
-	registry[ontype] = true;
-	bind(doc, ontype, handle, true);
-}
-
-/*
-function unlisten(ontype) {
-	if (registry[ontype])
-		doc.removeEventListener(ontype.slice(2), handle, USE_CAPTURE);
-}
-*/
-
-function unbind(el, type, fn, capt) {
-	el.removeEventListener(type.slice(2), fn, capt);
-}
-
-function bind(el, type, fn, capt) {
-	el.addEventListener(type.slice(2), fn, capt);
-}
-
-function exec(fn, args, e, node, vm) {
-	var out1 = fn.apply(vm, args.concat([e, node, vm, vm.data])), out2, out3;
+function exec(fn, args, e, evnode, vm) {
+    var out1 = fn.apply(vm.currentTarget, args.concat(e, evnode, vm, vm.data)) // this == currentTarget, NOT vm, to match normal handler
+    ,   out2, out3;
 
 	if (FEAT_ONEVENT) {
-		out2 = vm.onevent(e, node, vm, vm.data, args),
-		out3 = onevent.call(null, e, node, vm, vm.data, args);
+		out2 = vm.onevent(e, evnode, vm, vm.data, args),
+		out3 = onevent.call(null,e, evnode, vm, vm.data, args);
 	}
 
 	if (out1 === false || out2 === false || out3 === false) {
 		e.preventDefault();
-		e.stopPropagation();
+		e.stopPropagation(); // compatibility; this is almost never the right thing to do
 		return false;
 	}
 }
 
-function ancestEvDefs(type, node) {
-	var ontype = "on" + type, evDef, attrs, evDefs = [];
+function ancestorNodes(type, node, vm) {
+    var nods = [];
 
-	while (node) {
-		if (attrs = node.attrs) {
-			if ((evDef = attrs[ontype]) && isArr(evDef))
-				evDefs.unshift(evDef);
-		}
-		node = node.parent;
-	}
-
-	return evDefs;
+    for (; node; node = node.parent) {
+        nods.push(node);
+        if (node.vm == vm) // stop at view root (all views have their own handler
+            break;
+        if (node.vm != null) // reset at root of nested view
+            nods.length = 0;
+    }
+    return nods;
 }
 
-function handle(e) {
-	var node = e.target._node;
+function handleEvent(e) {
+	var evnode = e.target._node
 
-	if (node == null)
-		return;
+	if (evnode == null) // never?
+        return;
 
-	var evDefs = ancestEvDefs(e.type, node);
+    var vm      = e.currentTarget._node.vm
+    ,   ontype  = "on"+e.type
+    ,   vwnodes = ancestorNodes(e.type,evnode,vm)
+    ,   vwnode, attrs, evtdef, hdlres;
 
-	var vm = getVm(node);
-
-	for (var i = 0; i < evDefs.length; i++) {
-		var res = exec(evDefs[i][0], evDefs[i].slice(1), e, node, vm);
-
-		if (res === false)
-			break;
-	}
+    for(var xa = 0, len = vwnodes.length; xa < len; ++xa) {
+        vwnode = vwnodes[xa];
+        if ((attrs = vwnode.attrs) && (evtdef = attrs[ontype])) {
+            vm.currentTarget = vwnode.el;
+        	hdlres = (isFunc(evtdef) ? exec(evtdef   ,[]             ,e, evnode, vm)
+                                     : exec(evtdef[0],evtdef.slice(1),e, evnode, vm));
+            if(hdlres===false || !e.bubbles) { break; } // honor stopPropagation and non-bubbling events
+        }
+    vm.currentTarget = undefined;
+    }
 }
 
 export function patchEvent(node, name, nval, oval) {
-	if (nval == oval)
+	if (nval == null)
 		return;
 
 	if (_DEVMODE) {
-		if (isFunc(nval) && isFunc(oval) && oval.name == nval.name)
-			devNotify("INLINE_HANDLER", [node, oval, nval]);
-
-		if (oval != null && nval != null &&
-			(
-				isArr(oval) != isArr(nval) ||
-				isPlainObj(oval) != isPlainObj(nval) ||
-				isFunc(oval) != isFunc(nval)
-			)
-		) devNotify("MISMATCHED_HANDLER", [node, oval, nval]);
+		if (nval !=null && !isFunc(nval) && !isArr(nval))
+			devNotify("INVALID_HANDLER", [node, nval]);
+		if (isArr(nval) && !isFunc(nval[0]))
+			devNotify("INVALID_HANDLER", [node, nval]);
 	}
 
-	var el = node.el;
-
-	if (isFunc(nval))
-		bind(el, name, nval, false);
-	else if (nval != null)
-		listen(name);
-
-	if (isFunc(oval))
-		unbind(el, name, oval, false);
+    var vmel = getVm(node).node.el;
+	if (!vmel[name]) // assume actually setting this may have hidden overhead; TODO: measure difference without this test
+        vmel[name] = handleEvent;
 }
