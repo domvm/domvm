@@ -5,16 +5,13 @@ import { devNotify } from "./addons/devmode";
 
 function exec(fn, args, e, node) {
     let vm = getVm(node),
-		dvmargs = [e, node, vm, vm.data],
-		evtargs,
         out1 = fn.apply(e.currentTarget, args.concat(e, node, vm, vm.data)), // this == currentTarget, NOT vm, to match normal handler
 		out2,
 		out3;
 
 	if (FEAT_ONEVENT) {
-        evtargs = dvmargs.concat(args);
-		out2 = vm.onevent.apply(vm, evtargs),
-		out3 = onevent.apply(null, evtargs);
+        out2 = vm.onevent(e, node, vm, vm.data, args),
+        out3 = onevent.call(null,e, node, vm, vm.data, args);
 	}
 
 	if (out1 === false || out2 === false || out3 === false) {
