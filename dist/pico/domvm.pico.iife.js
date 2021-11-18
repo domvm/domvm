@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2020, Leon Sorokin
+* Copyright (c) 2021, Leon Sorokin
 * All rights reserved. (MIT Licensed)
 *
 * domvm.js (DOM ViewModel)
@@ -14,23 +14,23 @@ var domvm = (function (exports) {
 	// There are some places that test <= COMMENT to assert if node is a VNode
 
 	// VNode types
-	var UNMANAGED	= 0;
-	var ELEMENT	= 1;
-	var TEXT		= 2;
-	var COMMENT	= 3;
+	const UNMANAGED	= 0;
+	const ELEMENT	= 1;
+	const TEXT		= 2;
+	const COMMENT	= 3;
 
 	// placeholder types
-	var VVIEW		= 4;
-	var VMODEL		= 5;
+	const VVIEW		= 4;
+	const VMODEL		= 5;
 
-	var ENV_DOM = typeof window !== "undefined";
+	const ENV_DOM = typeof window !== "undefined";
 
-	var doc = ENV_DOM ? document : {};
+	const doc = ENV_DOM ? document : {};
 
-	var emptyObj = {};
+	const emptyObj = {};
 
 	function noop() {}
-	var isArr = Array.isArray;
+	const isArr = Array.isArray;
 
 	function isPlainObj(val) {
 		return val != null && val.constructor === Object;		//  && typeof val === "object"
@@ -57,8 +57,8 @@ var domvm = (function (exports) {
 		var args = arguments;
 
 		for (var i = 1; i < args.length; i++)
-			{ for (var k in args[i])
-				{ targ[k] = args[i][k]; } }
+			for (var k in args[i])
+				targ[k] = args[i][k];
 
 		return targ;
 	}
@@ -70,9 +70,9 @@ var domvm = (function (exports) {
 
 		while (seg = path.shift()) {
 			if (path.length === 0)
-				{ targ[seg] = val; }
+				targ[seg] = val;
 			else
-				{ targ[seg] = targ = targ[seg] || {}; }
+				targ[seg] = targ = targ[seg] || {};
 		}
 	}
 
@@ -85,18 +85,18 @@ var domvm = (function (exports) {
 	// https://en.wikipedia.org/wiki/Longest_increasing_subsequence
 	// impl borrowed from https://github.com/ivijs/ivi
 	function longestIncreasingSubsequence(a) {
-		var p = a.slice();
+		const p = a.slice();
 		// result is instantiated as an empty array to prevent instantiation with CoW backing store.
-		var result = [];
+		const result = [];
 		result[0] = 0;
-		var n = 0;
-		var i = 0;
-		var u;
-		var v;
-		var j;
+		let n = 0;
+		let i = 0;
+		let u;
+		let v;
+		let j;
 
 		for (; i < a.length; ++i) {
-			var k = a[i];
+			const k = a[i];
 			j = result[n];
 			if (a[j] < k) {
 				p[i] = j;
@@ -191,13 +191,13 @@ var domvm = (function (exports) {
 	function getVm(n) {
 		n = n || emptyObj;
 		while (n.vm == null && n.parent)
-			{ n = n.parent; }
+			n = n.parent;
 		return n.vm;
 	}
 
 	function VNode() {}
 
-	var VNodeProto = VNode.prototype = {
+	const VNodeProto = VNode.prototype = {
 		constructor: VNode,
 
 		type:	null,
@@ -249,7 +249,7 @@ var domvm = (function (exports) {
 	}
 
 	function defineText(body) {
-		var node = new VNode;
+		let node = new VNode;
 		node.type = TEXT;
 		node.body = body;
 		return node;
@@ -258,16 +258,16 @@ var domvm = (function (exports) {
 	// (de)optimization flags
 
 	// forces slow bottom-up removeChild to fire deep willRemove/willUnmount hooks,
-	var DEEP_REMOVE = 1 << 0;
+	const DEEP_REMOVE = 1 << 0;
 	// prevents inserting/removing/reordering of children
-	var FIXED_BODY = 1 << 1;
+	const FIXED_BODY = 1 << 1;
 	// enables fast keyed lookup of children via binary search, expects homogeneous keyed body
-	var KEYED_LIST = 1 << 2;
+	const KEYED_LIST = 1 << 2;
 	// indicates an vnode match/diff/recycler function for body
-	var LAZY_LIST = 1 << 3;
+	const LAZY_LIST = 1 << 3;
 
 	function initElementNode(tag, attrs, body, flags) {
-		var node = new VNode;
+		let node = new VNode;
 
 		node.type = ELEMENT;
 
@@ -277,6 +277,10 @@ var domvm = (function (exports) {
 
 		node.tag = tag;
 
+		if (node.attrs != null) {
+			node.attrs;
+		}
+
 		if (body != null) {
 			node.body = body;
 
@@ -284,7 +288,7 @@ var domvm = (function (exports) {
 				// replace rather than append flags since lists should not have
 				// FIXED_BODY, and DEEP_REMOVE is appended later in preProc
 				if (body instanceof List)
-					{ node.flags = body.flags; }
+					node.flags = body.flags;
 			}
 		}
 
@@ -302,7 +306,7 @@ var domvm = (function (exports) {
 
 		self.length = len;
 
-		self.key = function (i) { return null; };
+		self.key = i => null;
 
 		self.diff = {
 			val: function(i, newParent) {
@@ -314,9 +318,9 @@ var domvm = (function (exports) {
 		};
 
 		// TODO: auto-import diff and keygen into some vtypes?
-		self.tpl = function (i) { return tpl(items[i], i); };
+		self.tpl = i => tpl(items[i], i);
 
-		self.map = function (tpl0) {
+		self.map = tpl0 => {
 			tpl = tpl0;
 			return self;
 		};
@@ -331,7 +335,7 @@ var domvm = (function (exports) {
 			//		vnode2.key = getKey(item);
 
 				if (vnode2.type != VVIEW)
-					{ vnode2._diff = self.diff.val(i, vnode); }
+					vnode2._diff = self.diff.val(i, vnode);
 
 				nbody.push(vnode2);
 			}
@@ -344,7 +348,7 @@ var domvm = (function (exports) {
 
 		if (key != null) {
 			self.flags |= KEYED_LIST;
-			self.key = function (i) { return key(items[i], i); };
+			self.key = i => key(items[i], i);
 		}
 	}
 
@@ -352,20 +356,18 @@ var domvm = (function (exports) {
 		return new List(items, diff, key);
 	}
 
-	var syncRedraw = false;
-	var didRedraws = noop;
-	var onvnode = noop;
+	let onvnode = noop;
 
 	function config(newCfg) {
 
 		if (newCfg.onvnode != null)
-			{ onvnode = newCfg.onvnode; }
+			onvnode = newCfg.onvnode;
 
 		if (newCfg.syncRedraw != null)
-			{ syncRedraw = newCfg.syncRedraw; }
+			;
 
 		if (newCfg.didRedraws != null)
-			{ didRedraws = newCfg.didRedraws; }
+			;
 	}
 
 	function setRef(vm, name, node) {
@@ -375,7 +377,7 @@ var domvm = (function (exports) {
 
 	function setDeepRemove(node) {
 		while (node = node.parent)
-			{ node.flags |= DEEP_REMOVE; }
+			node.flags |= DEEP_REMOVE;
 	}
 
 	// vnew, vold
@@ -385,31 +387,31 @@ var domvm = (function (exports) {
 		onvnode(vnew, parent, idx, ownVm);
 
 		if (vnew.type === VMODEL || vnew.type === VVIEW)
-			{ return; }
+			return;
 
 		vnew.parent = parent;
 		vnew.idx = idx;
 		vnew.vm = ownVm;
 
 		if (vnew.ref != null)
-			{ setRef(getVm(vnew), vnew.ref, vnew); }
+			setRef(getVm(vnew), vnew.ref, vnew);
 
 		var nh = vnew.hooks,
 			vh = ownVm && ownVm.hooks;
 
 		if (nh && (nh.willRemove || nh.didRemove) ||
 			vh && (vh.willUnmount || vh.didUnmount))
-			{ setDeepRemove(vnew); }
+			setDeepRemove(vnew);
 
 		if (isArr(vnew.body))
-			{ preProcBody(vnew); }
+			preProcBody(vnew);
 		else if (vnew.body === "")
-			{ vnew.body = null; }
+			vnew.body = null;
 		else {
 			
 			{
 				if (vnew.body != null && !(vnew.body instanceof List))
-					{ vnew.body = "" + vnew.body; }
+					vnew.body = "" + vnew.body;
 			}
 		}
 	}
@@ -422,35 +424,35 @@ var domvm = (function (exports) {
 
 			// remove false/null/undefined
 			if (node2 === false || node2 == null)
-				{ body.splice(i--, 1); }
+				body.splice(i--, 1);
 			// flatten arrays
 			else if (isArr(node2)) {
 				insertArr(body, node2, i--, 1);
 			}
 			else {
 				if (node2.type == null)
-					{ body[i] = node2 = defineText(node2); }
+					body[i] = node2 = defineText(node2);
 
 				if (node2.type === TEXT) {
 					// remove empty text nodes
 					if (node2.body == null || node2.body === "")
-						{ body.splice(i--, 1); }
+						body.splice(i--, 1);
 					// merge with previous text node
 					else if (i > 0 && body[i-1].type === TEXT) {
 						body[i-1].body += node2.body;
 						body.splice(i--, 1);
 					}
 					else
-						{ preProc(node2, vnew, i, null); }
+						preProc(node2, vnew, i, null);
 				}
 				else
-					{ preProc(node2, vnew, i, null); }
+					preProc(node2, vnew, i, null);
 			}
 		}
 	}
 
 	function autoPx(name, val) {
-		{ return val; }
+		return val;
 	}
 
 	// assumes if styles exist both are objects or both are strings
@@ -460,111 +462,69 @@ var domvm = (function (exports) {
 
 		// replace or remove in full
 		if (ns == null || isVal(ns))
-			{ n.el.style.cssText = ns; }
+			n.el.style.cssText = ns;
 		else {
 			for (var nn in ns) {
 				var nv = ns[nn];
 
 				if (os == null || nv != null && nv !== os[nn])
-					{ n.el.style[nn] = autoPx(nn, nv); }
+					n.el.style[nn] = autoPx(nn, nv);
 			}
 
 			// clean old
 			if (os) {
 				for (var on in os) {
 					if (ns[on] == null)
-						{ n.el.style[on] = ""; }
+						n.el.style[on] = "";
 				}
 			}
 		}
 	}
 
-	var registry = {};
+	// invokes parameterized events
+	function exec(fn, args, e, node) {
+		let vm = getVm(node),
+			out1 = fn.apply(vm, args.concat(e, node, vm, vm.data)),
+			out2,
+			out3;
 
-	function listen(ontype) {
-		if (registry[ontype]) { return; }
-		registry[ontype] = true;
-		bind(doc, ontype, handle, true);
-	}
-
-	/*
-	function unlisten(ontype) {
-		if (registry[ontype])
-			doc.removeEventListener(ontype.slice(2), handle, USE_CAPTURE);
-	}
-	*/
-
-	function unbind(el, type, fn, capt) {
-		el.removeEventListener(type.slice(2), fn, capt);
-	}
-
-	function bind(el, type, fn, capt) {
-		el.addEventListener(type.slice(2), fn, capt);
-	}
-
-	function exec(fn, args, e, node, vm) {
-		var out1 = fn.apply(vm, args.concat([e, node, vm, vm.data])), out2, out3;
-
-		if (out1 === false || out2 === false || out3 === false) {
+		if (out1 === false || out2 === false || out3 === false)
 			e.preventDefault();
-			e.stopPropagation();
-			return false;
-		}
-	}
-
-	function ancestEvDefs(type, node) {
-		var ontype = "on" + type, evDef, attrs, evDefs = [];
-
-		while (node) {
-			if (attrs = node.attrs) {
-				if ((evDef = attrs[ontype]) && isArr(evDef))
-					{ evDefs.unshift(evDef); }
-			}
-			node = node.parent;
-		}
-
-		return evDefs;
 	}
 
 	function handle(e) {
-		var node = e.target._node;
+		let curTarg = e.currentTarget;
+		let node = curTarg._node;
 
 		if (node == null)
-			{ return; }
+			return;
 
-		var evDefs = ancestEvDefs(e.type, node);
+		let dfn = node.attrs["on" + e.type];
 
-		var vm = getVm(node);
-
-		for (var i = 0; i < evDefs.length; i++) {
-			var res = exec(evDefs[i][0], evDefs[i].slice(1), e, node, vm);
-
-			if (res === false)
-				{ break; }
-		}
+		if (isArr(dfn))
+			exec(dfn[0], dfn.slice(1), e, node);
+		else
+			dfn.call(curTarg, e);
 	}
 
 	function patchEvent(node, name, nval, oval) {
 		if (nval == oval)
-			{ return; }
+			return;
 
-		var el = node.el;
+		let el = node.el;
 
-		if (isFunc(nval))
-			{ bind(el, name, nval, false); }
-		else if (nval != null)
-			{ listen(name); }
-
-		if (isFunc(oval))
-			{ unbind(el, name, oval, false); }
+		if (nval == null)
+			el[name] = null;
+		else if (oval == null)
+			el[name] = handle;
 	}
 
 	function remAttr(node, name, asProp) {
 
 		if (asProp)
-			{ node.el[name] = ""; }
+			node.el[name] = "";
 		else
-			{ node.el.removeAttribute(name); }
+			node.el.removeAttribute(name);
 	}
 
 	// setAttr
@@ -573,20 +533,20 @@ var domvm = (function (exports) {
 		var el = node.el;
 
 		if (node.ns != null)
-			{ el.setAttribute(name, val); }
+			el.setAttribute(name, val);
 		else if (name === "class")
-			{ el.className = val; }
+			el.className = val;
 		else if (name === "id" || typeof val === "boolean" || asProp)
-			{ el[name] = val; }
+			el[name] = val;
 		else if (name[0] === ".")
-			{ el[name.substr(1)] = val; }
+			el[name.substr(1)] = val;
 		else
-			{ el.setAttribute(name, val); }
+			el.setAttribute(name, val);
 	}
 
 	function patchAttrs(vnode, donor) {
-		var nattrs = vnode.attrs || emptyObj;
-		var oattrs = donor.attrs || emptyObj;
+		const nattrs = vnode.attrs || emptyObj;
+		const oattrs = donor.attrs || emptyObj;
 
 		if (nattrs === oattrs) ;
 		else {
@@ -594,26 +554,26 @@ var domvm = (function (exports) {
 				var nval = nattrs[key];
 
 				if (nval == null)
-					{ continue; }
+					continue;
 
 				var isDyn = isDynAttr(vnode.tag, key);
 				var oval = isDyn ? vnode.el[key] : oattrs[key];
 
 				if (nval === oval) ;
 				else if (isStyleAttr(key))
-					{ patchStyle(vnode, donor); }
+					patchStyle(vnode, donor);
 				else if (isEvAttr(key))
-					{ patchEvent(vnode, key, nval, oval); }
+					patchEvent(vnode, key, nval, oval);
 				else
-					{ setAttr(vnode, key, nval, isDyn); }
+					setAttr(vnode, key, nval, isDyn);
 			}
 
 			// TODO: bench style.cssText = "" vs removeAttribute("style")
 			for (var key in oattrs) {
 				if (nattrs[key] == null) {
 					if (isEvAttr(key))
-						{ patchEvent(vnode, key, nattrs[key], oattrs[key]); }
-					else { remAttr(vnode, key, isDynAttr(vnode.tag, key)); }
+						patchEvent(vnode, key, nattrs[key], oattrs[key]);
+					else remAttr(vnode, key, isDynAttr(vnode.tag, key));
 				}
 			}
 		}
@@ -630,7 +590,7 @@ var domvm = (function (exports) {
 		return new ViewModel(view, data, key, opts);
 	}
 
-	var didQueue = [];
+	const didQueue = [];
 
 	function fireHook(hooks, name, o, n, immediate) {
 		if (hooks != null) {
@@ -644,7 +604,7 @@ var domvm = (function (exports) {
 						fn(o, n);
 					}
 					else
-						{ didQueue.push([fn, o, n]); }
+						didQueue.push([fn, o, n]);
 				}
 				else {		// will*
 					//	console.log(name + " may delay by promise", o, n);
@@ -660,13 +620,13 @@ var domvm = (function (exports) {
 
 			var item;
 			while (item = didQueue.shift())
-				{ item[0](item[1], item[2]); }
+				item[0](item[1], item[2]);
 		}
 	}
 
 	function createElement(tag, ns) {
 		if (ns != null)
-			{ return doc.createElementNS(ns, tag); }
+			return doc.createElementNS(ns, tag);
 		return doc.createElement(tag);
 	}
 
@@ -698,7 +658,7 @@ var domvm = (function (exports) {
 
 		if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE && isArr(node.body)) {
 			for (var i = 0; i < node.body.length; i++)
-				{ deepNotifyRemove(node.body[i]); }
+				deepNotifyRemove(node.body[i]);
 		}
 
 		return wuRes || wrRes;
@@ -709,14 +669,14 @@ var domvm = (function (exports) {
 			var vm = node.vm;
 
 			if (vm != null)
-				{ vm.node = vm.refs = null; }
+				vm.node = vm.refs = null;
 		}
 
 		var obody = node.body;
 
 		if (isArr(obody)) {
 			for (var i = 0; i < obody.length; i++)
-				{ deepUnref(obody[i], true); }
+				deepUnref(obody[i], true);
 		}
 	}
 
@@ -727,7 +687,7 @@ var domvm = (function (exports) {
 
 		if ((node.flags & DEEP_REMOVE) === DEEP_REMOVE) {
 			for (var i = 0; i < node.body.length; i++)
-				{ _removeChild(el, node.body[i].el); }
+				_removeChild(el, node.body[i].el);
 		}
 
 		delete el._node;
@@ -747,7 +707,7 @@ var domvm = (function (exports) {
 		var node = el._node;
 
 		// already marked for removal
-		if (node._dead) { return; }
+		if (node._dead) return;
 
 		var res = deepNotifyRemove(node);
 
@@ -756,7 +716,7 @@ var domvm = (function (exports) {
 			res.then(curry(_removeChild, [parEl, el, true]));
 		}
 		else
-			{ _removeChild(parEl, el); }
+			_removeChild(parEl, el);
 	}
 
 	function clearChildren(parent) {
@@ -786,14 +746,14 @@ var domvm = (function (exports) {
 		var vm = (el === refEl || !inDom) ? node.vm : null;
 
 		if (vm != null)
-			{ fireHook(vm.hooks, "willMount", vm, vm.data); }
+			fireHook(vm.hooks, "willMount", vm, vm.data);
 
 		fireHook(node.hooks, inDom ? "willReinsert" : "willInsert", node);
 		parEl.insertBefore(el, refEl);
 		fireHook(node.hooks, inDom ? "didReinsert" : "didInsert", node);
 
 		if (vm != null)
-			{ fireHook(vm.hooks, "didMount", vm, vm.data); }
+			fireHook(vm.hooks, "didMount", vm, vm.data);
 	}
 
 	function insertAfter(parEl, el, refEl) {
@@ -807,7 +767,7 @@ var domvm = (function (exports) {
 
 			// ELEMENT,TEXT,COMMENT
 			if (type2 <= COMMENT)
-				{ insertBefore(vnode.el, hydrate(vnode2)); }		// vnode.el.appendChild(hydrate(vnode2))
+				insertBefore(vnode.el, hydrate(vnode2));		// vnode.el.appendChild(hydrate(vnode2))
 			else if (type2 === VVIEW) {
 				var vm = createView(vnode2.view, vnode2.data, vnode2.key, vnode2.opts)._redraw(vnode, i, false);		// todo: handle new data updates
 				type2 = vm.node.type;
@@ -832,20 +792,20 @@ var domvm = (function (exports) {
 			//		vnode.el.setAttributeNS(XML_NS, 'xmlns:xlink', XLINK_NS);
 
 				if (vnode.attrs != null)
-					{ patchAttrs(vnode, emptyObj); }
+					patchAttrs(vnode, emptyObj);
 
-				if ( (vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList
-					{ vnode.body.body(vnode); }
+				if ((vnode.flags & LAZY_LIST) === LAZY_LIST)	// vnode.body instanceof LazyList
+					vnode.body.body(vnode);
 
 				if (isArr(vnode.body))
-					{ hydrateBody(vnode); }
+					hydrateBody(vnode);
 				else if (vnode.body != null)
-					{ vnode.el.textContent = vnode.body; }
+					vnode.el.textContent = vnode.body;
 			}
 			else if (vnode.type === TEXT)
-				{ vnode.el = withEl || createTextNode(vnode.body); }
+				vnode.el = withEl || createTextNode(vnode.body);
 			else if (vnode.type === COMMENT)
-				{ vnode.el = withEl || createComment(vnode.body); }
+				vnode.el = withEl || createComment(vnode.body);
 		}
 
 		vnode.el._node = vnode;
@@ -865,8 +825,8 @@ var domvm = (function (exports) {
 		return node.parent;
 	}
 
-	var BREAK = 1;
-	var BREAK_ALL = 2;
+	const BREAK = 1;
+	const BREAK_ALL = 2;
 
 	function syncDir(advSib, advNode, insert, sibName, nodeName, invSibName, invNodeName, invInsert) {
 		return function(node, parEl, body, state, convTest, lis) {
@@ -884,7 +844,7 @@ var domvm = (function (exports) {
 			}
 
 			if (state[nodeName] == convTest)
-				{ return BREAK_ALL; }
+				return BREAK_ALL;
 			else if (state[nodeName].el == null) {
 				insert(parEl, hydrate(state[nodeName]), state[sibName]);	// should lis be updated here?
 				state[nodeName] = advNode(state[nodeName], body);		// also need to advance sib?
@@ -903,7 +863,7 @@ var domvm = (function (exports) {
 			else {
 
 				if (lis && state[sibName] != null)
-					{ return lisMove(advSib, advNode, insert, sibName, nodeName, parEl, body, sibNode, state); }
+					return lisMove(advSib, advNode, insert, sibName, nodeName, parEl, body, sibNode, state);
 
 				return BREAK;
 			}
@@ -924,9 +884,9 @@ var domvm = (function (exports) {
 			insert(parEl, state[sibName], t != null ? body[state.tombs[t]].el : t);
 
 			if (t == null)
-				{ state.tombs.push(sibNode.idx); }
+				state.tombs.push(sibNode.idx);
 			else
-				{ state.tombs.splice(t, 0, sibNode.idx); }
+				state.tombs.splice(t, 0, sibNode.idx);
 
 			state[sibName] = tmpSib;
 		}
@@ -951,15 +911,15 @@ var domvm = (function (exports) {
 	//		from_left:
 			while (1) {
 				var l = syncLft(node, parEl, body, state, null, false);
-				if (l === BREAK) { break; }
-				if (l === BREAK_ALL) { break converge; }
+				if (l === BREAK) break;
+				if (l === BREAK_ALL) break converge;
 			}
 
 	//		from_right:
 			while (1) {
 				var r = syncRgt(node, parEl, body, state, state.lftNode, false);
-				if (r === BREAK) { break; }
-				if (r === BREAK_ALL) { break converge; }
+				if (r === BREAK) break;
+				if (r === BREAK_ALL) break converge;
 			}
 
 			sortDOM(node, parEl, body, state);
@@ -977,20 +937,20 @@ var domvm = (function (exports) {
 		do  {
 			var n = el._node;
 			if (n.parent === node)
-				{ domIdxs.push(n.idx); }
+				domIdxs.push(n.idx);
 		} while (el = nextSib(el));
 
 		// list of non-movable vnode indices (already in correct order in old dom)
-		var tombs = longestIncreasingSubsequence(domIdxs).map(function (i) { return domIdxs[i]; });
+		var tombs = longestIncreasingSubsequence(domIdxs).map(i => domIdxs[i]);
 
 		for (var i = 0; i < tombs.length; i++)
-			{ body[tombs[i]]._lis = true; }
+			body[tombs[i]]._lis = true;
 
 		state.tombs = tombs;
 
 		while (1) {
 			var r = syncLft(node, parEl, body, state, null, true);
-			if (r === BREAK_ALL) { break; }
+			if (r === BREAK_ALL) break;
 		}
 	}
 
@@ -1009,10 +969,10 @@ var domvm = (function (exports) {
 			if (o.vm != null) {
 				// match by key & viewFn || vm
 				if (n.type === VVIEW && o.vm.view === n.view && o.vm.key === n.key || n.type === VMODEL && o.vm === n.vm)
-					{ return o; }
+					return o;
 			}
 			else if (!alreadyAdopted(o) && n.tag === o.tag && n.type === o.type && n.key === o.key && (n.flags & ~DEEP_REMOVE) === (o.flags & ~DEEP_REMOVE))
-				{ return o; }
+				return o;
 		}
 
 		return null;
@@ -1021,11 +981,11 @@ var domvm = (function (exports) {
 	function findKeyed(n, obody, fromIdx) {
 		if (obody._keys == null) {
 			if (obody[fromIdx].key === n.key)
-				{ return obody[fromIdx]; }
+				return obody[fromIdx];
 			else {
 				var keys = {};
 				for (var i = 0; i < obody.length; i++)
-					{ keys[obody[i].key] = i; }
+					keys[obody[i].key] = i;
 				obody._keys = keys;
 			}
 		}
@@ -1060,26 +1020,26 @@ var domvm = (function (exports) {
 		}
 
 		if (vnode.attrs != null || donor.attrs != null)
-			{ patchAttrs(vnode, donor); }
+			patchAttrs(vnode, donor);
 
 		// patch events
 
 		var oldIsArr = isArr(obody);
 		var newIsArr = isArr(nbody);
-		var lazyList =  (vnode.flags & LAZY_LIST) === LAZY_LIST;
+		var lazyList = (vnode.flags & LAZY_LIST) === LAZY_LIST;
 
 	//	var nonEqNewBody = nbody != null && nbody !== obody;
 
 		if (oldIsArr) {
 			// [] => []
 			if (newIsArr || lazyList)
-				{ patchChildren(vnode, donor); }
+				patchChildren(vnode, donor);
 			// [] => "" | null
 			else if (nbody !== obody) {
 				if (nbody != null)
-					{ el.textContent = nbody; }
+					el.textContent = nbody;
 				else
-					{ clearChildren(donor); }
+					clearChildren(donor);
 			}
 		}
 		else {
@@ -1091,9 +1051,9 @@ var domvm = (function (exports) {
 			// "" | null => "" | null
 			else if (nbody !== obody) {
 				if (nbody != null && obody != null)
-					{ el.firstChild.nodeValue = nbody; }
+					el.firstChild.nodeValue = nbody;
 				else
-					{ el.textContent = nbody; }
+					el.textContent = nbody;
 			}
 		}
 
@@ -1112,7 +1072,7 @@ var domvm = (function (exports) {
 			nlen		= nbody.length,
 			obody		= donor.body,
 			olen		= obody.length,
-			isLazy		=  (vnode.flags & LAZY_LIST) === LAZY_LIST,
+			isLazy		= (vnode.flags & LAZY_LIST) === LAZY_LIST,
 			isFixed		= (vnode.flags & FIXED_BODY) === FIXED_BODY,
 			isKeyed		= (vnode.flags & KEYED_LIST) === KEYED_LIST,
 			domSync		= !isFixed && vnode.type === ELEMENT,
@@ -1127,7 +1087,7 @@ var domvm = (function (exports) {
 		if (domSync && nlen === 0) {
 			clearChildren(donor);
 			if (isLazy)
-				{ vnode.body = []; }	// nbody.tpl(all);
+				vnode.body = [];	// nbody.tpl(all);
 			return;
 		}
 
@@ -1149,7 +1109,7 @@ var domvm = (function (exports) {
 
 				if (doFind) {
 					if (isKeyed)
-						{ fnode2.key = nbody.key(i); }
+						fnode2.key = nbody.key(i);
 
 					donor2 = find(fnode2, obody, fromIdx);
 				}
@@ -1165,19 +1125,19 @@ var domvm = (function (exports) {
 						node2._lis = false;
 					}
 					else
-						{ remake = true; }
+						remake = true;
 				}
 				else
-					{ remake = true; }
+					remake = true;
 
 				if (remake) {
 					node2 = nbody.tpl(i);			// what if this is a VVIEW, VMODEL, injected element?
 
 					if (node2.type === VVIEW) {
 						if (donor2 != null)
-							{ node2 = donor2.vm._update(node2.data, vnode, i, true, true).node; }
+							node2 = donor2.vm._update(node2.data, vnode, i, true, true).node;
 						else
-							{ node2 = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false).node; }
+							node2 = createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false).node;
 					}
 					else {
 						preProc(node2, vnode, i);
@@ -1185,7 +1145,7 @@ var domvm = (function (exports) {
 						node2._diff = nbody.diff.val(i, vnode);
 
 						if (donor2 != null)
-							{ patch(node2, donor2); }
+							patch(node2, donor2);
 					}
 				}
 
@@ -1208,7 +1168,7 @@ var domvm = (function (exports) {
 						donor2.vm._update(node2.data, vnode, i, true, true);
 					}
 					else
-						{ createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false); }	// createView, no dom (will be handled by sync below)
+						createView(node2.view, node2.data, node2.key, node2.opts)._redraw(vnode, i, false);	// createView, no dom (will be handled by sync below)
 				}
 				else if (type2 === VMODEL) {
 					var vm = node2.vm;
@@ -1244,11 +1204,11 @@ var domvm = (function (exports) {
 					}
 				}
 				else
-					{ everNonseq = true; }
+					everNonseq = true;
 
 				if (!isKeyed && olen > 100 && everNonseq && ++patched % 10 === 0)
-					{ while (fromIdx < olen && alreadyAdopted(obody[fromIdx]))
-						{ fromIdx++; } }
+					while (fromIdx < olen && alreadyAdopted(obody[fromIdx]))
+						fromIdx++;
 			}
 		}
 
@@ -1271,7 +1231,7 @@ var domvm = (function (exports) {
 		var out = isPlainObj(view) ? view : view.call(vm, vm, data, key, opts);
 
 		if (isFunc(out))
-			{ vm.render = out; }
+			vm.render = out;
 		else {
 			vm.render = out.render;
 			vm.cfg(out);
@@ -1284,17 +1244,17 @@ var domvm = (function (exports) {
 		var t = this;
 
 		if (opts.init)
-			{ t.init = opts.init; }
+			t.init = opts.init;
 		if (opts.diff) {
-			{ t.diff = opts.diff; }
+			t.diff = opts.diff;
 		}
 
 		// maybe invert assignment order?
 		if (opts.hooks)
-			{ t.hooks = assignObj(t.hooks || {}, opts.hooks); }
+			t.hooks = assignObj(t.hooks || {}, opts.hooks);
 	}
 
-	var ViewModelProto = ViewModel.prototype = {
+	ViewModel.prototype = {
 		constructor: ViewModel,
 
 		init:	null,
@@ -1320,7 +1280,7 @@ var domvm = (function (exports) {
 			var p = this.node;
 
 			while (p.parent)
-				{ p = p.parent; }
+				p = p.parent;
 
 			return p.vm;
 		},
@@ -1362,17 +1322,17 @@ var domvm = (function (exports) {
 				el.parentNode.removeChild(el);
 			}
 			else
-				{ insertBefore(el.parentNode, hydrate(vm.node, el), el); }
+				insertBefore(el.parentNode, hydrate(vm.node, el), el);
 		}
 		else {
 			vm._redraw(null, null);
 
 			if (el)
-				{ insertBefore(el, vm.node.el); }
+				insertBefore(el, vm.node.el);
 		}
 
 		if (el)
-			{ drainDidHooks(vm, true); }
+			drainDidHooks(vm, true);
 
 		return vm;
 	}
@@ -1390,7 +1350,7 @@ var domvm = (function (exports) {
 		node.el = null;
 
 		if (!asSub)
-			{ drainDidHooks(vm, true); }
+			drainDidHooks(vm, true);
 	}
 
 	function reParent(vm, vold, newParent, newIdx) {
@@ -1404,7 +1364,7 @@ var domvm = (function (exports) {
 	}
 
 	function redrawSync(newParent, newIdx, withDOM) {
-		var isRedrawRoot = newParent == null;
+		const isRedrawRoot = newParent == null;
 		var vm = this;
 		var isMounted = vm.node && vm.node.el && vm.node.el.parentNode;
 
@@ -1436,17 +1396,17 @@ var domvm = (function (exports) {
 		var vnew = vm.render.call(vm, vm, vm.data, vm.key, newParent, newIdx);
 
 		if (doDiff)
-			{ vnew._diff = newDiff; }
+			vnew._diff = newDiff;
 
 		if (vnew === vold)
-			{ return reParent(vm, vold, newParent, newIdx); }
+			return reParent(vm, vold, newParent, newIdx);
 
 		// todo: test result of willRedraw hooks before clearing refs
 		vm.refs = null;
 
 		// always assign vm key to root vnode (this is a de-opt)
 		if (vm.key != null && vnew.key !== vm.key)
-			{ vnew.key = vm.key; }
+			vnew.key = vm.key;
 
 		vm.node = vnew;
 
@@ -1459,7 +1419,7 @@ var domvm = (function (exports) {
 			vold.parent.body[vold.idx] = vnew;
 		}
 		else
-			{ preProc(vnew, null, null, vm); }
+			preProc(vnew, null, null, vm);
 
 		if (withDOM !== false) {
 			if (vold) {
@@ -1481,16 +1441,16 @@ var domvm = (function (exports) {
 					vnew.vm = vm;
 				}
 				else
-					{ patch(vnew, vold); }
+					patch(vnew, vold);
 			}
 			else
-				{ hydrate(vnew); }
+				hydrate(vnew);
 		}
 
 		isMounted && fireHook(vm.hooks, "didRedraw", vm, vm.data);
 
 		if (isRedrawRoot && isMounted)
-			{ drainDidHooks(vm, true); }
+			drainDidHooks(vm, true);
 
 		return vm;
 	}
@@ -1514,9 +1474,9 @@ var domvm = (function (exports) {
 
 		if (arg2 == null) {
 			if (isPlainObj(arg1))
-				{ attrs = arg1; }
+				attrs = arg1;
 			else
-				{ body = arg1; }
+				body = arg1;
 		}
 		else {
 			attrs = arg1;
@@ -1527,7 +1487,7 @@ var domvm = (function (exports) {
 	}
 
 	//export const XML_NS = "http://www.w3.org/2000/xmlns/";
-	var SVG_NS = "http://www.w3.org/2000/svg";
+	const SVG_NS = "http://www.w3.org/2000/svg";
 
 	function defineSvgElement(tag, arg1, arg2, flags) {
 		var n = defineElement(tag, arg1, arg2, flags);
@@ -1536,7 +1496,7 @@ var domvm = (function (exports) {
 	}
 
 	function defineComment(body) {
-		var node = new VNode;
+		let node = new VNode;
 		node.type = COMMENT;
 		node.body = body;
 		return node;
@@ -1583,7 +1543,7 @@ var domvm = (function (exports) {
 	}
 
 	function injectElement(el) {
-		var node = new VNode;
+		let node = new VNode;
 		node.type = UNMANAGED;
 		node.el = node.key = el;
 		return node;
@@ -1607,4 +1567,4 @@ var domvm = (function (exports) {
 
 	return exports;
 
-}({}));
+})({});
