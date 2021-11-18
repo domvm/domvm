@@ -4,8 +4,6 @@ export const doc = ENV_DOM ? document : {};
 
 export const emptyObj = {};
 
-export const emptyArr = [];
-
 export function noop() {};
 
 export function retArg0(a) { return a; }

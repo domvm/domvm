@@ -204,7 +204,7 @@ QUnit.module("Events", function() {
 		// TODO: test if "handle" is the thing that's bound
 		// TOFIX: when last listener of this type is dropped, remove top-level capturing listener
 	//	evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { onclick: 1 });
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { onclick: 1 });
 
 		reset();
 

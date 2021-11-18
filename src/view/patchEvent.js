@@ -1,27 +1,27 @@
-import { isArr, isFunc, emptyArr } from '../utils';
+import { isArr, isFunc } from '../utils';
 import { getVm } from './utils';
 import { onevent } from './config';
 import { devNotify } from "./addons/devmode";
 
+// invokes parameterized events
 function exec(fn, args, e, node) {
 	let vm = getVm(node),
-		out1 = fn.apply(e.currentTarget, args.concat(e, node, vm, vm.data)), // this == currentTarget, NOT vm, to match normal handler
+		out1 = fn.apply(vm, args.concat(e, node, vm, vm.data)),
 		out2,
 		out3;
 
 	if (FEAT_ONEVENT) {
 		out2 = vm.onevent(e, node, vm, vm.data, args),
-		out3 = onevent.call(null, e, node, vm, vm.data, args);
+		out3 =    onevent(e, node, vm, vm.data, args);
 	}
 
-	if (out1 === false || out2 === false || out3 === false) {
+	if (out1 === false || out2 === false || out3 === false)
 		e.preventDefault();
-		return false;
-	}
 }
 
 function handle(e) {
-	let node = e.currentTarget._node;
+	let curTarg = e.currentTarget;
+	let node = curTarg._node;
 
 	if (node == null)
 		return;
@@ -31,7 +31,7 @@ function handle(e) {
 	if (isArr(dfn))
 		exec(dfn[0], dfn.slice(1), e, node);
 	else
-		exec(dfn,    emptyArr,     e, node);
+		dfn.call(curTarg, e);
 }
 
 export function patchEvent(node, name, nval, oval) {
