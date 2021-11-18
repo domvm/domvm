@@ -23,6 +23,7 @@
 
 	var htmlProto = HTMLElement.prototype;
 	var innerText = getDescr(htmlProto, "innerText");
+	var onclick = getDescr(htmlProto, "onclick");
 
 	var elemProto	= Element.prototype;
 	var innerHTML	= getDescr(!isIE ? elemProto : htmlProto, "innerHTML");
@@ -135,6 +136,14 @@
 				},
 			});
 
+			counts.onclick = 0;
+			defProp(htmlProto, "onclick", {
+				set: function(s) {
+					counts.onclick++;
+					onclick.set.call(this, s);
+				},
+			});
+
 			counts.innerHTML = 0;
 			defProp(!isIE ? elemProto : htmlProto, "innerHTML", {
 				set: function(s) {
@@ -236,6 +245,7 @@
 			defProp(nodeProto, "textContent", textContent);
 			defProp(nodeProto, "nodeValue", nodeValue);
 			defProp(htmlProto, "innerText", innerText);
+			defProp(htmlProto, "onclick", onclick);
 			defProp(!isIE ? elemProto : htmlProto, "innerHTML", innerHTML);
 			defProp(!isIE ? elemProto : htmlProto, "className", className);
 			defProp(!isIE ? elemProto : htmlProto, "id", id);
