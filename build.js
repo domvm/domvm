@@ -1,6 +1,5 @@
 const rollup = require('rollup').rollup;
 const replace = require('rollup-plugin-replace');
-const buble = require('rollup-plugin-buble');
 const fs = require('fs');
 const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
@@ -145,7 +144,6 @@ function compile(buildName) {
 		},
 		plugins: [
 			replace(repls),
-			buble(),
 		],
 	})
 	.then(function(bundle) {
@@ -194,7 +192,7 @@ function compile(buildName) {
 			sourcemap: buildName == 'full',
 			file: "./dist/" + buildName + "/domvm." + buildName + ".iife.js"
 		}).then(b => {
-			console.log((+new Date - start) + "ms: Rollup + Buble done (build: " + buildName + ")");
+			console.log((+new Date - start) + "ms: Rollup done (build: " + buildName + ")");
 			squish(buildName, preserve, start);
 		});
 	}).catch(function(err) {
@@ -202,7 +200,7 @@ function compile(buildName) {
 	})
 }
 
-function squish(buildName, preserve, start) {
+async function squish(buildName, preserve, start) {
 	var src = "dist/" + buildName + "/domvm." + buildName + ".iife.js";
 	var dst = "dist/" + buildName + "/domvm." + buildName + ".iife.min.js";
 
@@ -222,9 +220,9 @@ function squish(buildName, preserve, start) {
 		}
 	};
 
-	const compiled = Terser.minify(fs.readFileSync(src, 'utf8'), opts).code;
+	const compiled = await Terser.minify(fs.readFileSync(src, 'utf8'), opts);
 
-	fs.writeFileSync(dst, "// " + preserve + "\n" + compiled, 'utf8');
+	fs.writeFileSync(dst, "// " + preserve + "\n" + compiled.code, 'utf8');
 
 	buildDistTable();
 
