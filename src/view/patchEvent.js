@@ -4,14 +4,14 @@ import { onevent } from './config';
 import { devNotify } from "./addons/devmode";
 
 function exec(fn, args, e, node) {
-    let vm = getVm(node),
-        out1 = fn.apply(e.currentTarget, args.concat(e, node, vm, vm.data)), // this == currentTarget, NOT vm, to match normal handler
+	let vm = getVm(node),
+		out1 = fn.apply(e.currentTarget, args.concat(e, node, vm, vm.data)), // this == currentTarget, NOT vm, to match normal handler
 		out2,
 		out3;
 
 	if (FEAT_ONEVENT) {
-        out2 = vm.onevent(e, node, vm, vm.data, args),
-        out3 = onevent.call(null,e, node, vm, vm.data, args);
+		out2 = vm.onevent(e, node, vm, vm.data, args),
+		out3 = onevent.call(null, e, node, vm, vm.data, args);
 	}
 
 	if (out1 === false || out2 === false || out3 === false) {
@@ -24,13 +24,13 @@ function handle(e) {
 	let node = e.currentTarget._node;
 
 	if (node == null)
-        return;
+		return;
 
-    let dfn = node.attrs["on" + e.type];
+	let dfn = node.attrs["on" + e.type];
 
 	if (isArr(dfn))
 		exec(dfn[0], dfn.slice(1), e, node);
-    else
+	else
 		exec(dfn,    emptyArr,     e, node);
 }
 
