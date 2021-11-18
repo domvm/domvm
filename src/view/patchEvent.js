@@ -7,7 +7,7 @@ function exec(fn, args, e, node) {
     let vm = getVm(node),
 		dvmargs = [e, node, vm, vm.data],
 		evtargs,
-		out1 = fn.apply(vm, args.concat(dvmargs)),
+        out1 = fn.apply(e.currentTarget, args.concat(e, node, vm, vm.data)), // this == currentTarget, NOT vm, to match normal handler
 		out2,
 		out3;
 
