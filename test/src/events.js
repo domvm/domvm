@@ -217,19 +217,19 @@ QUnit.module("Events", function() {
 		assert.equal(counts.args1[0], 5);
 		assert.equal(counts.args1[1], 6);
 		assert.ok(counts.args1[2] instanceof Event);
-		assert.equal(counts.args1[3], vm.node.body[0]);
+		assert.equal(counts.args1[3], vm.node);
 		assert.equal(counts.args1[4], vm);
 		assert.equal(counts.args1[5], vm.data);
 
 		// global & vm-level onevent args
 		assert.ok(counts.globalOnArgs[0] instanceof Event);
-		assert.equal(counts.globalOnArgs[1], vm.node.body[0]);
+		assert.equal(counts.globalOnArgs[1], vm.node);
 		assert.equal(counts.globalOnArgs[2], vm);
 		assert.equal(counts.globalOnArgs[3], vm.data);
 		assert.deepEqual(counts.globalOnArgs[4], [5,6]);
 
 		assert.ok(counts.vmOnArgs[0] instanceof Event);
-		assert.equal(counts.vmOnArgs[1], vm.node.body[0]);
+		assert.equal(counts.vmOnArgs[1], vm.node);
 		assert.equal(counts.vmOnArgs[2], vm);
 		assert.equal(counts.vmOnArgs[3], vm.data);
 		assert.deepEqual(counts.vmOnArgs[4], [5,6]);
