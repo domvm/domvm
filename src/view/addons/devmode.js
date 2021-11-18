@@ -22,8 +22,8 @@ export const DEVMODE = {
 		return ["Invoking redraw() of an unmounted (sub)view may result in errors.", vm];
 	},
 
-	INLINE_HANDLER: function(vnode, oval, nval) {
-		return ["Anonymous event handlers get re-bound on each redraw, consider defining them outside of templates for better reuse.", vnode, oval, nval];
+	INLINE_HANDLER: function(vnode, nval) {
+		return ["Anonymous inline event handlers get re-created on every redraw, consider defining them outside of templates for better reuse.", vnode, nval];
 	},
 
 	MISMATCHED_HANDLER: function(vnode, oval, nval) {
