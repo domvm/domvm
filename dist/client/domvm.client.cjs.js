@@ -1,10 +1,10 @@
 /**
-* Copyright (c) 2021, Leon Sorokin
+* Copyright (c) 2022, Leon Sorokin
 * All rights reserved. (MIT Licensed)
 *
 * domvm.js (DOM ViewModel)
 * A thin, fast, dependency-free vdom view layer
-* @preserve https://github.com/domvm/domvm (v3.4.12, client build)
+* @preserve https://github.com/domvm/domvm (v3.4.13, client build)
 */
 
 'use strict';
