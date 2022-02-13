@@ -2,19 +2,23 @@ var el = domvm.defineElement;
 var vw = domvm.defineView;
 
 function B() {
-	alert(something);
+	console.log(createB);
 
 	return function() {
-		alert(otherThing);
+		console.log(renderB);
+
+		return el("div", "renderB");
 	};
 }
 
 const C = {
 	init() {
-		alert(something);
+	//	console.log(initC);
 	},
 	render() {
-		alert(otherThing);
+		console.log(renderC);
+
+		return el("div", "renderC");
 	},
 }
 
@@ -23,7 +27,7 @@ function A() {
 		return el("div", [
 			vw(B),
 			vw(C),
-			"A",
+			"renderA",
 		]);
 	};
 }

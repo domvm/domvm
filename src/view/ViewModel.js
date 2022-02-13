@@ -47,6 +47,12 @@ if (_DEVMODE) {
 
 var errAttrs = {class: "domvm-err", style: {color: "#fff", background: "#f00"}};
 
+function renderError(e) {
+	var err = "[DOMVM] " + e;
+	console.error(err);
+	return defineElement("div", errAttrs, err);
+}
+
 // view + key serve as the vm's unique identity
 export function ViewModel(view, data, key, opts) {
 	var vm = this;
@@ -60,25 +66,35 @@ export function ViewModel(view, data, key, opts) {
 		vm.cfg(opts);
 	}
 
-	var out = isPlainObj(view) ? view : view.call(vm, vm, data, key, opts);
+	var out, err;
+
+	try {
+		out = isPlainObj(view) ? view : view.call(vm, vm, data, key, opts);
+	}
+	catch(e) {
+		err = e;
+	}
 
 	var _render;
 
-	if (isFunc(out))
-		_render = out;
-	else {
-		_render = out.render;
-		vm.cfg(out);
+	if (out) {
+		if (isFunc(out))
+			_render = out;
+		else {
+			_render = out.render;
+			vm.cfg(out);
+		}
 	}
 
 	vm.render = function() {
+		if (err)
+			return renderError(err);
+
 		try {
 			return _render.apply(this, arguments);
 		}
 		catch (e) {
-			var err = "[DOMVM] " + e;
-			console.error(err);
-			return defineElement("div", errAttrs, err);
+			return renderError(e);
 		}
 	};
 
