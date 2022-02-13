@@ -9,6 +9,7 @@ import { streamVal, streamOn, streamOff } from './addons/stream';
 import { syncRedraw, didRedraws } from './config';
 import { devNotify, DEVMODE } from "./addons/devmode";
 import { DOMInstr } from "./addons/dominstr";
+import { defineElement } from "./defineElement";
 
 //if (FEAT_RAF_REDRAW) {
 	var redrawQueue = new Set();
@@ -44,6 +45,8 @@ if (_DEVMODE) {
 	}
 }
 
+var errAttrs = {class: "domvm-err", style: {color: "#fff", background: "#f00"}};
+
 // view + key serve as the vm's unique identity
 export function ViewModel(view, data, key, opts) {
 	var vm = this;
@@ -59,12 +62,25 @@ export function ViewModel(view, data, key, opts) {
 
 	var out = isPlainObj(view) ? view : view.call(vm, vm, data, key, opts);
 
+	var _render;
+
 	if (isFunc(out))
-		vm.render = out;
+		_render = out;
 	else {
-		vm.render = out.render;
+		_render = out.render;
 		vm.cfg(out);
 	}
+
+	vm.render = function() {
+		try {
+			return _render.apply(this, arguments);
+		}
+		catch (e) {
+			var err = "[DOMVM] " + e;
+			console.error(err);
+			return defineElement("div", errAttrs, err);
+		}
+	};
 
 	vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
 }
