@@ -105,6 +105,16 @@ QUnit.module("Imperative VMs", function() {
 		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { createElement: 4, createTextNode: 2, insertBefore: 6, textContent: 2 });
 	});
 
+	QUnit.test('Calling vm.config() returns the vm and can be chained to mount()', function(assert) {
+		var expcHtml = '<div>A<strong>B</strong><em>C<span>D</span></em></div>';
+
+		instr.start();
+		domvm.createView(ViewA, modelA).config({}).mount(testyDiv);
+		var callCounts = instr.end();
+
+		evalOut(assert, vmA.node.el, vmA.html(), expcHtml, callCounts, { createElement: 4, createTextNode: 2, insertBefore: 6, textContent: 2 });
+	});
+
 	QUnit.test('A mod, A redraw', function(assert) {
 		var expcHtml = '<div>A+<strong>B</strong><em>C<span>D</span></em></div>';
 
