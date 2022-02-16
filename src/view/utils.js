@@ -49,3 +49,10 @@ export function getVm(n) {
 		n = n.parent;
 	return n.vm;
 }
+
+export function getVnode(el) {
+	el = el || emptyObj;
+	while (el._node == null && el.parentNode)
+		el = el.parent;
+	return el._node;
+}
