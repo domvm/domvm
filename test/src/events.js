@@ -79,7 +79,7 @@ QUnit.module("Events", function() {
 		vm = domvm.createView(View).mount(testyDiv);
 		var callCounts = instr.end();
 		var expcHtml = '<div><input></div>';
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, onclick: 1, insertBefore: 2 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, addEventListener: 1, insertBefore: 2 });
 
 		// clicked args
 		doClick(vm.node.body[0].el);
@@ -128,7 +128,7 @@ QUnit.module("Events", function() {
 		var callCounts = instr.end();
 		var expcHtml = '<div><input></div>';
 
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { onclick: 1 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeEventListener: 1 });
 
 		reset();
 	});
@@ -142,7 +142,7 @@ QUnit.module("Events", function() {
 		var expcHtml = '<div><input></div>';
 
 		// TODO: test if "handle" is the thing that's bound
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, onclick: 1, insertBefore: 2 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, addEventListener: 1, insertBefore: 2 });
 
 		// clicked args
 		doClick(vm.node.body[0].el);
@@ -206,10 +206,7 @@ QUnit.module("Events", function() {
 		var callCounts = instr.end();
 		var expcHtml = '<div><input></div>';
 
-		// TODO: test if "handle" is the thing that's bound
-		// TOFIX: when last listener of this type is dropped, remove top-level capturing listener
-	//	evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { onclick: 1 });
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { onclick: 1 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeEventListener: 1 });
 
 		reset();
 
@@ -252,7 +249,7 @@ QUnit.module("Events", function() {
 		var expcHtml = '<div><input></div>';
 
 		// TODO: test if "handle" is the thing that's bound
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, onclick: 1, insertBefore: 2 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, addEventListener: 1, insertBefore: 2 });
 
 		reset();
 
@@ -287,7 +284,7 @@ QUnit.module("Events", function() {
 		var expcHtml = '<div><input></div>';
 
 		// TODO: test if "handle" is the thing that's bound
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { onclick: 1 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { removeEventListener: 1 });
 
 		reset();
 	});
@@ -301,7 +298,7 @@ QUnit.module("Events", function() {
 		var expcHtml = '<div><input></div>';
 
 		// TODO: test if "handle" is the thing that's bound
-		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, onclick: 1, insertBefore: 2 });
+		evalOut(assert, vm.node.el, vm.html(), expcHtml, callCounts, { createElement: 2, addEventListener: 1, insertBefore: 2 });
 
 		reset();
 

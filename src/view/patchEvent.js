@@ -40,7 +40,7 @@ export function patchEvent(node, name, nval, oval) {
     let el = node.el;
 
     if (nval == null)
-        el[name] = null;
+        el.removeEventListener(name.slice(2), handle);
     else if (oval == null)
-        el[name] = handle;
+        el.addEventListener(name.slice(2), handle);
 }
