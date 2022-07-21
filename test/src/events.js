@@ -40,13 +40,13 @@ QUnit.module("Events", function() {
 	reset();
 
 	function click1() {
-        counts.this1 = this;
+		counts.this1 = this;
 		counts.args1 = Array.prototype.slice.call(arguments);
 		counts.clicks1++;
 	}
 
 	function click2() {
-        counts.this2 = this;
+		counts.this2 = this;
 		counts.args2 = Array.prototype.slice.call(arguments);
 		counts.clicks2++;
 		return false;

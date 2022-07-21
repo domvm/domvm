@@ -175,7 +175,7 @@ function patchChildren(vnode, donor) {
 			}
 
 			if (donor2 != null) {
-                foundIdx = donor2.idx;
+				foundIdx = donor2.idx;
 
 				if (nbody.diff.eq(i, donor2)) {
 					// almost same as reParent() in ViewModel
