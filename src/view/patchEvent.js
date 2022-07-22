@@ -1,37 +1,31 @@
 import { isArr, isFunc } from '../utils';
-import { getVm } from './utils';
+import { getVm, getVnode } from './utils';
 import { onevent } from './config';
 import { devNotify } from "./addons/devmode";
 
-// invokes parameterized events
-function exec(fn, args, e, node) {
-	let vm = getVm(node),
-		out1 = fn.apply(vm, args.concat(e, node, vm, vm.data)),
-		out2,
-		out3;
+function handle(evt) {
+	let elm = evt.currentTarget,
+		dfn = elm._node.attrs["on" + evt.type];
 
-	if (FEAT_ONEVENT) {
-		out2 = vm.onevent(e, node, vm, vm.data, args),
-		out3 =    onevent(e, node, vm, vm.data, args);
+	if (isArr(dfn)) {
+		let fn = dfn[0], args = dfn.slice(1);
+		let node = getVnode(evt.target),
+			vm = getVm(node),
+			dvmargs = [evt, node, vm, vm.data],
+			out1 = fn.apply(elm, args.concat(dvmargs)),
+			out2,
+			out3;
+
+		if (FEAT_ONEVENT) {
+			out2 = vm.onevent(evt, node, vm, vm.data, args),
+			out3 =    onevent(evt, node, vm, vm.data, args);
+		}
+
+		if (out1 === false || out2 === false || out3 === false)
+			evt.preventDefault();
 	}
-
-	if (out1 === false || out2 === false || out3 === false)
-		e.preventDefault();
-}
-
-function handle(e) {
-	let curTarg = e.currentTarget;
-	let node = curTarg._node;
-
-	if (node == null)
-		return;
-
-	let dfn = node.attrs["on" + e.type];
-
-	if (isArr(dfn))
-		exec(dfn[0], dfn.slice(1), e, node);
 	else
-		dfn.call(curTarg, e);
+		dfn.call(elm, evt);
 }
 
 export function patchEvent(node, name, nval, oval) {
@@ -49,7 +43,7 @@ export function patchEvent(node, name, nval, oval) {
 	let el = node.el;
 
 	if (nval == null)
-		el[name] = null;
+		el.removeEventListener(name.slice(2), handle);
 	else if (oval == null)
-		el[name] = handle;
+		el.addEventListener(name.slice(2), handle);
 }

@@ -243,6 +243,13 @@ function getVm(n) {
 	return n.vm;
 }
 
+function getVnode(el) {
+	el = el || emptyObj;
+	while (el._node == null && el.parentNode)
+		el = el.parent;
+	return el._node;
+}
+
 function VNode() {}
 
 const VNodeProto = VNode.prototype = {
@@ -719,35 +726,29 @@ function patchStyle(n, o) {
 	}
 }
 
-// invokes parameterized events
-function exec(fn, args, e, node) {
-	let vm = getVm(node),
-		out1 = fn.apply(vm, args.concat(e, node, vm, vm.data)),
-		out2,
-		out3;
+function handle(evt) {
+	let elm = evt.currentTarget,
+		dfn = elm._node.attrs["on" + evt.type];
 
-	{
-		out2 = vm.onevent(e, node, vm, vm.data, args),
-		out3 =    onevent(e, node, vm, vm.data, args);
+	if (isArr(dfn)) {
+		let fn = dfn[0], args = dfn.slice(1);
+		let node = getVnode(evt.target),
+			vm = getVm(node),
+			dvmargs = [evt, node, vm, vm.data],
+			out1 = fn.apply(elm, args.concat(dvmargs)),
+			out2,
+			out3;
+
+		{
+			out2 = vm.onevent(evt, node, vm, vm.data, args),
+			out3 =    onevent(evt, node, vm, vm.data, args);
+		}
+
+		if (out1 === false || out2 === false || out3 === false)
+			evt.preventDefault();
 	}
-
-	if (out1 === false || out2 === false || out3 === false)
-		e.preventDefault();
-}
-
-function handle(e) {
-	let curTarg = e.currentTarget;
-	let node = curTarg._node;
-
-	if (node == null)
-		return;
-
-	let dfn = node.attrs["on" + e.type];
-
-	if (isArr(dfn))
-		exec(dfn[0], dfn.slice(1), e, node);
 	else
-		dfn.call(curTarg, e);
+		dfn.call(elm, evt);
 }
 
 function patchEvent(node, name, nval, oval) {
@@ -757,9 +758,9 @@ function patchEvent(node, name, nval, oval) {
 	let el = node.el;
 
 	if (nval == null)
-		el[name] = null;
+		el.removeEventListener(name.slice(2), handle);
 	else if (oval == null)
-		el[name] = handle;
+		el.addEventListener(name.slice(2), handle);
 }
 
 function remAttr(node, name, asProp) {
@@ -1377,7 +1378,7 @@ function patchChildren(vnode, donor) {
 			}
 
 			if (donor2 != null) {
-                foundIdx = donor2.idx;
+				foundIdx = donor2.idx;
 
 				if (nbody.diff.eq(i, donor2)) {
 					// almost same as reParent() in ViewModel
