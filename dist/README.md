@@ -9,11 +9,11 @@
 | [full][7]   | 18.1k / 7.3k | `mini`<br> + `attach`<br> + `html`<br>                                                                                                                                                                                   | all the bells and whistles                                                                                                                           |
 | [dev][8]    | 23.8k / 9.5k | `full`<br> + warnings<br>                                                                                                                                                                                                | use this build for development; it contains detection of some<br>anti-patterns that may cause slowness, confusion, errors or<br>undesirable behavior |
 
-[1]: https://github.com/domvm/domvm/blob/issue/#240-event-handler/dist/pico/domvm.pico.iife.min.js
-[2]: https://github.com/domvm/domvm/blob/issue/#240-event-handler/dist/nano/domvm.nano.iife.min.js
-[3]: https://github.com/domvm/domvm/blob/issue/#240-event-handler/dist/micro/domvm.micro.iife.min.js
-[4]: https://github.com/domvm/domvm/blob/issue/#240-event-handler/dist/mini/domvm.mini.iife.min.js
-[5]: https://github.com/domvm/domvm/blob/issue/#240-event-handler/dist/client/domvm.client.iife.min.js
-[6]: https://github.com/domvm/domvm/blob/issue/#240-event-handler/dist/server/domvm.server.iife.min.js
-[7]: https://github.com/domvm/domvm/blob/issue/#240-event-handler/dist/full/domvm.full.iife.min.js
-[8]: https://github.com/domvm/domvm/blob/issue/#240-event-handler/dist/dev/domvm.dev.iife.min.js
+[1]: https://github.com/domvm/domvm/blob/master/dist/pico/domvm.pico.iife.min.js
+[2]: https://github.com/domvm/domvm/blob/master/dist/nano/domvm.nano.iife.min.js
+[3]: https://github.com/domvm/domvm/blob/master/dist/micro/domvm.micro.iife.min.js
+[4]: https://github.com/domvm/domvm/blob/master/dist/mini/domvm.mini.iife.min.js
+[5]: https://github.com/domvm/domvm/blob/master/dist/client/domvm.client.iife.min.js
+[6]: https://github.com/domvm/domvm/blob/master/dist/server/domvm.server.iife.min.js
+[7]: https://github.com/domvm/domvm/blob/master/dist/full/domvm.full.iife.min.js
+[8]: https://github.com/domvm/domvm/blob/master/dist/dev/domvm.dev.iife.min.js
