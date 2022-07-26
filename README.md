@@ -84,7 +84,7 @@ Many [/demos](/demos) are examples of how to use these libs in your apps.
 ---
 ### Builds
 
-domvm comes in [several builds](/dist) of increasing size and features. The `nano` build is a good starting point and is sufficient for most cases.
+domvm comes in [several builds](https://github.com/domvm/domvm/tree/master/dist) of increasing size and features. The `nano` build is a good starting point and is sufficient for most cases.
 
 ---
 ### Changelog
