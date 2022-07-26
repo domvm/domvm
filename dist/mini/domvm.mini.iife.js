@@ -961,17 +961,22 @@ var domvm = (function (exports) {
 	function removeChild(parEl, el) {
 		var node = el._node;
 
-		// already marked for removal
-		if (node._dead) return;
+		// immediately remove foreign dom nodes
+		if (node == null)
+			parEl.removeChild(el);
+		else {
+			// already marked for removal
+			if (node._dead) return;
 
-		var res = deepNotifyRemove(node);
+			var res = deepNotifyRemove(node);
 
-		if (res != null && isProm(res)) {
-			node._dead = true;
-			res.then(curry(_removeChild, [parEl, el, true]));
+			if (res != null && isProm(res)) {
+				node._dead = true;
+				res.then(curry(_removeChild, [parEl, el, true]));
+			}
+			else
+				_removeChild(parEl, el);
 		}
-		else
-			_removeChild(parEl, el);
 	}
 
 	function clearChildren(parent) {
