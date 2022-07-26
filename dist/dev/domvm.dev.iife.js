@@ -1838,6 +1838,23 @@ var domvm = (function (exports) {
 		};
 	}
 
+	function defineElement(tag, arg1, arg2, flags) {
+		var attrs, body;
+
+		if (arg2 == null) {
+			if (isPlainObj(arg1))
+				attrs = arg1;
+			else
+				body = arg1;
+		}
+		else {
+			attrs = arg1;
+			body = arg2;
+		}
+
+		return initElementNode(tag, attrs, body, flags);
+	}
+
 	//if (true) {
 		var redrawQueue = new Set();
 		var rafId = 0;
@@ -1872,6 +1889,14 @@ var domvm = (function (exports) {
 		}
 	}
 
+	var errAttrs = {class: "domvm-err", style: {color: "#fff", background: "#f00"}};
+
+	function renderError(e) {
+		var err = "[DOMVM] " + e;
+		console.error(err);
+		return defineElement("div", errAttrs, err);
+	}
+
 	// view + key serve as the vm's unique identity
 	function ViewModel(view, data, key, opts) {
 		var vm = this;
@@ -1885,14 +1910,37 @@ var domvm = (function (exports) {
 			vm.cfg(opts);
 		}
 
-		var out = isPlainObj(view) ? view : view.call(vm, vm, data, key, opts);
+		var out, err;
 
-		if (isFunc(out))
-			vm.render = out;
-		else {
-			vm.render = out.render;
-			vm.cfg(out);
+		try {
+			out = isPlainObj(view) ? view : view.call(vm, vm, data, key, opts);
 		}
+		catch(e) {
+			err = e;
+		}
+
+		var _render;
+
+		if (out) {
+			if (isFunc(out))
+				_render = out;
+			else {
+				_render = out.render;
+				vm.cfg(out);
+			}
+		}
+
+		vm.render = function() {
+			if (err)
+				return renderError(err);
+
+			try {
+				return _render.apply(this, arguments);
+			}
+			catch (e) {
+				return renderError(e);
+			}
+		};
 
 		vm.init && vm.init.call(vm, vm, vm.data, vm.key, opts);
 	}
@@ -2206,23 +2254,6 @@ var domvm = (function (exports) {
 		}
 
 		return withRedraw ? vm._redraw(newParent, newIdx, withDOM) : vm;
-	}
-
-	function defineElement(tag, arg1, arg2, flags) {
-		var attrs, body;
-
-		if (arg2 == null) {
-			if (isPlainObj(arg1))
-				attrs = arg1;
-			else
-				body = arg1;
-		}
-		else {
-			attrs = arg1;
-			body = arg2;
-		}
-
-		return initElementNode(tag, attrs, body, flags);
 	}
 
 	//export const XML_NS = "http://www.w3.org/2000/xmlns/";
