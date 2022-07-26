@@ -134,6 +134,9 @@ function cfg(opts) {
 		if (opts.onemit)
 			t.onemit = assignObj(t.onemit || {}, opts.onemit);
 	}
+
+    // enable domvm.createView(...).config({...}).mount(...)
+    return t;
 }
 
 export const ViewModelProto = ViewModel.prototype = {
