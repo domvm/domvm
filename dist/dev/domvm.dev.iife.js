@@ -1978,6 +1978,9 @@ var domvm = (function (exports) {
 			if (opts.onemit)
 				t.onemit = assignObj(t.onemit || {}, opts.onemit);
 		}
+
+	    // enable domvm.createView(...).config({...}).mount(...)
+	    return t;
 	}
 
 	const ViewModelProto = ViewModel.prototype = {

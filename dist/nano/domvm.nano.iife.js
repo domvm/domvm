@@ -1499,6 +1499,9 @@ var domvm = (function (exports) {
 		// maybe invert assignment order?
 		if (opts.hooks)
 			t.hooks = assignObj(t.hooks || {}, opts.hooks);
+
+	    // enable domvm.createView(...).config({...}).mount(...)
+	    return t;
 	}
 
 	const ViewModelProto = ViewModel.prototype = {

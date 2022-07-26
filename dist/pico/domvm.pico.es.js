@@ -1298,6 +1298,9 @@ function cfg(opts) {
 	// maybe invert assignment order?
 	if (opts.hooks)
 		t.hooks = assignObj(t.hooks || {}, opts.hooks);
+
+    // enable domvm.createView(...).config({...}).mount(...)
+    return t;
 }
 
 ViewModel.prototype = {
